@@ -1,0 +1,19 @@
+<?php
+
+namespace {{ namespace }};
+
+use WpStarter\Http\Resources\Json\ResourceCollection;
+
+class {{ class }} extends ResourceCollection
+{
+    /**
+     * Transform the resource collection into an array.
+     *
+     * @param  \WpStarter\Http\Request  $request
+     * @return array|\WpStarter\Contracts\Support\Arrayable|\JsonSerializable
+     */
+    public function toArray($request)
+    {
+        return parent::toArray($request);
+    }
+}

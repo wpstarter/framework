@@ -1,0 +1,11 @@
+<?php
+
+namespace {{ namespace }};
+
+use WpStarter\Database\Eloquent\Factories\HasFactory;
+use WpStarter\Database\Eloquent\Model;
+
+class {{ class }} extends Model
+{
+    use HasFactory;
+}

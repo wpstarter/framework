@@ -1,0 +1,21 @@
+<?php
+
+namespace {{ namespace }};
+
+use Closure;
+use WpStarter\Http\Request;
+
+class {{ class }}
+{
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \WpStarter\Http\Request  $request
+     * @param  \Closure(\WpStarter\Http\Request): (\WpStarter\Http\Response|\WpStarter\Http\RedirectResponse)  $next
+     * @return \WpStarter\Http\Response|\WpStarter\Http\RedirectResponse
+     */
+    public function handle(Request $request, Closure $next)
+    {
+        return $next($request);
+    }
+}

@@ -1,0 +1,33 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ eventNamespace }};
+use WpStarter\Contracts\Queue\ShouldQueue;
+use WpStarter\Queue\InteractsWithQueue;
+
+class {{ class }} implements ShouldQueue
+{
+    use InteractsWithQueue;
+
+    /**
+     * Create the event listener.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        //
+    }
+
+    /**
+     * Handle the event.
+     *
+     * @param  {{ eventNamespace }}  $event
+     * @return void
+     */
+    public function handle({{ event }} $event)
+    {
+        //
+    }
+}

@@ -1,0 +1,19 @@
+<?php
+
+namespace {{ namespace }};
+
+use Exception;
+
+class {{ class }} extends Exception
+{
+    /**
+     * Render the exception as an HTTP response.
+     *
+     * @param  \WpStarter\Http\Request  $request
+     * @return \WpStarter\Http\Response
+     */
+    public function render($request)
+    {
+        //
+    }
+}
