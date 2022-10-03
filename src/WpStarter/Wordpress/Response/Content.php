@@ -72,6 +72,30 @@ class Content extends Response implements HasPostTitle
         }
         return $view;
     }
+    function getComponents(){
+        return $this->components;
+    }
+
+    /**
+     * @param array $components
+     * @return $this
+     */
+    function setComponents(array $components){
+        $this->components=$components;
+        return $this;
+    }
+
+    /**
+     * @param $key
+     * @return $this
+     */
+    function remove($key){
+        unset($this->components[$key]);
+        return $this;
+    }
+    function get($key){
+        return $this->components[$key]??null;
+    }
     function append($content,$key=null){
         $this->push($content,[],[],$key);
         return $this;
