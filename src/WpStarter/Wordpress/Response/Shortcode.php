@@ -16,11 +16,11 @@ class Shortcode extends Content implements HasPostTitle
      * @var Renderable[]|\Closure[]|mixed[]
      */
     protected $components=[];
-    public function __construct($tag=null, $view=null)
+    public function __construct($tag, $view=null, $data = [], $mergeData = [])
     {
         parent::__construct();
         if($tag && $view) {
-            $this->components[$tag] = $view;
+            $this->add($tag,$view,$data,$mergeData);
         }
     }
 
@@ -45,21 +45,10 @@ class Shortcode extends Content implements HasPostTitle
      * @return $this
      */
     function add($tag, $view, $data = [], $mergeData = []){
-        $this->push($tag,$view,$data,$mergeData);
+        $this->push($view,$data,$mergeData,$tag);
         return $this;
     }
-    /**
-     * Create new tag add and return
-     * @param $tag
-     * @param $view
-     * @param $data
-     * @param $mergeData
-     * @return mixed|View
-     */
-    function push($tag, $view, $data = [], $mergeData = []){
-        $view=ws_app(Factory::class)->make($view,$data,$mergeData);
-        return $this->components[$tag]=$view;
-    }
+
 
     /**
      * @param $shortcode
@@ -69,8 +58,6 @@ class Shortcode extends Content implements HasPostTitle
      * @return static
      */
     public static function make($tag, $view=null, $data = [], $mergeData = []){
-        $r= new static();
-        $r->add($tag,$view,$data,$mergeData);
-        return $r;
+        return new static($tag,$view,$data,$mergeData);
     }
 }

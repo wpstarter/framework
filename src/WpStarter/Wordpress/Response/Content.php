@@ -2,7 +2,6 @@
 
 namespace WpStarter\Wordpress\Response;
 
-use WpStarter\Contracts\Support\Renderable;
 use WpStarter\Contracts\View\View;
 use WpStarter\Support\Arr;
 use WpStarter\Wordpress\Contracts\HasPostTitle;
@@ -17,16 +16,16 @@ use WpStarter\Wordpress\View\Factory;
 class Content extends Response implements HasPostTitle
 {
     use Response\Concerns\PostTitle;
-    protected $components;
-    public function __construct($view=null){
+    protected $components=[];
+    public function __construct($view=null, $data = [], $mergeData = []){
         parent::__construct();
         if($view) {
-            $this->components = $view;
+            $this->push($view,$data,$mergeData);
         }
     }
     function bootComponent(){
         if(!$this->componentBooted) {
-            foreach (Arr::wrap($this->components) as $view) {
+            foreach ($this->components as $view) {
                 if ($view instanceof Component) {
                     $view->setResponse($this);
                     ws_app()->call([$view, 'boot']);
@@ -37,7 +36,7 @@ class Content extends Response implements HasPostTitle
     }
     function mountComponent(){
         if(!$this->componentMounted) {
-            foreach (Arr::wrap($this->components) as $view) {
+            foreach ($this->components as $view) {
                 if ($view instanceof Component) {
                     ws_app()->call([$view, 'mount']);
                 }
@@ -48,7 +47,7 @@ class Content extends Response implements HasPostTitle
 
     function getContent($content=null){
         $buffer='';
-        foreach (Arr::wrap($this->components) as $view) {
+        foreach ($this->components as $view) {
             $buffer.=Handler::renderView($view);
         }
         if($buffer){
@@ -56,14 +55,36 @@ class Content extends Response implements HasPostTitle
         }
         return $content;
     }
-    public static function make($view, $data = [], $mergeData = []){
+
+    /**
+     * @param $view
+     * @param $data
+     * @param $mergeData
+     * @param $key
+     * @return mixed|View|Content
+     */
+    function push($view, $data = [], $mergeData = [], $key=null){
         $view=ws_app(Factory::class)->make($view,$data,$mergeData);
-        return new static($view);
+        if($key) {
+            $this->components[$key] = $view;
+        }else{
+            $this->components[]=$view;
+        }
+        return $view;
+    }
+    function append($content,$key=null){
+        $this->push($content,[],[],$key);
+        return $this;
+    }
+    public static function make($view, $data = [], $mergeData = []){
+        return new static($view, $data, $mergeData );
     }
     public function __call($method, $parameters)
     {
-        foreach (Arr::wrap($this->components) as $view){
-            call_user_func_array([$view,$method],$parameters);
+        foreach ($this->components as $view){
+            if(is_object($view)) {
+                call_user_func_array([$view, $method], $parameters);
+            }
         }
         return $this;
     }
