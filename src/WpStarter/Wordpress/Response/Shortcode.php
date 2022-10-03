@@ -9,39 +9,31 @@ use WpStarter\Contracts\View\View;
 use WpStarter\Wordpress\View\Component;
 use WpStarter\Wordpress\View\Factory;
 
-class Shortcode extends Response implements HasPostTitle
+class Shortcode extends Content implements HasPostTitle
 {
     use Response\Concerns\PostTitle;
     /**
      * @var Renderable[]|\Closure[]|mixed[]
      */
-    protected $shortcodes=[];
+    protected $components=[];
     public function __construct($tag=null, $view=null)
     {
         parent::__construct();
         if($tag && $view) {
-            $this->shortcodes[$tag] = $view;
-        }
-    }
-    function bootComponent()
-    {
-        foreach ($this->shortcodes as $view){
-            if($view instanceof Component){
-                $view->setResponse($this);
-                ws_app()->call([$view,'boot']);
-            }
+            $this->components[$tag] = $view;
         }
     }
 
+
     function all(){
-        return $this->shortcodes;
+        return $this->components;
     }
     /**
      * @param $tag
      * @return Renderable|null
      */
     function view($tag){
-        return $this->shortcodes[$tag]??null;
+        return $this->components[$tag]??null;
     }
 
     /**
@@ -53,7 +45,7 @@ class Shortcode extends Response implements HasPostTitle
      */
     function add($tag, $view, $data = [], $mergeData = []){
         $view=ws_app(Factory::class)->make($view,$data,$mergeData);
-        return $this->shortcodes[$tag]=$view;
+        return $this->components[$tag]=$view;
     }
 
     /**
@@ -63,7 +55,7 @@ class Shortcode extends Response implements HasPostTitle
      * @param $mergeData
      * @return static
      */
-    public static function make($tag, $view, $data = [], $mergeData = []){
+    public static function make($tag, $view=null, $data = [], $mergeData = []){
         $r= new static();
         $r->add($tag,$view,$data,$mergeData);
         return $r;

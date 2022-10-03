@@ -9,11 +9,16 @@ abstract class Response extends BaseResponse
     protected $titleParts=[];
     protected $documentTitle;
     protected $titlePart;
+    protected $componentBooted=false;
+    protected $componentMounted=false;
     public function __construct(?string $content = '', int $status = 200, array $headers = [])
     {
         parent::__construct($content, $status, $headers);
     }
     public function bootComponent(){
+
+    }
+    public function mountComponent(){
 
     }
 

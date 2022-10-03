@@ -53,12 +53,14 @@ class Handler
         }elseif ($response instanceof Content) {
             $this->registerTerminateOnShutdown();
             add_filter('the_content', function ($content) use ($response) {
+                $response->mountComponent();
                 return $response->getContent($content);
             });
         }elseif($response instanceof Shortcode) {
             $this->registerTerminateOnShutdown();
             foreach ($response->all() as $tag => $view) {
-                add_shortcode($tag, function () use ($view) {
+                add_shortcode($tag, function () use ($view,$response) {
+                    $response->mountComponent();
                     return static::renderView($view);
                 });
             }
@@ -80,9 +82,6 @@ class Handler
         return $this;
     }
     public static function renderView($view){
-        if($view instanceof Component){
-            ws_app()->call([$view,'mount']);
-        }
         if($view instanceof Renderable) {
             return $view->render();
         }
@@ -97,6 +96,7 @@ class Handler
         $this->kernel->terminate($this->request, $this->response);
     }
     function sendPageResponse(Kernel $kernel, Request $request, Page $response){
+        $response->mountComponent();
         $response->send();
         $kernel->terminate($request, $response);
         die;
@@ -104,13 +104,16 @@ class Handler
     protected function setupTitleFilters(Response $response){
         if($response instanceof HasPostTitle) {
             add_filter('the_title', function ($postTitle) use ($response) {
+                $response->mountComponent();
                 return $response->getPostTitle($postTitle);
-            });
+            },10000);
         }
         add_filter('document_title_parts',function($titleParts)use($response){
+            $response->mountComponent();
             return $response->getTitleParts($titleParts);
         },10000);
         add_filter('document_title',function($title) use($response){
+            $response->mountComponent();
             return $response->getDocumentTitle($title);
         },10000);
     }
