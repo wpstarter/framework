@@ -23,7 +23,8 @@ class Content extends Response implements HasGetTitle
     }
     function bootComponent(){
         if($this->view instanceof Component){
-            $this->view->boot();
+            $this->view->setResponse($this);
+            ws_app()->call([$this->view,'boot']);
         }
     }
     function withTitle($title){

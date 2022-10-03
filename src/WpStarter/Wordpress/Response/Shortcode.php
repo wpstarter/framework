@@ -27,7 +27,8 @@ class Shortcode extends Response implements HasGetTitle
     {
         foreach ($this->shortcodes as $view){
             if($view instanceof Component){
-                $view->boot();
+                $view->setResponse($this);
+                ws_app()->call([$view,'boot']);
             }
         }
     }
@@ -56,6 +57,8 @@ class Shortcode extends Response implements HasGetTitle
     /**
      * @param $tag
      * @param $view
+     * @param $data
+     * @param $mergeData
      * @return mixed|View
      */
     function add($tag, $view, $data = [], $mergeData = []){

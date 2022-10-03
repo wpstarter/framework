@@ -2,6 +2,8 @@
 
 namespace WpStarter\Wordpress\Response;
 
+use WpStarter\Container\BoundMethod;
+use WpStarter\Contracts\Foundation\Application;
 use WpStarter\Contracts\Http\Kernel;
 use WpStarter\Contracts\Support\Renderable;
 use WpStarter\Http\Request;
@@ -23,6 +25,14 @@ class Handler
      * @var Response|Page|Content
      */
     protected $response;
+
+    protected $customResponseHandlers=[];
+    protected $app;
+    public function __construct(Application $app)
+    {
+        $this->app=$app;
+    }
+
     function handle(Kernel $kernel,Request $request,Response $response){
         $this->kernel=$kernel;
         $this->request=$request;
@@ -43,24 +53,38 @@ class Handler
                     $this->sendPageResponse($kernel,$request,$response);
                 },$priority);
             }
-        }else {
-            if ($response instanceof Content) {
-                add_filter('the_content', function ($content) use ($response) {
-                    return $response->getContent($content);
+        }elseif ($response instanceof Content) {
+            $this->registerTerminateOnShutdown();
+            add_filter('the_content', function ($content) use ($response) {
+                return $response->getContent($content);
+            });
+        }elseif($response instanceof Shortcode) {
+            $this->registerTerminateOnShutdown();
+            foreach ($response->all() as $tag => $view) {
+                add_shortcode($tag, function () use ($view) {
+                    return static::renderView($view);
                 });
-            } elseif ($response instanceof Shortcode) {
-                foreach ($response->all() as $tag => $view) {
-                    add_shortcode($tag, function () use ($view) {
-                        return static::renderView($view);
-                    });
+            }
+        }else{
+            foreach ($this->customResponseHandlers as $customResponseHandler){
+                if($customResponseHandler instanceof \Closure){
+                    $handled=$customResponseHandler($kernel,$request,$response);
+                }else {
+                    $handled=$this->app->make($customResponseHandler)->handle($kernel, $request, $response);
+                }
+                if($handled){
+                    break;
                 }
             }
-            $this->registerTerminateOnShutdown();
         }
+    }
+    public function addCustomHandler($handler){
+        $this->customResponseHandlers[]=$handler;
+        return $this;
     }
     public static function renderView($view){
         if($view instanceof Component){
-            $view->mount();
+            ws_app()->call([$view,'mount']);
         }
         if($view instanceof Renderable) {
             return $view->render();
@@ -70,7 +94,7 @@ class Handler
         }
     }
     protected function registerTerminateOnShutdown(){
-        add_action('wp_shutdown',[$this,'terminate']);
+        add_action('shutdown',[$this,'terminate']);
     }
     public function terminate(){
         $this->kernel->terminate($this->request, $this->response);

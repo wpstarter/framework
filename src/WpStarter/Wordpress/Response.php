@@ -2,7 +2,7 @@
 
 namespace WpStarter\Wordpress;
 use WpStarter\Http\Response as BaseResponse;
-class Response extends BaseResponse
+abstract class Response extends BaseResponse
 {
     protected $headerIsAlreadySent=false;
     public function __construct(?string $content = '', int $status = 200, array $headers = [])
@@ -13,8 +13,7 @@ class Response extends BaseResponse
 
     }
 
-    public function sendHeaders()
-    {
+    public function sendHeaders(){
         if(!$this->headerIsAlreadySent){
             $this->headerIsAlreadySent=true;
             return parent::sendHeaders();
@@ -29,7 +28,6 @@ class Response extends BaseResponse
     public function sendContent()
     {
         echo $this->getContent();
-
         return $this;
     }
 }
