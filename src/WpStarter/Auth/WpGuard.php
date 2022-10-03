@@ -6,7 +6,8 @@ use WpStarter\Contracts\Auth\UserProvider;
 
 class WpGuard
 {
-
+    protected $name;
+    protected $provider;
     /**
      * Create a new authentication guard.
      *
@@ -20,7 +21,26 @@ class WpGuard
         $this->name = $name;
         $this->provider = $provider;
     }
+    /**
+     * Determine if the current user is authenticated.
+     *
+     * @return bool
+     */
+    public function check(){
+        if($this->user()){
+            return true;
+        }
+        return false;
+    }
 
+    /**
+     * Determine if the current user is a guest.
+     *
+     * @return bool
+     */
+    public function guest(){
+        return !$this->check();
+    }
     /**
      * Get the currently authenticated user.
      *
