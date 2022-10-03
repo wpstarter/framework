@@ -9,7 +9,7 @@ class Response extends BaseResponse
     {
         parent::__construct($content, $status, $headers);
     }
-    public function mountComponent(){
+    public function bootComponent(){
 
     }
 

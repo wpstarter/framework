@@ -7,6 +7,7 @@ use WpStarter\Contracts\Support\Renderable;
 use WpStarter\Http\Request;
 use WpStarter\Wordpress\Contracts\HasGetTitle;
 use WpStarter\Wordpress\Response;
+use WpStarter\Wordpress\View\Component;
 
 class Handler
 {
@@ -19,14 +20,14 @@ class Handler
      */
     protected $request;
     /**
-     * @var Response
+     * @var Response|Page|Content
      */
     protected $response;
     function handle(Kernel $kernel,Request $request,Response $response){
         $this->kernel=$kernel;
         $this->request=$request;
         $this->response=$response;
-        $response->mountComponent();
+        $response->bootComponent();
         $response->sendHeaders();//Header should be sent as soon as possible
         if($response instanceof HasGetTitle) {
             add_filter('the_title', function ($content) use ($response) {
@@ -34,14 +35,13 @@ class Handler
             });
         }
         if($response instanceof Page){
-            add_filter('wp_title',function($title)use($response){
-                return $response->getTitle($title);
-            });
             list($hook,$priority)=$response->getHook();
             if(!$hook || did_action($hook)) {
-                $this->sendResponseAndDie();
+                $this->sendPageResponse($kernel,$request,$response);
             }else{
-                add_action($hook,[$this,'sendResponseAndDie'],$priority);
+                add_action($hook,function()use($kernel,$request,$response){
+                    $this->sendPageResponse($kernel,$request,$response);
+                },$priority);
             }
         }else {
             if ($response instanceof Content) {
@@ -59,6 +59,9 @@ class Handler
         }
     }
     public static function renderView($view){
+        if($view instanceof Component){
+            $view->mount();
+        }
         if($view instanceof Renderable) {
             return $view->render();
         }
@@ -72,9 +75,15 @@ class Handler
     public function terminate(){
         $this->kernel->terminate($this->request, $this->response);
     }
-    function sendResponseAndDie(){
-        $this->response->send();
-        $this->kernel->terminate($this->request, $this->response);
+    function sendPageResponse(Kernel $kernel, Request $request, Page $response){
+        add_filter('document_title_parts',function($titleParts)use($response){
+            return $response->getTitleParts($titleParts);
+        },10000);
+        add_filter('document_title',function($title) use($response){
+            return $response->getTitle($title);
+        },10000);
+        $response->send();
+        $kernel->terminate($request, $response);
         die;
     }
 }

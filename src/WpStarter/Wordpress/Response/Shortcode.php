@@ -23,11 +23,11 @@ class Shortcode extends Response implements HasGetTitle
             $this->shortcodes[$tag] = $view;
         }
     }
-    function mountComponent()
+    function bootComponent()
     {
         foreach ($this->shortcodes as $view){
             if($view instanceof Component){
-                $view->mount();
+                $view->boot();
             }
         }
     }

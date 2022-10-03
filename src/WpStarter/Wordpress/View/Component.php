@@ -18,6 +18,9 @@ abstract class Component implements Renderable
     {
         return $this->data;
     }
+    function boot(){
+
+    }
     function mount(){
 
     }

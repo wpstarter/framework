@@ -21,9 +21,9 @@ class Content extends Response implements HasGetTitle
         parent::__construct();
         $this->view=$view;
     }
-    function mountComponent(){
+    function bootComponent(){
         if($this->view instanceof Component){
-            $this->view->mount();
+            $this->view->boot();
         }
     }
     function withTitle($title){
