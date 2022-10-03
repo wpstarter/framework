@@ -50,12 +50,6 @@ class Handler
                     $this->sendPageResponse($kernel,$request,$response);
                 },$priority);
             }
-        }elseif ($response instanceof Content) {
-            $this->registerTerminateOnShutdown();
-            add_filter('the_content', function ($content) use ($response) {
-                $response->mountComponent();
-                return $response->getContent($content);
-            });
         }elseif($response instanceof Shortcode) {
             $this->registerTerminateOnShutdown();
             foreach ($response->all() as $tag => $view) {
@@ -64,6 +58,12 @@ class Handler
                     return static::renderView($view);
                 });
             }
+        }elseif ($response instanceof Content) {
+            $this->registerTerminateOnShutdown();
+            add_filter('the_content', function ($content) use ($response) {
+                $response->mountComponent();
+                return $response->getContent($content);
+            });
         }else{
             foreach ($this->customResponseHandlers as $customResponseHandler){
                 if($customResponseHandler instanceof \Closure){
