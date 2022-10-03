@@ -28,7 +28,7 @@ abstract class Response extends BaseResponse
         }
         return $title;
     }
-    public function setDocumentTitle($title){
+    public function withDocumentTitle($title){
         $this->documentTitle=$title;
         return $this;
     }
@@ -59,7 +59,7 @@ abstract class Response extends BaseResponse
      * @param $partOrResolver
      * @return $this
      */
-    function setTitleParts($partOrResolver){
+    function withTitleParts($partOrResolver){
         $this->titleParts=$partOrResolver;
         return $this;
     }
