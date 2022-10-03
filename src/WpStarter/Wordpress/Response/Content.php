@@ -47,9 +47,12 @@ class Content extends Response implements HasPostTitle
     }
 
     function getContent($content=null){
-        $rendered=Handler::renderView($this->components);
-        if($rendered){
-            return $rendered;
+        $buffer='';
+        foreach (Arr::wrap($this->components) as $view) {
+            $buffer.=Handler::renderView($view);
+        }
+        if($buffer){
+            return $buffer;
         }
         return $content;
     }
