@@ -4,7 +4,7 @@ namespace WpStarter\Wordpress\Response;
 
 use WpStarter\Contracts\Support\Renderable;
 use WpStarter\Contracts\View\View;
-use WpStarter\Wordpress\Contracts\HasGetTitle;
+use WpStarter\Wordpress\Contracts\HasPostTitle;
 use WpStarter\Wordpress\Response;
 use WpStarter\Wordpress\View\Component;
 use WpStarter\Wordpress\View\Factory;
@@ -13,10 +13,10 @@ use WpStarter\Wordpress\View\Factory;
 /**
  * @mixin View
  */
-class Content extends Response implements HasGetTitle
+class Content extends Response implements HasPostTitle
 {
+    use Response\Concerns\PostTitle;
     protected $view;
-    protected $title;
     public function __construct($view){
         parent::__construct();
         $this->view=$view;
@@ -27,19 +27,7 @@ class Content extends Response implements HasGetTitle
             ws_app()->call([$this->view,'boot']);
         }
     }
-    function withTitle($title){
-        $this->title=$title;
-        return $this;
-    }
-    function getTitle($title=null){
-        if($this->title){
-            if($this->title instanceof \Closure){
-                return call_user_func($this->title,$title);
-            }
-            return $this->title;
-        }
-        return $title;
-    }
+
     function getContent($content=null){
         $rendered=Handler::renderView($this->view);
         if($rendered){

@@ -3,19 +3,19 @@
 namespace WpStarter\Wordpress\Response;
 
 use WpStarter\Contracts\Support\Renderable;
-use WpStarter\Wordpress\Contracts\HasGetTitle;
+use WpStarter\Wordpress\Contracts\HasPostTitle;
 use WpStarter\Wordpress\Response;
 use WpStarter\Contracts\View\View;
 use WpStarter\Wordpress\View\Component;
 use WpStarter\Wordpress\View\Factory;
 
-class Shortcode extends Response implements HasGetTitle
+class Shortcode extends Response implements HasPostTitle
 {
+    use Response\Concerns\PostTitle;
     /**
      * @var Renderable[]|\Closure[]|mixed[]
      */
     protected $shortcodes=[];
-    protected $title;
     public function __construct($tag=null, $view=null)
     {
         parent::__construct();
@@ -33,16 +33,6 @@ class Shortcode extends Response implements HasGetTitle
         }
     }
 
-    function withTitle($title){
-        $this->title=$title;
-        return $this;
-    }
-    function getTitle($title=null){
-        if($this->title){
-            return $this->title;
-        }
-        return $title;
-    }
     function all(){
         return $this->shortcodes;
     }

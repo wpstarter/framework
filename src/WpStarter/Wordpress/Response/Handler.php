@@ -7,7 +7,7 @@ use WpStarter\Contracts\Foundation\Application;
 use WpStarter\Contracts\Http\Kernel;
 use WpStarter\Contracts\Support\Renderable;
 use WpStarter\Http\Request;
-use WpStarter\Wordpress\Contracts\HasGetTitle;
+use WpStarter\Wordpress\Contracts\HasPostTitle;
 use WpStarter\Wordpress\Response;
 use WpStarter\Wordpress\View\Component;
 
@@ -39,11 +39,8 @@ class Handler
         $this->response=$response;
         $response->bootComponent();
         $response->sendHeaders();//Header should be sent as soon as possible
-        if($response instanceof HasGetTitle) {
-            add_filter('the_title', function ($content) use ($response) {
-                return $response->getTitle($content);
-            });
-        }
+        $this->setupTitleFilters($response);
+
         if($response instanceof Page){
             list($hook,$priority)=$response->getHook();
             if(!$hook || did_action($hook)) {
@@ -100,14 +97,21 @@ class Handler
         $this->kernel->terminate($this->request, $this->response);
     }
     function sendPageResponse(Kernel $kernel, Request $request, Page $response){
+        $response->send();
+        $kernel->terminate($request, $response);
+        die;
+    }
+    protected function setupTitleFilters(Response $response){
+        if($response instanceof HasPostTitle) {
+            add_filter('the_title', function ($postTitle) use ($response) {
+                return $response->getPostTitle($postTitle);
+            });
+        }
         add_filter('document_title_parts',function($titleParts)use($response){
             return $response->getTitleParts($titleParts);
         },10000);
         add_filter('document_title',function($title) use($response){
-            return $response->getTitle($title);
+            return $response->getDocumentTitle($title);
         },10000);
-        $response->send();
-        $kernel->terminate($request, $response);
-        die;
     }
 }
