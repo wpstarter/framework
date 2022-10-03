@@ -32,6 +32,9 @@ class Content extends Response implements HasGetTitle
     }
     function getTitle($title=null){
         if($this->title){
+            if($this->title instanceof \Closure){
+                return call_user_func($this->title,$title);
+            }
             return $this->title;
         }
         return $title;

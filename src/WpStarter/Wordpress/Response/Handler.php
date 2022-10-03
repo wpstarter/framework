@@ -34,6 +34,9 @@ class Handler
             });
         }
         if($response instanceof Page){
+            add_filter('wp_title',function($title)use($response){
+                return $response->getTitle($title);
+            });
             list($hook,$priority)=$response->getHook();
             if(!$hook || did_action($hook)) {
                 $this->sendResponseAndDie();
