@@ -2,6 +2,7 @@
 
 namespace WpStarter\Wordpress\Database;
 
+use PDO;
 use WpStarter\Database\Connectors\Connector;
 use WpStarter\Database\Connectors\ConnectorInterface;
 

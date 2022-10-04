@@ -29,19 +29,18 @@ use Symfony\Component\HttpKernel\HttpKernelInterface;
 class Application extends Container implements ApplicationContract, CachesConfiguration, CachesRoutes, HttpKernelInterface
 {
     /**
+     * The WpStarter framework version.
+     *
+     * @var string
+     */
+    const VERSION = '1.0.10';
+
+    /**
      * The Laravel framework version.
      *
      * @var string
      */
     const LARAVEL_VERSION = '8.83.25';
-
-    /**
-     * The WpStarter framework version.
-     *
-     * @var string
-     */
-    const VERSION = '1.0.9';
-
 
     /**
      * The base path for the Laravel installation.
