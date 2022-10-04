@@ -6,6 +6,7 @@
     "homepage": "https://github.com/as247",
     "require": {
         "php": "^7.3|^8.0",
+        "ext-pdo": "*",
         "ext-json": "*",
         "ext-mbstring": "*",
         "ext-openssl": "*",

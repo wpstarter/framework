@@ -46,7 +46,7 @@ trait HasTimestamps
 
         $createdAtColumn = $this->getCreatedAtColumn();
 
-        if (! $this->exists && ! is_null($createdAtColumn) && ! $this->isDirty($createdAtColumn)) {
+        if (! $this->exists() && ! is_null($createdAtColumn) && ! $this->isDirty($createdAtColumn)) {
             $this->setCreatedAt($time);
         }
     }

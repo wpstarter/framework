@@ -457,7 +457,13 @@ trait HasAttributes
      */
     protected function getAttributeFromArray($key)
     {
-        return $this->getAttributes()->{$key} ?? get_user_meta($this->ID,$key,true);
+        if(isset($this->getAttributes()->{$key})){
+            $this->getAttributes()->{$key};
+        }
+        if(metadata_exists( 'user', $this->ID, $key)){
+            return get_user_meta($this->ID,$key,true);
+        }
+        return null;
     }
 
     /**
@@ -517,7 +523,7 @@ trait HasAttributes
             return call_user_func(static::$lazyLoadingViolationCallback, $this, $key);
         }
 
-        if (! $this->exists || $this->wasRecentlyCreated) {
+        if (! $this->exists() || $this->wasRecentlyCreated) {
             return;
         }
 

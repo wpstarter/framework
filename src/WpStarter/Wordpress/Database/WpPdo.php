@@ -12,6 +12,7 @@ use PDOException;
  */
 class WpPdo extends PDO
 {
+    use ForwardToWpdb;
     /**
      * @var \wpdb
      */
