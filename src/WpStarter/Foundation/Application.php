@@ -33,7 +33,15 @@ class Application extends Container implements ApplicationContract, CachesConfig
      *
      * @var string
      */
-    const VERSION = '1.0.8';//8.83.25
+    const LARAVEL_VERSION = '8.83.25';
+
+    /**
+     * The WpStarter framework version.
+     *
+     * @var string
+     */
+    const VERSION = '1.0.9';
+
 
     /**
      * The base path for the Laravel installation.
