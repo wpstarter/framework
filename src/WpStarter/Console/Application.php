@@ -62,7 +62,7 @@ class Application extends SymfonyApplication implements ApplicationContract
      */
     public function __construct(Container $laravel, Dispatcher $events, $version)
     {
-        parent::__construct('Laravel Framework', $version);
+        parent::__construct('WpStarter Framework', $version);
 
         $this->laravel = $laravel;
         $this->events = $events;
@@ -72,6 +72,10 @@ class Application extends SymfonyApplication implements ApplicationContract
         $this->events->dispatch(new ArtisanStarting($this));
 
         $this->bootstrap();
+    }
+    public function getLongVersion()
+    {
+        return parent::getLongVersion().sprintf(' (Laravel: <info>%s</info>)',\WpStarter\Foundation\Application::LARAVEL_VERSION);
     }
 
     /**
