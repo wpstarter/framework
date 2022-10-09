@@ -1,6 +1,6 @@
 <?php
 
-namespace WpStarter\Wordpress\Shortcode;
+namespace WpStarter\Wordpress\Routing;
 
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use WpStarter\Container\Container;
@@ -17,6 +17,7 @@ use ArrayObject;
 use JsonSerializable;
 use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
 use Symfony\Bridge\PsrHttpMessage\Factory\HttpFoundationFactory;
+use WpStarter\Wordpress\Http\ShortcodeResponse;
 
 class Router extends BaseRouter
 {
@@ -66,7 +67,7 @@ class Router extends BaseRouter
         } elseif ($response instanceof Model && $response->wasRecentlyCreated) {
             $response = new JsonResponse($response, 201);
         } elseif ($response instanceof Stringable) {
-            $response = new Response($response->__toString(), 200, ['Content-Type' => 'text/html']);
+            $response = new ShortcodeResponse($response->__toString(), 200, ['Content-Type' => 'text/html']);
         } elseif (! $response instanceof SymfonyResponse &&
             ($response instanceof Arrayable ||
                 $response instanceof Jsonable ||
@@ -76,10 +77,10 @@ class Router extends BaseRouter
                 is_array($response))) {
             $response = new JsonResponse($response);
         } elseif (! $response instanceof SymfonyResponse) {
-            $response = new Response($response, 200, ['Content-Type' => 'text/html']);
+            $response = new ShortcodeResponse($response, 200, ['Content-Type' => 'text/html']);
         }
 
-        if ($response->getStatusCode() === Response::HTTP_NOT_MODIFIED) {
+        if ($response->getStatusCode() === SymfonyResponse::HTTP_NOT_MODIFIED) {
             $response->setNotModified();
         }
 

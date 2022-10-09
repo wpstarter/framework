@@ -1,6 +1,6 @@
 <?php
 
-namespace WpStarter\Wordpress\Response;
+namespace WpStarter\Wordpress\Http\Response;
 
 class Page extends Content
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace WpStarter\Wordpress\Response\Concerns;
+namespace WpStarter\Wordpress\Http\Response\Concerns;
 
 trait PostTitle
 {

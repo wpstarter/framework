@@ -1,11 +1,11 @@
 <?php
 
-namespace WpStarter\Wordpress\Response;
+namespace WpStarter\Wordpress\Http\Response;
 
 use WpStarter\Contracts\View\View;
 use WpStarter\Support\Arr;
 use WpStarter\Wordpress\Contracts\HasPostTitle;
-use WpStarter\Wordpress\Response;
+use WpStarter\Wordpress\Http\Response;
 use WpStarter\Wordpress\View\Component;
 use WpStarter\Wordpress\View\Factory;
 

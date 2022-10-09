@@ -1,6 +1,6 @@
 <?php
 
-namespace WpStarter\Wordpress\Shortcode;
+namespace WpStarter\Wordpress\Routing;
 
 use WpStarter\Routing\RouteCollection as BaseRouteCollection;
 

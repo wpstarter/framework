@@ -1,6 +1,6 @@
 <?php
 
-namespace WpStarter\Wordpress;
+namespace WpStarter\Wordpress\Http;
 use WpStarter\Http\Response as BaseResponse;
 abstract class Response extends BaseResponse
 {

@@ -233,9 +233,7 @@ class StartSession
      */
     protected function saveSession($request)
     {
-        add_action('shutdown',function(){
-            $this->manager->driver()->save();
-        });
+        $this->manager->driver()->save();
     }
 
     /**

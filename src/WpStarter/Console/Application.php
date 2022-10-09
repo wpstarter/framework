@@ -75,7 +75,7 @@ class Application extends SymfonyApplication implements ApplicationContract
     }
     public function getLongVersion()
     {
-        return parent::getLongVersion().sprintf(' (Laravel: <info>%s</info>)',\WpStarter\Foundation\Application::LARAVEL_VERSION);
+        return parent::getLongVersion().sprintf(' (Laravel: <info>%s</info>)',\WpStarter\Foundation\Application::VERSION);
     }
 
     /**

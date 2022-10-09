@@ -1,35 +1,35 @@
 <?php
 
-namespace WpStarter\Wordpress\Shortcode;
+namespace WpStarter\Wordpress;
 
-use WpStarter\Contracts\Debug\ExceptionHandler;
+use WpStarter\Wordpress\Http\ShortcodeResponse;
 use WpStarter\Contracts\Foundation\Application;
 use WpStarter\Foundation\Http\Kernel as HttpKernel;
 use WpStarter\Routing\Pipeline;
-use Throwable;
-use WpStarter\Wordpress\Contracts\Kernel as BaseKernel;
-
-class Kernel extends HttpKernel implements BaseKernel
+use WpStarter\Routing\Router;
+use WpStarter\Wordpress\Routing\Router as ShortcodeRouter;
+class Kernel extends HttpKernel
 {
-    public function __construct(Application $app, Router $router)
+    protected $wpRouter;
+    public function __construct(Application $app, Router $router, ShortcodeRouter $wpRouter)
     {
+        $this->wpRouter=$wpRouter;
         parent::__construct($app, $router);
-        $this->router=$router;
     }
 
-    function register(){
-        $this->router->registerShortcodes($this->app['request']);
+    function registerWpHandler(){
+        $this->wpRouter->registerShortcodes($this->app['request']);
         add_action('template_redirect',function(){
-            $this->handle($this->app['request']);
+            $this->handleWp($this->app['request']);
         },-1);
     }
 
 
 
-    function handle($request){
+    function handleWp($request){
         try {
             $request->setRouteNotFoundHttpException(false);
-            $response = $this->sendRequestThroughRouter($request);
+            $response = $this->wpSendRequestThroughRouter($request);
         }catch (\Throwable $e) {
             $this->reportException($e);
             $response = $this->renderException($request, $e);
@@ -37,7 +37,7 @@ class Kernel extends HttpKernel implements BaseKernel
 
         if(!$request->isNotFoundHttpExceptionFromRoute()){
             //We just ignore no route matching exception and allow application continue running
-            if($response instanceof Response){
+            if($response instanceof ShortcodeResponse){
                 //Our responses converted from StringAble, we only send headers for them
                 $response->sendHeaders();
             }else{//Normal response from controller middleware, etc...
@@ -57,39 +57,17 @@ class Kernel extends HttpKernel implements BaseKernel
      * @param  \WpStarter\Http\Request  $request
      * @return \WpStarter\Http\Response
      */
-    protected function sendRequestThroughRouter($request)
+    protected function wpSendRequestThroughRouter($request)
     {
         return (new Pipeline($this->app))
             ->send($request)
             ->through($this->app->shouldSkipMiddleware() ? [] : $this->middleware)
-            ->then($this->dispatchToRouter());
+            ->then($this->dispatchToWpRouter());
     }
-    function dispatchToRouter($route=null){
+    function dispatchToWpRouter($route=null){
         return function($request)use($route){
-            return $this->router->dispatch($request);
+            return $this->wpRouter->dispatch($request);
         };
-    }
-    /**
-     * Report the exception to the exception handler.
-     *
-     * @param  \Throwable  $e
-     * @return void
-     */
-    protected function reportException(Throwable $e)
-    {
-        $this->app[ExceptionHandler::class]->report($e);
-    }
-
-    /**
-     * Render the exception to a response.
-     *
-     * @param  \WpStarter\Http\Request  $request
-     * @param  \Throwable  $e
-     * @return \Symfony\Component\HttpFoundation\Response
-     */
-    protected function renderException($request, Throwable $e)
-    {
-        return $this->app[ExceptionHandler::class]->render($request, $e);
     }
 
     /**
@@ -99,14 +77,16 @@ class Kernel extends HttpKernel implements BaseKernel
      */
     protected function syncMiddlewareToRouter()
     {
-        $this->router->middlewarePriority = $this->middlewarePriority;
+        parent::syncMiddlewareToRouter();
+        $this->wpRouter->middlewarePriority = $this->middlewarePriority;
 
         foreach ($this->middlewareGroups as $key => $middleware) {
-            $this->router->middlewareGroup($key, $middleware);
+            $this->wpRouter->middlewareGroup($key, $middleware);
         }
 
         foreach ($this->routeMiddleware as $key => $middleware) {
-            $this->router->aliasMiddleware($key, $middleware);
+            $this->wpRouter->aliasMiddleware($key, $middleware);
         }
+
     }
 }

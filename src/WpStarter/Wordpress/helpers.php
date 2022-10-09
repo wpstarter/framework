@@ -1,7 +1,7 @@
 <?php
-use WpStarter\Wordpress\Response\Content;
-use WpStarter\Wordpress\Response\Shortcode;
-use WpStarter\Wordpress\Response\Page;
+use WpStarter\Wordpress\Http\Response\Content;
+use WpStarter\Wordpress\Http\Response\Shortcode;
+use WpStarter\Wordpress\Http\Response\Page;
 if (! function_exists('wp_view')) {
     /**
      * Get the full page view
@@ -9,7 +9,7 @@ if (! function_exists('wp_view')) {
      * @param  $view
      * @param  \WpStarter\Contracts\Support\Arrayable|array  $data
      * @param  array  $mergeData
-     * @return \WpStarter\Wordpress\Response\Page
+     * @return \WpStarter\Wordpress\Http\Response\Page
      */
     function wp_view($view, $data = [], $mergeData = [])
     {
@@ -23,7 +23,7 @@ if (! function_exists('content_view')) {
      * @param  $view
      * @param  \WpStarter\Contracts\Support\Arrayable|array  $data
      * @param  array  $mergeData
-     * @return \WpStarter\Wordpress\Response\Content
+     * @return \WpStarter\Wordpress\Http\Response\Content
      */
     function content_view($view, $data = [], $mergeData = [])
     {
@@ -38,7 +38,7 @@ if (! function_exists('shortcode_view')) {
      * @param  $view
      * @param  \WpStarter\Contracts\Support\Arrayable|array  $data
      * @param  array  $mergeData
-     * @return \WpStarter\Wordpress\Response\Shortcode
+     * @return \WpStarter\Wordpress\Http\Response\Shortcode
      */
     function shortcode_view($tag, $view, $data = [], $mergeData = [])
     {

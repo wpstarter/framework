@@ -1,15 +1,13 @@
 <?php
 
-namespace WpStarter\Wordpress\Response;
+namespace WpStarter\Wordpress\Http\Response;
 
-use WpStarter\Container\BoundMethod;
 use WpStarter\Contracts\Foundation\Application;
 use WpStarter\Contracts\Http\Kernel;
 use WpStarter\Contracts\Support\Renderable;
 use WpStarter\Http\Request;
 use WpStarter\Wordpress\Contracts\HasPostTitle;
-use WpStarter\Wordpress\Response;
-use WpStarter\Wordpress\View\Component;
+use WpStarter\Wordpress\Http\Response;
 
 class Handler
 {

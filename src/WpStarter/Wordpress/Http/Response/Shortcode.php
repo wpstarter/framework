@@ -1,6 +1,6 @@
 <?php
 
-namespace WpStarter\Wordpress\Response;
+namespace WpStarter\Wordpress\Http\Response;
 
 use WpStarter\Contracts\Support\Renderable;
 use WpStarter\Wordpress\Contracts\HasPostTitle;
