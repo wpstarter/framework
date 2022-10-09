@@ -8,6 +8,7 @@ use WpStarter\Wordpress\Auth\User;
 use WpStarter\Wordpress\Database\WpConnection;
 use WpStarter\Wordpress\Database\WpConnector;
 use WpStarter\Wordpress\Response\Handler;
+use WpStarter\Wordpress\Shortcode\ShortcodeServiceProvider;
 
 class WordpressServiceProvider extends ServiceProvider
 {
@@ -17,6 +18,7 @@ class WordpressServiceProvider extends ServiceProvider
         Connection::resolverFor('wp',function($connection, $database, $prefix, $config){
             return new WpConnection($connection, $database, $prefix, $config);
         });
+        $this->app->register(ShortcodeServiceProvider::class);
     }
     function boot(){
         User::setConnectionResolver($this->app['db']);
