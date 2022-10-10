@@ -10,7 +10,31 @@ use WpStarter\Routing\Router;
 use WpStarter\Wordpress\Routing\Router as ShortcodeRouter;
 class Kernel extends HttpKernel
 {
+    /**
+     * @var \WpStarter\Wordpress\Application
+     */
+    protected $app;
+    protected $earlyBootstrapers=[
+        \WpStarter\Foundation\Bootstrap\LoadEnvironmentVariables::class,
+        \WpStarter\Foundation\Bootstrap\LoadConfiguration::class,
+        \WpStarter\Wordpress\Bootstrap\HandleExceptions::class,
+        \WpStarter\Foundation\Bootstrap\RegisterFacades::class,
+    ];
+    /**
+     * The bootstrap classes for the application.
+     *
+     * @var string[]
+     */
+    protected $bootstrappers = [
+        \WpStarter\Foundation\Bootstrap\LoadEnvironmentVariables::class,
+        \WpStarter\Foundation\Bootstrap\LoadConfiguration::class,
+        \WpStarter\Wordpress\Bootstrap\HandleExceptions::class,
+        \WpStarter\Foundation\Bootstrap\RegisterFacades::class,
+        \WpStarter\Foundation\Bootstrap\RegisterProviders::class,
+        \WpStarter\Foundation\Bootstrap\BootProviders::class,
+    ];
     protected $wpRouter;
+
     public function __construct(Application $app, Router $router, ShortcodeRouter $wpRouter)
     {
         $this->wpRouter=$wpRouter;
@@ -21,7 +45,7 @@ class Kernel extends HttpKernel
         $this->wpRouter->registerShortcodes($this->app['request']);
         add_action('template_redirect',function(){
             $this->handleWp($this->app['request']);
-        },-1);
+        },1);
     }
 
 
@@ -88,5 +112,13 @@ class Kernel extends HttpKernel
             $this->wpRouter->aliasMiddleware($key, $middleware);
         }
 
+    }
+
+
+
+    function earlyBootstrap(){
+        foreach ($this->earlyBootstrapers as $bootstraper){
+            $this->app->bootstrapOne($bootstraper);
+        }
     }
 }

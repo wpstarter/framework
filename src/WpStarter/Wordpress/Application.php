@@ -12,6 +12,8 @@ class Application extends \WpStarter\Foundation\Application
      * @var string
      */
     const VERSION = '1.0.11';
+
+    protected $bootstrappedList=[];
     protected function registerBaseServiceProviders()
     {
         parent::registerBaseServiceProviders();
@@ -26,9 +28,13 @@ class Application extends \WpStarter\Foundation\Application
             $this->bootstrapOne($bootstrapper);
         }
     }
-    protected function bootstrapOne($bootstrapper){
-        $this['events']->dispatch('bootstrapping: '.$bootstrapper, [$this]);
-        $this->make($bootstrapper)->bootstrap($this);
-        $this['events']->dispatch('bootstrapped: '.$bootstrapper, [$this]);
+    function bootstrapOne($bootstrapper){
+        if(!isset($this->bootstrappedList[$bootstrapper])){
+            $this->bootstrappedList[$bootstrapper]=true;
+            $this['events']->dispatch('bootstrapping: '.$bootstrapper, [$this]);
+            $this->make($bootstrapper)->bootstrap($this);
+            $this['events']->dispatch('bootstrapped: '.$bootstrapper, [$this]);
+        }
+
     }
 }
