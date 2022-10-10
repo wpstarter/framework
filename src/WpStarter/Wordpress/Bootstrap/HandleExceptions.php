@@ -73,6 +73,7 @@ class HandleExceptions extends \WpStarter\Foundation\Bootstrap\HandleExceptions
             } else {
                 $this->renderHttpResponse($error);
             }
+            exit;
         }
     }
 
