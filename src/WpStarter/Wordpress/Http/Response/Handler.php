@@ -35,7 +35,7 @@ class Handler
         $this->kernel=$kernel;
         $this->request=$request;
         $this->response=$response;
-        $response->bootComponent();
+        $response->bootComponents();
         $response->sendHeaders();//Header should be sent as soon as possible
         $this->setupTitleFilters($response);
 
@@ -52,14 +52,14 @@ class Handler
             $this->registerTerminateOnShutdown();
             foreach ($response->all() as $tag => $view) {
                 add_shortcode($tag, function () use ($view,$response) {
-                    $response->mountComponent();
+                    $response->mountComponents();
                     return static::renderView($view);
                 });
             }
         }elseif ($response instanceof Content) {
             $this->registerTerminateOnShutdown();
             add_filter('the_content', function ($content) use ($response) {
-                $response->mountComponent();
+                $response->mountComponents();
                 return $response->getContent($content);
             });
         }else{
@@ -94,7 +94,7 @@ class Handler
         $this->kernel->terminate($this->request, $this->response);
     }
     function sendPageResponse(Kernel $kernel, Request $request, Page $response){
-        $response->mountComponent();
+        $response->mountComponents();
         $response->send();
         $kernel->terminate($request, $response);
         die;
@@ -102,16 +102,16 @@ class Handler
     protected function setupTitleFilters(Response $response){
         if($response instanceof HasPostTitle) {
             add_filter('the_title', function ($postTitle) use ($response) {
-                $response->mountComponent();
+                $response->mountComponents();
                 return $response->getPostTitle($postTitle);
             },10000);
         }
         add_filter('document_title_parts',function($titleParts)use($response){
-            $response->mountComponent();
+            $response->mountComponents();
             return $response->getTitleParts($titleParts);
         },10000);
         add_filter('document_title',function($title) use($response){
-            $response->mountComponent();
+            $response->mountComponents();
             return $response->getDocumentTitle($title);
         },10000);
     }

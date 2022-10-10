@@ -1,7 +1,9 @@
 <?php
 
 namespace WpStarter\Wordpress\Http\Response;
-
+/**
+ * Full page response and terminate application after render
+ */
 class Page extends Content
 {
     protected $hook;

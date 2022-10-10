@@ -3,7 +3,6 @@
 namespace WpStarter\Wordpress\Http\Response;
 
 use WpStarter\Contracts\View\View;
-use WpStarter\Support\Arr;
 use WpStarter\Wordpress\Contracts\HasPostTitle;
 use WpStarter\Wordpress\Http\Response;
 use WpStarter\Wordpress\View\Component;
@@ -23,18 +22,18 @@ class Content extends Response implements HasPostTitle
             $this->push($view,$data,$mergeData);
         }
     }
-    function bootComponent(){
-        if(!$this->componentBooted) {
+    function bootComponents(){
+        if(!$this->componentsBooted) {
             foreach ($this->components as $view) {
                 if ($view instanceof Component) {
                     $view->setResponse($this);
                     ws_app()->call([$view, 'boot']);
                 }
             }
-            $this->componentBooted=true;
+            $this->componentsBooted=true;
         }
     }
-    function mountComponent(){
+    function mountComponents(){
         if(!$this->componentMounted) {
             foreach ($this->components as $view) {
                 if ($view instanceof Component) {

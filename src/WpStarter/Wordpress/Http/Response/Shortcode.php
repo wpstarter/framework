@@ -4,10 +4,7 @@ namespace WpStarter\Wordpress\Http\Response;
 
 use WpStarter\Contracts\Support\Renderable;
 use WpStarter\Wordpress\Contracts\HasPostTitle;
-use WpStarter\Wordpress\Response;
-use WpStarter\Contracts\View\View;
-use WpStarter\Wordpress\View\Component;
-use WpStarter\Wordpress\View\Factory;
+use WpStarter\Wordpress\Http\Response;
 
 class Shortcode extends Content implements HasPostTitle
 {

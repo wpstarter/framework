@@ -3,7 +3,7 @@
 namespace WpStarter\Wordpress\View;
 
 use WpStarter\Contracts\Support\Renderable;
-use WpStarter\Wordpress\Response;
+use WpStarter\Wordpress\Http\Response;
 
 abstract class Component implements Renderable
 {
@@ -31,9 +31,17 @@ abstract class Component implements Renderable
     {
         return $this->data;
     }
+
+    /**
+     * Component boot call on kernel handle
+     */
     function boot(){
 
     }
+
+    /**
+     * Call before render
+     */
     function mount(){
 
     }
