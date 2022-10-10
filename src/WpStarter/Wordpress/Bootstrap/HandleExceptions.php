@@ -40,35 +40,49 @@ class HandleExceptions extends \WpStarter\Foundation\Bootstrap\HandleExceptions
     public function handleError($level, $message, $file = '', $line = 0, $context = [])
     {
         if($this->isExternalPath($file)){
-            $config=$this->app['config'];
-            $debug=$config->get('app.debug_external');
-            $debug_log=$config->get('app.debug_external_log',$debug);
-            try {
-                if($debug_log) {
-                    if ($this->isDeprecation($level)) {
-                        return $this->handleDeprecation($message, $file, $line);
-                    }
-                    $this->handleExternal($level, $message, $file , $line );
-                }
-            } catch (Exception $e) {
-                //
-            }
-            if($debug) {
-                throw new ErrorException($message, 0, $level, $file, $line);
-            }
+            $this->handleExternalError(new ErrorException($message, 0, $level, $file, $line));
+
         }else {
             parent::handleError($level,$message,$file,$line,$context);
         }
     }
 
-    public function handleExternal($level, $message, $file , $line )
+    /**
+     * @param ErrorException $error
+     * @return void|null
+     * @throws ErrorException
+     */
+    public function handleExternalError(ErrorException $error){
+        self::$reservedMemory = null;
+        $config=$this->app['config'];
+        $level=$error->getSeverity();
+        $message=$error->getMessage();
+        $file=$error->getFile();
+        $line=$error->getLine();
+        try {
+            if ($this->isDeprecation($level)) {
+                return $this->handleDeprecation($message, $file, $line);
+            }
+            $this->reportExternal($error);
+        } catch (Exception $e) {
+            //
+        }
+        if($config->get('app.debug_external')) {
+            if ($this->app->runningInConsole()) {
+                $this->renderForConsole($error);
+            } else {
+                $this->renderHttpResponse($error);
+            }
+        }
+    }
+
+    protected function reportExternal(ErrorException $error)
     {
         if (! class_exists(LogManager::class)
             || $this->app->runningUnitTests()
         ) {
             return;
         }
-
         try {
             $logger = $this->app->make(LogManager::class);
         } catch (Exception $e) {
@@ -76,10 +90,12 @@ class HandleExceptions extends \WpStarter\Foundation\Bootstrap\HandleExceptions
         }
 
         $this->ensureExternalLoggerIsConfigured();
-        $log=$logger->channel('external');
-        $log->warning(sprintf('%s in %s on line %s',
-            $message, $file, $line
-        ),['exception'=>new ErrorException($message, 0, $level, $file, $line)]);
+
+        ws_with($logger->channel('external'), function ($log) use ($error) {
+            $log->warning(sprintf('%s in %s on line %s',
+                $error->getMessage(), $error->getFile(), $error->getLine()
+            ),['exception'=>$error]);
+        });
     }
 
 
