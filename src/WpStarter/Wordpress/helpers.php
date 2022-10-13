@@ -45,3 +45,16 @@ if (! function_exists('shortcode_view')) {
         return Shortcode::make($tag, $view, $data, $mergeData);
     }
 }
+
+if (! function_exists('ws_plugin_url')) {
+    /**
+     * Get the shortcode view
+     *
+     */
+    function ws_plugin_url($path = '', $scheme = null)
+    {
+        $basePath=str_replace(ABSPATH,'',__WS_FILE__);
+        $basePath=trim(dirname($basePath),'\/');
+        return site_url($basePath.'/'.ltrim($path,'/'),$scheme);
+    }
+}
