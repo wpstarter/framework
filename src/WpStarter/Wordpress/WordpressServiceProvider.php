@@ -12,6 +12,7 @@ use WpStarter\Wordpress\Database\WpConnection;
 use WpStarter\Wordpress\Database\WpConnector;
 use WpStarter\Wordpress\Dependency\ResourceManager;
 use WpStarter\Wordpress\Http\Response\Handler;
+use WpStarter\Wordpress\Mail\Transport\WpTransport;
 use WpStarter\Wordpress\Routing\RoutingServiceProvider;
 
 class WordpressServiceProvider extends ServiceProvider
@@ -22,11 +23,19 @@ class WordpressServiceProvider extends ServiceProvider
         $this->app->register(RoutingServiceProvider::class);
         $this->registerResourceManager();
         $this->extendMigrationCommands();
+        $this->registerMailerTransport();
     }
     function boot(){
         User::setConnectionResolver($this->app['db']);
         User::setEventDispatcher($this->app['events']);
         $this->bootResourceManager();
+    }
+    protected function registerMailerTransport(){
+        $this->app->resolving('mail.manager',function($mailManager){
+            $mailManager->extend('wp',function($config){
+                return new WpTransport($config);
+            });
+        });
     }
     protected function configureDatabase(){
         $this->app->alias(WpConnector::class,'db.connector.wp');
