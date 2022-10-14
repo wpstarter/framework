@@ -3,10 +3,8 @@
 namespace WpStarter\Wordpress;
 
 use WpStarter\Database\Connection;
-use WpStarter\Database\Migrations\Migrator;
 use WpStarter\Support\ServiceProvider;
 use WpStarter\Wordpress\Auth\User;
-use WpStarter\Wordpress\Console\Commands\Database\MigrationFreshCommand;
 use WpStarter\Wordpress\Console\Commands\Database\MigrationWipeCommand;
 use WpStarter\Wordpress\Database\WpConnection;
 use WpStarter\Wordpress\Database\WpConnector;
@@ -26,6 +24,9 @@ class WordpressServiceProvider extends ServiceProvider
         $this->registerMailerTransport();
     }
     function boot(){
+        if(!defined('ABSPATH')){
+            return ;
+        }
         User::setConnectionResolver($this->app['db']);
         User::setEventDispatcher($this->app['events']);
         $this->bootResourceManager();
