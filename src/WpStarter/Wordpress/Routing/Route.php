@@ -16,7 +16,10 @@ class Route extends \WpStarter\Routing\Route
         return $this->response;
     }
     function getContent(){
-        return $this->response->getContent();
+        if($this->response){
+            return $this->response->getContent();
+        }
+        return '';
     }
 
 }
