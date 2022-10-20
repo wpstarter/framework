@@ -53,17 +53,17 @@ trait HasComponents
         return $this;
     }
 
-    public function offsetExists(mixed $offset)
+    public function offsetExists($offset)
     {
         return isset($this->components[$offset]);
     }
 
-    public function offsetGet(mixed $offset)
+    public function offsetGet($offset)
     {
         return $this->components[$offset]??null;
     }
 
-    public function offsetSet(mixed $offset, mixed $value)
+    public function offsetSet($offset, $value)
     {
         if($offset===null){
             $this->components[]=$value;
@@ -72,7 +72,7 @@ trait HasComponents
         }
     }
 
-    public function offsetUnset(mixed $offset)
+    public function offsetUnset($offset)
     {
         unset($this->components[$offset]);
     }
