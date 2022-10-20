@@ -15,34 +15,14 @@ use WpStarter\Wordpress\View\Factory;
 class Content extends Response implements HasPostTitle
 {
     use Response\Concerns\PostTitle;
-    protected $components=[];
+
     public function __construct($view=null, $data = [], $mergeData = []){
         parent::__construct();
         if($view) {
             $this->push($view,$data,$mergeData);
         }
     }
-    function bootComponents(){
-        if(!$this->componentsBooted) {
-            foreach ($this->components as $view) {
-                if ($view instanceof Component) {
-                    $view->setResponse($this);
-                    ws_app()->call([$view, 'boot']);
-                }
-            }
-            $this->componentsBooted=true;
-        }
-    }
-    function mountComponents(){
-        if(!$this->componentMounted) {
-            foreach ($this->components as $view) {
-                if ($view instanceof Component) {
-                    ws_app()->call([$view, 'mount']);
-                }
-            }
-            $this->componentMounted=true;
-        }
-    }
+
 
     function getContent($content=null){
         $buffer='';
@@ -64,37 +44,10 @@ class Content extends Response implements HasPostTitle
      */
     function push($view, $data = [], $mergeData = [], $key=null){
         $view=ws_app(Factory::class)->make($view,$data,$mergeData);
-        if($key) {
-            $this->components[$key] = $view;
-        }else{
-            $this->components[]=$view;
-        }
+        $this->offsetSet($key,$view);
         return $view;
     }
-    function getComponents(){
-        return $this->components;
-    }
 
-    /**
-     * @param array $components
-     * @return $this
-     */
-    function setComponents(array $components){
-        $this->components=$components;
-        return $this;
-    }
-
-    /**
-     * @param $key
-     * @return $this
-     */
-    function remove($key){
-        unset($this->components[$key]);
-        return $this;
-    }
-    function get($key){
-        return $this->components[$key]??null;
-    }
     function append($content,$key=null){
         $this->push($content,[],[],$key);
         return $this;
@@ -111,4 +64,6 @@ class Content extends Response implements HasPostTitle
         }
         return $this;
     }
+
+
 }

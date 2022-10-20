@@ -27,12 +27,7 @@ abstract class User extends WP_User implements
         Concerns\HidesAttributes,
         Concerns\GuardsAttributes;
     use UserQuery,SupportMethods;
-    /**
-     * Indicates if the model was inserted during the current request lifecycle.
-     *
-     * @var bool
-     */
-    public $wasRecentlyCreated = false;
+
     protected $skipPasswordHash=false;
     /**
      * @var array Attributes supported by wp_insert_user

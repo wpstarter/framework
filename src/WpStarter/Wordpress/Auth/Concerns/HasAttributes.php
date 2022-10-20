@@ -30,6 +30,12 @@ use ReflectionNamedType;
 trait HasAttributes
 {
     /**
+     * Indicates if the model was inserted during the current request lifecycle.
+     *
+     * @var bool
+     */
+    public $wasRecentlyCreated = false;
+    /**
      * The model attribute's original state.
      *
      * @var
