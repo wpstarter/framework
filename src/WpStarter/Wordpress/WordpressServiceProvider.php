@@ -3,6 +3,7 @@
 namespace WpStarter\Wordpress;
 
 use WpStarter\Database\Connection;
+use WpStarter\Routing\Redirector;
 use WpStarter\Support\ServiceProvider;
 use WpStarter\Wordpress\Auth\User;
 use WpStarter\Wordpress\Console\Commands\Database\MigrationWipeCommand;
@@ -10,18 +11,22 @@ use WpStarter\Wordpress\Database\WpConnection;
 use WpStarter\Wordpress\Database\WpConnector;
 use WpStarter\Wordpress\Dependency\ResourceManager;
 use WpStarter\Wordpress\Http\Response\Handler;
+use WpStarter\Wordpress\Http\Response\PassThrough;
 use WpStarter\Wordpress\Mail\Transport\WpTransport;
 use WpStarter\Wordpress\Routing\RoutingServiceProvider;
 
 class WordpressServiceProvider extends ServiceProvider
 {
     function register(){
-        $this->app->singleton(Handler::class);
         $this->configureDatabase();
-        $this->app->register(RoutingServiceProvider::class);
         $this->registerResourceManager();
         $this->extendMigrationCommands();
         $this->registerMailerTransport();
+        $this->registerResponse();
+        $this->registerChildServices();
+    }
+    protected function registerChildServices(){
+        $this->app->register(RoutingServiceProvider::class);
     }
     function boot(){
         if(!defined('ABSPATH')){
@@ -30,6 +35,12 @@ class WordpressServiceProvider extends ServiceProvider
         User::setConnectionResolver($this->app['db']);
         User::setEventDispatcher($this->app['events']);
         $this->bootResourceManager();
+    }
+    protected function registerResponse(){
+        $this->app->singleton(Handler::class);
+        Redirector::macro('pass',function(){
+            return new PassThrough();
+        });
     }
     protected function registerMailerTransport(){
         $this->app->resolving('mail.manager',function($mailManager){

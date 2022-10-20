@@ -2,25 +2,14 @@
 
 namespace WpStarter\Wordpress\Http;
 use WpStarter\Http\Response as BaseResponse;
-abstract class Response extends BaseResponse
+use WpStarter\Wordpress\Http\Response\Concerns\HasComponents;
+
+abstract class Response extends BaseResponse implements \ArrayAccess
 {
+    use HasComponents;
     protected $headerIsAlreadySent=false;
     protected $titleParts=[];
     protected $documentTitle;
-    protected $titlePart;
-    protected $componentsBooted=false;
-    protected $componentMounted=false;
-    public function __construct(?string $content = '', int $status = 200, array $headers = [])
-    {
-        parent::__construct($content, $status, $headers);
-    }
-    public function bootComponents(){
-
-    }
-    public function mountComponents(){
-
-    }
-
 
     public function getDocumentTitle($title){
         if($this->documentTitle){
@@ -38,18 +27,7 @@ abstract class Response extends BaseResponse
      * @param $title
      * @return $this
      */
-    function withTitle($title){
-        $this->titlePart=$title;
-        return $this;
-    }
-
-    /**
-     * Set title for given part
-     * @param $part
-     * @param $title
-     * @return $this
-     */
-    function withTitlePart($part,$title){
+    function withTitle($title, $part='title'){
         $this->titleParts[$part]=$title;
         return $this;
     }
@@ -59,7 +37,7 @@ abstract class Response extends BaseResponse
      * @param $partOrResolver
      * @return $this
      */
-    function withTitleParts($partOrResolver){
+    function setTitleParts($partOrResolver){
         $this->titleParts=$partOrResolver;
         return $this;
     }
@@ -68,9 +46,14 @@ abstract class Response extends BaseResponse
         if($this->titleParts){
             $newParts=static::unwrapIfClosure($this->titleParts,$parts);
         }
-        $parts=array_merge($parts,$newParts);
-        $title=$this->titlePart?:$this->postTitle??'';
-        $parts['title']=static::unwrapIfClosure($title,$parts['title']??'');
+        if(!isset($newParts['title']) && isset($this->postTitle)){
+            $newParts['title']=$this->postTitle;
+        }
+        foreach ($newParts as $part=>$value){
+            $oldValue=$parts[$part]??null;
+            $parts[$part]=static::unwrapIfClosure($value,$oldValue);
+        }
+
         return $parts;
     }
 
@@ -79,6 +62,7 @@ abstract class Response extends BaseResponse
             $this->headerIsAlreadySent=true;
             return parent::sendHeaders();
         }
+        return $this;
     }
 
     public static function unwrapIfClosure($value,...$args){
@@ -95,4 +79,7 @@ abstract class Response extends BaseResponse
         echo $this->getContent();
         return $this;
     }
+
+
+
 }

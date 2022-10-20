@@ -58,3 +58,13 @@ if (! function_exists('ws_plugin_url')) {
         return site_url($basePath.'/'.ltrim($path,'/'),$scheme);
     }
 }
+if (! function_exists('ws_pass')) {
+    /**
+     * @return \WpStarter\Wordpress\Http\Response\PassThrough
+     */
+    function ws_pass(){
+        return ws_redirect()->pass();
+    }
+}
+
+
