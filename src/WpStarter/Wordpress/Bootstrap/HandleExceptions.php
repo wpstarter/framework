@@ -40,11 +40,16 @@ class HandleExceptions extends \WpStarter\Foundation\Bootstrap\HandleExceptions
     public function handleError($level, $message, $file = '', $line = 0, $context = [])
     {
         if($this->isExternalPath($file)){
-            $this->handleExternalError(new ErrorException($message, 0, $level, $file, $line));
-
+            if(!$this->isSuppressed()) {
+                $this->handleExternalError(new ErrorException($message, 0, $level, $file, $line));
+            }
         }else {
             parent::handleError($level,$message,$file,$line,$context);
         }
+    }
+    protected function isSuppressed(){
+        $report=error_reporting();
+        return $report===0||$report===4437;
     }
 
     /**
