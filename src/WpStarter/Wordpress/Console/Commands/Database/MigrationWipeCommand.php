@@ -24,6 +24,7 @@ class MigrationWipeCommand extends WipeCommand
                 $tables=array_merge($tables,$matches[1]);
             }
         }
+        $tables=array_reverse($tables);
         foreach ($tables as $table) {
             $this->laravel['db']->connection($database)
                 ->getSchemaBuilder()->dropIfExists($table);
