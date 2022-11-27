@@ -18,13 +18,9 @@ class WpPdo extends PDO
      */
     protected $db;
     protected $in_transaction;
-    public function __construct($wpdb)
+    public function __construct($wpdb, $dsn, $username, $password, $options)
     {
-        try {
-            parent::__construct(null);
-        }catch (PDOException $e){
-
-        }
+        parent::__construct($dsn, $username, $password, $options);
         $this->db=$wpdb;
     }
 
