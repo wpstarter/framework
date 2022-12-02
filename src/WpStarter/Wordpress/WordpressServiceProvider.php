@@ -14,6 +14,7 @@ use WpStarter\Wordpress\Http\Response\Handler;
 use WpStarter\Wordpress\Http\Response\PassThrough;
 use WpStarter\Wordpress\Mail\Transport\WpTransport;
 use WpStarter\Wordpress\Routing\RoutingServiceProvider;
+use WpStarter\Wordpress\Shortcode\ShortcodeManager;
 
 class WordpressServiceProvider extends ServiceProvider
 {
@@ -23,18 +24,21 @@ class WordpressServiceProvider extends ServiceProvider
         $this->extendMigrationCommands();
         $this->registerMailerTransport();
         $this->registerResponse();
+        $this->registerShortcodeManager();
         $this->registerChildServices();
+
     }
     protected function registerChildServices(){
         $this->app->register(RoutingServiceProvider::class);
     }
     function boot(){
-        if(!defined('ABSPATH')){
+        if(!is_wp()){
             return ;
         }
         User::setConnectionResolver($this->app['db']);
         User::setEventDispatcher($this->app['events']);
         $this->bootResourceManager();
+        $this->bootShortcodeManager();
     }
     protected function registerResponse(){
         $this->app->singleton(Handler::class);
@@ -48,6 +52,13 @@ class WordpressServiceProvider extends ServiceProvider
                 return new WpTransport($config);
             });
         });
+    }
+    protected function registerShortcodeManager(){
+        $this->app->singleton(ShortcodeManager::class);
+        $this->app->alias(ShortcodeManager::class,'wp.shortcode');
+    }
+    protected function bootShortcodeManager(){
+        $this->app->make(ShortcodeManager::class)->boot();
     }
     protected function configureDatabase(){
         $this->app->alias(WpConnector::class,'db.connector.wp');

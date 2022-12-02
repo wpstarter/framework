@@ -77,7 +77,7 @@ class ResourceManager {
 
     function loadResources() {
         $resources = $this->app['config']['resources'];
-        $this->defaultVersion=$resources['default_version']??WS_VERSION;
+        $this->defaultVersion=$resources['default_version'] ?? defined('WS_VERSION') ? WS_VERSION : '';
         if ($resources) {
             foreach ($resources as $resource) {
                 $this->loadResource($resource);
