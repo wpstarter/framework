@@ -67,4 +67,31 @@ if (! function_exists('ws_pass')) {
     }
 }
 
+if (! function_exists('is_wp')) {
+    /**
+     * Check if we are running in wp
+     * @return bool
+     */
+    function is_wp(){
+        return function_exists('wp_filter');
+    }
+}
 
+if(! function_exists('ws_setting')){
+    /**
+     * Get or set the setting
+     * @param $key
+     * @param $default
+     * @return mixed|\WpStarter\Wordpress\Setting\Repository|null
+     */
+    function ws_setting($key=null,$default=null){
+        if (is_null($key)) {
+            return ws_app('setting');
+        }
+        if (is_array($key)) {
+            return ws_app('setting')->set($key);
+        }
+
+        return ws_app('setting')->get($key, $default);
+    }
+}
