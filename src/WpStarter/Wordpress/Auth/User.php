@@ -26,13 +26,13 @@ abstract class User extends WP_User implements
         Concerns\HasTimestamps,
         Concerns\HidesAttributes,
         Concerns\GuardsAttributes;
-    use UserQuery,SupportMethods;
+    use UserQuery, SupportMethods;
 
-    protected $skipPasswordHash=false;
+    protected $skipPasswordHash = false;
     /**
      * @var array Attributes supported by wp_insert_user
      */
-    protected $wp_fields=[
+    protected $wp_fields = [
         'ID',
         'user_pass',
         'user_login',
@@ -86,7 +86,7 @@ abstract class User extends WP_User implements
      */
     protected static $traitInitializers = [];
 
-    public function __construct($attributes=[],$site_id=0)
+    public function __construct($attributes = [], $site_id = 0)
     {
         $this->bootIfNotBooted();
         parent::__construct(0, '', $site_id);
@@ -96,14 +96,14 @@ abstract class User extends WP_User implements
     function init($data, $site_id = '')
     {
         $this->setConnection($this->getConnection()->getName());
-        if($data) {
-            if(is_array($data)){
-                $data=(object)$data;
+        if ($data) {
+            if (is_array($data)) {
+                $data = (object)$data;
             }
             parent::init($data, $site_id);
-        }else {
-            $this->data=new \stdClass();
-            $this->ID=0;
+        } else {
+            $this->data = new \stdClass();
+            $this->ID = 0;
         }
         $this->readMissingAttributes();
         $this->syncOriginal();
@@ -112,37 +112,40 @@ abstract class User extends WP_User implements
     /***
      * Load main user fields to data object so it won't be lost when save()
      */
-    protected function readMissingAttributes(){
-        if(!empty($this->ID)){
-            $user_id=$this->ID;
+    protected function readMissingAttributes()
+    {
+        if (!empty($this->ID)) {
+            $user_id = $this->ID;
 
-            foreach ($this->wp_fields as $field){
-                if(!isset($this->data->{$field})){
-                    if(metadata_exists('user',$user_id,$field)) {
+            foreach ($this->wp_fields as $field) {
+                if (!isset($this->data->{$field})) {
+                    if (metadata_exists('user', $user_id, $field)) {
                         $this->data->{$field} = get_user_meta($user_id, $field, true);
-                    }else{
+                    } else {
                         $this->data->{$field} = null;
                     }
                 }
             }
-            foreach ($this->fillable as $field){
-                if(!isset($this->data->{$field})){
-                    if(metadata_exists('user',$user_id,$field)){
-                        $this->data->{$field}=get_user_meta($user_id,$field,true);
-                    }else{
-                        $this->data->{$field}=null;
+            foreach ($this->fillable as $field) {
+                if (!isset($this->data->{$field})) {
+                    if (metadata_exists('user', $user_id, $field)) {
+                        $this->data->{$field} = get_user_meta($user_id, $field, true);
+                    } else {
+                        $this->data->{$field} = null;
                     }
                 }
             }
         }
     }
 
-    public function fresh(){
+    public function fresh()
+    {
         return static::find($this->ID);
     }
 
-    public static function make(...$args){
-        $instance=new static($args);
+    public static function make(...$args)
+    {
+        $instance = new static($args);
         return $instance;
     }
 
@@ -153,13 +156,13 @@ abstract class User extends WP_User implements
      */
     protected function bootIfNotBooted()
     {
-        if (! isset(static::$booted[static::class])) {
+        if (!isset(static::$booted[static::class])) {
             static::$booted[static::class] = true;
 
             //Check for fillable
 
-            if($needRemove=array_intersect($this->wp_fields,$this->fillable)){
-                throw new \LogicException('Please remove following fields from fillable: '.join(',',$needRemove));
+            if ($needRemove = array_intersect($this->wp_fields, $this->fillable)) {
+                throw new \LogicException('Please remove following fields from fillable: ' . join(',', $needRemove));
             }
 
             $this->fireModelEvent('booting', false);
@@ -194,15 +197,15 @@ abstract class User extends WP_User implements
         static::$traitInitializers[$class] = [];
 
         foreach (ws_class_uses_recursive($class) as $trait) {
-            $method = 'boot'.ws_class_basename($trait);
+            $method = 'boot' . ws_class_basename($trait);
 
-            if (method_exists($class, $method) && ! in_array($method, $booted)) {
+            if (method_exists($class, $method) && !in_array($method, $booted)) {
                 forward_static_call([$class, $method]);
 
                 $booted[] = $method;
             }
 
-            if (method_exists($class, $method = 'initialize'.ws_class_basename($trait))) {
+            if (method_exists($class, $method = 'initialize' . ws_class_basename($trait))) {
                 static::$traitInitializers[$class][] = $method;
 
                 static::$traitInitializers[$class] = array_unique(
@@ -211,25 +214,28 @@ abstract class User extends WP_User implements
             }
         }
     }
+
     /**
      * Update the model in the database.
      *
-     * @param  array  $attributes
-     * @param  array  $options
+     * @param array $attributes
+     * @param array $options
      * @return bool
      */
     public function update(array $attributes = [], array $options = [])
     {
-        if (! $this->exists()) {
+        if (!$this->exists()) {
             return false;
         }
         return $this->fill($attributes)->save($options);
     }
-    public function fill($attributes){
-        foreach ($attributes as $key=>$value){
-            if($this->isFillable($key)) {
+
+    public function fill($attributes)
+    {
+        foreach ($attributes as $key => $value) {
+            if ($this->isFillable($key)) {
                 $this->setAttribute($key, $value);
-            }else{
+            } else {
                 throw new MassAssignmentException(sprintf(
                     'Add [%s] to fillable property to allow mass assignment on [%s].',
                     $key, get_class($this)
@@ -239,17 +245,20 @@ abstract class User extends WP_User implements
         return $this;
     }
 
-    protected function isWpField($key){
-        return in_array($key,$this->wp_fields);
+    protected function isWpField($key)
+    {
+        return in_array($key, $this->wp_fields);
     }
-    protected function isAdditionalMeta($key){
+
+    protected function isAdditionalMeta($key)
+    {
         return !$this->isWpField($key);
     }
 
     /**
      * Save the model to the database.
      *
-     * @param  array  $options
+     * @param array $options
      * @return bool
      */
     public function save(array $options = [])
@@ -259,7 +268,7 @@ abstract class User extends WP_User implements
         }
         if ($this->exists()) {
             $saved = $this->performUpdate();
-        }else {
+        } else {
             $saved = $this->performInsert();
         }
         if ($saved) {
@@ -268,22 +277,24 @@ abstract class User extends WP_User implements
 
         return $saved;
     }
-    protected function performUpdate(){
+
+    protected function performUpdate()
+    {
 
         if ($this->fireModelEvent('updating') === false) {
             return false;
         }
 
-        $this->data->ID=$this->ID;
+        $this->data->ID = $this->ID;
 
-        if(!empty($this->data->user_pass)
+        if (!empty($this->data->user_pass)
             && $this->isDirty('user_pass')
             && !$this->skipPasswordHash
-        ){
-            $this->data->user_pass=wp_hash_password($this->data->user_pass);
+        ) {
+            $this->data->user_pass = wp_hash_password($this->data->user_pass);
         }
-        $result=wp_insert_user($this->data);
-        if(is_wp_error($result)){
+        $result = wp_insert_user($this->data);
+        if (is_wp_error($result)) {
             throw (new WpErrorException($result->get_error_message()))->setWpError($result);
         }
         $this->performUpdateExtra();
@@ -292,59 +303,65 @@ abstract class User extends WP_User implements
         return $result;
 
     }
-    protected function performInsert(){
+
+    protected function performInsert()
+    {
         if ($this->fireModelEvent('creating') === false) {
             return false;
         }
-        $result=wp_insert_user($this->data);
-        if(is_wp_error($result)){
+        $result = wp_insert_user($this->data);
+        if (is_wp_error($result)) {
             throw (new WpErrorException($result->get_error_message()))->setWpError($result);
         }
         $this->performUpdateExtra();
-        $this->ID=$result;
+        $this->ID = $result;
         $this->wasRecentlyCreated = true;
         $this->fireModelEvent('created', false);
         return $result;
     }
-    protected function finishSave($options){
 
-        $data=static::get_data_by('id',$this->ID);
-        $this->init( $data, $this->get_site_id() );
+    protected function finishSave($options)
+    {
+
+        $data = static::get_data_by('id', $this->ID);
+        $this->init($data, $this->get_site_id());
 
         $this->fireModelEvent('saved', false);
     }
 
-    protected function performUpdateExtra(){
+    protected function performUpdateExtra()
+    {
         //List of fields which not handled by wp_insert_user
-        $fields=['user_activation_key','user_login','user_status'];
-        $update=[];
-        if(isset($this->data->user_activation_key)) {
-            $update['user_activation_key']=$this->data->user_activation_key;
+        $fields = ['user_activation_key', 'user_login', 'user_status'];
+        $update = [];
+        if (isset($this->data->user_activation_key)) {
+            $update['user_activation_key'] = $this->data->user_activation_key;
         }
-        if(isset($this->data->user_status)){
-            $update['user_status']=$this->data->user_status;
+        if (isset($this->data->user_status)) {
+            $update['user_status'] = $this->data->user_status;
         }
-        if($newLogin=$this->maybeUpdateUserLogin()){
-            $update['user_login']=$newLogin;
+        if ($newLogin = $this->maybeUpdateUserLogin()) {
+            $update['user_login'] = $newLogin;
         }
 
         global $wpdb;
-        if($this->ID && $update) {
+        if ($this->ID && $update) {
             $wpdb->update($wpdb->users, $update, ['ID' => $this->ID]);
         }
 
-        foreach ($this->data as $key=>$value){
-            if($this->isAdditionalMeta($key)){//we need to update additional meta fields which not maintained in wp_insert_user
-                if(!is_null($value)) {
+        foreach ($this->data as $key => $value) {
+            if ($this->isAdditionalMeta($key)) {//we need to update additional meta fields which not maintained in wp_insert_user
+                if (!is_null($value)) {
                     update_user_meta($this->ID, $key, $value);
-                }else{
-                    delete_user_meta($this->ID,$key);
+                } else {
+                    delete_user_meta($this->ID, $key);
                 }
             }
         }
     }
 
-    static function create($attributes){
+    static function create($attributes)
+    {
         return (new static())->fill($attributes)->save();
     }
 
@@ -355,7 +372,7 @@ abstract class User extends WP_User implements
 
     public function toJson($options = 0)
     {
-        return json_encode($this->jsonSerialize(),$options);
+        return json_encode($this->jsonSerialize(), $options);
     }
 
     public function jsonSerialize()
@@ -367,7 +384,7 @@ abstract class User extends WP_User implements
     /**
      * Determine if the given attribute exists.
      *
-     * @param  mixed  $offset
+     * @param mixed $offset
      * @return bool
      */
     public function offsetExists($offset)
@@ -378,7 +395,7 @@ abstract class User extends WP_User implements
     /**
      * Get the value for a given offset.
      *
-     * @param  mixed  $offset
+     * @param mixed $offset
      * @return mixed
      */
     public function offsetGet($offset)
@@ -389,8 +406,8 @@ abstract class User extends WP_User implements
     /**
      * Set the value for a given offset.
      *
-     * @param  mixed  $offset
-     * @param  mixed  $value
+     * @param mixed $offset
+     * @param mixed $value
      * @return void
      */
     public function offsetSet($offset, $value)
@@ -401,7 +418,7 @@ abstract class User extends WP_User implements
     /**
      * Unset the value for a given offset.
      *
-     * @param  mixed  $offset
+     * @param mixed $offset
      * @return void
      */
     public function offsetUnset($offset)
@@ -412,12 +429,13 @@ abstract class User extends WP_User implements
     /**
      * Magic method for accessing custom fields.
      *
-     * @since 3.3.0
-     *
      * @param string $key User meta key to retrieve.
      * @return mixed Value of the given user meta key (if set). If `$key` is 'id', the user ID.
+     * @since 3.3.0
+     *
      */
-    public function __get( $key ) {
+    public function __get($key)
+    {
         return $this->getAttribute($key);
     }
 
@@ -427,13 +445,14 @@ abstract class User extends WP_User implements
      * This method does not update custom fields in the database. It only stores
      * the value on the WP_User instance.
      *
+     * @param string $key User meta key.
+     * @param mixed $value User meta value.
      * @since 3.3.0
      *
-     * @param string $key   User meta key.
-     * @param mixed  $value User meta value.
      */
-    public function __set( $key, $value ) {
-        $this->setAttribute($key,$value);
+    public function __set($key, $value)
+    {
+        $this->setAttribute($key, $value);
     }
 
     public function __isset($key)
@@ -448,17 +467,18 @@ abstract class User extends WP_User implements
      * @return bool|false|int
      * @throws WpErrorException
      */
-    protected function maybeUpdateUserLogin($newLogin=null){
-        $oldLogin=(string)$this->getOriginal('user_login');
-        if($newLogin===null){
-            $newLogin=(string)$this->user_login;
+    protected function maybeUpdateUserLogin($newLogin = null)
+    {
+        $oldLogin = (string)$this->getOriginal('user_login');
+        if ($newLogin === null) {
+            $newLogin = (string)$this->user_login;
         }
 
-        if($this->ID && $newLogin!==$oldLogin) {
-            $user = get_user_by( 'login', $newLogin );
-            if($user && $user->ID !== $this->ID){
-                $exception=new WpErrorException("User login ".$newLogin." already exits",'existing_user_login');
-                $exception->setWpError((new \WP_Error('existing_user_login','',['dupe_with_id'=>$user->ID])));
+        if ($this->ID && $newLogin !== $oldLogin) {
+            $user = get_user_by('login', $newLogin);
+            if ($user && $user->ID !== $this->ID) {
+                $exception = new WpErrorException("User login " . $newLogin . " already exits", 'existing_user_login');
+                $exception->setWpError((new \WP_Error('existing_user_login', '', ['dupe_with_id' => $user->ID])));
                 throw ($exception);
             }
             return $newLogin;
@@ -470,9 +490,10 @@ abstract class User extends WP_User implements
      * Update user while skip password hashing
      * @param $callback
      */
-    public function passwordAlreadyHashed($callback){
-        $this->skipPasswordHash=true;
+    public function passwordAlreadyHashed($callback)
+    {
+        $this->skipPasswordHash = true;
         $callback();
-        $this->skipPasswordHash=true;
+        $this->skipPasswordHash = true;
     }
 }

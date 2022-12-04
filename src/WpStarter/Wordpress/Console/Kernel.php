@@ -6,7 +6,7 @@ use WpStarter\Foundation\Console\Kernel as ConsoleKernel;
 
 class Kernel extends ConsoleKernel
 {
-    protected $earlyBootstrapers=[
+    protected $earlyBootstrapers = [
         \WpStarter\Foundation\Bootstrap\LoadEnvironmentVariables::class,
         \WpStarter\Foundation\Bootstrap\LoadConfiguration::class,
         \WpStarter\Wordpress\Bootstrap\HandleExceptions::class,
@@ -27,8 +27,9 @@ class Kernel extends ConsoleKernel
         \WpStarter\Foundation\Bootstrap\BootProviders::class,
     ];
 
-    function earlyBootstrap(){
-        foreach ($this->earlyBootstrapers as $bootstraper){
+    function earlyBootstrap()
+    {
+        foreach ($this->earlyBootstrapers as $bootstraper) {
             $this->app->bootstrapOne($bootstraper);
         }
     }

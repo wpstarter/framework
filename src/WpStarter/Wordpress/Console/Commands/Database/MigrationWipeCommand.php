@@ -4,27 +4,29 @@ namespace WpStarter\Wordpress\Console\Commands\Database;
 
 use WpStarter\Database\Console\WipeCommand;
 use WpStarter\Database\Migrations\Migrator;
+
 class MigrationWipeCommand extends WipeCommand
 {
     protected $migrator;
     protected $app;
+
     public function __construct(Migrator $app)
     {
-        $this->migrator=$app;
+        $this->migrator = $app;
         parent::__construct();
     }
 
     protected function dropAllTables($database)
     {
-        $files=$this->migrator->getMigrationFiles($this->getMigrationPaths());
-        $tables=[];
-        foreach ($files as $file){
-            $content=file_get_contents($file);
-            if(preg_match_all('#create\s*\(\s*["\']([^"\']+)["\']#is',$content,$matches)){
-                $tables=array_merge($tables,$matches[1]);
+        $files = $this->migrator->getMigrationFiles($this->getMigrationPaths());
+        $tables = [];
+        foreach ($files as $file) {
+            $content = file_get_contents($file);
+            if (preg_match_all('#create\s*\(\s*["\']([^"\']+)["\']#is', $content, $matches)) {
+                $tables = array_merge($tables, $matches[1]);
             }
         }
-        $tables=array_reverse($tables);
+        $tables = array_reverse($tables);
         foreach ($tables as $table) {
             $this->laravel['db']->connection($database)
                 ->getSchemaBuilder()->dropIfExists($table);
@@ -39,8 +41,8 @@ class MigrationWipeCommand extends WipeCommand
         // migrations may be run for any customized path from within the application.
         if ($this->input->hasOption('path') && $this->option('path')) {
             return ws_collect($this->option('path'))->map(function ($path) {
-                return ! $this->usingRealPath()
-                    ? $this->laravel->basePath().'/'.$path
+                return !$this->usingRealPath()
+                    ? $this->laravel->basePath() . '/' . $path
                     : $path;
             })->all();
         }
@@ -49,6 +51,7 @@ class MigrationWipeCommand extends WipeCommand
             $this->migrator->paths(), [$this->getMigrationPath()]
         );
     }
+
     /**
      * Get the path to the migration directory.
      *
@@ -56,6 +59,6 @@ class MigrationWipeCommand extends WipeCommand
      */
     protected function getMigrationPath()
     {
-        return $this->laravel->databasePath().DIRECTORY_SEPARATOR.'migrations';
+        return $this->laravel->databasePath() . DIRECTORY_SEPARATOR . 'migrations';
     }
 }

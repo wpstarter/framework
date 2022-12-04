@@ -13,15 +13,17 @@ use PDOException;
 class WpPdo extends PDO
 {
     use ForwardToWpdb;
+
     /**
      * @var \wpdb
      */
     protected $db;
     protected $in_transaction;
+
     public function __construct($wpdb, $dsn, $username, $password, $options)
     {
         parent::__construct($dsn, $username, $password, $options);
-        $this->db=$wpdb;
+        $this->db = $wpdb;
     }
 
     /**
@@ -48,11 +50,12 @@ class WpPdo extends PDO
      * <b>Note</b>: An exception is raised even when the <b>PDO::ATTR_ERRMODE</b>
      * attribute is not <b>PDO::ERRMODE_EXCEPTION</b>.
      */
-    public function beginTransaction () {
-        if($this->in_transaction){
+    public function beginTransaction()
+    {
+        if ($this->in_transaction) {
             throw new PDOException("Failed to start transaction. Transaction is already started.");
         }
-        $this->in_transaction=true;
+        $this->in_transaction = true;
         return $this->db->query('START TRANSACTION');
     }
 
@@ -63,11 +66,12 @@ class WpPdo extends PDO
      * @return bool <b>TRUE</b> on success or <b>FALSE</b> on failure.
      * @throws PDOException if there is no active transaction.
      */
-    public function commit () {
-        if(!$this->in_transaction){
+    public function commit()
+    {
+        if (!$this->in_transaction) {
             throw new PDOException("There is no active transaction to commit");
         }
-        $this->in_transaction=false;
+        $this->in_transaction = false;
         return $this->db->query('COMMIT');
     }
 
@@ -78,11 +82,12 @@ class WpPdo extends PDO
      * @return bool <b>TRUE</b> on success or <b>FALSE</b> on failure.
      * @throws PDOException if there is no active transaction.
      */
-    public function rollBack () {
-        if(!$this->in_transaction){
+    public function rollBack()
+    {
+        if (!$this->in_transaction) {
             throw new PDOException("There is no active transaction to rollback");
         }
-        $this->in_transaction=false;
+        $this->in_transaction = false;
         return $this->db->query('ROLLBACK');
     }
 
@@ -92,7 +97,8 @@ class WpPdo extends PDO
      * @link https://php.net/manual/en/pdo.intransaction.php
      * @return bool <b>TRUE</b> if a transaction is currently active, and <b>FALSE</b> if not.
      */
-    public function inTransaction () {
+    public function inTransaction()
+    {
         return $this->in_transaction;
     }
 
@@ -125,23 +131,24 @@ class WpPdo extends PDO
      * $db->exec() or die(print_r($db->errorInfo(), true));
      * </code>
      */
-    public function exec ($statement) {
+    public function exec($statement)
+    {
         return $this->db->query($statement);
     }
+
     /**
      * (PHP 5 &gt;= 5.1.0, PHP 7, PECL pdo &gt;= 0.2.0)<br/>
      * Executes an SQL statement, returning a result set as a PDOStatement object
      * @link https://php.net/manual/en/pdo.query.php
      * @param string $statement <p>
      * The SQL statement to prepare and execute.
-
      * @return \PDOStatement|false <b>PDO::query</b> returns a PDOStatement object, or <b>FALSE</b>
      * on failure.
      * @see PDOStatement::setFetchMode For a full description of the second and following parameters.
      */
     function query($statement, ...$args)
     {
-        $statement=$this->prepare($statement);
+        $statement = $this->prepare($statement);
         $statement->execute();
         return $statement;
     }
@@ -169,29 +176,35 @@ class WpPdo extends PDO
      * <b>PDO::lastInsertId</b> triggers an
      * IM001 SQLSTATE.
      */
-    public function lastInsertId($name=null)
+    public function lastInsertId($name = null)
     {
         return $this->db->insert_id;
     }
+
     public function __call($name, $arguments)
     {
         return $this->db->$name(...$arguments);
     }
+
     public function __get($name)
     {
         return $this->db->$name;
     }
+
     public function __isset($name)
     {
         return isset($this->db->$name);
     }
-    public function getWpdb(){
+
+    public function getWpdb()
+    {
         return $this->db;
     }
+
     public function prepare($query, $options = null)
     {
-        $statement=new WpPdoStatement($this);
-        $statement->sqlQueryString=$query;
+        $statement = new WpPdoStatement($this);
+        $statement->sqlQueryString = $query;
         return $statement;
     }
 

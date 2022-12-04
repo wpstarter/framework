@@ -15,8 +15,8 @@ class HandleExceptions extends \WpStarter\Foundation\Bootstrap\HandleExceptions
         // Capture the last error that occurred before HandleExceptions loaded:
         $prior_error = error_get_last();
         parent::bootstrap($app);
-        if($prior_error){//We cannot handle error now
-            $this->app->booted(function()use($prior_error){
+        if ($prior_error) {//We cannot handle error now
+            $this->app->booted(function () use ($prior_error) {
                 $this->handleError($prior_error['type'],
                     $prior_error['message'],
                     $prior_error['file'],
@@ -28,28 +28,30 @@ class HandleExceptions extends \WpStarter\Foundation\Bootstrap\HandleExceptions
     /**
      * Report PHP deprecations, or convert PHP errors to ErrorException instances.
      *
-     * @param  int  $level
-     * @param  string  $message
-     * @param  string  $file
-     * @param  int  $line
-     * @param  array  $context
+     * @param int $level
+     * @param string $message
+     * @param string $file
+     * @param int $line
+     * @param array $context
      * @return void
      *
      * @throws \ErrorException
      */
     public function handleError($level, $message, $file = '', $line = 0, $context = [])
     {
-        if($this->isExternalPath($file)){
-            if(!$this->isSuppressed()) {
+        if ($this->isExternalPath($file)) {
+            if (!$this->isSuppressed()) {
                 $this->handleExternalError(new ErrorException($message, 0, $level, $file, $line));
             }
-        }else {
-            parent::handleError($level,$message,$file,$line,$context);
+        } else {
+            parent::handleError($level, $message, $file, $line, $context);
         }
     }
-    protected function isSuppressed(){
-        $report=error_reporting();
-        return $report===0||$report===4437;
+
+    protected function isSuppressed()
+    {
+        $report = error_reporting();
+        return $report === 0 || $report === 4437;
     }
 
     /**
@@ -57,13 +59,14 @@ class HandleExceptions extends \WpStarter\Foundation\Bootstrap\HandleExceptions
      * @return void|null
      * @throws ErrorException
      */
-    public function handleExternalError(ErrorException $error){
+    public function handleExternalError(ErrorException $error)
+    {
         self::$reservedMemory = null;
-        $config=$this->app['config'];
-        $level=$error->getSeverity();
-        $message=$error->getMessage();
-        $file=$error->getFile();
-        $line=$error->getLine();
+        $config = $this->app['config'];
+        $level = $error->getSeverity();
+        $message = $error->getMessage();
+        $file = $error->getFile();
+        $line = $error->getLine();
         try {
             if ($this->isDeprecation($level)) {
                 return $this->handleDeprecation($message, $file, $line);
@@ -72,7 +75,7 @@ class HandleExceptions extends \WpStarter\Foundation\Bootstrap\HandleExceptions
         } catch (Exception $e) {
             //
         }
-        if($config->get('app.debug_external')) {
+        if ($config->get('app.debug_external')) {
             if ($this->app->runningInConsole()) {
                 $this->renderForConsole($error);
             } else {
@@ -84,7 +87,7 @@ class HandleExceptions extends \WpStarter\Foundation\Bootstrap\HandleExceptions
 
     protected function reportExternal(ErrorException $error)
     {
-        if (! class_exists(LogManager::class)
+        if (!class_exists(LogManager::class)
             || $this->app->runningUnitTests()
         ) {
             return;
@@ -100,7 +103,7 @@ class HandleExceptions extends \WpStarter\Foundation\Bootstrap\HandleExceptions
         ws_with($logger->channel('external'), function ($log) use ($error) {
             $log->warning(sprintf('%s in %s on line %s',
                 $error->getMessage(), $error->getFile(), $error->getLine()
-            ),['exception'=>$error]);
+            ), ['exception' => $error]);
         });
     }
 
@@ -132,20 +135,22 @@ class HandleExceptions extends \WpStarter\Foundation\Bootstrap\HandleExceptions
      * the HTTP and Console kernels. But, fatal error exceptions must
      * be handled differently since they are not normal exceptions.
      *
-     * @param  \Throwable  $e
+     * @param \Throwable $e
      * @return void
      */
     public function handleException(Throwable $e)
     {
-        if(!$this->app->runningInConsole() && !$this->app->hasBeenBootstrapped()){
+        if (!$this->app->runningInConsole() && !$this->app->hasBeenBootstrapped()) {
             //App not bootstrapped, force debug
-            $this->app['config']->set('app.debug',true);
+            $this->app['config']->set('app.debug', true);
         }
         parent::handleException($e);
 
     }
-    protected function isExternalPath($path){
-        return strpos($path,$this->app->basePath())===false;
+
+    protected function isExternalPath($path)
+    {
+        return strpos($path, $this->app->basePath()) === false;
     }
 
 }
