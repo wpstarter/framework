@@ -68,7 +68,7 @@ class Menu
 
     public function addSubMenu($slug, $callback, $capability = 'read', $title='', $page_title = '', $position = null)
     {
-        $menu = $this->router->newMenu($slug, $callback, $capability, $title, $page_title, $callback, '', $position);
+        $menu = $this->router->newMenu($slug, $callback, $capability, $title, $page_title, '',  $position);
         $menu->parent = $this->slug;
         $this->router->addMenu($menu);
         return $menu;
@@ -284,7 +284,7 @@ class Menu
      * @param mixed|string $callback
      * @return Menu
      */
-    public function callback(mixed $callback)
+    public function callback($callback)
     {
         $this->callback = $callback;
         return $this;
@@ -294,7 +294,7 @@ class Menu
      * @param mixed|string $icon_url
      * @return Menu
      */
-    public function iconUrl(mixed $icon_url)
+    public function iconUrl($icon_url)
     {
         $this->icon = $icon_url;
         return $this;
@@ -304,7 +304,7 @@ class Menu
      * @param mixed|null $position
      * @return Menu
      */
-    public function position(mixed $position)
+    public function position($position)
     {
         $this->position = $position;
         return $this;
