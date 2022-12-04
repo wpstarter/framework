@@ -20,7 +20,7 @@ trait HasTimestamps
      */
     public function touch()
     {
-        if (! $this->usesTimestamps()) {
+        if (!$this->usesTimestamps()) {
             return false;
         }
 
@@ -40,13 +40,13 @@ trait HasTimestamps
 
         $updatedAtColumn = $this->getUpdatedAtColumn();
 
-        if (! is_null($updatedAtColumn) && ! $this->isDirty($updatedAtColumn)) {
+        if (!is_null($updatedAtColumn) && !$this->isDirty($updatedAtColumn)) {
             $this->setUpdatedAt($time);
         }
 
         $createdAtColumn = $this->getCreatedAtColumn();
 
-        if (! $this->exists() && ! is_null($createdAtColumn) && ! $this->isDirty($createdAtColumn)) {
+        if (!$this->exists() && !is_null($createdAtColumn) && !$this->isDirty($createdAtColumn)) {
             $this->setCreatedAt($time);
         }
     }
@@ -54,7 +54,7 @@ trait HasTimestamps
     /**
      * Set the value of the "created at" attribute.
      *
-     * @param  mixed  $value
+     * @param mixed $value
      * @return $this
      */
     public function setCreatedAt($value)
@@ -67,7 +67,7 @@ trait HasTimestamps
     /**
      * Set the value of the "updated at" attribute.
      *
-     * @param  mixed  $value
+     * @param mixed $value
      * @return $this
      */
     public function setUpdatedAt($value)

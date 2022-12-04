@@ -22,12 +22,12 @@ class WpConnection extends MySqlConnection
     /**
      * Run a select statement against the database.
      *
-     * @param  string $query
-     * @param  array $bindings
-     * @param  bool $useReadPdo
+     * @param string $query
+     * @param array $bindings
+     * @param bool $useReadPdo
+     * @return array
      * @throws QueryException
      *
-     * @return array
      */
     public function select($query, $bindings = [], $useReadPdo = true)
     {
@@ -36,7 +36,7 @@ class WpConnection extends MySqlConnection
                 return [];
             }
             $query = $this->bindParams($query, $bindings);
-            $error=$this->getPdo()->suppress_errors();
+            $error = $this->getPdo()->suppress_errors();
             $result = $this->getPdo()->get_results($query);
             $this->getPdo()->suppress_errors($error);
             if ($this->getPdo()->last_error)
@@ -45,18 +45,19 @@ class WpConnection extends MySqlConnection
         });
 
     }
+
     /**
      * Run a select statement against the database and returns a generator.
      *
-     * @param  string  $query
-     * @param  array  $bindings
-     * @param  bool  $useReadPdo
+     * @param string $query
+     * @param array $bindings
+     * @param bool $useReadPdo
      * @return \Generator
      */
     public function cursor($query, $bindings = [], $useReadPdo = true)
     {
-        $result=$this->select($query,$bindings,$useReadPdo);
-        foreach ($result as $row){
+        $result = $this->select($query, $bindings, $useReadPdo);
+        foreach ($result as $row) {
             yield $row;
         }
     }
@@ -65,8 +66,8 @@ class WpConnection extends MySqlConnection
     /**
      * Execute an SQL statement and return the boolean result.
      *
-     * @param  string $query
-     * @param  array $bindings
+     * @param string $query
+     * @param array $bindings
      *
      * @return bool
      */
@@ -75,11 +76,12 @@ class WpConnection extends MySqlConnection
         $new_query = $this->bindParams($query, $bindings);
         return $this->unprepared($new_query);
     }
+
     /**
      * Run an SQL statement and get the number of rows affected.
      *
-     * @param  string $query
-     * @param  array $bindings
+     * @param string $query
+     * @param array $bindings
      *
      * @return int
      */
@@ -88,10 +90,11 @@ class WpConnection extends MySqlConnection
         $new_query = $this->bindParams($query, $bindings);
         return $this->runRawQuery($new_query);
     }
+
     /**
      * Run a raw, unprepared query against the PDO connection.
      *
-     * @param  string $query
+     * @param string $query
      *
      * @return bool
      */
@@ -105,15 +108,16 @@ class WpConnection extends MySqlConnection
      * @param $query
      * @return int
      */
-    protected function runRawQuery($query){
+    protected function runRawQuery($query)
+    {
         return $this->run($query, [], function ($query) {
             if ($this->pretending()) {
                 return 1;
             }
-            $error=$this->getPdo()->suppress_errors();
+            $error = $this->getPdo()->suppress_errors();
             $result = $this->getPdo()->exec($query);
             $this->getPdo()->suppress_errors($error);
-            if($this->getPdo()->last_error){
+            if ($this->getPdo()->last_error) {
                 throw new QueryException($query, [], new Exception($this->getPdo()->last_error));
             }
             return intval($result);
@@ -147,10 +151,11 @@ class WpConnection extends MySqlConnection
         $query = vsprintf($query, $bindings);
         return $query;
     }
+
     /**
      * Prepare the query bindings for execution.
      *
-     * @param  array $bindings
+     * @param array $bindings
      *
      * @return array
      */
@@ -168,16 +173,16 @@ class WpConnection extends MySqlConnection
                 // date string. Each query grammar maintains its own date string format
                 // so we'll just ask the grammar for the format to get from the date.
                 $bindings[$key] = $value->format($grammar->getDateFormat());
-            } elseif(is_object($value)){
-                if($value instanceof Serializable){
+            } elseif (is_object($value)) {
+                if ($value instanceof Serializable) {
                     $bindings[$key] = $value->serialize();
-                }elseif($value instanceof JsonSerializable){
+                } elseif ($value instanceof JsonSerializable) {
                     $bindings[$key] = json_encode($value->jsonSerialize());
-                }else{
-                    $bindings[$key] = (string) $value;
+                } else {
+                    $bindings[$key] = (string)$value;
                 }
-            }else{
-                $bindings[$key] = (string) $value;
+            } else {
+                $bindings[$key] = (string)$value;
             }
         }
         return $bindings;

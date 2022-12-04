@@ -6,41 +6,47 @@ use WpStarter\Wordpress\View\Component;
 
 trait HasComponents
 {
-    protected $components=[];
+    protected $components = [];
     /**
      * @var bool
      */
-    protected $componentsBooted=false;
+    protected $componentsBooted = false;
     /**
      * @var bool
      */
-    protected $componentMounted=false;
-    function bootComponents(){
-        if(!$this->componentsBooted) {
+    protected $componentMounted = false;
+
+    function bootComponents()
+    {
+        if (!$this->componentsBooted) {
             foreach ($this->components as $component) {
                 if ($component instanceof Component) {
                     $component->setResponse($this);
                     ws_app()->call([$component, 'boot']);
-                }elseif($component instanceof \Closure){
+                } elseif ($component instanceof \Closure) {
                     $component();
                 }
             }
-            $this->componentsBooted=true;
+            $this->componentsBooted = true;
         }
     }
-    function mountComponents(){
-        if(!$this->componentMounted) {
+
+    function mountComponents()
+    {
+        if (!$this->componentMounted) {
             foreach ($this->components as $component) {
                 if ($component instanceof Component) {
                     ws_app()->call([$component, 'mount']);
-                }elseif($component instanceof \Closure){
+                } elseif ($component instanceof \Closure) {
                     $component();
                 }
             }
-            $this->componentMounted=true;
+            $this->componentMounted = true;
         }
     }
-    function getComponents(){
+
+    function getComponents()
+    {
         return $this->components;
     }
 
@@ -48,8 +54,9 @@ trait HasComponents
      * @param array $components
      * @return $this
      */
-    function setComponents(array $components){
-        $this->components=$components;
+    function setComponents(array $components)
+    {
+        $this->components = $components;
         return $this;
     }
 
@@ -60,15 +67,15 @@ trait HasComponents
 
     public function offsetGet($offset)
     {
-        return $this->components[$offset]??null;
+        return $this->components[$offset] ?? null;
     }
 
     public function offsetSet($offset, $value)
     {
-        if($offset===null){
-            $this->components[]=$value;
-        }else{
-            $this->components[$offset]=$value;
+        if ($offset === null) {
+            $this->components[] = $value;
+        } else {
+            $this->components[$offset] = $value;
         }
     }
 

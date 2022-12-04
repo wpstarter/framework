@@ -10,7 +10,7 @@ class WpConnector extends MySqlConnector implements ConnectorInterface
     /**
      * Establish a database connection.
      *
-     * @param  array  $config
+     * @param array $config
      * @return \PDO
      */
     public function connect(array $config)
@@ -24,8 +24,8 @@ class WpConnector extends MySqlConnector implements ConnectorInterface
         // connection's behavior, and some might be specified by the developers.
         $connection = $this->createConnection($dsn, $config, $options);
 
-        if (! empty($config['database'])) {
-            if(defined('DB_NAME') && $config['database'] !== DB_NAME) {
+        if (!empty($config['database'])) {
+            if (defined('DB_NAME') && $config['database'] !== DB_NAME) {
                 $connection->exec("use `{$config['database']}`;");
             }
         }
@@ -43,19 +43,20 @@ class WpConnector extends MySqlConnector implements ConnectorInterface
 
         return $connection;
     }
+
     /**
      * Create a new PDO connection instance.
      *
-     * @param  string  $dsn
-     * @param  string  $username
-     * @param  string  $password
-     * @param  array  $options
+     * @param string $dsn
+     * @param string $username
+     * @param string $password
+     * @param array $options
      * @return \PDO
      */
     protected function createPdoConnection($dsn, $username, $password, $options)
     {
         global $wpdb;
-        return new WpPdo($wpdb,$dsn, $username, $password, $options);
+        return new WpPdo($wpdb, $dsn, $username, $password, $options);
     }
 
 

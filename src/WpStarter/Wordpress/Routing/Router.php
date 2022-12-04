@@ -25,6 +25,7 @@ class Router extends BaseRouter
      * @var RouteCollection
      */
     protected $routes;
+
     /**
      * @param Dispatcher $events
      * @param Container|null $container
@@ -32,8 +33,9 @@ class Router extends BaseRouter
     public function __construct(Dispatcher $events, Container $container = null)
     {
         parent::__construct($events, $container);
-        $this->routes=new RouteCollection();
+        $this->routes = new RouteCollection();
     }
+
     public function newRoute($methods, $uri, $action)
     {
         return (new Route($methods, $uri, $action))
@@ -41,9 +43,10 @@ class Router extends BaseRouter
             ->setContainer($this->container);
     }
 
-    function registerShortcodes(Request $request){
-        foreach ($this->routes->get($request->getMethod()) as $route){
-            add_shortcode($route->uri(),function()use ($route){
+    function registerShortcodes(Request $request)
+    {
+        foreach ($this->routes->get($request->getMethod()) as $route) {
+            add_shortcode($route->uri(), function () use ($route) {
                 return $route->getContent();
             });
         }
@@ -52,8 +55,8 @@ class Router extends BaseRouter
     /**
      * Static version of prepareResponse.
      *
-     * @param  \Symfony\Component\HttpFoundation\Request  $request
-     * @param  mixed  $response
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param mixed $response
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public static function toResponse($request, $response)
@@ -68,7 +71,7 @@ class Router extends BaseRouter
             $response = new JsonResponse($response, 201);
         } elseif ($response instanceof Stringable) {
             $response = new ShortcodeResponse($response->__toString(), 200, ['Content-Type' => 'text/html']);
-        } elseif (! $response instanceof SymfonyResponse &&
+        } elseif (!$response instanceof SymfonyResponse &&
             ($response instanceof Arrayable ||
                 $response instanceof Jsonable ||
                 $response instanceof ArrayObject ||
@@ -76,7 +79,7 @@ class Router extends BaseRouter
                 $response instanceof \stdClass ||
                 is_array($response))) {
             $response = new JsonResponse($response);
-        } elseif (! $response instanceof SymfonyResponse) {
+        } elseif (!$response instanceof SymfonyResponse) {
             $response = new ShortcodeResponse($response, 200, ['Content-Type' => 'text/html']);
         }
 

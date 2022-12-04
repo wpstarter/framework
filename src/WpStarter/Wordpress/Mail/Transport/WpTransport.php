@@ -23,25 +23,27 @@ class WpTransport extends Transport
      * @var Swift_Mime_SimpleMessage
      */
     protected $message;
+
     public function __construct($config)
     {
-        add_action('phpmailer_init',[$this,'setPhpMailer']);
+        add_action('phpmailer_init', [$this, 'setPhpMailer']);
     }
 
     /**
      * @param PHPMailer $phpMailer
      * @return void
      */
-    public function setPhpMailer($phpMailer){
-        if($children=$this->message->getChildren()){
-            foreach ($children as $child){
-                if($child instanceof \Swift_Mime_EmbeddedFile) {
-                    $body=$child->getBody();
+    public function setPhpMailer($phpMailer)
+    {
+        if ($children = $this->message->getChildren()) {
+            foreach ($children as $child) {
+                if ($child instanceof \Swift_Mime_EmbeddedFile) {
+                    $body = $child->getBody();
                     $phpMailer->addStringEmbeddedImage(
                         $body,
                         $child->getId(),
-                        $child->getFilename(),$phpMailer::ENCODING_BASE64,$child->getContentType());
-                }elseif($child instanceof \Swift_Mime_Attachment){
+                        $child->getFilename(), $phpMailer::ENCODING_BASE64, $child->getContentType());
+                } elseif ($child instanceof \Swift_Mime_Attachment) {
                     $phpMailer->addStringAttachment(
                         $body,
                         $child->getFileName(),
@@ -55,18 +57,18 @@ class WpTransport extends Transport
 
     function send(Swift_Mime_SimpleMessage $message, &$failedRecipients = null)
     {
-        $this->message=$message;
-        $tos=$message->getTo();
-        $subject=$message->getSubject();
-        $body=$message->getBody();
-        $headers=$message->getHeaders()->get('Content-Type')->toString();
-        $failedRecipients = (array) $failedRecipients;
-        $sent=0;
+        $this->message = $message;
+        $tos = $message->getTo();
+        $subject = $message->getSubject();
+        $body = $message->getBody();
+        $headers = $message->getHeaders()->get('Content-Type')->toString();
+        $failedRecipients = (array)$failedRecipients;
+        $sent = 0;
 
         foreach (array_keys($tos) as $to) {
-            if(!wp_mail($to, $subject,$body,$headers)){
-                $failedRecipients[]=$to;
-            }else{
+            if (!wp_mail($to, $subject, $body, $headers)) {
+                $failedRecipients[] = $to;
+            } else {
                 $sent++;
             }
         }

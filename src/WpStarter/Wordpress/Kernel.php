@@ -8,13 +8,14 @@ use WpStarter\Foundation\Http\Kernel as HttpKernel;
 use WpStarter\Routing\Pipeline;
 use WpStarter\Routing\Router;
 use WpStarter\Wordpress\Routing\Router as ShortcodeRouter;
+
 class Kernel extends HttpKernel
 {
     /**
      * @var \WpStarter\Wordpress\Application
      */
     protected $app;
-    protected $earlyBootstrapers=[
+    protected $earlyBootstrapers = [
         \WpStarter\Foundation\Bootstrap\LoadEnvironmentVariables::class,
         \WpStarter\Foundation\Bootstrap\LoadConfiguration::class,
         \WpStarter\Wordpress\Bootstrap\HandleExceptions::class,
@@ -37,48 +38,50 @@ class Kernel extends HttpKernel
 
     public function __construct(Application $app, Router $router, ShortcodeRouter $wpRouter)
     {
-        $this->wpRouter=$wpRouter;
+        $this->wpRouter = $wpRouter;
         parent::__construct($app, $router);
     }
 
-    function registerWpHandler(){
+    function registerWpHandler()
+    {
         $this->wpRouter->registerShortcodes($this->app['request']);
-        add_action('template_redirect',function(){
+        add_action('template_redirect', function () {
             $this->handleWp($this->app['request']);
-        },1);
+        }, 1);
     }
 
 
-
-    function handleWp($request){
+    function handleWp($request)
+    {
         try {
             $request->setRouteNotFoundHttpException(false);
             $response = $this->wpSendRequestThroughRouter($request);
-        }catch (\Throwable $e) {
+        } catch (\Throwable $e) {
             $this->reportException($e);
             $response = $this->renderException($request, $e);
         }
 
-        if(!$request->isNotFoundHttpExceptionFromRoute()){
+        if (!$request->isNotFoundHttpExceptionFromRoute()) {
             //We just ignore no route matching exception and allow application continue running
-            if($response instanceof ShortcodeResponse){
+            if ($response instanceof ShortcodeResponse) {
                 //Our responses converted from StringAble, we only send headers for them
                 $response->sendHeaders();
-            }else{//Normal response from controller middleware, etc...
+            } else {//Normal response from controller middleware, etc...
                 $response->send();
                 $this->terminate($request, $response);
                 exit;
             }
         }
-        add_action('shutdown',function()use($request,$response){
+        add_action('shutdown', function () use ($request, $response) {
             $this->terminate($request, $response);
         });
 
     }
+
     /**
      * Send the given request through the middleware / router.
      *
-     * @param  \WpStarter\Http\Request  $request
+     * @param \WpStarter\Http\Request $request
      * @return \WpStarter\Http\Response
      */
     protected function wpSendRequestThroughRouter($request)
@@ -88,8 +91,10 @@ class Kernel extends HttpKernel
             ->through($this->app->shouldSkipMiddleware() ? [] : $this->middleware)
             ->then($this->dispatchToWpRouter());
     }
-    function dispatchToWpRouter($route=null){
-        return function($request)use($route){
+
+    function dispatchToWpRouter($route = null)
+    {
+        return function ($request) use ($route) {
             return $this->wpRouter->dispatch($request);
         };
     }
@@ -115,9 +120,9 @@ class Kernel extends HttpKernel
     }
 
 
-
-    function earlyBootstrap(){
-        foreach ($this->earlyBootstrapers as $bootstraper){
+    function earlyBootstrap()
+    {
+        foreach ($this->earlyBootstrapers as $bootstraper) {
             $this->app->bootstrapOne($bootstraper);
         }
     }

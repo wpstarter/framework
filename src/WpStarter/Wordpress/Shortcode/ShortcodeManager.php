@@ -7,34 +7,42 @@ use WpStarter\Wordpress\View\Shortcode;
 
 class ShortcodeManager
 {
-    protected $shortcodes=[];
+    protected $shortcodes = [];
     protected $app;
-    protected $boot_hook=['template_redirect',10];
-    protected $booted=false;
+    protected $boot_hook = ['template_redirect', 10];
+    protected $booted = false;
+
     public function __construct(Application $application)
     {
-        $this->app=$application;
+        $this->app = $application;
     }
-    public function setBootHook($hook,$priority=10){
-        $this->boot_hook=[$hook,$priority];
+
+    public function setBootHook($hook, $priority = 10)
+    {
+        $this->boot_hook = [$hook, $priority];
         return $this;
     }
 
-    public function boot(){
-        if(!$this->booted){
-            add_action($this->boot_hook[0],[$this,'bootShortcodes'],$this->boot_hook[1]);
+    public function boot()
+    {
+        if (!$this->booted) {
+            add_action($this->boot_hook[0], [$this, 'bootShortcodes'], $this->boot_hook[1]);
         }
+        return $this;
     }
-    public function bootShortcodes(){
-        if(is_singular()){
-            if($post=get_post()) {
-                foreach ($this->shortcodes as $tag=>$shortcode){
-                    if(has_shortcode($post->post_content, $tag)){
-                        $this->app->call([$shortcode,'boot']);
+
+    public function bootShortcodes()
+    {
+        if (is_singular()) {
+            if ($post = get_post()) {
+                foreach ($this->shortcodes as $tag => $shortcode) {
+                    if (has_shortcode($post->post_content, $tag)) {
+                        $this->app->call([$shortcode, 'boot']);
                     }
                 }
             }
         }
+        return $this;
     }
 
     /**
@@ -42,24 +50,34 @@ class ShortcodeManager
      * @param $callable
      * @return $this
      */
-    function add($shortcode,$callable=null){
-        if($shortcode instanceof Shortcode){
-            $tag=$shortcode->getTag();
-            $this->shortcodes[$tag]=$shortcode;
-            add_shortcode($tag,function ($attributes,$content='')use($shortcode){
+    function add($shortcode, $callable = null)
+    {
+        if ($shortcode instanceof Shortcode) {
+            $tag = $shortcode->getTag();
+            $this->shortcodes[$tag] = $shortcode;
+            add_shortcode($tag, function ($attributes, $content = '') use ($shortcode) {
                 $shortcode->setAttributes($attributes);
                 $shortcode->setContent($content);
-                $this->app->call([$shortcode,'mount']);
-                $result=$shortcode->render();
+                $this->app->call([$shortcode, 'mount']);
+                $result = $shortcode->render();
                 $shortcode->cleanup();
                 return $result;
             });
-        }else{
-            add_shortcode($shortcode,function ($attributes,$content='')use($callable){
-                return $this->app->call($callable,[$attributes,$content]);
+        } else {
+            add_shortcode($shortcode, function ($attributes, $content = '') use ($callable) {
+                return $this->app->call($callable, [$attributes, $content]);
             });
         }
         return $this;
+    }
 
+    public function get($tag)
+    {
+        return $this->shortcodes[$tag] ?? null;
+    }
+
+    public function has($tag)
+    {
+        return isset($this->shortcodes[$tag]);
     }
 }

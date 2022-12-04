@@ -3,10 +3,12 @@
 namespace WpStarter\Wordpress\Facades;
 
 use WpStarter\Support\Facades\Facade;
-use WpStarter\Wordpress\Shortcode\ShortcodeManager;
 
 /**
- * @method static \WpStarter\Wordpress\Shortcode\ShortcodeManager add($shortcode,$callable)
+ * @method static \WpStarter\Wordpress\Shortcode\ShortcodeManager add($shortcode, $callable = null)
+ * @method static \WpStarter\Wordpress\Shortcode\ShortcodeManager setBootHook($hook, $priority = 10)
+ * @method static \WpStarter\Wordpress\View\Shortcode get($tag)
+ * @method static boolean has($tag)
  */
 class Shortcode extends Facade
 {

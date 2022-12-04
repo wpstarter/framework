@@ -7,23 +7,29 @@ use WpStarter\Wordpress\Http\Response;
 
 abstract class Component implements Renderable
 {
-    protected $data=[];
+    protected $data = [];
     /**
      * @var Response|Response\Content|Response\Page|Response\Shortcode
      */
     protected $response;
 
-    function setResponse($response){
-        $this->response=$response;
+    function setResponse($response)
+    {
+        $this->response = $response;
         return $this;
     }
-    function getResponse(){
+
+    function getResponse()
+    {
         return $this->response;
     }
-    function setData($data){
-        $this->data=$data;
+
+    function setData($data)
+    {
+        $this->data = $data;
         return $this;
     }
+
     /**
      * @return array
      */
@@ -35,14 +41,16 @@ abstract class Component implements Renderable
     /**
      * Component boot call on kernel handle
      */
-    function boot(){
+    function boot()
+    {
 
     }
 
     /**
      * Call before render
      */
-    function mount(){
+    function mount()
+    {
 
     }
 }

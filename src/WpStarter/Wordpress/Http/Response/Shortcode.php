@@ -9,28 +9,33 @@ use WpStarter\Wordpress\Http\Response;
 class Shortcode extends Content implements HasPostTitle
 {
     use Response\Concerns\PostTitle;
+
     /**
      * @var Renderable[]|\Closure[]|mixed[]
      */
-    protected $components=[];
-    public function __construct($tag, $view=null, $data = [], $mergeData = [])
+    protected $components = [];
+
+    public function __construct($tag, $view = null, $data = [], $mergeData = [])
     {
         parent::__construct();
-        if($tag && $view) {
-            $this->add($tag,$view,$data,$mergeData);
+        if ($tag && $view) {
+            $this->add($tag, $view, $data, $mergeData);
         }
     }
 
 
-    function all(){
+    function all()
+    {
         return $this->components;
     }
+
     /**
      * @param $tag
      * @return Renderable|null
      */
-    function view($tag){
-        return $this->components[$tag]??null;
+    function view($tag)
+    {
+        return $this->components[$tag] ?? null;
     }
 
     /**
@@ -41,8 +46,9 @@ class Shortcode extends Content implements HasPostTitle
      * @param $mergeData
      * @return $this
      */
-    function add($tag, $view, $data = [], $mergeData = []){
-        $this->push($view,$data,$mergeData,$tag);
+    function add($tag, $view, $data = [], $mergeData = [])
+    {
+        $this->push($view, $data, $mergeData, $tag);
         return $this;
     }
 
@@ -54,7 +60,8 @@ class Shortcode extends Content implements HasPostTitle
      * @param $mergeData
      * @return static
      */
-    public static function make($tag, $view=null, $data = [], $mergeData = []){
-        return new static($tag,$view,$data,$mergeData);
+    public static function make($tag, $view = null, $data = [], $mergeData = [])
+    {
+        return new static($tag, $view, $data, $mergeData);
     }
 }
