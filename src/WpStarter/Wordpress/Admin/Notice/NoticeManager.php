@@ -2,16 +2,17 @@
 
 namespace WpStarter\Wordpress\Admin\Notice;
 
-use WpStarter\Session\SessionManager;
-
 class NoticeManager
 {
     protected $notices=[];
-    protected $session;
+    protected $store;
     protected $loaded;
-    public function __construct(SessionManager $sessionManager)
+    public function __construct(Store $store)
     {
-        $this->session=$sessionManager;
+        $this->store=$store;
+    }
+    public function withStore(Store $store){
+        return new static($store);
     }
 
     public function notify($message,$type){
@@ -33,11 +34,11 @@ class NoticeManager
     }
     public function addNotice(Notice $notice){
         $this->notices[]=$notice;
-        $this->session->put('admin.notices',$this->notices);
+        $this->store->put($this->notices);
         return $this;
     }
     public function all(){
-        $notices=$this->session->get('admin.notices',[]);
+        $notices=$this->store->get();
         if(!is_array($notices)){
             $notices=[];
         }
@@ -47,7 +48,7 @@ class NoticeManager
     }
     public function clear(){
         $this->notices[]='';
-        $this->session->forget('admin.notices');
+        $this->store->forget();
         return $this;
     }
 }
