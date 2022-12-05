@@ -39,7 +39,7 @@ class Authenticate implements AuthenticatesRequests
      */
     public function handle($request, Closure $next)
     {
-        $this->authenticate($request);
+        $this->authenticate($request,[]);
 
         return $next($request);
     }
