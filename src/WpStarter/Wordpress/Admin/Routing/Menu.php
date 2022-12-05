@@ -64,6 +64,7 @@ class Menu
             $this->pageTitle=$this->title;
         }
         $this->layout()->title($this->pageTitle);
+        $this->layout()->setNoticeManager($this->container['wp.admin.notice']);
     }
 
     public function addSubMenu($slug, $callback, $capability = 'read', $title='', $page_title = '', $position = null)
@@ -226,7 +227,6 @@ class Menu
     {
         if (is_null($this->response)) {
             $request = $this->container['request'];
-            $this->layout()->loadMessages();
             $this->response = Router::toResponse($request, $this->runController());
         }
         return $this->response;

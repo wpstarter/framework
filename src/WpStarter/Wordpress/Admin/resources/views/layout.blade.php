@@ -14,13 +14,13 @@
     </span>
     @endif
     <hr class="wp-header-end">
-    @foreach($layout->getMessages() as $message)
-        {!! $message->render() !!}
+    @foreach($layout->getNotices() as $notice)
+        {!! $notice->render() !!}
     @endforeach
     <div class="wps-admin-content">
         @yield('content','Main admin content.This should be replaced by child view!')
     </div>
 </div>
 @php
-$layout->clearMessages();
+$layout->clearNotices();
 @endphp

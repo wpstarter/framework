@@ -3,8 +3,11 @@
 namespace WpStarter\Wordpress\Admin;
 
 use WpStarter\Support\ServiceProvider;
-use WpStarter\Wordpress\Admin\Routing\Router;
 use WpStarter\Wordpress\Admin\Contracts\Kernel;
+use WpStarter\Wordpress\Admin\Notice\NoticeManager;
+use WpStarter\Wordpress\Admin\Notice\SessionStore;
+use WpStarter\Wordpress\Admin\Routing\Router;
+
 class AdminServiceProvider extends ServiceProvider
 {
     function register()
@@ -13,6 +16,11 @@ class AdminServiceProvider extends ServiceProvider
             return new Router($app['events'], $app);
         });
         $this->app->alias('wp.admin.router', Router::class);
+
+        $this->app->singleton('wp.admin.notice',function($app){
+            return new NoticeManager(new SessionStore($app['session']));
+        });
+        $this->app->alias('wp.admin.notice',NoticeManager::class);
     }
 
     function boot()

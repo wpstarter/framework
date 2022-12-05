@@ -5,7 +5,13 @@ namespace WpStarter\Wordpress\Admin\Routing;
 
 class MenuCollection implements \Countable, \IteratorAggregate
 {
+    /**
+     * @var Menu[]
+     */
     protected $menus = [];
+    /**
+     * @var Menu[]
+     */
     protected $menusByHookSuffix = [];
 
     public function addByHook($hook, $menu)
@@ -19,9 +25,17 @@ class MenuCollection implements \Countable, \IteratorAggregate
         return $this->menusByHookSuffix[$hook] ?? null;
     }
 
+    /**
+     * @param $slug
+     * @return Menu|null
+     */
+    public function find($slug){
+        return $this->menus[$slug] ?? null;
+    }
+
     public function add(Menu $menu)
     {
-        $this->menus[] = $menu;
+        $this->menus[$menu->slug] = $menu;
         return $this;
     }
 

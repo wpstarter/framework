@@ -77,7 +77,7 @@ if (!function_exists('is_wp')) {
      */
     function is_wp()
     {
-        return function_exists('wp_filter');
+        return function_exists('add_filter');
     }
 }
 
@@ -98,5 +98,19 @@ if (!function_exists('ws_setting')) {
         }
 
         return ws_app('setting')->get($key, $default);
+    }
+}
+
+if(!function_exists('ws_admin_notice')){
+    /**
+     * @param $message
+     * @param $type
+     * @return \WpStarter\Wordpress\Admin\Notice\NoticeManager|\WpStarter\Wordpress\Admin\Notice\Notice
+     */
+    function ws_admin_notice($message=null,$type='success'){
+        if(is_null($message)){
+            return ws_app('wp.admin.notice');
+        }
+        return ws_app('wp.admin.notice')->notify($message,$type);
     }
 }
