@@ -1,6 +1,6 @@
 <?php
 
-namespace WpStarter\Wordpress\Admin\View;
+namespace WpStarter\Wordpress\Admin\Notice;
 
 class Notice
 {

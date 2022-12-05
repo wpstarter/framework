@@ -572,6 +572,21 @@ class Router
     }
 
     /**
+     * @return Menu[]|MenuCollection
+     */
+    public function menus(){
+        return $this->menus;
+    }
+
+    /**
+     * Find menu by slug
+     * @param $slug
+     * @return Menu|null
+     */
+    public function menu($slug){
+        return $this->menus->find($slug);
+    }
+    /**
      * Remove any duplicate middleware from the given array.
      *
      * @param array $middleware

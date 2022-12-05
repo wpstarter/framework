@@ -10,6 +10,8 @@ use WpStarter\Wordpress\Admin\Routing\Router;
 
 class Kernel implements Contracts\Kernel
 {
+    protected $dispatchPriority=10;
+
     protected $router;
     /**
      * The application's middleware stack.
@@ -74,7 +76,7 @@ class Kernel implements Contracts\Kernel
         });
         add_action('current_screen', function ($screen)use($request) {
             $this->handleAdmin($request, $screen->id);
-        });
+        },$this->dispatchPriority);
     }
 
     /**
