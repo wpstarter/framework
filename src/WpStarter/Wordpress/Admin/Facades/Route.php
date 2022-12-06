@@ -12,7 +12,7 @@ use WpStarter\Wordpress\Admin\View\Layout;
  * @method static Menu menu($slug)
  * @method static Menu current()
  * @method static MenuCollection menus()
- * @method static \WpStarter\Wordpress\Admin\Routing\RouteRegistrar parent($parent_slug)
+ * @method static \WpStarter\Wordpress\Admin\Routing\RouteRegistrar parent($parent)
  * @method static \WpStarter\Wordpress\Admin\Routing\RouteRegistrar middleware(array|string|null $middleware=null)
  * @method static \WpStarter\Wordpress\Admin\Routing\RouteRegistrar namespace(string|null $value=null)
  * @method static void group(\Closure|string|array $attributes, \Closure|string $routes)

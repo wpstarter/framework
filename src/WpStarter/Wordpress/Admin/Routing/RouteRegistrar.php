@@ -5,7 +5,7 @@ namespace WpStarter\Wordpress\Admin\Routing;
 use WpStarter\Support\Arr;
 
 /**
- * @method \WpStarter\Wordpress\Admin\Routing\RouteRegistrar controller(string $controller)
+ * @method \WpStarter\Wordpress\Admin\Routing\RouteRegistrar parent($parent)
  * @method \WpStarter\Wordpress\Admin\Routing\RouteRegistrar middleware(array|string|null $middleware)
  * @method \WpStarter\Wordpress\Admin\Routing\RouteRegistrar namespace(string|null $value)
  */
