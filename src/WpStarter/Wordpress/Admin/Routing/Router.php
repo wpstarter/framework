@@ -161,7 +161,10 @@ class Router
 
     protected function getContent(Menu $menu)
     {
-        return $menu->getContent();
+        if($response=$menu->getResponse()){
+            return $response->getContent();
+        }
+        return '';
     }
 
 
@@ -217,9 +220,12 @@ class Router
     protected function runMenu(Request $request, Menu $menu)
     {
         $this->events->dispatch(new MenuMatched($menu, $request));
-        return $this->prepareResponse($request,
+        $response = $this->prepareResponse($request,
             $this->runMenuWithinStack($menu, $request)
         );
+        //Cary the response to output later
+        $menu->setResponse($response);
+        return $response;
     }
 
     /**

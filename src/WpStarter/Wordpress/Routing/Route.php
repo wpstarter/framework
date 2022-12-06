@@ -9,11 +9,11 @@ class Route extends \WpStarter\Routing\Route
      */
     protected $response;
 
-    function run()
-    {
-        if (is_null($this->response)) {
-            $this->response = Router::toResponse($this->container['request'], parent::run());
-        }
+    public function setResponse($response){
+        $this->response=$response;
+        return $this;
+    }
+    public function getResponse(){
         return $this->response;
     }
 
