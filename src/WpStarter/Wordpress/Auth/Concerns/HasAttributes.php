@@ -426,7 +426,6 @@ trait HasAttributes
         // get the attribute's value. Otherwise, we will proceed as if the developers
         // are asking for a relationship's value. This covers both types of values.
         if (property_exists($this->data, $key) ||
-            metadata_exists('user', $this->ID, $key) ||
             array_key_exists($key, $this->casts) ||
             $this->hasGetMutator($key) ||
             $this->hasAttributeMutator($key) ||
@@ -464,10 +463,7 @@ trait HasAttributes
     protected function getAttributeFromArray($key)
     {
         if (isset($this->getAttributes()->{$key})) {
-            $this->getAttributes()->{$key};
-        }
-        if (metadata_exists('user', $this->ID, $key)) {
-            return get_user_meta($this->ID, $key, true);
+            return $this->getAttributes()->{$key};
         }
         return null;
     }

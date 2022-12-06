@@ -116,22 +116,10 @@ abstract class User extends WP_User implements
     {
         if (!empty($this->ID)) {
             $user_id = $this->ID;
-
-            foreach ($this->wp_fields as $field) {
-                if (!isset($this->data->{$field})) {
-                    if (metadata_exists('user', $user_id, $field)) {
-                        $this->data->{$field} = get_user_meta($user_id, $field, true);
-                    } else {
-                        $this->data->{$field} = null;
-                    }
-                }
-            }
-            foreach ($this->fillable as $field) {
-                if (!isset($this->data->{$field})) {
-                    if (metadata_exists('user', $user_id, $field)) {
-                        $this->data->{$field} = get_user_meta($user_id, $field, true);
-                    } else {
-                        $this->data->{$field} = null;
+            if($allMeta=get_user_meta($user_id)){
+                foreach ($allMeta as $key=>$values){
+                    if(!isset($this->data->{$key})) {
+                        $this->data->{$key} = $values[0];
                     }
                 }
             }
@@ -348,8 +336,8 @@ abstract class User extends WP_User implements
         if ($this->ID && $update) {
             $wpdb->update($wpdb->users, $update, ['ID' => $this->ID]);
         }
-
-        foreach ($this->data as $key => $value) {
+        $dirty = $this->getDirty();
+        foreach ($dirty as $key => $value) {
             if ($this->isAdditionalMeta($key)) {//we need to update additional meta fields which not maintained in wp_insert_user
                 if (!is_null($value)) {
                     update_user_meta($this->ID, $key, $value);
