@@ -5,7 +5,7 @@ namespace WpStarter\Wordpress\Admin\Routing;
 use WpStarter\Support\Arr;
 
 /**
- * @method \WpStarter\Wordpress\Admin\Routing\RouteRegistrar controller(string $controller)
+ * @method \WpStarter\Wordpress\Admin\Routing\RouteRegistrar parent($parent)
  * @method \WpStarter\Wordpress\Admin\Routing\RouteRegistrar middleware(array|string|null $middleware)
  * @method \WpStarter\Wordpress\Admin\Routing\RouteRegistrar namespace(string|null $value)
  */
@@ -30,7 +30,7 @@ class RouteRegistrar
      * @var string[]
      */
     protected $allowedAttributes = [
-        'controller',
+        'parent',
         'middleware',
         'namespace',
     ];
@@ -41,9 +41,7 @@ class RouteRegistrar
      * @var array
      */
     protected $aliases = [
-        'name' => 'as',
-        'scopeBindings' => 'scope_bindings',
-        'withoutMiddleware' => 'excluded_middleware',
+        'children' => 'parent',
     ];
     /**
      * Create a new route registrar instance.

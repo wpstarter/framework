@@ -11,6 +11,7 @@ use WpStarter\Contracts\Support\Responsable;
 use WpStarter\Database\Eloquent\Model;
 use WpStarter\Http\JsonResponse;
 use WpStarter\Http\Request;
+use WpStarter\Routing\Route as BaseRoute;
 use WpStarter\Routing\Router as BaseRouter;
 use WpStarter\Support\Stringable;
 use ArrayObject;
@@ -50,6 +51,12 @@ class Router extends BaseRouter
                 return $route->getContent();
             });
         }
+    }
+    protected function runRoute(Request $request, BaseRoute $route)
+    {
+        $response = parent::runRoute($request, $route);
+        $route->setResponse($response);
+        return $response;
     }
 
     /**

@@ -92,9 +92,15 @@ class Router
         $menu = (new Menu($slug, $controller, $capability, $title ,$page_title, $icon, $position))
             ->setRouter($this)
             ->setContainer($this->container);
-        $menu->middleware($this->getLastGroupMiddleware());
+        if($this->hasGroupStack()){
+            $this->mergeFromLastGroup($menu);
+        }
 
         return $menu;
+    }
+    protected function mergeFromLastGroup($menu){
+        $menu->middleware($this->getLastGroupMiddleware());
+        $menu->parent($this->getLastGroupParent());
     }
     protected function prependGroupNamespace($class)
     {
@@ -108,6 +114,13 @@ class Router
             return $last['middleware']??[];
         }
         return [];
+    }
+    protected function getLastGroupParent(){
+        if($this->hasGroupStack()){
+            $last=end($this->groupStack);
+            return $last['parent']??'';
+        }
+        return '';
     }
 
     public function add($slug, $controller, $capability = 'read', $title ='' , $page_title = '', $icon = '', $position = null)
@@ -161,7 +174,10 @@ class Router
 
     protected function getContent(Menu $menu)
     {
-        return $menu->getContent();
+        if($response=$menu->getResponse()){
+            return $response->getContent();
+        }
+        return '';
     }
 
 
@@ -217,9 +233,12 @@ class Router
     protected function runMenu(Request $request, Menu $menu)
     {
         $this->events->dispatch(new MenuMatched($menu, $request));
-        return $this->prepareResponse($request,
+        $response = $this->prepareResponse($request,
             $this->runMenuWithinStack($menu, $request)
         );
+        //Cary the response to output later
+        $menu->setResponse($response);
+        return $response;
     }
 
     /**

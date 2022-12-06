@@ -2,13 +2,18 @@
 
 namespace WpStarter\Wordpress\Admin\Routing;
 
+use ReflectionFunction;
 use WpStarter\Container\Container;
+use WpStarter\Http\Exceptions\HttpResponseException;
+use WpStarter\Routing\RouteDependencyResolverTrait;
 use WpStarter\Support\Arr;
 use WpStarter\Support\Str;
 use WpStarter\Wordpress\Admin\View\Layout;
 
 class Menu
 {
+    use RouteDependencyResolverTrait;
+    protected $defaultAction='index';
     protected $actionKey = ['action','action2'];
     /**
      * @var \WpStarter\Http\Request
@@ -33,6 +38,8 @@ class Menu
     protected $computedMiddleware;
     protected $methods = [];
     protected $layout;
+
+    protected $hide=false;
 
     public $pageTitle;
     public $title;
@@ -65,6 +72,19 @@ class Menu
         }
         $this->layout()->title($this->pageTitle);
         $this->layout()->setNoticeManager($this->container['wp.admin.notice']);
+    }
+
+    /**
+     * @param $callback
+     * @return $this
+     */
+    public function build($callback){
+        $callback($this);
+        return $this;
+    }
+
+    public function group($callback){
+        $this->router->group(['parent'=>$this->slug],$callback);
     }
 
     public function addSubMenu($slug, $callback, $capability = 'read', $title='', $page_title = '', $position = null)
@@ -159,6 +179,10 @@ class Menu
         return $this;
     }
 
+    /**
+     * Get action from request
+     * @return string
+     */
     public function getAction()
     {
         $request = $this->getRequest();
@@ -167,13 +191,13 @@ class Menu
                 return $action;
             }
         }
-        return null;
+        return $this->defaultAction;
     }
 
     protected function getController()
     {
         if (! $this->controller) {
-            $class = $this->callback;
+            $class = $this->parseControllerCallback()[0];
             $this->controller = $this->container->make(ltrim($class, '\\'));
             if (method_exists($this->controller, 'setMenu')) {
                 return $this->controller->setMenu($this);
@@ -186,16 +210,37 @@ class Menu
     protected function getControllerMethod()
     {
         $action = $this->getAction();
-        if (!$action) {
-            $action = 'index';
-        }
         $requestMethod = $this->request->method();
-        $defaultAction = Str::camel(strtolower($requestMethod) . '_' . $action);
+        $defaultMethod = Str::camel(strtolower($requestMethod) . '_' . $action);
+        if($defaultMethod==='getIndex'){
+            $registeredMethod=$this->parseControllerCallback()[1]??'';
+            if($registeredMethod){
+                $defaultMethod=$registeredMethod;
+            }
+        }
+
         $key = strtolower($requestMethod . ':' . $action);
-        return $this->methods[$key] ?? $defaultAction;
+        return $this->methods[$key] ?? $defaultMethod;
     }
 
+    protected function parseControllerCallback()
+    {
+        if(is_array($this->callback)){
+            return $this->callback;
+        }
+        return Str::parseCallback($this->callback);
+    }
 
+    /**
+     * Check if callback is a controller
+     * @return boolean
+     */
+    protected function isControllerCallback(){
+        if(!$this->callback){
+            throw new \RuntimeException("Please register a callback for menu");
+        }
+        return is_string($this->callback) || (is_array($this->callback) && count($this->callback)===2);
+    }
     protected function controllerDispatcher()
     {
         return new ControllerDispatcher($this->container);
@@ -203,13 +248,7 @@ class Menu
 
     protected function runController()
     {
-        if(!$this->callback){
-            throw new \RuntimeException("Please register a callback for menu");
-        }
-        if (is_string($this->callback)) {
-            return $this->controllerDispatcher()->dispatch($this, $this->getController(), $this->getControllerMethod());
-        }
-        return $this->runCallable();
+        return $this->controllerDispatcher()->dispatch($this, $this->getController(), $this->getControllerMethod());
     }
 
     /**
@@ -220,26 +259,48 @@ class Menu
     protected function runCallable()
     {
         $callable = $this->callback;
-        return $callable();
+        return $callable(...array_values($this->resolveMethodDependencies(
+            [], new ReflectionFunction($callable)
+        )));
     }
 
     function run()
     {
-        if (is_null($this->response)) {
-            $request = $this->container['request'];
-            $this->response = Router::toResponse($request, $this->runController());
+        try {
+            if ($this->isControllerCallback()) {
+                return $this->runController();
+            }
+
+            return $this->runCallable();
+        } catch (HttpResponseException $e) {
+            return $e->getResponse();
         }
+    }
+
+    public function setResponse($response){
+        $this->response=$response;
+        return $this;
+    }
+    public function getResponse(){
         return $this->response;
     }
 
-    function getContent()
-    {
-        if ($this->response) {
-            return $this->response->getContent();
+    /**
+     * Hide the menu
+     * @return $this
+     */
+    public function hide($hide=true){
+        if($hide) {
+            $this->hide = $this->parent;
+            $this->parent = 'ws-admin-hidden-menu';
+        }else{
+            if($this->parent ==='ws-admin-hidden-menu'){
+                $this->parent = $this->hide;
+                $this->hide=null;
+            }
         }
-        return '';
+        return $this;
     }
-
     /**
      * @param mixed $page_title
      * @return Menu
