@@ -92,9 +92,15 @@ class Router
         $menu = (new Menu($slug, $controller, $capability, $title ,$page_title, $icon, $position))
             ->setRouter($this)
             ->setContainer($this->container);
-        $menu->middleware($this->getLastGroupMiddleware());
+        if($this->hasGroupStack()){
+            $this->mergeFromLastGroup($menu);
+        }
 
         return $menu;
+    }
+    protected function mergeFromLastGroup($menu){
+        $menu->middleware($this->getLastGroupMiddleware());
+        $menu->parent($this->getLastGroupParent());
     }
     protected function prependGroupNamespace($class)
     {
@@ -108,6 +114,13 @@ class Router
             return $last['middleware']??[];
         }
         return [];
+    }
+    protected function getLastGroupParent(){
+        if($this->hasGroupStack()){
+            $last=end($this->groupStack);
+            return $last['parent']??'';
+        }
+        return '';
     }
 
     public function add($slug, $controller, $capability = 'read', $title ='' , $page_title = '', $icon = '', $position = null)

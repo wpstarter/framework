@@ -2,14 +2,17 @@
 
 namespace WpStarter\Wordpress\Admin\Routing;
 
+use ReflectionFunction;
 use WpStarter\Container\Container;
 use WpStarter\Http\Exceptions\HttpResponseException;
+use WpStarter\Routing\RouteDependencyResolverTrait;
 use WpStarter\Support\Arr;
 use WpStarter\Support\Str;
 use WpStarter\Wordpress\Admin\View\Layout;
 
 class Menu
 {
+    use RouteDependencyResolverTrait;
     protected $defaultAction='index';
     protected $actionKey = ['action','action2'];
     /**
@@ -71,8 +74,17 @@ class Menu
         $this->layout()->setNoticeManager($this->container['wp.admin.notice']);
     }
 
-    public function addChild($slug, $callback, $capability = 'read', $title='', $page_title = '', $position = null){
-        return $this->addSubMenu($slug,$callback,$capability,$title,$page_title,$position);
+    /**
+     * @param $callback
+     * @return $this
+     */
+    public function build($callback){
+        $callback($this);
+        return $this;
+    }
+
+    public function group($callback){
+        $this->router->group(['parent'=>$this->slug],$callback);
     }
 
     public function addSubMenu($slug, $callback, $capability = 'read', $title='', $page_title = '', $position = null)
@@ -213,6 +225,9 @@ class Menu
 
     protected function parseControllerCallback()
     {
+        if(is_array($this->callback)){
+            return $this->callback;
+        }
         return Str::parseCallback($this->callback);
     }
 
@@ -244,7 +259,9 @@ class Menu
     protected function runCallable()
     {
         $callable = $this->callback;
-        return $callable();
+        return $callable(...array_values($this->resolveMethodDependencies(
+            [], new ReflectionFunction($callable)
+        )));
     }
 
     function run()

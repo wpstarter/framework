@@ -30,7 +30,7 @@ class RouteRegistrar
      * @var string[]
      */
     protected $allowedAttributes = [
-        'controller',
+        'parent',
         'middleware',
         'namespace',
     ];
@@ -41,9 +41,7 @@ class RouteRegistrar
      * @var array
      */
     protected $aliases = [
-        'name' => 'as',
-        'scopeBindings' => 'scope_bindings',
-        'withoutMiddleware' => 'excluded_middleware',
+        'children' => 'parent',
     ];
     /**
      * Create a new route registrar instance.
