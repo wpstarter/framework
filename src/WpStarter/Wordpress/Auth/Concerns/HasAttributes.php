@@ -464,7 +464,7 @@ trait HasAttributes
     protected function getAttributeFromArray($key)
     {
         if (isset($this->getAttributes()->{$key})) {
-            $this->getAttributes()->{$key};
+            return $this->getAttributes()->{$key};
         }
         if (metadata_exists('user', $this->ID, $key)) {
             return get_user_meta($this->ID, $key, true);

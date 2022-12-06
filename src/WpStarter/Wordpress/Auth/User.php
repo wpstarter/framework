@@ -348,8 +348,8 @@ abstract class User extends WP_User implements
         if ($this->ID && $update) {
             $wpdb->update($wpdb->users, $update, ['ID' => $this->ID]);
         }
-
-        foreach ($this->data as $key => $value) {
+        $dirty = $this->getDirty();
+        foreach ($dirty as $key => $value) {
             if ($this->isAdditionalMeta($key)) {//we need to update additional meta fields which not maintained in wp_insert_user
                 if (!is_null($value)) {
                     update_user_meta($this->ID, $key, $value);
