@@ -105,7 +105,7 @@ if(!function_exists('ws_admin_notice')){
     /**
      * @param $message
      * @param $type
-     * @return \WpStarter\Wordpress\Admin\Notice\NoticeManager|\WpStarter\Wordpress\Admin\Notice\Notice
+     * @return \WpStarter\Wordpress\Admin\Notice\NoticeManager|\WpStarter\Wordpress\Admin\Notice\Message
      */
     function ws_admin_notice($message=null,$type='success'){
         if(is_null($message)){

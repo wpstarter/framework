@@ -7,7 +7,8 @@ use Faker\Generator;
 use WpStarter\Container\Container;
 use WpStarter\Contracts\Foundation\Application;
 use WpStarter\Database\Eloquent\Collection as EloquentCollection;
-use WpStarter\Database\Eloquent\Model;
+use WpStarter\Database\Eloquent\Contracts\Model;
+use WpStarter\Database\Eloquent\Model as ModelAbstract;
 use WpStarter\Support\Collection;
 use WpStarter\Support\Str;
 use WpStarter\Support\Traits\Conditionable;
@@ -237,7 +238,7 @@ abstract class Factory
      */
     public function createManyQuietly(iterable $records)
     {
-        return Model::withoutEvents(function () use ($records) {
+        return ModelAbstract::withoutEvents(function () use ($records) {
             return $this->createMany($records);
         });
     }
@@ -279,7 +280,7 @@ abstract class Factory
      */
     public function createQuietly($attributes = [], ?Model $parent = null)
     {
-        return Model::withoutEvents(function () use ($attributes, $parent) {
+        return ModelAbstract::withoutEvents(function () use ($attributes, $parent) {
             return $this->create($attributes, $parent);
         });
     }
@@ -325,7 +326,7 @@ abstract class Factory
      */
     protected function createChildren(Model $model)
     {
-        Model::unguarded(function () use ($model) {
+        ModelAbstract::unguarded(function () use ($model) {
             $this->has->each(function ($has) use ($model) {
                 $has->createFor($model);
             });
@@ -383,7 +384,7 @@ abstract class Factory
      */
     protected function makeInstance(?Model $parent)
     {
-        return Model::unguarded(function () use ($parent) {
+        return ModelAbstract::unguarded(function () use ($parent) {
             return ws_tap($this->newModel($this->getExpandedAttributes($parent)), function ($instance) {
                 if (isset($this->connection)) {
                     $instance->setConnection($this->connection);

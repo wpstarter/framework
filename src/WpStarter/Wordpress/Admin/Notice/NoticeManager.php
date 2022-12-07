@@ -16,7 +16,7 @@ class NoticeManager
     }
 
     public function notify($message,$type){
-        $notice=new Notice($message,$type);
+        $notice=new Message($message,$type);
         $this->addNotice($notice);
         return $notice;
     }
@@ -32,7 +32,7 @@ class NoticeManager
     public function error($message){
         return $this->notify($message,'error');
     }
-    public function addNotice(Notice $notice){
+    public function addNotice(Message $notice){
         $this->notices[]=$notice;
         $this->store->put($this->notices);
         return $this;
@@ -43,7 +43,7 @@ class NoticeManager
             $notices=[];
         }
         return array_filter($notices,function($notice){
-            return $notice instanceof Notice;
+            return $notice instanceof Message;
         });
     }
     public function clear(){

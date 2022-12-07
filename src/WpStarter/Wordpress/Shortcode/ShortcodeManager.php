@@ -3,8 +3,8 @@
 namespace WpStarter\Wordpress\Shortcode;
 
 use WpStarter\Contracts\Foundation\Application;
-use WpStarter\Wordpress\View\Shortcode;
-
+use WpStarter\Wordpress\Contracts\Shortcode;
+use WpStarter\Wordpress\View\Shortcode as ShortcodeView;
 class ShortcodeManager
 {
     protected $shortcodes = [];
@@ -37,7 +37,9 @@ class ShortcodeManager
             if ($post = get_post()) {
                 foreach ($this->shortcodes as $tag => $shortcode) {
                     if (has_shortcode($post->post_content, $tag)) {
-                        $this->app->call([$shortcode, 'boot']);
+                        if(method_exists($shortcode,'boot')) {
+                            $this->app->call([$shortcode, 'boot']);
+                        }
                     }
                 }
             }
@@ -52,21 +54,36 @@ class ShortcodeManager
      */
     function add($shortcode, $callable = null)
     {
+        if(is_string($shortcode) && class_exists($shortcode)){
+            $shortcode = $this->app->make($shortcode);
+        }
         if ($shortcode instanceof Shortcode) {
             $tag = $shortcode->getTag();
+            if($callable && is_string($callable)){
+                $tag=$callable;
+            }
             $this->shortcodes[$tag] = $shortcode;
             add_shortcode($tag, function ($attributes, $content = '') use ($shortcode) {
-                $shortcode->setAttributes($attributes);
-                $shortcode->setContent($content);
-                $this->app->call([$shortcode, 'mount']);
-                $result = $shortcode->render();
-                $shortcode->cleanup();
+                if($shortcode instanceof ShortcodeView) {
+                    $shortcode->setAttributes($attributes);
+                    $shortcode->setContent($content);
+                    if(method_exists($shortcode,'mount')) {
+                        $this->app->call([$shortcode, 'mount']);
+                    }
+                    $result = $shortcode->render();
+                    $shortcode->cleanup();
+                }else{
+                    $result = $shortcode->render($attributes,$content);
+                }
+
                 return $result;
             });
         } else {
-            add_shortcode($shortcode, function ($attributes, $content = '') use ($callable) {
-                return $this->app->call($callable, [$attributes, $content]);
-            });
+            if($callable) {
+                add_shortcode($shortcode, function ($attributes, $content = '') use ($callable) {
+                    return $this->app->call($callable, [$attributes, $content], 'render');
+                });
+            }
         }
         return $this;
     }

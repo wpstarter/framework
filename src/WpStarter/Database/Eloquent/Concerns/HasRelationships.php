@@ -6,7 +6,7 @@ use Closure;
 use WpStarter\Database\ClassMorphViolationException;
 use WpStarter\Database\Eloquent\Builder;
 use WpStarter\Database\Eloquent\Collection;
-use WpStarter\Database\Eloquent\Model;
+use WpStarter\Database\Eloquent\Contracts\Model;
 use WpStarter\Database\Eloquent\Relations\BelongsTo;
 use WpStarter\Database\Eloquent\Relations\BelongsToMany;
 use WpStarter\Database\Eloquent\Relations\HasMany;

@@ -5,7 +5,7 @@ namespace WpStarter\Database\Eloquent\Relations;
 use WpStarter\Contracts\Database\Eloquent\SupportsPartialRelations;
 use WpStarter\Database\Eloquent\Builder;
 use WpStarter\Database\Eloquent\Collection;
-use WpStarter\Database\Eloquent\Model;
+use WpStarter\Database\Eloquent\Contracts\Model;
 use WpStarter\Database\Eloquent\Relations\Concerns\CanBeOneOfMany;
 use WpStarter\Database\Eloquent\Relations\Concerns\ComparesRelatedModels;
 use WpStarter\Database\Eloquent\Relations\Concerns\SupportsDefaultModels;

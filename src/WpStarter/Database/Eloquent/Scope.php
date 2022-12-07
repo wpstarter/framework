@@ -1,6 +1,7 @@
 <?php
 
 namespace WpStarter\Database\Eloquent;
+use WpStarter\Database\Eloquent\Contracts\Model;
 
 interface Scope
 {

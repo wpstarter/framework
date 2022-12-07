@@ -2,7 +2,7 @@
 
 namespace WpStarter\Wordpress\Admin\Notice;
 
-class Notice
+class Message
 {
     protected $message;
     protected $type;

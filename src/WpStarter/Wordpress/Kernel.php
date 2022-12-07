@@ -67,9 +67,15 @@ class Kernel extends HttpKernel
                 //Our responses converted from StringAble, we only send headers for them
                 $response->sendHeaders();
             } else {//Normal response from controller middleware, etc...
-                $response->send();
-                $this->terminate($request, $response);
-                exit;
+                if($response instanceof \WpStarter\Wordpress\Http\Response){
+                    //Got a WordPress response, process it
+                    $handler=$this->app->make(\WpStarter\Wordpress\Http\Response\Handler::class);
+                    $handler->handle($this,$request,$response);
+                }else {//Normal response
+                    $response->send();
+                    $this->terminate($request, $response);
+                    die;
+                }
             }
         }
         add_action('shutdown', function () use ($request, $response) {

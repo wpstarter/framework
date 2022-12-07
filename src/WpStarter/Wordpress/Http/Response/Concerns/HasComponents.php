@@ -22,7 +22,9 @@ trait HasComponents
             foreach ($this->components as $component) {
                 if ($component instanceof Component) {
                     $component->setResponse($this);
-                    ws_app()->call([$component, 'boot']);
+                    if(method_exists($component,'boot')) {
+                        ws_app()->call([$component, 'boot']);
+                    }
                 } elseif ($component instanceof \Closure) {
                     $component();
                 }
@@ -36,7 +38,9 @@ trait HasComponents
         if (!$this->componentMounted) {
             foreach ($this->components as $component) {
                 if ($component instanceof Component) {
-                    ws_app()->call([$component, 'mount']);
+                    if(method_exists($component,'mount')) {
+                        ws_app()->call([$component, 'mount']);
+                    }
                 } elseif ($component instanceof \Closure) {
                     $component();
                 }

@@ -3,7 +3,7 @@
 namespace WpStarter\Database\Eloquent\Relations;
 
 use WpStarter\Database\Eloquent\Builder;
-use WpStarter\Database\Eloquent\Model;
+use WpStarter\Database\Eloquent\Contracts\Model;
 
 abstract class MorphOneOrMany extends HasOneOrMany
 {

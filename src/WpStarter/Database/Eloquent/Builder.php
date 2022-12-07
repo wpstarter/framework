@@ -17,6 +17,8 @@ use WpStarter\Support\Str;
 use WpStarter\Support\Traits\ForwardsCalls;
 use ReflectionClass;
 use ReflectionMethod;
+use WpStarter\Database\Eloquent\Contracts\Model;
+use WpStarter\Database\Eloquent\Model as ModelAbstract;
 
 /**
  * @property-read HigherOrderBuilderProxy $orWhere
@@ -363,7 +365,7 @@ class Builder
             $model = $instance->newFromBuilder($item);
 
             if (count($items) > 1) {
-                $model->preventsLazyLoading = Model::preventsLazyLoading();
+                $model->preventsLazyLoading = ModelAbstract::preventsLazyLoading();
             }
 
             return $model;

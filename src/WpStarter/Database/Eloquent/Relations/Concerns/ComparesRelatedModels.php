@@ -3,7 +3,7 @@
 namespace WpStarter\Database\Eloquent\Relations\Concerns;
 
 use WpStarter\Contracts\Database\Eloquent\SupportsPartialRelations;
-use WpStarter\Database\Eloquent\Model;
+use WpStarter\Database\Eloquent\Contracts\Model;
 
 trait ComparesRelatedModels
 {

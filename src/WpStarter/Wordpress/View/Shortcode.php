@@ -2,7 +2,9 @@
 
 namespace WpStarter\Wordpress\View;
 
-abstract class Shortcode extends Component
+use WpStarter\Wordpress\Contracts\Shortcode as ShortcodeContract;
+
+abstract class Shortcode extends Component implements ShortcodeContract
 {
     protected $tag;
     protected $attributes = [];

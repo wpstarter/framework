@@ -3,7 +3,7 @@
 namespace WpStarter\Database\Eloquent\Relations;
 
 use WpStarter\Database\Eloquent\Collection;
-use WpStarter\Database\Eloquent\Model;
+use WpStarter\Database\Eloquent\Contracts\Model;
 use WpStarter\Database\Eloquent\Relations\Concerns\InteractsWithDictionary;
 use WpStarter\Database\Eloquent\Relations\Concerns\SupportsDefaultModels;
 
