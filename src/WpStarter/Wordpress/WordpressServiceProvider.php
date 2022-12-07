@@ -16,6 +16,7 @@ use WpStarter\Wordpress\Http\Response\PassThrough;
 use WpStarter\Wordpress\Mail\Transport\WpTransport;
 use WpStarter\Wordpress\Routing\RoutingServiceProvider;
 use WpStarter\Wordpress\Shortcode\ShortcodeManager;
+use WpStarter\Wordpress\Translation\TranslationServiceProvider;
 
 class WordpressServiceProvider extends ServiceProvider
 {
@@ -35,6 +36,7 @@ class WordpressServiceProvider extends ServiceProvider
     {
         $this->app->register(RoutingServiceProvider::class);
         $this->app->register(AdminServiceProvider::class);
+        $this->app->register(TranslationServiceProvider::class);
     }
 
     function boot()
@@ -44,6 +46,10 @@ class WordpressServiceProvider extends ServiceProvider
         }
         User::setConnectionResolver($this->app['db']);
         User::setEventDispatcher($this->app['events']);
+        $this->bootServices();
+    }
+
+    protected function bootServices(){
         $this->bootResourceManager();
         $this->bootShortcodeManager();
     }
