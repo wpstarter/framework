@@ -2,7 +2,7 @@
 
 namespace WpStarter\Database\Eloquent\Factories;
 
-use WpStarter\Database\Eloquent\Model;
+use WpStarter\Database\Eloquent\Contracts\Model;
 use WpStarter\Database\Eloquent\Relations\BelongsToMany;
 use WpStarter\Database\Eloquent\Relations\HasOneOrMany;
 use WpStarter\Database\Eloquent\Relations\MorphOneOrMany;

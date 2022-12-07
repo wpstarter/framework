@@ -22,8 +22,9 @@ use WpStarter\Support\Str;
 use WpStarter\Support\Traits\ForwardsCalls;
 use JsonSerializable;
 use LogicException;
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 
-abstract class Model implements Arrayable, ArrayAccess, CanBeEscapedWhenCastToString, HasBroadcastChannel, Jsonable, JsonSerializable, QueueableEntity, UrlRoutable
+abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEscapedWhenCastToString, HasBroadcastChannel, Jsonable, JsonSerializable, QueueableEntity, UrlRoutable
 {
     use Concerns\HasAttributes,
         Concerns\HasEvents,

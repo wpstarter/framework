@@ -6,7 +6,7 @@ use Closure;
 use WpStarter\Contracts\Support\Arrayable;
 use WpStarter\Database\Eloquent\Builder;
 use WpStarter\Database\Eloquent\Collection;
-use WpStarter\Database\Eloquent\Model;
+use WpStarter\Database\Eloquent\Contracts\Model;
 use WpStarter\Database\Eloquent\ModelNotFoundException;
 use WpStarter\Database\Eloquent\Relations\Concerns\AsPivot;
 use WpStarter\Database\Eloquent\Relations\Concerns\InteractsWithDictionary;

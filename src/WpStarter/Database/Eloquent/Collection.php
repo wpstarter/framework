@@ -9,6 +9,7 @@ use WpStarter\Support\Arr;
 use WpStarter\Support\Collection as BaseCollection;
 use WpStarter\Support\Str;
 use LogicException;
+use WpStarter\Database\Eloquent\Contracts\Model;
 
 class Collection extends BaseCollection implements QueueableCollection
 {

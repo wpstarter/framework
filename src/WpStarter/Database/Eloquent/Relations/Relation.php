@@ -5,7 +5,7 @@ namespace WpStarter\Database\Eloquent\Relations;
 use Closure;
 use WpStarter\Database\Eloquent\Builder;
 use WpStarter\Database\Eloquent\Collection;
-use WpStarter\Database\Eloquent\Model;
+use WpStarter\Database\Eloquent\Contracts\Model;
 use WpStarter\Database\Eloquent\ModelNotFoundException;
 use WpStarter\Database\MultipleRecordsFoundException;
 use WpStarter\Database\Query\Expression;

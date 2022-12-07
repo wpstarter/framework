@@ -5,7 +5,8 @@ namespace WpStarter\Database\Eloquent\Relations;
 use BadMethodCallException;
 use WpStarter\Database\Eloquent\Builder;
 use WpStarter\Database\Eloquent\Collection;
-use WpStarter\Database\Eloquent\Model;
+use WpStarter\Database\Eloquent\Contracts\Model;
+use WpStarter\Database\Eloquent\Model as ModelAbstract;
 use WpStarter\Database\Eloquent\Relations\Concerns\InteractsWithDictionary;
 
 class MorphTo extends BelongsTo
@@ -181,7 +182,7 @@ class MorphTo extends BelongsTo
      */
     public function createModelByType($type)
     {
-        $class = Model::getActualClassNameForMorph($type);
+        $class = ModelAbstract::getActualClassNameForMorph($type);
 
         return ws_tap(new $class, function ($instance) {
             if (! $instance->getConnectionName()) {

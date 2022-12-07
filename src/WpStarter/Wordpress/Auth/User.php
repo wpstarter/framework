@@ -11,10 +11,12 @@ use WpStarter\Exceptions\WpErrorException;
 use WpStarter\Wordpress\Auth\Access\Authorizable;
 use WpStarter\Wordpress\Auth\Concerns\SupportMethods;
 use WpStarter\Wordpress\Auth\Concerns\UserQuery;
+use WpStarter\Database\Eloquent\Contracts\Model;
 use JsonSerializable;
 use ArrayAccess;
 
 abstract class User extends WP_User implements
+    Model,
     AuthorizableContract,
     Arrayable, ArrayAccess, Jsonable, JsonSerializable
 {

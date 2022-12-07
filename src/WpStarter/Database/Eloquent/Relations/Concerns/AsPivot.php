@@ -3,7 +3,7 @@
 namespace WpStarter\Database\Eloquent\Relations\Concerns;
 
 use WpStarter\Database\Eloquent\Builder;
-use WpStarter\Database\Eloquent\Model;
+use WpStarter\Database\Eloquent\Contracts\Model;
 use WpStarter\Support\Str;
 
 trait AsPivot

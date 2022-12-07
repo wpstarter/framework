@@ -2,6 +2,8 @@
 
 namespace WpStarter\Database\Eloquent;
 
+use WpStarter\Database\Eloquent\Contracts\Model;
+
 class SoftDeletingScope implements Scope
 {
     /**

@@ -6,6 +6,7 @@ use WpStarter\Broadcasting\InteractsWithSockets;
 use WpStarter\Broadcasting\PrivateChannel;
 use WpStarter\Contracts\Broadcasting\ShouldBroadcast;
 use WpStarter\Queue\SerializesModels;
+use WpStarter\Database\Eloquent\Contracts\Model;
 
 class BroadcastableModelEventOccurred implements ShouldBroadcast
 {
