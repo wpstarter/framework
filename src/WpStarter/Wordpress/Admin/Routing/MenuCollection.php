@@ -38,12 +38,13 @@ class MenuCollection implements \Countable, \IteratorAggregate
         $this->menus[$menu->slug] = $menu;
         return $this;
     }
-
+    #[\ReturnTypeWillChange]
     public function getIterator()
     {
         return new \ArrayIterator($this->menus);
     }
 
+    #[\ReturnTypeWillChange]
     public function count()
     {
         return count($this->menus);

@@ -63,17 +63,17 @@ trait HasComponents
         $this->components = $components;
         return $this;
     }
-
+    #[\ReturnTypeWillChange]
     public function offsetExists($offset)
     {
         return isset($this->components[$offset]);
     }
-
+    #[\ReturnTypeWillChange]
     public function offsetGet($offset)
     {
         return $this->components[$offset] ?? null;
     }
-
+    #[\ReturnTypeWillChange]
     public function offsetSet($offset, $value)
     {
         if ($offset === null) {
@@ -82,7 +82,7 @@ trait HasComponents
             $this->components[$offset] = $value;
         }
     }
-
+    #[\ReturnTypeWillChange]
     public function offsetUnset($offset)
     {
         unset($this->components[$offset]);
