@@ -54,6 +54,9 @@ class ShortcodeManager
      */
     function add($shortcode, $callable = null)
     {
+        if(!function_exists('add_shortcode')){
+            return $this;
+        }
         if(is_string($shortcode) && class_exists($shortcode)){
             $shortcode = $this->app->make($shortcode);
         }
