@@ -59,7 +59,7 @@ class AuthManager implements FactoryContract
      * Attempt to get the guard from the local cache.
      *
      * @param  string|null  $name
-     * @return \WpStarter\Contracts\Auth\Guard
+     * @return \WpStarter\Contracts\Auth\Guard|\WpStarter\Contracts\Auth\StatefulGuard
      */
     public function guard($name = null)
     {
@@ -72,7 +72,7 @@ class AuthManager implements FactoryContract
      * Resolve the given guard.
      *
      * @param  string  $name
-     * @return \WpStarter\Contracts\Auth\Guard
+     * @return \WpStarter\Contracts\Auth\Guard|\WpStarter\Contracts\Auth\StatefulGuard
      *
      * @throws \InvalidArgumentException
      */
@@ -116,16 +116,61 @@ class AuthManager implements FactoryContract
      *
      * @param  string  $name
      * @param  array  $config
-     * @return \WpStarter\Auth\WpGuard
+     * @return \WpStarter\Auth\SessionGuard
      */
-    public function createWpDriver($name, $config)
+    public function createSessionDriver($name, $config)
     {
         $provider = $this->createUserProvider($config['provider'] ?? null);
 
-        $guard = new WpGuard(
+        $guard = new SessionGuard(
             $name,
-            $provider
+            $provider,
+            $this->app['session.store'],
         );
+
+        // When using the remember me functionality of the authentication services we
+        // will need to be set the encryption instance of the guard, which allows
+        // secure, encrypted cookie values to get generated for those cookies.
+        if (method_exists($guard, 'setCookieJar')) {
+            $guard->setCookieJar($this->app['cookie']);
+        }
+
+        if (method_exists($guard, 'setDispatcher')) {
+            $guard->setDispatcher($this->app['events']);
+        }
+
+        if (method_exists($guard, 'setRequest')) {
+            $guard->setRequest($this->app->refresh('request', $guard, 'setRequest'));
+        }
+
+        if (isset($config['remember'])) {
+            $guard->setRememberDuration($config['remember']);
+        }
+
+        return $guard;
+    }
+
+    /**
+     * Create a token based authentication guard.
+     *
+     * @param  string  $name
+     * @param  array  $config
+     * @return \WpStarter\Auth\TokenGuard
+     */
+    public function createTokenDriver($name, $config)
+    {
+        // The token guard implements a basic API token based guard implementation
+        // that takes an API token field from the request and matches it to the
+        // user in the database or another persistence layer where users are.
+        $guard = new TokenGuard(
+            $this->createUserProvider($config['provider'] ?? null),
+            $this->app['request'],
+            $config['input_key'] ?? 'api_token',
+            $config['storage_key'] ?? 'api_token',
+            $config['hash'] ?? false
+        );
+
+        $this->app->refresh('request', $guard, 'setRequest');
 
         return $guard;
     }
@@ -152,6 +197,23 @@ class AuthManager implements FactoryContract
     }
 
     /**
+     * Set the default guard driver the factory should serve.
+     *
+     * @param  string  $name
+     * @return void
+     */
+    public function shouldUse($name)
+    {
+        $name = $name ?: $this->getDefaultDriver();
+
+        $this->setDefaultDriver($name);
+
+        $this->userResolver = function ($name = null) {
+            return $this->guard($name)->user();
+        };
+    }
+
+    /**
      * Set the default authentication driver name.
      *
      * @param  string  $name
@@ -160,6 +222,24 @@ class AuthManager implements FactoryContract
     public function setDefaultDriver($name)
     {
         $this->app['config']['auth.defaults.guard'] = $name;
+    }
+
+    /**
+     * Register a new callback based request guard.
+     *
+     * @param  string  $driver
+     * @param  callable  $callback
+     * @return $this
+     */
+    public function viaRequest($driver, callable $callback)
+    {
+        return $this->extend($driver, function () use ($callback) {
+            $guard = new RequestGuard($callback, $this->app['request'], $this->createUserProvider());
+
+            $this->app->refresh('request', $guard, 'setRequest');
+
+            return $guard;
+        });
     }
 
     /**

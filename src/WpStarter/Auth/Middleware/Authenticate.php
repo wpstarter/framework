@@ -37,9 +37,9 @@ class Authenticate implements AuthenticatesRequests
      *
      * @throws \WpStarter\Auth\AuthenticationException
      */
-    public function handle($request, Closure $next)
+    public function handle($request, Closure $next, ...$guards)
     {
-        $this->authenticate($request,[]);
+        $this->authenticate($request, $guards);
 
         return $next($request);
     }
@@ -60,8 +60,8 @@ class Authenticate implements AuthenticatesRequests
         }
 
         foreach ($guards as $guard) {
-            if ($this->auth->guard($guard)->user()) {
-                return;
+            if ($this->auth->guard($guard)->check()) {
+                return $this->auth->shouldUse($guard);
             }
         }
 

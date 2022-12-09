@@ -14,7 +14,7 @@ class MailServiceProvider extends ServiceProvider implements DeferrableProvider
      */
     public function register()
     {
-        $this->registerWpStarterMailer();
+        $this->registerIlluminateMailer();
         $this->registerMarkdownRenderer();
     }
 
@@ -23,7 +23,7 @@ class MailServiceProvider extends ServiceProvider implements DeferrableProvider
      *
      * @return void
      */
-    protected function registerWpStarterMailer()
+    protected function registerIlluminateMailer()
     {
         $this->app->singleton('mail.manager', function ($app) {
             return new MailManager($app);

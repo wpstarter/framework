@@ -1,6 +1,7 @@
 <?php
 
 use WpStarter\Container\Container;
+use WpStarter\Contracts\Auth\Access\Gate;
 use WpStarter\Contracts\Auth\Factory as AuthFactory;
 use WpStarter\Contracts\Broadcasting\Factory as BroadcastFactory;
 use WpStarter\Contracts\Bus\Dispatcher;
@@ -151,7 +152,7 @@ if (! function_exists('ws_auth')) {
      * Get the available auth instance.
      *
      * @param  string|null  $guard
-     * @return \WpStarter\Contracts\Auth\Factory|\WpStarter\Contracts\Auth\Guard
+     * @return \WpStarter\Contracts\Auth\Factory|\WpStarter\Contracts\Auth\Guard|\WpStarter\Contracts\Auth\StatefulGuard
      */
     function ws_auth($guard = null)
     {
@@ -561,6 +562,21 @@ if (! function_exists('ws_old')) {
     function ws_old($key = null, $default = null)
     {
         return ws_app('request')->old($key, $default);
+    }
+}
+
+if (! function_exists('ws_policy')) {
+    /**
+     * Get a policy instance for a given class.
+     *
+     * @param  object|string  $class
+     * @return mixed
+     *
+     * @throws \InvalidArgumentException
+     */
+    function ws_policy($class)
+    {
+        return ws_app(Gate::class)->getPolicyFor($class);
     }
 }
 
