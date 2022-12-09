@@ -479,14 +479,14 @@ class Handler implements ExceptionHandlerContract
     protected function prepareResponse($request, Throwable $e)
     {
         if (! $this->isHttpException($e) && ws_config('app.debug')) {
-            return $this->toWpStarterResponse($this->convertExceptionToResponse($e), $e);
+            return $this->toIlluminateResponse($this->convertExceptionToResponse($e), $e);
         }
 
         if (! $this->isHttpException($e)) {
             $e = new HttpException(500, $e->getMessage());
         }
 
-        return $this->toWpStarterResponse(
+        return $this->toIlluminateResponse(
             $this->renderHttpException($e), $e
         );
     }
@@ -616,7 +616,7 @@ class Handler implements ExceptionHandlerContract
      * @param  \Throwable  $e
      * @return \WpStarter\Http\Response
      */
-    protected function toWpStarterResponse($response, Throwable $e)
+    protected function toIlluminateResponse($response, Throwable $e)
     {
         if ($response instanceof SymfonyRedirectResponse) {
             $response = new RedirectResponse(

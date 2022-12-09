@@ -6,7 +6,7 @@ use WpStarter\Database\Connection;
 use WpStarter\Routing\Redirector;
 use WpStarter\Support\ServiceProvider;
 use WpStarter\Wordpress\Admin\AdminServiceProvider;
-use WpStarter\Wordpress\Auth\User;
+use WpStarter\Wordpress\Auth\AuthServiceProvider;
 use WpStarter\Wordpress\Console\Commands\Database\MigrationWipeCommand;
 use WpStarter\Wordpress\Database\WpConnection;
 use WpStarter\Wordpress\Database\WpConnector;
@@ -14,6 +14,7 @@ use WpStarter\Wordpress\Dependency\ResourceManager;
 use WpStarter\Wordpress\Http\Response\Handler;
 use WpStarter\Wordpress\Http\Response\PassThrough;
 use WpStarter\Wordpress\Mail\Transport\WpTransport;
+use WpStarter\Wordpress\Model\User;
 use WpStarter\Wordpress\Routing\RoutingServiceProvider;
 use WpStarter\Wordpress\Shortcode\ShortcodeManager;
 use WpStarter\Wordpress\Translation\TranslationServiceProvider;
@@ -35,6 +36,7 @@ class WordpressServiceProvider extends ServiceProvider
     protected function registerChildServices()
     {
         $this->app->register(RoutingServiceProvider::class);
+        $this->app->register(AuthServiceProvider::class);
         $this->app->register(AdminServiceProvider::class);
         $this->app->register(TranslationServiceProvider::class);
     }

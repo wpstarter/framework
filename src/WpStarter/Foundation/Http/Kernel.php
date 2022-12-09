@@ -74,9 +74,12 @@ class Kernel implements KernelContract
         \WpStarter\Cookie\Middleware\EncryptCookies::class,
         \WpStarter\Session\Middleware\StartSession::class,
         \WpStarter\View\Middleware\ShareErrorsFromSession::class,
+        \WpStarter\Contracts\Auth\Middleware\AuthenticatesRequests::class,
         \WpStarter\Routing\Middleware\ThrottleRequests::class,
         \WpStarter\Routing\Middleware\ThrottleRequestsWithRedis::class,
+        \WpStarter\Session\Middleware\AuthenticateSession::class,
         \WpStarter\Routing\Middleware\SubstituteBindings::class,
+        \WpStarter\Auth\Middleware\Authorize::class,
     ];
 
     /**

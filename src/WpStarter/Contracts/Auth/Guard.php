@@ -17,10 +17,11 @@ interface Guard
      * @return bool
      */
     public function guest();
+
     /**
      * Get the currently authenticated user.
      *
-     * @return \WpStarter\Wordpress\User|null
+     * @return \WpStarter\Contracts\Auth\Authenticatable|null
      */
     public function user();
 
@@ -31,4 +32,19 @@ interface Guard
      */
     public function id();
 
+    /**
+     * Validate a user's credentials.
+     *
+     * @param  array  $credentials
+     * @return bool
+     */
+    public function validate(array $credentials = []);
+
+    /**
+     * Set the current user.
+     *
+     * @param  \WpStarter\Contracts\Auth\Authenticatable  $user
+     * @return void
+     */
+    public function setUser(Authenticatable $user);
 }

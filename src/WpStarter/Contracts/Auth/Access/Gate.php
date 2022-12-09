@@ -5,6 +5,58 @@ namespace WpStarter\Contracts\Auth\Access;
 interface Gate
 {
     /**
+     * Determine if a given ability has been defined.
+     *
+     * @param  string  $ability
+     * @return bool
+     */
+    public function has($ability);
+
+    /**
+     * Define a new ability.
+     *
+     * @param  string  $ability
+     * @param  callable|string  $callback
+     * @return $this
+     */
+    public function define($ability, $callback);
+
+    /**
+     * Define abilities for a resource.
+     *
+     * @param  string  $name
+     * @param  string  $class
+     * @param  array|null  $abilities
+     * @return $this
+     */
+    public function resource($name, $class, array $abilities = null);
+
+    /**
+     * Define a policy class for a given class type.
+     *
+     * @param  string  $class
+     * @param  string  $policy
+     * @return $this
+     */
+    public function policy($class, $policy);
+
+    /**
+     * Register a callback to run before all Gate checks.
+     *
+     * @param  callable  $callback
+     * @return $this
+     */
+    public function before(callable $callback);
+
+    /**
+     * Register a callback to run after all Gate checks.
+     *
+     * @param  callable  $callback
+     * @return $this
+     */
+    public function after(callable $callback);
+
+    /**
      * Determine if the given ability should be granted for the current user.
      *
      * @param  string  $ability
@@ -71,13 +123,28 @@ interface Gate
      */
     public function raw($ability, $arguments = []);
 
+    /**
+     * Get a policy instance for a given class.
+     *
+     * @param  object|string  $class
+     * @return mixed
+     *
+     * @throws \InvalidArgumentException
+     */
+    public function getPolicyFor($class);
 
     /**
      * Get a guard instance for the given user.
      *
-     * @param  \WpStarter\Wordpress\User|mixed  $user
+     * @param  \WpStarter\Contracts\Auth\Authenticatable|mixed  $user
      * @return static
      */
     public function forUser($user);
 
+    /**
+     * Get all of the defined abilities.
+     *
+     * @return array
+     */
+    public function abilities();
 }
