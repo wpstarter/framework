@@ -32,6 +32,9 @@ class L10n
         return $this;
     }
     function loadDomain($domain,$langDir){
+        if(!function_exists('load_textdomain')){
+            return true;
+        }
         if(!$this->defaultDomain){
             $this->setDefaultDomain($domain);
         }
