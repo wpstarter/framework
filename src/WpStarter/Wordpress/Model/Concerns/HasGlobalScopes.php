@@ -1,11 +1,11 @@
 <?php
 
-namespace WpStarter\Wordpress\Auth\Concerns;
+namespace WpStarter\Wordpress\Model\Concerns;
 
 use Closure;
+use InvalidArgumentException;
 use WpStarter\Database\Eloquent\Scope;
 use WpStarter\Support\Arr;
-use InvalidArgumentException;
 
 trait HasGlobalScopes
 {

@@ -1,11 +1,11 @@
 <?php
 
-namespace WpStarter\Wordpress\Auth\Concerns;
+namespace WpStarter\Wordpress\Model\Concerns;
 
+use InvalidArgumentException;
 use WpStarter\Contracts\Events\Dispatcher;
 use WpStarter\Events\NullDispatcher;
 use WpStarter\Support\Arr;
-use InvalidArgumentException;
 
 trait HasEvents
 {

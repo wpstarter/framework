@@ -6,13 +6,12 @@
  * Time: 1:51 PM
  */
 
-namespace WpStarter\Wordpress\Auth\Concerns;
+namespace WpStarter\Wordpress\Model\Concerns;
 
+use WpStarter\Database\ConnectionResolverInterface as Resolver;
+use WpStarter\Database\Eloquent\Collection;
 use WpStarter\Support\Str;
 use WpStarter\Support\Traits\ForwardsCalls;
-use WpStarter\Database\ConnectionResolverInterface as Resolver;
-use WpStarter\Database\Eloquent\Builder;
-use WpStarter\Database\Eloquent\Collection;
 
 trait UserQuery
 {

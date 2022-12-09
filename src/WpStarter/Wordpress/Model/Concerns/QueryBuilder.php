@@ -1,6 +1,6 @@
 <?php
 
-namespace WpStarter\Wordpress\Auth\Concerns;
+namespace WpStarter\Wordpress\Model\Concerns;
 
 use WpStarter\Database\Eloquent\Builder;
 

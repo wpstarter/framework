@@ -1,10 +1,15 @@
 <?php
 
-namespace WpStarter\Wordpress\Auth\Concerns;
+namespace WpStarter\Wordpress\Model\Concerns;
 
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use DateTimeInterface;
+use InvalidArgumentException;
+use LogicException;
+use ReflectionClass;
+use ReflectionMethod;
+use ReflectionNamedType;
 use WpStarter\Contracts\Database\Eloquent\Castable;
 use WpStarter\Contracts\Database\Eloquent\CastsInboundAttributes;
 use WpStarter\Contracts\Support\Arrayable;
@@ -21,11 +26,8 @@ use WpStarter\Support\Collection as BaseCollection;
 use WpStarter\Support\Facades\Crypt;
 use WpStarter\Support\Facades\Date;
 use WpStarter\Support\Str;
-use InvalidArgumentException;
-use LogicException;
-use ReflectionClass;
-use ReflectionMethod;
-use ReflectionNamedType;
+use function WpStarter\Wordpress\Auth\Concerns\enum_exists;
+use const WpStarter\Wordpress\Auth\Concerns\PHP_FLOAT_EPSILON;
 
 trait HasAttributes
 {
