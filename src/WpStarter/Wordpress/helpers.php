@@ -36,15 +36,15 @@ if (!function_exists('shortcode_view')) {
     /**
      * Get the shortcode view
      *
-     * @param string $tag
      * @param  $view
      * @param \WpStarter\Contracts\Support\Arrayable|array $data
      * @param array $mergeData
+     * @param string $tag
      * @return \WpStarter\Wordpress\Http\Response\Shortcode
      */
-    function shortcode_view($tag, $view, $data = [], $mergeData = [])
+    function shortcode_view($view, $data = [], $mergeData = [], $tag=null)
     {
-        return Shortcode::make($tag, $view, $data, $mergeData);
+        return Shortcode::make($view, $data, $mergeData, $tag);
     }
 }
 

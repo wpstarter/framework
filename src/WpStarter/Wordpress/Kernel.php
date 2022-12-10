@@ -2,7 +2,6 @@
 
 namespace WpStarter\Wordpress;
 
-use WpStarter\Wordpress\Http\ShortcodeResponse;
 use WpStarter\Contracts\Foundation\Application;
 use WpStarter\Foundation\Http\Kernel as HttpKernel;
 use WpStarter\Routing\Pipeline;
@@ -11,6 +10,7 @@ use WpStarter\Wordpress\Routing\Router as ShortcodeRouter;
 
 class Kernel extends HttpKernel
 {
+    protected $wpHandleHook=['template_redirect',1];
     /**
      * @var \WpStarter\Wordpress\Application
      */
@@ -42,12 +42,46 @@ class Kernel extends HttpKernel
         parent::__construct($app, $router);
     }
 
-    function registerWpHandler()
+    public function handle($request)
     {
-        $this->wpRouter->registerShortcodes($this->app['request']);
-        add_action('template_redirect', function () {
-            $this->handleWp($this->app['request']);
-        }, 1);
+        $response = parent::handle($request);
+        if(!$request->isNotFoundHttpExceptionFromRoute()) {
+            $this->processResponse($request, $response);
+        }else{
+            $this->registerWpHandler($request);
+        }
+        return $response;
+    }
+
+    /**
+     * Process response
+     * @param $request
+     * @param $response
+     * @return void
+     */
+    protected function processResponse($request, $response){
+        //Not a not found response from router
+        if($response instanceof \WpStarter\Wordpress\Http\Response){
+            //Got a WordPress response, process it
+            $handler=$this->app->make(\WpStarter\Wordpress\Http\Response\Handler::class);
+            /**
+             * @var \WpStarter\Wordpress\Http\Response\Handler $handler
+             */
+            $handler->handle($this,$request,$response);
+        }else {//Normal response
+            $response->send();
+            $this->terminate($request, $response);
+            die;
+        }
+
+    }
+
+    function registerWpHandler($request)
+    {
+        $hook=(array)$this->wpHandleHook;
+        add_action($hook[0]??'template_redirect', function ()use($request) {
+            $this->handleWp($request);
+        }, $hook[1]??1);
     }
 
 
@@ -60,27 +94,9 @@ class Kernel extends HttpKernel
             $this->reportException($e);
             $response = $this->renderException($request, $e);
         }
-
         if (!$request->isNotFoundHttpExceptionFromRoute()) {
-            //We just ignore no route matching exception and allow application continue running
-            if ($response instanceof ShortcodeResponse) {
-                //Our responses converted from StringAble, we only send headers for them
-                $response->sendHeaders();
-            } else {//Normal response from controller middleware, etc...
-                if($response instanceof \WpStarter\Wordpress\Http\Response){
-                    //Got a WordPress response, process it
-                    $handler=$this->app->make(\WpStarter\Wordpress\Http\Response\Handler::class);
-                    $handler->handle($this,$request,$response);
-                }else {//Normal response
-                    $response->send();
-                    $this->terminate($request, $response);
-                    die;
-                }
-            }
+            $this->processResponse($request,$response);
         }
-        add_action('shutdown', function () use ($request, $response) {
-            $this->terminate($request, $response);
-        });
 
     }
 
