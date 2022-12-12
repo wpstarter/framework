@@ -15,6 +15,7 @@ class Menu
     use RouteDependencyResolverTrait;
     protected $defaultAction='index';
     protected $actionKey = ['action','action2'];
+    protected $ignoreActions=["-1"];
     /**
      * @var \WpStarter\Http\Request
      */
@@ -138,12 +139,10 @@ class Menu
         if(!is_array($params)){
             $params=[];
         }
-        $url=menu_page_url($this->slug,false);
+
         $params[$this->getActionKey()]=$action;
-        $params=array_filter($params, function ($p) {
-            return ! is_null($p);
-        });
-        return add_query_arg($params,$url);
+
+        return ws_admin_url($this->slug,$params);
     }
 
     /**
@@ -188,10 +187,16 @@ class Menu
         $request = $this->getRequest();
         foreach ((array)$this->actionKey as $key) {
             if ($action = $request->input($key)) {
-                return $action;
+                if(!in_array($action,$this->ignoreActions)) {
+                    return $action;
+                }
             }
         }
         return $this->defaultAction;
+    }
+    public function ignoreActions(...$actions){
+        $this->ignoreActions=is_array($actions[0])?$actions[0]:$actions;
+        return $this;
     }
 
     protected function getController()

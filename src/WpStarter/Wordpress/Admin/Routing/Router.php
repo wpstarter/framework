@@ -3,6 +3,7 @@
 namespace WpStarter\Wordpress\Admin\Routing;
 
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use WpStarter\Container\Container;
 use WpStarter\Contracts\Events\Dispatcher;
 use WpStarter\Contracts\Support\Arrayable;
@@ -205,22 +206,27 @@ class Router
      */
     public function dispatchToMenu(Request $request, $hook)
     {
-        if ($menu = $this->findMenu($hook)) {
-            return $this->runMenu($request, $menu);
-        }
+        return $this->runMenu($request, $this->findMenu($request,$hook));
     }
 
     /**
      * Find the menu matching a given hook.
-     *
+     * @param Request $request
      * @param string $hook
      * @return Menu
      */
-    protected function findMenu($hook)
+    protected function findMenu(Request $request,$hook)
     {
         $this->current = $menu = $this->menus->findByHook($hook);
-
+        $this->handleMatchedMenu($request,$menu);
         return $menu;
+    }
+    protected function handleMatchedMenu(Request $request, $menu){
+        if(!is_null($menu)){
+            return $menu;
+        }
+        $request->setRouteNotFoundHttpException();
+        throw new NotFoundHttpException;
     }
 
     /**

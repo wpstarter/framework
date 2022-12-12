@@ -50,8 +50,10 @@ if (!function_exists('shortcode_view')) {
 
 if (!function_exists('ws_plugin_url')) {
     /**
-     * Get the shortcode view
-     *
+     * Get url to ws plugin
+     * @param  string      $path   Optional. Path relative to the site URL. Default empty.
+     * @param  string|null $scheme Optional. Scheme to give the site URL context. See set_url_scheme().
+     * @return string
      */
     function ws_plugin_url($path = '', $scheme = null)
     {
@@ -60,8 +62,31 @@ if (!function_exists('ws_plugin_url')) {
         return site_url($basePath . '/' . ltrim($path, '/'), $scheme);
     }
 }
+if (!function_exists('ws_admin_menu')) {
+    /**
+     * Get current admin menu
+     * @return null|\WpStarter\Wordpress\Admin\Routing\Menu
+     */
+    function ws_admin_menu()
+    {
+        return ws_app('wp.admin.router')->current();
+    }
+}
+
+if (!function_exists('ws_admin_url')) {
+    /**
+     * Get url to admin page
+     * @param string $slug The slug name to refer to this menu by (should be unique for this menu).
+     * @param array $params Query to add to url
+     */
+    function ws_admin_url($slug=null,$params=[])
+    {
+        return ws_app('url')->admin($slug,$params);
+    }
+}
 if (!function_exists('ws_pass')) {
     /**
+     * Bypass response
      * @return \WpStarter\Wordpress\Http\Response\PassThrough
      */
     function ws_pass()
