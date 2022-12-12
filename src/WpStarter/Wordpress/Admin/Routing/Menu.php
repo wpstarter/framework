@@ -88,13 +88,7 @@ class Menu
         $this->router->group(['parent'=>$this->slug],$callback);
     }
 
-    public function addSubMenu($slug, $callback, $capability = 'read', $title='', $page_title = '', $position = null)
-    {
-        $menu = $this->router->newMenu($slug, $callback, $capability, $title, $page_title, '',  $position);
-        $menu->parent = $this->slug;
-        $this->router->addMenu($menu);
-        return $menu;
-    }
+
 
     public function setRouter(Router $router)
     {
