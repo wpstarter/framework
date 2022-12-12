@@ -11,6 +11,7 @@ use WpStarter\Wordpress\Admin\Routing\Router;
 class Kernel implements Contracts\Kernel
 {
     protected $dispatchPriority=10;
+    protected $registerPriority=10;
 
     protected $router;
     /**
@@ -73,7 +74,7 @@ class Kernel implements Contracts\Kernel
     {
         add_action('admin_menu', function () {
             $this->router->register();
-        });
+        },$this->registerPriority);
         add_action('current_screen', function ($screen)use($request) {
             $this->handleAdmin($request, $screen->id);
         },$this->dispatchPriority);
@@ -87,12 +88,13 @@ class Kernel implements Contracts\Kernel
     function handleAdmin($request, $screenId)
     {
         try {
+            $request->setRouteNotFoundHttpException(false);
             $response = $this->sendRequestThroughRouter($request, $screenId);
         } catch (\Throwable $e) {
             $this->reportException($e);
             $response = $this->renderException($request, $e);
         }
-        if ($response) {
+        if (!$request->isNotFoundHttpExceptionFromRoute()) {
             //We just ignore no route matching exception and allow application continue running
             if ($response instanceof Response) {
                 //Our responses converted from StringAble, we only send headers for them
@@ -102,8 +104,6 @@ class Kernel implements Contracts\Kernel
                 $this->terminate($request, $response);
                 exit;
             }
-        } else {
-            $response = new \WpStarter\Http\Response('', 404);
         }
         add_action('shutdown', function () use ($request, $response) {
             $this->terminate($request, $response);
