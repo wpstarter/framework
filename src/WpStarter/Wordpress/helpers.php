@@ -3,7 +3,16 @@
 use WpStarter\Wordpress\Http\Response\Content;
 use WpStarter\Wordpress\Http\Response\Shortcode;
 use WpStarter\Wordpress\Http\Response\Page;
-
+if (!function_exists('is_wp')) {
+    /**
+     * Check if we are running in wp
+     * @return bool
+     */
+    function is_wp()
+    {
+        return function_exists('add_filter');
+    }
+}
 if (!function_exists('wp_view')) {
     /**
      * Get the full page view
@@ -50,18 +59,45 @@ if (!function_exists('shortcode_view')) {
 
 if (!function_exists('ws_plugin_url')) {
     /**
-     * Get the shortcode view
-     *
+     * Get url to ws plugin
+     * @param  string      $path   Optional. Path relative to the site URL. Default empty.
+     * @param  string|null $scheme Optional. Scheme to give the site URL context. See set_url_scheme().
+     * @return string
      */
     function ws_plugin_url($path = '', $scheme = null)
     {
-        $basePath = str_replace(ABSPATH, '', __WS_FILE__);
-        $basePath = trim(dirname($basePath), '\/');
-        return site_url($basePath . '/' . ltrim($path, '/'), $scheme);
+        if(defined('ABSPATH') && defined('__WS_FILE__')) {
+            $basePath = str_replace(ABSPATH, '', __WS_FILE__);
+            $basePath = trim(dirname($basePath), '\/');
+            return site_url($basePath . '/' . ltrim($path, '/'), $scheme);
+        }
+    }
+}
+if (!function_exists('ws_admin_menu')) {
+    /**
+     * Get current admin menu
+     * @return null|\WpStarter\Wordpress\Admin\Routing\Menu
+     */
+    function ws_admin_menu()
+    {
+        return ws_app('wp.admin.router')->current();
+    }
+}
+
+if (!function_exists('ws_admin_url')) {
+    /**
+     * Get url to admin page
+     * @param string $slug The slug name to refer to this menu by (should be unique for this menu).
+     * @param array $params Query to add to url
+     */
+    function ws_admin_url($slug=null,$params=[])
+    {
+        return ws_app('url')->admin($slug,$params);
     }
 }
 if (!function_exists('ws_pass')) {
     /**
+     * Bypass response
      * @return \WpStarter\Wordpress\Http\Response\PassThrough
      */
     function ws_pass()
@@ -70,16 +106,7 @@ if (!function_exists('ws_pass')) {
     }
 }
 
-if (!function_exists('is_wp')) {
-    /**
-     * Check if we are running in wp
-     * @return bool
-     */
-    function is_wp()
-    {
-        return function_exists('add_filter');
-    }
-}
+
 
 if (!function_exists('ws_setting')) {
     /**
