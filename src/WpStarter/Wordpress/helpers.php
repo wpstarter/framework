@@ -3,7 +3,16 @@
 use WpStarter\Wordpress\Http\Response\Content;
 use WpStarter\Wordpress\Http\Response\Shortcode;
 use WpStarter\Wordpress\Http\Response\Page;
-
+if (!function_exists('is_wp')) {
+    /**
+     * Check if we are running in wp
+     * @return bool
+     */
+    function is_wp()
+    {
+        return function_exists('add_filter');
+    }
+}
 if (!function_exists('wp_view')) {
     /**
      * Get the full page view
@@ -57,9 +66,11 @@ if (!function_exists('ws_plugin_url')) {
      */
     function ws_plugin_url($path = '', $scheme = null)
     {
-        $basePath = str_replace(ABSPATH, '', __WS_FILE__);
-        $basePath = trim(dirname($basePath), '\/');
-        return site_url($basePath . '/' . ltrim($path, '/'), $scheme);
+        if(defined('ABSPATH') && defined('__WS_FILE__')) {
+            $basePath = str_replace(ABSPATH, '', __WS_FILE__);
+            $basePath = trim(dirname($basePath), '\/');
+            return site_url($basePath . '/' . ltrim($path, '/'), $scheme);
+        }
     }
 }
 if (!function_exists('ws_admin_menu')) {
@@ -95,16 +106,7 @@ if (!function_exists('ws_pass')) {
     }
 }
 
-if (!function_exists('is_wp')) {
-    /**
-     * Check if we are running in wp
-     * @return bool
-     */
-    function is_wp()
-    {
-        return function_exists('add_filter');
-    }
-}
+
 
 if (!function_exists('ws_setting')) {
     /**
