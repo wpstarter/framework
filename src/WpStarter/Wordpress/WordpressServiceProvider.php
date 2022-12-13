@@ -4,6 +4,7 @@ namespace WpStarter\Wordpress;
 
 use WpStarter\Database\Connection;
 use WpStarter\Routing\Redirector;
+use WpStarter\Support\Facades\Artisan;
 use WpStarter\Support\ServiceProvider;
 use WpStarter\Wordpress\Admin\AdminServiceProvider;
 use WpStarter\Wordpress\Auth\AuthServiceProvider;
@@ -49,11 +50,20 @@ class WordpressServiceProvider extends ServiceProvider
         User::setConnectionResolver($this->app['db']);
         User::setEventDispatcher($this->app['events']);
         $this->bootServices();
+        $this->autoRestartQueue();
     }
 
     protected function bootServices(){
         $this->bootResourceManager();
         $this->bootShortcodeManager();
+    }
+    protected function autoRestartQueue(){
+        add_action('activated_plugin',function(){
+            Artisan::call('queue:restart');
+        });
+        add_action('deactivated_plugin',function(){
+            Artisan::call('queue:restart');
+        });
     }
 
     protected function registerResponse()
