@@ -59,6 +59,15 @@ trait UserQuery
     }
 
     /**
+     * Get the default foreign key name for the model.
+     *
+     * @return string
+     */
+    public function getForeignKey()
+    {
+        return Str::snake(ws_class_basename($this)).'_'.$this->getKeyName();
+    }
+    /**
      * Get the number of models to return per page.
      *
      * @return int
