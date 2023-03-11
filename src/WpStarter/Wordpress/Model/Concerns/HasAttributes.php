@@ -26,8 +26,6 @@ use WpStarter\Support\Collection as BaseCollection;
 use WpStarter\Support\Facades\Crypt;
 use WpStarter\Support\Facades\Date;
 use WpStarter\Support\Str;
-use function WpStarter\Wordpress\Auth\Concerns\enum_exists;
-use const WpStarter\Wordpress\Auth\Concerns\PHP_FLOAT_EPSILON;
 
 trait HasAttributes
 {
