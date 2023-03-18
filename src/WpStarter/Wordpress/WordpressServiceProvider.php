@@ -16,6 +16,7 @@ use WpStarter\Wordpress\Http\Response\Handler;
 use WpStarter\Wordpress\Http\Response\PassThrough;
 use WpStarter\Wordpress\Mail\Transport\WpTransport;
 use WpStarter\Wordpress\Model\User;
+use WpStarter\Wordpress\Providers\CarbonServiceProvider;
 use WpStarter\Wordpress\Routing\RoutingServiceProvider;
 use WpStarter\Wordpress\Shortcode\ShortcodeManager;
 use WpStarter\Wordpress\Translation\TranslationServiceProvider;
@@ -36,6 +37,9 @@ class WordpressServiceProvider extends ServiceProvider
 
     protected function registerChildServices()
     {
+        if(class_exists(\Carbon\Carbon::class)){
+            $this->app->register(CarbonServiceProvider::class);
+        }
         $this->app->register(RoutingServiceProvider::class);
         $this->app->register(AuthServiceProvider::class);
         $this->app->register(AdminServiceProvider::class);
