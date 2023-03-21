@@ -662,7 +662,7 @@ class Worker
     protected function getTimestampOfLastQueueRestart()
     {
         if ($this->cache) {
-            return $this->cache->get('illuminate:queue:restart');
+            return $this->cache->get('wpstarter:queue:restart');
         }
     }
 

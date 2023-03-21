@@ -204,7 +204,7 @@ trait Queueable
         if ($job instanceof Closure) {
             if (! class_exists(CallQueuedClosure::class)) {
                 throw new RuntimeException(
-                    'To enable support for closure jobs, please install the illuminate/queue package.'
+                    'To enable support for closure jobs, please install the wpstarter/queue package.'
                 );
             }
 
