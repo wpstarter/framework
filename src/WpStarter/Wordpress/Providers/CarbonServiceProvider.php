@@ -42,7 +42,7 @@ class CarbonServiceProvider extends \WpStarter\Support\ServiceProvider
         $events = $this->app['events'];
 
         if ($this->isEventDispatcher($events)) {
-            $events->listen(class_exists('Illuminate\Foundation\Events\LocaleUpdated') ? 'Illuminate\Foundation\Events\LocaleUpdated' : 'locale.changed', function () use ($service) {
+            $events->listen(class_exists('WpStarter\Foundation\Events\LocaleUpdated') ? 'WpStarter\Foundation\Events\LocaleUpdated' : 'locale.changed', function () use ($service) {
                 $service->updateLocale();
             });
         }

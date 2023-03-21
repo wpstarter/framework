@@ -51,7 +51,7 @@ class RestartCommand extends Command
      */
     public function handle()
     {
-        $this->cache->forever('illuminate:queue:restart', $this->currentTime());
+        $this->cache->forever('wpstarter:queue:restart', $this->currentTime());
 
         $this->info('Broadcasting queue restart signal.');
     }
