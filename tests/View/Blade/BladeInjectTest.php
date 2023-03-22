@@ -7,14 +7,14 @@ class BladeInjectTest extends AbstractBladeTestCase
     public function testDependenciesInjectedAsStringsAreCompiled()
     {
         $string = "Foo @inject('baz', 'SomeNamespace\SomeClass') bar";
-        $expected = "Foo <?php \$baz = app('SomeNamespace\SomeClass'); ?> bar";
+        $expected = "Foo <?php \$baz = ws_app('SomeNamespace\SomeClass'); ?> bar";
         $this->assertEquals($expected, $this->compiler->compileString($string));
     }
 
     public function testDependenciesInjectedAsStringsAreCompiledWhenInjectedWithDoubleQuotes()
     {
         $string = 'Foo @inject("baz", "SomeNamespace\SomeClass") bar';
-        $expected = 'Foo <?php $baz = app("SomeNamespace\SomeClass"); ?> bar';
+        $expected = 'Foo <?php $baz = ws_app("SomeNamespace\SomeClass"); ?> bar';
         $this->assertEquals($expected, $this->compiler->compileString($string));
     }
 

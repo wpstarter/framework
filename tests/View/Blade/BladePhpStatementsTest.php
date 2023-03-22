@@ -38,7 +38,7 @@ class BladePhpStatementsTest extends AbstractBladeTestCase
 
         $expected = " {{ Hello, I'm not blade! }}"
                 ."\n@php echo 'And I'm not PHP!' @endphp"
-                ."\n <?php echo e('I am Blade'); ?>"
+                ."\n <?php echo ws_e('I am Blade'); ?>"
                 ."\n\n<?php echo 'I am PHP {{ not Blade }}' ?>";
 
         $this->assertEquals($expected, $this->compiler->compileString($string));
