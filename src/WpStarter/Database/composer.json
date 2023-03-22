@@ -1,0 +1,50 @@
+{
+    "name": "wpstarter/database",
+    "description": "The WpStarter Database package.",
+    "license": "MIT",
+    "homepage": "https://wpstarter.dev",
+    "support": {
+        "issues": "https://github.com/wpstarter/framework/issues",
+        "source": "https://github.com/wpstarter/framework"
+    },
+    "keywords": ["laravel", "database", "sql", "orm"],
+    "authors": [
+        {
+            "name": "As247",
+            "email": "as247@wpstarter.dev"
+        }
+    ],
+    "require": {
+        "php": "^7.3|^8.0",
+        "ext-json": "*",
+        "wpstarter/collections": "^1.0",
+        "wpstarter/container": "^1.0",
+        "wpstarter/contracts": "^1.0",
+        "wpstarter/macroable": "^1.0",
+        "wpstarter/support": "^1.0",
+        "symfony/console": "^5.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "WpStarter\\Database\\": ""
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.x-dev"
+        }
+    },
+    "suggest": {
+        "doctrine/dbal": "Required to rename columns and drop SQLite columns (^2.13.3|^3.1.4).",
+        "fakerphp/faker": "Required to use the eloquent factory builder (^1.9.1).",
+        "wpstarter/console": "Required to use the database commands (^8.0).",
+        "wpstarter/events": "Required to use the observers with Eloquent (^8.0).",
+        "wpstarter/filesystem": "Required to use the migrations (^8.0).",
+        "wpstarter/pagination": "Required to paginate the result set (^8.0).",
+        "symfony/finder": "Required to use Eloquent model factories (^5.4)."
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev"
+}

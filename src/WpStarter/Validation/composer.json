@@ -1,0 +1,47 @@
+{
+    "name": "wpstarter/validation",
+    "description": "The WpStarter Validation package.",
+    "license": "MIT",
+    "homepage": "https://wpstarter.dev",
+    "support": {
+        "issues": "https://github.com/wpstarter/framework/issues",
+        "source": "https://github.com/wpstarter/framework"
+    },
+    "authors": [
+        {
+            "name": "As247",
+            "email": "as247@wpstarter.dev"
+        }
+    ],
+    "require": {
+        "php": "^7.3|^8.0",
+        "ext-json": "*",
+        "egulias/email-validator": "^2.1.10",
+        "wpstarter/collections": "^1.0",
+        "wpstarter/container": "^1.0",
+        "wpstarter/contracts": "^1.0",
+        "wpstarter/macroable": "^1.0",
+        "wpstarter/support": "^1.0",
+        "wpstarter/translation": "^1.0",
+        "symfony/http-foundation": "^5.4",
+        "symfony/mime": "^5.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "WpStarter\\Validation\\": ""
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.x-dev"
+        }
+    },
+    "suggest": {
+        "ext-bcmath": "Required to use the multiple_of validation rule.",
+        "wpstarter/database": "Required to use the database presence verifier (^8.0)."
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev"
+}

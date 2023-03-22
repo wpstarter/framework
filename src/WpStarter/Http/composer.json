@@ -1,0 +1,45 @@
+{
+    "name": "wpstarter/http",
+    "description": "The WpStarter Http package.",
+    "license": "MIT",
+    "homepage": "https://wpstarter.dev",
+    "support": {
+        "issues": "https://github.com/wpstarter/framework/issues",
+        "source": "https://github.com/wpstarter/framework"
+    },
+    "authors": [
+        {
+            "name": "As247",
+            "email": "as247@wpstarter.dev"
+        }
+    ],
+    "require": {
+        "php": "^7.3|^8.0",
+        "ext-json": "*",
+        "wpstarter/collections": "^1.0",
+        "wpstarter/macroable": "^1.0",
+        "wpstarter/session": "^1.0",
+        "wpstarter/support": "^1.0",
+        "symfony/http-foundation": "^5.4",
+        "symfony/http-kernel": "^5.4",
+        "symfony/mime": "^5.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "WpStarter\\Http\\": ""
+        }
+    },
+    "suggest": {
+        "ext-gd": "Required to use WpStarter\\Http\\Testing\\FileFactory::image().",
+        "guzzlehttp/guzzle": "Required to use the HTTP Client (^6.5.5|^7.0.1)."
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.x-dev"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev"
+}
