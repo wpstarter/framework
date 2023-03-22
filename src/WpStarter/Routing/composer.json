@@ -16,14 +16,14 @@
     "require": {
         "php": "^7.3|^8.0",
         "ext-json": "*",
-        "wpstarter/collections": "^1.0",
-        "wpstarter/container": "^1.0",
-        "wpstarter/contracts": "^1.0",
-        "wpstarter/http": "^1.0",
-        "wpstarter/macroable": "^1.0",
-        "wpstarter/pipeline": "^1.0",
-        "wpstarter/session": "^1.0",
-        "wpstarter/support": "^1.0",
+        "wp-starter/collections": "^1.0",
+        "wp-starter/container": "^1.0",
+        "wp-starter/contracts": "^1.0",
+        "wp-starter/http": "^1.0",
+        "wp-starter/macroable": "^1.0",
+        "wp-starter/pipeline": "^1.0",
+        "wp-starter/session": "^1.0",
+        "wp-starter/support": "^1.0",
         "symfony/http-foundation": "^5.4",
         "symfony/http-kernel": "^5.4",
         "symfony/routing": "^5.4"
@@ -39,7 +39,7 @@
         }
     },
     "suggest": {
-        "wpstarter/console": "Required to use the make commands (^8.0).",
+        "wp-starter/console": "Required to use the make commands (^8.0).",
         "nyholm/psr7": "Required to use PSR-7 bridging features (^1.2).",
         "symfony/psr-http-message-bridge": "Required to use PSR-7 bridging features (^2.0)."
     },

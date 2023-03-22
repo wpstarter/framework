@@ -15,8 +15,8 @@
     ],
     "require": {
         "php": "^7.3|^8.0",
-        "wpstarter/contracts": "^1.0",
-        "wpstarter/macroable": "^1.0"
+        "wp-starter/contracts": "^1.0",
+        "wp-starter/macroable": "^1.0"
     },
     "autoload": {
         "psr-4": {

@@ -17,12 +17,12 @@
         "php": "^7.3|^8.0",
         "ext-json": "*",
         "egulias/email-validator": "^2.1.10",
-        "wpstarter/collections": "^1.0",
-        "wpstarter/container": "^1.0",
-        "wpstarter/contracts": "^1.0",
-        "wpstarter/macroable": "^1.0",
-        "wpstarter/support": "^1.0",
-        "wpstarter/translation": "^1.0",
+        "wp-starter/collections": "^1.0",
+        "wp-starter/container": "^1.0",
+        "wp-starter/contracts": "^1.0",
+        "wp-starter/macroable": "^1.0",
+        "wp-starter/support": "^1.0",
+        "wp-starter/translation": "^1.0",
         "symfony/http-foundation": "^5.4",
         "symfony/mime": "^5.4"
     },
@@ -38,7 +38,7 @@
     },
     "suggest": {
         "ext-bcmath": "Required to use the multiple_of validation rule.",
-        "wpstarter/database": "Required to use the database presence verifier (^8.0)."
+        "wp-starter/database": "Required to use the database presence verifier (^8.0)."
     },
     "config": {
         "sort-packages": true

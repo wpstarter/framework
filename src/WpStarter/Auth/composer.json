@@ -15,12 +15,12 @@
     ],
     "require": {
         "php": "^7.3|^8.0",
-        "wpstarter/collections": "^1.0",
-        "wpstarter/contracts": "^1.0",
-        "wpstarter/http": "^1.0",
-        "wpstarter/macroable": "^1.0",
-        "wpstarter/queue": "^1.0",
-        "wpstarter/support": "^1.0"
+        "wp-starter/collections": "^1.0",
+        "wp-starter/contracts": "^1.0",
+        "wp-starter/http": "^1.0",
+        "wp-starter/macroable": "^1.0",
+        "wp-starter/queue": "^1.0",
+        "wp-starter/support": "^1.0"
     },
     "autoload": {
         "psr-4": {
@@ -33,9 +33,9 @@
         }
     },
     "suggest": {
-        "wpstarter/console": "Required to use the auth:clear-resets command (^8.0).",
-        "wpstarter/queue": "Required to fire login / logout events (^8.0).",
-        "wpstarter/session": "Required to use the session based guard (^8.0)."
+        "wp-starter/console": "Required to use the auth:clear-resets command (^8.0).",
+        "wp-starter/queue": "Required to fire login / logout events (^8.0).",
+        "wp-starter/session": "Required to use the session based guard (^8.0)."
     },
     "config": {
         "sort-packages": true

@@ -16,10 +16,10 @@
     "require": {
         "php": "^7.3|^8.0",
         "ext-json": "*",
-        "wpstarter/collections": "^1.0",
-        "wpstarter/macroable": "^1.0",
-        "wpstarter/session": "^1.0",
-        "wpstarter/support": "^1.0",
+        "wp-starter/collections": "^1.0",
+        "wp-starter/macroable": "^1.0",
+        "wp-starter/session": "^1.0",
+        "wp-starter/support": "^1.0",
         "symfony/http-foundation": "^5.4",
         "symfony/http-kernel": "^5.4",
         "symfony/mime": "^5.4"

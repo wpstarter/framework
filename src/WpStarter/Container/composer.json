@@ -15,7 +15,7 @@
     ],
     "require": {
         "php": "^7.3|^8.0",
-        "wpstarter/contracts": "^1.0",
+        "wp-starter/contracts": "^1.0",
         "psr/container": "^1.0"
     },
     "provide": {

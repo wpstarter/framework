@@ -15,10 +15,10 @@
     ],
     "require": {
         "php": "^7.3|^8.0",
-        "wpstarter/collections": "^1.0",
-        "wpstarter/contracts": "^1.0",
-        "wpstarter/macroable": "^1.0",
-        "wpstarter/support": "^1.0"
+        "wp-starter/collections": "^1.0",
+        "wp-starter/contracts": "^1.0",
+        "wp-starter/macroable": "^1.0",
+        "wp-starter/support": "^1.0"
     },
     "provide": {
         "psr/simple-cache-implementation": "1.0"
@@ -35,9 +35,9 @@
     },
     "suggest": {
         "ext-memcached": "Required to use the memcache cache driver.",
-        "wpstarter/database": "Required to use the database cache driver (^8.0).",
-        "wpstarter/filesystem": "Required to use the file cache driver (^8.0).",
-        "wpstarter/redis": "Required to use the redis cache driver (^8.0).",
+        "wp-starter/database": "Required to use the database cache driver (^8.0).",
+        "wp-starter/filesystem": "Required to use the file cache driver (^8.0).",
+        "wp-starter/redis": "Required to use the redis cache driver (^8.0).",
         "symfony/cache": "Required to PSR-6 cache bridge (^5.4)."
     },
     "config": {

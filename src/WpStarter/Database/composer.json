@@ -17,11 +17,11 @@
     "require": {
         "php": "^7.3|^8.0",
         "ext-json": "*",
-        "wpstarter/collections": "^1.0",
-        "wpstarter/container": "^1.0",
-        "wpstarter/contracts": "^1.0",
-        "wpstarter/macroable": "^1.0",
-        "wpstarter/support": "^1.0",
+        "wp-starter/collections": "^1.0",
+        "wp-starter/container": "^1.0",
+        "wp-starter/contracts": "^1.0",
+        "wp-starter/macroable": "^1.0",
+        "wp-starter/support": "^1.0",
         "symfony/console": "^5.4"
     },
     "autoload": {
@@ -37,10 +37,10 @@
     "suggest": {
         "doctrine/dbal": "Required to rename columns and drop SQLite columns (^2.13.3|^3.1.4).",
         "fakerphp/faker": "Required to use the eloquent factory builder (^1.9.1).",
-        "wpstarter/console": "Required to use the database commands (^8.0).",
-        "wpstarter/events": "Required to use the observers with Eloquent (^8.0).",
-        "wpstarter/filesystem": "Required to use the migrations (^8.0).",
-        "wpstarter/pagination": "Required to paginate the result set (^8.0).",
+        "wp-starter/console": "Required to use the database commands (^8.0).",
+        "wp-starter/events": "Required to use the observers with Eloquent (^8.0).",
+        "wp-starter/filesystem": "Required to use the migrations (^8.0).",
+        "wp-starter/pagination": "Required to paginate the result set (^8.0).",
         "symfony/finder": "Required to use Eloquent model factories (^5.4)."
     },
     "config": {

@@ -15,10 +15,10 @@
     ],
     "require": {
         "php": "^7.3|^8.0",
-        "wpstarter/collections": "^1.0",
-        "wpstarter/contracts": "^1.0",
-        "wpstarter/pipeline": "^1.0",
-        "wpstarter/support": "^1.0"
+        "wp-starter/collections": "^1.0",
+        "wp-starter/contracts": "^1.0",
+        "wp-starter/pipeline": "^1.0",
+        "wp-starter/support": "^1.0"
     },
     "autoload": {
         "psr-4": {
@@ -31,7 +31,7 @@
         }
     },
     "suggest": {
-        "wpstarter/queue": "Required to use closures when chaining jobs (^7.0)."
+        "wp-starter/queue": "Required to use closures when chaining jobs (^7.0)."
     },
     "config": {
         "sort-packages": true
