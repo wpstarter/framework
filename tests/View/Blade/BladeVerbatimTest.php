@@ -33,7 +33,7 @@ class BladeVerbatimTest extends AbstractBladeTestCase
     public function testMultipleVerbatimBlocksAreCompiled()
     {
         $string = '@verbatim {{ $a }} @endverbatim {{ $b }} @verbatim {{ $c }} @endverbatim';
-        $expected = ' {{ $a }}  <?php echo e($b); ?>  {{ $c }} ';
+        $expected = ' {{ $a }}  <?php echo ws_e($b); ?>  {{ $c }} ';
         $this->assertEquals($expected, $this->compiler->compileString($string));
     }
 
@@ -61,13 +61,13 @@ class BladeVerbatimTest extends AbstractBladeTestCase
 @endverbatim
 @php echo $fifth; @endphp';
 
-        $expected = '<?php echo e($first); ?>
+        $expected = '<?php echo ws_e($first); ?>
 
 <?php
     echo $second;
 ?>
 <?php if($conditional): ?>
-    <?php echo e($third); ?>
+    <?php echo ws_e($third); ?>
 
 <?php endif; ?>
 <?php echo $__env->make("users", \WpStarter\Support\Arr::except(get_defined_vars(), [\'__data\', \'__path\']))->render(); ?>

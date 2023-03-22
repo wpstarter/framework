@@ -19,7 +19,7 @@ class PostResourceWithAnonymousResourceCollectionWithPaginationInformation exten
      */
     public static function collection($resource)
     {
-        return tap(new AnonymousResourceCollectionWithPaginationInformation($resource, static::class), function ($collection) {
+        return ws_tap(new AnonymousResourceCollectionWithPaginationInformation($resource, static::class), function ($collection) {
             if (property_exists(static::class, 'preserveKeys')) {
                 $collection->preserveKeys = (new static([]))->preserveKeys === true;
             }

@@ -60,7 +60,7 @@ class ForgotPasswordTest extends TestCase
                 $message = $notification->toMail($user);
 
                 return ! is_null($notification->token)
-                    && $message->actionUrl === route('password.reset', ['token' => $notification->token, 'email' => $user->email]);
+                    && $message->actionUrl === ws_route('password.reset', ['token' => $notification->token, 'email' => $user->email]);
             }
         );
     }
@@ -71,7 +71,7 @@ class ForgotPasswordTest extends TestCase
         Notification::fake();
 
         ResetPassword::createUrlUsing(function ($user, string $token) {
-            return route('custom.password.reset', $token);
+            return ws_route('custom.password.reset', $token);
         });
 
         UserFactory::new()->create();
@@ -88,7 +88,7 @@ class ForgotPasswordTest extends TestCase
                 $message = $notification->toMail($user);
 
                 return ! is_null($notification->token)
-                    && $message->actionUrl === route('custom.password.reset', ['token' => $notification->token]);
+                    && $message->actionUrl === ws_route('custom.password.reset', ['token' => $notification->token]);
             }
         );
     }
@@ -100,10 +100,10 @@ class ForgotPasswordTest extends TestCase
 
         ResetPassword::toMailUsing(function ($notifiable, $token) {
             return (new MailMessage)
-                ->subject(__('Reset Password Notification'))
-                ->line(__('You are receiving this email because we received a password reset request for your account.'))
-                ->action(__('Reset Password'), route('custom.password.reset', $token))
-                ->line(__('If you did not request a password reset, no further action is required.'));
+                ->subject(ws___('Reset Password Notification'))
+                ->line(ws___('You are receiving this email because we received a password reset request for your account.'))
+                ->action(ws___('Reset Password'), ws_route('custom.password.reset', $token))
+                ->line(ws___('If you did not request a password reset, no further action is required.'));
         });
 
         UserFactory::new()->create();
@@ -120,7 +120,7 @@ class ForgotPasswordTest extends TestCase
                 $message = $notification->toMail($user);
 
                 return ! is_null($notification->token)
-                    && $message->actionUrl === route('custom.password.reset', ['token' => $notification->token]);
+                    && $message->actionUrl === ws_route('custom.password.reset', ['token' => $notification->token]);
             }
         );
     }

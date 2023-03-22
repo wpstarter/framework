@@ -39,7 +39,7 @@ class InteractsWithAuthenticationTest extends TestCase
         AuthenticationTestUser::create([
             'username' => 'taylorotwell',
             'email' => 'taylorotwell@laravel.com',
-            'password' => bcrypt('password'),
+            'password' => ws_bcrypt('password'),
             'is_active' => true,
         ]);
     }

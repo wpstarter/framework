@@ -96,7 +96,7 @@ class DatabaseEloquentModelAttributeCastingTest extends DatabaseTestCase
         $this->assertTrue($model->isDirty('options'));
 
         $model = new TestEloquentModelWithAttributeCast;
-        $model->birthday_at = now();
+        $model->birthday_at = ws_now();
         $this->assertIsString($model->toArray()['birthday_at']);
     }
 
@@ -348,7 +348,7 @@ class TestEloquentModelWithAttributeCast extends Model
     {
         return new Attribute(
             function () {
-                return collect();
+                return ws_collect();
             }
         );
     }

@@ -4,6 +4,7 @@ namespace WpStarter\Tests\Database\EloquentRelationshipsTest;
 
 use WpStarter\Database\Eloquent\Builder;
 use WpStarter\Database\Eloquent\Model;
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use WpStarter\Database\Eloquent\Relations\BelongsTo;
 use WpStarter\Database\Eloquent\Relations\BelongsToMany;
 use WpStarter\Database\Eloquent\Relations\HasMany;
@@ -136,57 +137,57 @@ class Post extends Model
 
 class CustomPost extends Post
 {
-    protected function newBelongsTo(Builder $query, Model $child, $foreignKey, $ownerKey, $relation)
+    protected function newBelongsTo(Builder $query, ModelContract $child, $foreignKey, $ownerKey, $relation)
     {
         return new CustomBelongsTo($query, $child, $foreignKey, $ownerKey, $relation);
     }
 
-    protected function newHasMany(Builder $query, Model $parent, $foreignKey, $localKey)
+    protected function newHasMany(Builder $query, ModelContract $parent, $foreignKey, $localKey)
     {
         return new CustomHasMany($query, $parent, $foreignKey, $localKey);
     }
 
-    protected function newHasOne(Builder $query, Model $parent, $foreignKey, $localKey)
+    protected function newHasOne(Builder $query, ModelContract $parent, $foreignKey, $localKey)
     {
         return new CustomHasOne($query, $parent, $foreignKey, $localKey);
     }
 
-    protected function newMorphOne(Builder $query, Model $parent, $type, $id, $localKey)
+    protected function newMorphOne(Builder $query, ModelContract $parent, $type, $id, $localKey)
     {
         return new CustomMorphOne($query, $parent, $type, $id, $localKey);
     }
 
-    protected function newMorphMany(Builder $query, Model $parent, $type, $id, $localKey)
+    protected function newMorphMany(Builder $query, ModelContract $parent, $type, $id, $localKey)
     {
         return new CustomMorphMany($query, $parent, $type, $id, $localKey);
     }
 
-    protected function newBelongsToMany(Builder $query, Model $parent, $table, $foreignPivotKey, $relatedPivotKey,
+    protected function newBelongsToMany(Builder $query, ModelContract $parent, $table, $foreignPivotKey, $relatedPivotKey,
         $parentKey, $relatedKey, $relationName = null
     ) {
         return new CustomBelongsToMany($query, $parent, $table, $foreignPivotKey, $relatedPivotKey, $parentKey, $relatedKey, $relationName);
     }
 
-    protected function newHasManyThrough(Builder $query, Model $farParent, Model $throughParent, $firstKey,
+    protected function newHasManyThrough(Builder $query, ModelContract $farParent, ModelContract $throughParent, $firstKey,
         $secondKey, $localKey, $secondLocalKey
     ) {
         return new CustomHasManyThrough($query, $farParent, $throughParent, $firstKey, $secondKey, $localKey, $secondLocalKey);
     }
 
-    protected function newHasOneThrough(Builder $query, Model $farParent, Model $throughParent, $firstKey,
+    protected function newHasOneThrough(Builder $query, ModelContract $farParent, ModelContract $throughParent, $firstKey,
         $secondKey, $localKey, $secondLocalKey
     ) {
         return new CustomHasOneThrough($query, $farParent, $throughParent, $firstKey, $secondKey, $localKey, $secondLocalKey);
     }
 
-    protected function newMorphToMany(Builder $query, Model $parent, $name, $table, $foreignPivotKey,
+    protected function newMorphToMany(Builder $query, ModelContract $parent, $name, $table, $foreignPivotKey,
         $relatedPivotKey, $parentKey, $relatedKey, $relationName = null, $inverse = false)
     {
         return new CustomMorphToMany($query, $parent, $name, $table, $foreignPivotKey, $relatedPivotKey, $parentKey, $relatedKey,
             $relationName, $inverse);
     }
 
-    protected function newMorphTo(Builder $query, Model $parent, $foreignKey, $ownerKey, $type, $relation)
+    protected function newMorphTo(Builder $query, ModelContract $parent, $foreignKey, $ownerKey, $type, $relation)
     {
         return new CustomMorphTo($query, $parent, $foreignKey, $ownerKey, $type, $relation);
     }

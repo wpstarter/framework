@@ -14,14 +14,14 @@ class FoundationHelpersTest extends TestCase
     {
         $this->assertEquals(
             'rescued!',
-            rescue(function () {
+            ws_rescue(function () {
                 throw new Exception;
             }, 'rescued!')
         );
 
         $this->assertEquals(
             'rescued!',
-            rescue(function () {
+            ws_rescue(function () {
                 throw new Exception;
             }, function () {
                 return 'rescued!';
@@ -30,7 +30,7 @@ class FoundationHelpersTest extends TestCase
 
         $this->assertEquals(
             'no need to rescue',
-            rescue(function () {
+            ws_rescue(function () {
                 return 'no need to rescue';
             }, 'rescued!')
         );
@@ -45,7 +45,7 @@ class FoundationHelpersTest extends TestCase
 
         $this->assertEquals(
             'rescued!',
-            rescue(function () use ($testClass) {
+            ws_rescue(function () use ($testClass) {
                 $testClass->test([]);
             }, 'rescued!')
         );
@@ -57,7 +57,7 @@ class FoundationHelpersTest extends TestCase
         $this->app->instance(ExceptionHandler::class, $handler);
         $manifest = $this->makeManifest();
 
-        mix('missing.js');
+        ws_mix('missing.js');
 
         $this->assertInstanceOf(Exception::class, $handler->reported[0]);
         $this->assertSame('Unable to locate Mix file: /missing.js.', $handler->reported[0]->getMessage());
@@ -71,7 +71,7 @@ class FoundationHelpersTest extends TestCase
 
         $manifest = $this->makeManifest();
 
-        $path = mix('missing.js');
+        $path = ws_mix('missing.js');
 
         $this->assertSame('/missing.js', $path);
 
@@ -88,7 +88,7 @@ class FoundationHelpersTest extends TestCase
         $manifest = $this->makeManifest();
 
         try {
-            mix('missing.js');
+            ws_mix('missing.js');
         } catch (Exception $e) {
             throw $e;
         } finally { // make sure we can cleanup the file
@@ -105,7 +105,7 @@ class FoundationHelpersTest extends TestCase
         $manifest = $this->makeManifest();
 
         Route::get('test-route', function () {
-            mix('missing.js');
+            ws_mix('missing.js');
         });
 
         $this->get('/test-route');
@@ -121,7 +121,7 @@ class FoundationHelpersTest extends TestCase
             return __DIR__;
         });
 
-        $path = public_path(Str::finish($directory, '/').'mix-manifest.json');
+        $path = ws_public_path(Str::finish($directory, '/').'mix-manifest.json');
 
         touch($path);
 

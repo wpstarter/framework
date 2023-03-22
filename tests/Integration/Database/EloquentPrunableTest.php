@@ -16,7 +16,7 @@ class EloquentPrunableTest extends DatabaseTestCase
 {
     protected function defineDatabaseMigrationsAfterDatabaseRefreshed()
     {
-        collect([
+        ws_collect([
             'prunable_test_models',
             'prunable_soft_delete_test_models',
             'prunable_test_model_missing_prunable_methods',
@@ -45,7 +45,7 @@ class EloquentPrunableTest extends DatabaseTestCase
     {
         Event::fake();
 
-        collect(range(1, 5000))->map(function ($id) {
+        ws_collect(range(1, 5000))->map(function ($id) {
             return ['id' => $id];
         })->chunk(200)->each(function ($chunk) {
             PrunableTestModel::insert($chunk->all());
@@ -63,8 +63,8 @@ class EloquentPrunableTest extends DatabaseTestCase
     {
         Event::fake();
 
-        collect(range(1, 5000))->map(function ($id) {
-            return ['id' => $id, 'deleted_at' => now()];
+        ws_collect(range(1, 5000))->map(function ($id) {
+            return ['id' => $id, 'deleted_at' => ws_now()];
         })->chunk(200)->each(function ($chunk) {
             PrunableSoftDeleteTestModel::insert($chunk->all());
         });
@@ -82,7 +82,7 @@ class EloquentPrunableTest extends DatabaseTestCase
     {
         Event::fake();
 
-        collect(range(1, 5000))->map(function ($id) {
+        ws_collect(range(1, 5000))->map(function ($id) {
             return ['id' => $id];
         })->chunk(200)->each(function ($chunk) {
             PrunableWithCustomPruneMethodTestModel::insert($chunk->all());

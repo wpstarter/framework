@@ -803,8 +803,8 @@ class RedisConnectionTest extends TestCase
             'phpredis' => $this->redis['phpredis']->connection(),
         ];
 
-        $host = env('REDIS_HOST', '127.0.0.1');
-        $port = env('REDIS_PORT', 6379);
+        $host = ws_env('REDIS_HOST', '127.0.0.1');
+        $port = ws_env('REDIS_PORT', 6379);
 
         $connections[] = (new RedisManager(new Application, 'phpredis', [
             'cluster' => false,

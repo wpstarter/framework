@@ -22,7 +22,7 @@ class MailLogTransportTest extends TestCase
             'path' => 'mail.log',
         ]);
 
-        $transport = app('mailer')->getSwiftMailer()->getTransport();
+        $transport = ws_app('mailer')->getSwiftMailer()->getTransport();
         $this->assertInstanceOf(LogTransport::class, $transport);
 
         $logger = $transport->logger();
@@ -38,7 +38,7 @@ class MailLogTransportTest extends TestCase
         $this->app['config']->set('mail.driver', 'log');
         $logger = $this->app->instance('log', new NullLogger);
 
-        $transportLogger = app('mailer')->getSwiftMailer()->getTransport()->logger();
+        $transportLogger = ws_app('mailer')->getSwiftMailer()->getTransport()->logger();
 
         $this->assertEquals($logger, $transportLogger);
     }

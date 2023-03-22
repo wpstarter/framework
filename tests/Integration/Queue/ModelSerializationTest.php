@@ -136,7 +136,7 @@ class ModelSerializationTest extends TestCase
 
     public function testItReloadsRelationships()
     {
-        $order = tap(Order::create(), function (Order $order) {
+        $order = ws_tap(Order::create(), function (Order $order) {
             $order->wasRecentlyCreated = false;
         });
 
@@ -156,7 +156,7 @@ class ModelSerializationTest extends TestCase
 
     public function testItReloadsNestedRelationships()
     {
-        $order = tap(Order::create(), function (Order $order) {
+        $order = ws_tap(Order::create(), function (Order $order) {
             $order->wasRecentlyCreated = false;
         });
 
@@ -196,7 +196,7 @@ class ModelSerializationTest extends TestCase
      */
     public function testItCanUnserializeNestedRelationshipsWithoutPivot()
     {
-        $user = tap(User::create([
+        $user = ws_tap(User::create([
             'email' => 'taylor@laravel.com',
         ]), function (User $user) {
             $user->wasRecentlyCreated = false;
@@ -317,7 +317,7 @@ class ModelSerializationTest extends TestCase
         $serialized = serialize(new ModelSerializationParentAccessibleTestClass($user, $user, $user));
 
         $this->assertSame(
-            'O:78:"WpStarter\\Tests\\Integration\\Queue\\ModelSerializationParentAccessibleTestClass":2:{s:4:"user";O:45:"WpStarter\\Contracts\\Database\\ModelIdentifier":4:{s:5:"class";s:61:"WpStarter\\Tests\\Integration\\Queue\\ModelSerializationTestUser";s:2:"id";i:1;s:9:"relations";a:0:{}s:10:"connection";s:7:"testing";}s:8:"'."\0".'*'."\0".'user2";O:45:"WpStarter\\Contracts\\Database\\ModelIdentifier":4:{s:5:"class";s:61:"WpStarter\\Tests\\Integration\\Queue\\ModelSerializationTestUser";s:2:"id";i:1;s:9:"relations";a:0:{}s:10:"connection";s:7:"testing";}}', $serialized
+            'O:77:"WpStarter\Tests\Integration\Queue\ModelSerializationParentAccessibleTestClass":2:{s:4:"user";O:44:"WpStarter\Contracts\Database\ModelIdentifier":4:{s:5:"class";s:60:"WpStarter\Tests\Integration\Queue\ModelSerializationTestUser";s:2:"id";i:1;s:9:"relations";a:0:{}s:10:"connection";s:7:"testing";}s:8:"'."\0".'*'."\0".'user2";O:44:"WpStarter\Contracts\Database\ModelIdentifier":4:{s:5:"class";s:60:"WpStarter\Tests\Integration\Queue\ModelSerializationTestUser";s:2:"id";i:1;s:9:"relations";a:0:{}s:10:"connection";s:7:"testing";}}', $serialized
         );
     }
 }

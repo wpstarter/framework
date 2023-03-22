@@ -44,6 +44,6 @@ trait CompilesHelpers
      */
     protected function compileMethod($method)
     {
-        return "<?php echo method_field{$method}; ?>";
+        return "<?php echo ws_method_field{$method}; ?>";
     }
 }

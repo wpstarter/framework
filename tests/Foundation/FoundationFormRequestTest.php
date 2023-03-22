@@ -162,7 +162,7 @@ class FoundationFormRequestTest extends TestCase
      */
     protected function createRequest($payload = [], $class = FoundationTestFormRequestStub::class)
     {
-        $container = tap(new Container, function ($container) {
+        $container = ws_tap(new Container, function ($container) {
             $container->instance(
                 ValidationFactoryContract::class,
                 $this->createValidationFactory($container)

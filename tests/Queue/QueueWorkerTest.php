@@ -185,7 +185,7 @@ class QueueWorkerTest extends TestCase
             throw $e;
         });
 
-        $job->retryUntil = now()->addSeconds(1)->getTimestamp();
+        $job->retryUntil = ws_now()->addSeconds(1)->getTimestamp();
 
         $job->attempts = 0;
 

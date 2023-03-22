@@ -165,7 +165,7 @@ class SupportLazyCollectionTest extends TestCase
         $results = $mock
             ->times(10)
             ->pipe(function ($collection) use ($mock, $timeout) {
-                tap($collection)
+                ws_tap($collection)
                     ->mockery_init($mock->mockery_getContainer())
                     ->shouldAllowMockingProtectedMethods()
                     ->shouldReceive('now')

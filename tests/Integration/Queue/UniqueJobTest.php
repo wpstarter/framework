@@ -60,7 +60,7 @@ class UniqueJobTest extends TestCase
     public function testLockIsReleasedForSuccessfulJobs()
     {
         UniqueTestJob::$handled = false;
-        dispatch($job = new UniqueTestJob);
+        ws_dispatch($job = new UniqueTestJob);
 
         $this->assertTrue($job::$handled);
         $this->assertTrue($this->app->get(Cache::class)->lock($this->getLockKey($job), 10)->get());
@@ -73,7 +73,7 @@ class UniqueJobTest extends TestCase
         $this->expectException(Exception::class);
 
         try {
-            dispatch($job = new UniqueTestFailJob);
+            ws_dispatch($job = new UniqueTestFailJob);
         } finally {
             $this->assertTrue($job::$handled);
             $this->assertTrue($this->app->get(Cache::class)->lock($this->getLockKey($job), 10)->get());
@@ -84,7 +84,7 @@ class UniqueJobTest extends TestCase
     {
         UniqueTestRetryJob::$handled = false;
 
-        dispatch($job = new UniqueTestRetryJob);
+        ws_dispatch($job = new UniqueTestRetryJob);
 
         $this->assertFalse($this->app->get(Cache::class)->lock($this->getLockKey($job), 10)->get());
 
@@ -109,7 +109,7 @@ class UniqueJobTest extends TestCase
     public function testLockIsNotReleasedForJobReleases()
     {
         UniqueTestReleasedJob::$handled = false;
-        dispatch($job = new UniqueTestReleasedJob);
+        ws_dispatch($job = new UniqueTestReleasedJob);
 
         $this->assertFalse($this->app->get(Cache::class)->lock($this->getLockKey($job), 10)->get());
 
@@ -135,7 +135,7 @@ class UniqueJobTest extends TestCase
     {
         UniqueUntilStartTestJob::$handled = false;
 
-        dispatch($job = new UniqueUntilStartTestJob);
+        ws_dispatch($job = new UniqueUntilStartTestJob);
 
         $this->assertFalse($this->app->get(Cache::class)->lock($this->getLockKey($job), 10)->get());
 

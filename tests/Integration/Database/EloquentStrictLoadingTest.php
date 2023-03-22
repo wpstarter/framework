@@ -118,7 +118,7 @@ class EloquentStrictLoadingTest extends DatabaseTestCase
         $this->expectsEvents(ViolatedLazyLoadingEvent::class);
 
         Model::handleLazyLoadingViolationUsing(function ($model, $key) {
-            event(new ViolatedLazyLoadingEvent($model, $key));
+            ws_event(new ViolatedLazyLoadingEvent($model, $key));
         });
 
         EloquentStrictLoadingTestModel1::create();

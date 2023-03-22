@@ -26,8 +26,8 @@ class RedisConnectorTest extends TestCase
 
     public function testDefaultConfiguration()
     {
-        $host = env('REDIS_HOST', '127.0.0.1');
-        $port = env('REDIS_PORT', 6379);
+        $host = ws_env('REDIS_HOST', '127.0.0.1');
+        $port = ws_env('REDIS_PORT', 6379);
 
         $predisClient = $this->redis['predis']->connection()->client();
         $parameters = $predisClient->getConnection()->getParameters();
@@ -43,8 +43,8 @@ class RedisConnectorTest extends TestCase
 
     public function testUrl()
     {
-        $host = env('REDIS_HOST', '127.0.0.1');
-        $port = env('REDIS_PORT', 6379);
+        $host = ws_env('REDIS_HOST', '127.0.0.1');
+        $port = ws_env('REDIS_PORT', 6379);
 
         $predis = new RedisManager(new Application, 'predis', [
             'cluster' => false,
@@ -81,8 +81,8 @@ class RedisConnectorTest extends TestCase
 
     public function testUrlWithScheme()
     {
-        $host = env('REDIS_HOST', '127.0.0.1');
-        $port = env('REDIS_PORT', 6379);
+        $host = ws_env('REDIS_HOST', '127.0.0.1');
+        $port = ws_env('REDIS_PORT', 6379);
 
         $predis = new RedisManager(new Application, 'predis', [
             'cluster' => false,
@@ -119,8 +119,8 @@ class RedisConnectorTest extends TestCase
 
     public function testScheme()
     {
-        $host = env('REDIS_HOST', '127.0.0.1');
-        $port = env('REDIS_PORT', 6379);
+        $host = ws_env('REDIS_HOST', '127.0.0.1');
+        $port = ws_env('REDIS_PORT', 6379);
 
         $predis = new RedisManager(new Application, 'predis', [
             'cluster' => false,
@@ -161,8 +161,8 @@ class RedisConnectorTest extends TestCase
 
     public function testPredisConfigurationWithUsername()
     {
-        $host = env('REDIS_HOST', '127.0.0.1');
-        $port = env('REDIS_PORT', 6379);
+        $host = ws_env('REDIS_HOST', '127.0.0.1');
+        $port = ws_env('REDIS_PORT', 6379);
         $username = 'testuser';
         $password = 'testpw';
 
@@ -184,8 +184,8 @@ class RedisConnectorTest extends TestCase
 
     public function testPredisConfigurationWithSentinel()
     {
-        $host = env('REDIS_HOST', '127.0.0.1');
-        $port = env('REDIS_PORT', 6379);
+        $host = ws_env('REDIS_HOST', '127.0.0.1');
+        $port = ws_env('REDIS_PORT', 6379);
 
         $predis = new RedisManager(new Application, 'predis', [
             'cluster' => false,

@@ -58,7 +58,7 @@ class BladeComponentTagCompilerTest extends AbstractBladeTestCase
         $result = $this->compiler(['alert' => TestAlertComponent::class])->compileTags('<div><x-alert type="foo" limit="5" @click="foo" wire:click="changePlan(\'{{ $plan }}\')" required /><x-alert /></div>');
 
         $this->assertSame("<div>##BEGIN-COMPONENT-CLASS##@component('WpStarter\Tests\View\Blade\TestAlertComponent', 'alert', [])
-<?php \$component->withAttributes(['type' => 'foo','limit' => '5','@click' => 'foo','wire:click' => 'changePlan(\''.e(\$plan).'\')','required' => true]); ?>\n".
+<?php \$component->withAttributes(['type' => 'foo','limit' => '5','@click' => 'foo','wire:click' => 'changePlan(\''.ws_e(\$plan).'\')','required' => true]); ?>\n".
 "@endComponentClass##END-COMPONENT-CLASS####BEGIN-COMPONENT-CLASS##@component('WpStarter\Tests\View\Blade\TestAlertComponent', 'alert', [])
 <?php \$component->withAttributes([]); ?>\n".
 '@endComponentClass##END-COMPONENT-CLASS##</div>', trim($result));
@@ -294,10 +294,10 @@ class BladeComponentTagCompilerTest extends AbstractBladeTestCase
 
         $model = new class extends Model {};
 
-        $this->assertEquals(e('<hi>'), BladeCompiler::sanitizeComponentAttribute('<hi>'));
-        $this->assertEquals(e('1'), BladeCompiler::sanitizeComponentAttribute('1'));
+        $this->assertEquals(ws_e('<hi>'), BladeCompiler::sanitizeComponentAttribute('<hi>'));
+        $this->assertEquals(ws_e('1'), BladeCompiler::sanitizeComponentAttribute('1'));
         $this->assertEquals(1, BladeCompiler::sanitizeComponentAttribute(1));
-        $this->assertEquals(e('<hi>'), BladeCompiler::sanitizeComponentAttribute($class));
+        $this->assertEquals(ws_e('<hi>'), BladeCompiler::sanitizeComponentAttribute($class));
         $this->assertSame($model, BladeCompiler::sanitizeComponentAttribute($model));
     }
 

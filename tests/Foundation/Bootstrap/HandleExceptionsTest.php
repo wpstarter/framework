@@ -26,12 +26,12 @@ class HandleExceptionsTest extends TestCase
 
         $this->handleExceptions = new HandleExceptions();
 
-        with(new ReflectionClass($this->handleExceptions), function ($reflection) {
-            $property = tap($reflection->getProperty('app'))->setAccessible(true);
+        ws_with(new ReflectionClass($this->handleExceptions), function ($reflection) {
+            $property = ws_tap($reflection->getProperty('app'))->setAccessible(true);
 
             $property->setValue(
                 $this->handleExceptions,
-                tap(m::mock($this->app), function ($app) {
+                ws_tap(m::mock($this->app), function ($app) {
                     $app->shouldReceive('runningUnitTests')->andReturn(false);
                     $app->shouldReceive('hasBeenBootstrapped')->andReturn(true);
                 })

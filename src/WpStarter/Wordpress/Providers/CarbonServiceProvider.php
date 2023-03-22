@@ -105,7 +105,7 @@ class CarbonServiceProvider extends \WpStarter\Support\ServiceProvider
 
     protected function getGlobalApp(...$args)
     {
-        return \function_exists('app') ? \app(...$args) : null;
+        return \function_exists('ws_app') ? \ws_app(...$args) : null;
     }
 
     protected function isEventDispatcher($instance)

@@ -53,7 +53,7 @@ class JobEncryptionTest extends DatabaseTestCase
         Bus::dispatch(new JobEncryptionTestEncryptedJob);
 
         $this->assertNotEmpty(
-            decrypt(json_decode(DB::table('jobs')->first()->payload)->data->command)
+            ws_decrypt(json_decode(DB::table('jobs')->first()->payload)->data->command)
         );
     }
 
@@ -68,7 +68,7 @@ class JobEncryptionTest extends DatabaseTestCase
             unserialize(json_decode(DB::table('jobs')->first()->payload)->data->command)
         );
 
-        decrypt(json_decode(DB::table('jobs')->first()->payload)->data->command);
+        ws_decrypt(json_decode(DB::table('jobs')->first()->payload)->data->command);
     }
 
     public function testQueueCanProcessEncryptedJob()

@@ -30,7 +30,7 @@ class MailFailoverTransportTest extends TestCase
             ],
         ]);
 
-        $transport = app('mailer')->getSwiftMailer()->getTransport();
+        $transport = ws_app('mailer')->getSwiftMailer()->getTransport();
         $this->assertInstanceOf(\Swift_FailoverTransport::class, $transport);
 
         $transports = $transport->getTransports();
@@ -51,7 +51,7 @@ class MailFailoverTransportTest extends TestCase
 
         $this->app['config']->set('mail.sendmail', '/usr/sbin/sendmail -bs');
 
-        $transport = app('mailer')->getSwiftMailer()->getTransport();
+        $transport = ws_app('mailer')->getSwiftMailer()->getTransport();
         $this->assertInstanceOf(\Swift_FailoverTransport::class, $transport);
 
         $transports = $transport->getTransports();

@@ -174,7 +174,7 @@ EOF, str_replace("\r", '', $output->fetch()));
         $input = new ArrayInput($arguments);
         $output = new BufferedOutput;
 
-        tap(new PruneCommand())
+        ws_tap(new PruneCommand())
             ->setLaravel(Container::getInstance())
             ->run($input, $output);
 
@@ -198,8 +198,8 @@ class PrunableTestModelWithPrunableRecords extends Model
 
     public function pruneAll()
     {
-        event(new ModelsPruned(static::class, 10));
-        event(new ModelsPruned(static::class, 20));
+        ws_event(new ModelsPruned(static::class, 10));
+        ws_event(new ModelsPruned(static::class, 20));
 
         return 20;
     }

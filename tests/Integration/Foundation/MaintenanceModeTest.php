@@ -18,12 +18,12 @@ class MaintenanceModeTest extends TestCase
 {
     protected function tearDown(): void
     {
-        @unlink(storage_path('framework/down'));
+        @unlink(ws_storage_path('framework/down'));
     }
 
     public function testBasicMaintenanceModeResponse()
     {
-        file_put_contents(storage_path('framework/down'), json_encode([
+        file_put_contents(ws_storage_path('framework/down'), json_encode([
             'retry' => 60,
             'refresh' => 60,
         ]));
@@ -41,7 +41,7 @@ class MaintenanceModeTest extends TestCase
 
     public function testMaintenanceModeCanHaveCustomStatus()
     {
-        file_put_contents(storage_path('framework/down'), json_encode([
+        file_put_contents(ws_storage_path('framework/down'), json_encode([
             'retry' => 60,
             'status' => 200,
         ]));
@@ -58,7 +58,7 @@ class MaintenanceModeTest extends TestCase
 
     public function testMaintenanceModeCanHaveCustomTemplate()
     {
-        file_put_contents(storage_path('framework/down'), json_encode([
+        file_put_contents(ws_storage_path('framework/down'), json_encode([
             'retry' => 60,
             'template' => 'Rendered Content',
         ]));
@@ -76,7 +76,7 @@ class MaintenanceModeTest extends TestCase
 
     public function testMaintenanceModeCanRedirectWithBypassCookie()
     {
-        file_put_contents(storage_path('framework/down'), json_encode([
+        file_put_contents(ws_storage_path('framework/down'), json_encode([
             'retry' => 60,
             'secret' => 'foo',
             'template' => 'Rendered Content',
@@ -94,7 +94,7 @@ class MaintenanceModeTest extends TestCase
 
     public function testMaintenanceModeCanBeBypassedWithValidCookie()
     {
-        file_put_contents(storage_path('framework/down'), json_encode([
+        file_put_contents(ws_storage_path('framework/down'), json_encode([
             'retry' => 60,
             'secret' => 'foo',
         ]));
@@ -115,7 +115,7 @@ class MaintenanceModeTest extends TestCase
 
     public function testMaintenanceModeCantBeBypassedWithInvalidCookie()
     {
-        file_put_contents(storage_path('framework/down'), json_encode([
+        file_put_contents(ws_storage_path('framework/down'), json_encode([
             'retry' => 60,
             'secret' => 'foo',
         ]));
@@ -143,7 +143,7 @@ class MaintenanceModeTest extends TestCase
         $this->assertTrue(MaintenanceModeBypassCookie::isValid($cookie->getValue(), 'test-key'));
         $this->assertFalse(MaintenanceModeBypassCookie::isValid($cookie->getValue(), 'wrong-key'));
 
-        Carbon::setTestNow(now()->addMonths(6));
+        Carbon::setTestNow(ws_now()->addMonths(6));
         $this->assertFalse(MaintenanceModeBypassCookie::isValid($cookie->getValue(), 'test-key'));
 
         Carbon::setTestNow(null);
@@ -160,7 +160,7 @@ class MaintenanceModeTest extends TestCase
 
     public function testDispatchEventWhenMaintenanceModeIsDisabled()
     {
-        file_put_contents(storage_path('framework/down'), json_encode([
+        file_put_contents(ws_storage_path('framework/down'), json_encode([
             'retry' => 60,
             'refresh' => 60,
         ]));

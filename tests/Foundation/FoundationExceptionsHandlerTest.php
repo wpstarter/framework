@@ -140,7 +140,7 @@ class FoundationExceptionsHandlerTest extends TestCase
         $this->handler->renderable(function (CustomException $e, $request) {
             $this->assertSame($this->request, $request);
 
-            return response()->json(['response' => 'My custom exception response']);
+            return ws_response()->json(['response' => 'My custom exception response']);
         });
 
         $response = $this->handler->render($this->request, new CustomException)->getContent();
@@ -295,7 +295,7 @@ class ResponsableException extends Exception implements Responsable
 {
     public function toResponse($request)
     {
-        return response()->json(['response' => 'My responsable exception response']);
+        return ws_response()->json(['response' => 'My responsable exception response']);
     }
 }
 
@@ -346,7 +346,7 @@ class CustomRenderer
 {
     public function __invoke(CustomException $e, $request)
     {
-        return response()->json(['response' => 'The CustomRenderer response']);
+        return ws_response()->json(['response' => 'The CustomRenderer response']);
     }
 }
 

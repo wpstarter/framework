@@ -401,7 +401,7 @@ class TestResponseTest extends TestCase
 
         $this->expectExceptionMessage('Expected response status code');
 
-        $baseResponse = tap(new Response, function ($response) use ($statusCode) {
+        $baseResponse = ws_tap(new Response, function ($response) use ($statusCode) {
             $response->setStatusCode($statusCode);
         });
 
@@ -417,7 +417,7 @@ class TestResponseTest extends TestCase
 
         $this->expectExceptionMessage('Expected response status code');
 
-        $baseResponse = tap(new Response, function ($response) use ($statusCode) {
+        $baseResponse = ws_tap(new Response, function ($response) use ($statusCode) {
             $response->setStatusCode($statusCode);
         });
 
@@ -432,7 +432,7 @@ class TestResponseTest extends TestCase
         $this->expectException(AssertionFailedError::class);
         $this->expectExceptionMessage('Expected response status code');
 
-        $baseResponse = tap(new Response, function ($response) use ($statusCode) {
+        $baseResponse = ws_tap(new Response, function ($response) use ($statusCode) {
             $response->setStatusCode($statusCode);
         });
 
@@ -448,7 +448,7 @@ class TestResponseTest extends TestCase
 
         $this->expectExceptionMessage('Expected response status code');
 
-        $baseResponse = tap(new Response, function ($response) use ($statusCode) {
+        $baseResponse = ws_tap(new Response, function ($response) use ($statusCode) {
             $response->setStatusCode($statusCode);
         });
 
@@ -464,7 +464,7 @@ class TestResponseTest extends TestCase
 
         $this->expectExceptionMessage('Expected response status code');
 
-        $baseResponse = tap(new Response, function ($response) use ($statusCode) {
+        $baseResponse = ws_tap(new Response, function ($response) use ($statusCode) {
             $response->setStatusCode($statusCode);
         });
 
@@ -480,7 +480,7 @@ class TestResponseTest extends TestCase
 
         $this->expectExceptionMessage('Expected response status code');
 
-        $baseResponse = tap(new Response, function ($response) use ($statusCode) {
+        $baseResponse = ws_tap(new Response, function ($response) use ($statusCode) {
             $response->setStatusCode($statusCode);
         });
 
@@ -496,7 +496,7 @@ class TestResponseTest extends TestCase
 
         $this->expectExceptionMessage('Expected response status code');
 
-        $baseResponse = tap(new Response, function ($response) use ($statusCode) {
+        $baseResponse = ws_tap(new Response, function ($response) use ($statusCode) {
             $response->setStatusCode($statusCode);
         });
 
@@ -513,7 +513,7 @@ class TestResponseTest extends TestCase
 
         $this->expectExceptionMessage('Expected response status code');
 
-        $baseResponse = tap(new Response, function ($response) use ($statusCode) {
+        $baseResponse = ws_tap(new Response, function ($response) use ($statusCode) {
             $response->setStatusCode($statusCode);
         });
 
@@ -527,7 +527,7 @@ class TestResponseTest extends TestCase
 
         $this->expectExceptionMessage('Response content is not empty');
 
-        $baseResponse = tap(new Response, function ($response) {
+        $baseResponse = ws_tap(new Response, function ($response) {
             $response->setStatusCode(204);
             $response->setContent('non-empty-response-content');
         });
@@ -545,7 +545,7 @@ class TestResponseTest extends TestCase
 
         $this->expectExceptionMessage('Expected response status code');
 
-        $baseResponse = tap(new Response, function ($response) use ($statusCode) {
+        $baseResponse = ws_tap(new Response, function ($response) use ($statusCode) {
             $response->setStatusCode($statusCode);
         });
 
@@ -562,10 +562,10 @@ class TestResponseTest extends TestCase
 
         $this->expectExceptionMessage('Test exception message');
 
-        $baseResponse = tap(new Response, function ($response) use ($statusCode) {
+        $baseResponse = ws_tap(new Response, function ($response) use ($statusCode) {
             $response->setStatusCode($statusCode);
         });
-        $exceptions = collect([new Exception('Test exception message')]);
+        $exceptions = ws_collect([new Exception('Test exception message')]);
 
         $response = TestResponse::fromBaseResponse($baseResponse)
             ->withExceptions($exceptions);
@@ -581,7 +581,7 @@ class TestResponseTest extends TestCase
 
         $this->expectExceptionMessage('The first name field is required.');
 
-        $baseResponse = tap(new RedirectResponse('/', $statusCode), function ($response) {
+        $baseResponse = ws_tap(new RedirectResponse('/', $statusCode), function ($response) {
             $response->setSession(new Store('test-session', new ArraySessionHandler(1)));
             $response->withErrors([
                 'first_name' => 'The first name field is required.',
@@ -627,7 +627,7 @@ class TestResponseTest extends TestCase
 
     public function testAssertStatusWhenJsonIsEncoded()
     {
-        $baseResponse = tap(new Response, function ($response) {
+        $baseResponse = ws_tap(new Response, function ($response) {
             $response->header('Content-Type', 'application/json');
             $response->header('Content-Encoding', 'gzip');
             $response->setContent('b"x£½V*.I,)-V▓R╩¤V¬\x05\x00+ü\x059"');
@@ -641,7 +641,7 @@ class TestResponseTest extends TestCase
     {
         $this->expectException(AssertionFailedError::class);
 
-        $baseResponse = tap(new Response, function ($response) {
+        $baseResponse = ws_tap(new Response, function ($response) {
             $response->header('Location', '/foo');
         });
 
@@ -655,7 +655,7 @@ class TestResponseTest extends TestCase
         $this->expectException(ExpectationFailedException::class);
         $this->expectExceptionMessage('Unexpected header [Location] is present on response.');
 
-        $baseResponse = tap(new Response, function ($response) {
+        $baseResponse = ws_tap(new Response, function ($response) {
             $response->header('Location', '/foo');
         });
 
@@ -973,7 +973,7 @@ class TestResponseTest extends TestCase
 
     public function testAssertSessionValidationErrorsUsingAssertInvalid()
     {
-        app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
+        ws_app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
 
         $store->put('errors', $errorBag = new ViewErrorBag);
 
@@ -998,7 +998,7 @@ class TestResponseTest extends TestCase
 
     public function testAssertSessionValidationErrorsUsingAssertValid()
     {
-        app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
+        ws_app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
 
         $store->put('errors', $errorBag = new ViewErrorBag);
 
@@ -1253,7 +1253,7 @@ class TestResponseTest extends TestCase
 
     public function testAssertJsonMissingValidationErrors()
     {
-        $baseResponse = tap(new Response, function ($response) {
+        $baseResponse = ws_tap(new Response, function ($response) {
             $response->setContent(json_encode(['errors' => [
                 'foo' => [],
                 'bar' => ['one', 'two'],
@@ -1264,7 +1264,7 @@ class TestResponseTest extends TestCase
 
         $response->assertJsonMissingValidationErrors('baz');
 
-        $baseResponse = tap(new Response, function ($response) {
+        $baseResponse = ws_tap(new Response, function ($response) {
             $response->setContent(json_encode(['foo' => 'bar']));
         });
 
@@ -1276,7 +1276,7 @@ class TestResponseTest extends TestCase
     {
         $this->expectException(AssertionFailedError::class);
 
-        $baseResponse = tap(new Response, function ($response) {
+        $baseResponse = ws_tap(new Response, function ($response) {
             $response->setContent(json_encode(['errors' => [
                 'foo' => [],
                 'bar' => ['one', 'two'],
@@ -1292,7 +1292,7 @@ class TestResponseTest extends TestCase
     {
         $this->expectException(AssertionFailedError::class);
 
-        $baseResponse = tap(new Response, function ($response) {
+        $baseResponse = ws_tap(new Response, function ($response) {
             $response->setContent(json_encode(['errors' => [
                 'foo' => [],
                 'bar' => ['one', 'two'],
@@ -1308,7 +1308,7 @@ class TestResponseTest extends TestCase
     {
         $this->expectException(AssertionFailedError::class);
 
-        $baseResponse = tap(new Response, function ($response) {
+        $baseResponse = ws_tap(new Response, function ($response) {
             $response->setContent(
                 json_encode([
                     'data' => [
@@ -1620,7 +1620,7 @@ class TestResponseTest extends TestCase
 
     private function makeMockResponse($content)
     {
-        $baseResponse = tap(new Response, function ($response) use ($content) {
+        $baseResponse = ws_tap(new Response, function ($response) use ($content) {
             $response->setContent(m::mock(View::class, $content));
         });
 

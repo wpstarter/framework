@@ -113,7 +113,7 @@ class TestRegularViewComponent extends Component
 
     public function render()
     {
-        return view('alert');
+        return ws_view('alert');
     }
 }
 

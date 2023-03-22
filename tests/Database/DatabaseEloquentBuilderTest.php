@@ -72,7 +72,7 @@ class DatabaseEloquentBuilderTest extends TestCase
         $builder->getQuery()->shouldNotReceive('whereIn');
         $builder->shouldNotReceive('get');
 
-        $result = $builder->findMany(collect(), ['column']);
+        $result = $builder->findMany(ws_collect(), ['column']);
         $this->assertSame('emptycollection', $result);
     }
 
@@ -167,7 +167,7 @@ class DatabaseEloquentBuilderTest extends TestCase
 
     public function testFindWithManyUsingCollection()
     {
-        $ids = collect([1, 2]);
+        $ids = ws_collect([1, 2]);
         $builder = m::mock(Builder::class.'[get]', [$this->getMockQueryBuilder()]);
         $builder->getQuery()->shouldReceive('whereIn')->once()->with('foo_table.foo', [1, 2]);
         $builder->setModel($this->getMockModel());

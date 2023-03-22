@@ -92,7 +92,7 @@ class JsonResource implements ArrayAccess, JsonSerializable, Responsable, UrlRou
     public function resolve($request = null)
     {
         $data = $this->toArray(
-            $request = $request ?: Container::getInstance()->make('ws_request')
+            $request = $request ?: Container::getInstance()->make('request')
         );
 
         if ($data instanceof Arrayable) {
@@ -216,7 +216,7 @@ class JsonResource implements ArrayAccess, JsonSerializable, Responsable, UrlRou
     public function response($request = null)
     {
         return $this->toResponse(
-            $request ?: Container::getInstance()->make('ws_request')
+            $request ?: Container::getInstance()->make('request')
         );
     }
 
@@ -239,6 +239,6 @@ class JsonResource implements ArrayAccess, JsonSerializable, Responsable, UrlRou
     #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
-        return $this->resolve(Container::getInstance()->make('ws_request'));
+        return $this->resolve(Container::getInstance()->make('request'));
     }
 }

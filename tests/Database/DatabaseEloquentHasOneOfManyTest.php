@@ -577,7 +577,7 @@ class HasOneOfManyTestUser extends Eloquent
             'published_at' => 'max',
             'id' => 'max',
         ], function ($q) {
-            $q->where('published_at', '<', now());
+            $q->where('published_at', '<', ws_now());
         });
     }
 
@@ -597,7 +597,7 @@ class HasOneOfManyTestUser extends Eloquent
             'published_at' => 'max',
             'id' => 'max',
         ], function ($q) {
-            $q->where('published_at', '<', now());
+            $q->where('published_at', '<', ws_now());
         });
     }
 }

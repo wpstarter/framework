@@ -394,7 +394,7 @@ class ResourceTest extends TestCase
             'title' => 'Test Title',
         ]));
 
-        $this->assertSame('http://localhost/post/5', url('/post', $post));
+        $this->assertSame('http://localhost/post/5', ws_url('/post', $post));
     }
 
     public function testNamedRoutesAreUrlRoutable()
@@ -405,7 +405,7 @@ class ResourceTest extends TestCase
         ]));
 
         Route::get('/post/{id}', function () use ($post) {
-            return route('post.show', $post);
+            return ws_route('post.show', $post);
         })->name('post.show');
 
         $response = $this->withoutExceptionHandling()->get('/post/1');
@@ -520,7 +520,7 @@ class ResourceTest extends TestCase
     public function testCollectionResourcesMayCustomizeJsonOptions()
     {
         Route::get('/', function () {
-            return PostResourceWithJsonOptions::collection(collect([
+            return PostResourceWithJsonOptions::collection(ws_collect([
                 new Post(['id' => 5, 'title' => 'Test Title', 'reading_time' => 3.0]),
             ]));
         });
@@ -539,7 +539,7 @@ class ResourceTest extends TestCase
     {
         Route::get('/', function () {
             $paginator = new LengthAwarePaginator(
-                collect([new Post(['id' => 5, 'title' => 'Test Title', 'reading_time' => 3.0])]),
+                ws_collect([new Post(['id' => 5, 'title' => 'Test Title', 'reading_time' => 3.0])]),
                 10, 15, 1
             );
 
@@ -616,7 +616,7 @@ class ResourceTest extends TestCase
     public function testCollectionsAreNotDoubledWrapped()
     {
         Route::get('/', function () {
-            return new PostCollectionResource(collect([new Post([
+            return new PostCollectionResource(ws_collect([new Post([
                 'id' => 5,
                 'title' => 'Test Title',
             ])]));
@@ -642,7 +642,7 @@ class ResourceTest extends TestCase
     {
         Route::get('/', function () {
             $paginator = new LengthAwarePaginator(
-                collect([new Post(['id' => 5, 'title' => 'Test Title'])]),
+                ws_collect([new Post(['id' => 5, 'title' => 'Test Title'])]),
                 10, 15, 1
             );
 
@@ -683,7 +683,7 @@ class ResourceTest extends TestCase
     public function testPaginatorResourceCanPreserveQueryParameters()
     {
         Route::get('/', function () {
-            $collection = collect([new Post(['id' => 2, 'title' => 'Laravel Nova'])]);
+            $collection = ws_collect([new Post(['id' => 2, 'title' => 'Laravel Nova'])]);
             $paginator = new LengthAwarePaginator(
                 $collection, 3, 1, 2
             );
@@ -725,7 +725,7 @@ class ResourceTest extends TestCase
     public function testPaginatorResourceCanReceiveQueryParameters()
     {
         Route::get('/', function () {
-            $collection = collect([new Post(['id' => 2, 'title' => 'Laravel Nova'])]);
+            $collection = ws_collect([new Post(['id' => 2, 'title' => 'Laravel Nova'])]);
             $paginator = new LengthAwarePaginator(
                 $collection, 3, 1, 2
             );
@@ -768,7 +768,7 @@ class ResourceTest extends TestCase
     {
         Route::get('/', function () {
             $paginator = new CursorPaginator(
-                collect([new Post(['id' => 5, 'title' => 'Test Title']), new Post(['id' => 6, 'title' => 'Hello'])]),
+                ws_collect([new Post(['id' => 5, 'title' => 'Test Title']), new Post(['id' => 6, 'title' => 'Hello'])]),
                 1, null, ['parameters' => ['id']]
             );
 
@@ -804,7 +804,7 @@ class ResourceTest extends TestCase
     public function testCursorPaginatorResourceCanPreserveQueryParameters()
     {
         Route::get('/', function () {
-            $collection = collect([new Post(['id' => 5, 'title' => 'Test Title']), new Post(['id' => 6, 'title' => 'Hello'])]);
+            $collection = ws_collect([new Post(['id' => 5, 'title' => 'Test Title']), new Post(['id' => 6, 'title' => 'Hello'])]);
             $paginator = new CursorPaginator(
                 $collection, 1, null, ['parameters' => ['id']]
             );
@@ -841,7 +841,7 @@ class ResourceTest extends TestCase
     public function testCursorPaginatorResourceCanReceiveQueryParameters()
     {
         Route::get('/', function () {
-            $collection = collect([new Post(['id' => 5, 'title' => 'Test Title']), new Post(['id' => 6, 'title' => 'Hello'])]);
+            $collection = ws_collect([new Post(['id' => 5, 'title' => 'Test Title']), new Post(['id' => 6, 'title' => 'Hello'])]);
             $paginator = new CursorPaginator(
                 $collection, 1, null, ['parameters' => ['id']]
             );
@@ -879,7 +879,7 @@ class ResourceTest extends TestCase
     {
         Route::get('/', function () {
             return new EmptyPostCollectionResource(new LengthAwarePaginator(
-                collect([new Post(['id' => 5, 'title' => 'Test Title'])]),
+                ws_collect([new Post(['id' => 5, 'title' => 'Test Title'])]),
                 10, 15, 1
             ));
         });
@@ -953,7 +953,7 @@ class ResourceTest extends TestCase
 
     public function testOriginalOnResponseIsCollectionOfModelWhenCollectionResource()
     {
-        $createdPosts = collect([
+        $createdPosts = ws_collect([
             new Post(['id' => 5, 'title' => 'Test Title']),
             new Post(['id' => 6, 'title' => 'Test Title 2']),
         ]);
@@ -970,7 +970,7 @@ class ResourceTest extends TestCase
 
     public function testCollectionResourceWithPaginationInfomation()
     {
-        $posts = collect([
+        $posts = ws_collect([
             new Post(['id' => 5, 'title' => 'Test Title']),
         ]);
 
@@ -1001,7 +1001,7 @@ class ResourceTest extends TestCase
 
     public function testResourceWithPaginationInfomation()
     {
-        $posts = collect([
+        $posts = ws_collect([
             new Post(['id' => 5, 'title' => 'Test Title']),
         ]);
 
@@ -1032,7 +1032,7 @@ class ResourceTest extends TestCase
 
     public function testCollectionResourcesAreCountable()
     {
-        $posts = collect([
+        $posts = ws_collect([
             new Post(['id' => 1, 'title' => 'Test title']),
             new Post(['id' => 2, 'title' => 'Test title 2']),
         ]);
@@ -1288,7 +1288,7 @@ class ResourceTest extends TestCase
 
             public function work()
             {
-                $posts = collect([
+                $posts = ws_collect([
                     new Post(['id' => 1, 'title' => 'Test title 1']),
                     new Post(['id' => 2, 'title' => 'Test title 2']),
                 ]);

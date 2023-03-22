@@ -24,23 +24,23 @@ class FoundationHelpersTest extends TestCase
         $app['cache'] = $cache = m::mock(stdClass::class);
 
         // 1. cache()
-        $this->assertInstanceOf(stdClass::class, cache());
+        $this->assertInstanceOf(stdClass::class, ws_cache());
 
         // 2. cache(['foo' => 'bar'], 1);
         $cache->shouldReceive('put')->once()->with('foo', 'bar', 1);
-        cache(['foo' => 'bar'], 1);
+        ws_cache(['foo' => 'bar'], 1);
 
         // 3. cache('foo');
         $cache->shouldReceive('get')->once()->with('foo')->andReturn('bar');
-        $this->assertSame('bar', cache('foo'));
+        $this->assertSame('bar', ws_cache('foo'));
 
         // 4. cache('foo', null);
         $cache->shouldReceive('get')->once()->with('foo', null)->andReturn('bar');
-        $this->assertSame('bar', cache('foo', null));
+        $this->assertSame('bar', ws_cache('foo', null));
 
         // 5. cache('baz', 'default');
         $cache->shouldReceive('get')->once()->with('baz', 'default')->andReturn('default');
-        $this->assertSame('default', cache('baz', 'default'));
+        $this->assertSame('default', ws_cache('baz', 'default'));
     }
 
     public function testMixDoesNotIncludeHost()
@@ -52,7 +52,7 @@ class FoundationHelpersTest extends TestCase
 
         $manifest = $this->makeManifest();
 
-        $result = mix('/unversioned.css');
+        $result = ws_mix('/unversioned.css');
 
         $this->assertSame('/versioned.css', $result->toHtml());
 
@@ -67,10 +67,10 @@ class FoundationHelpersTest extends TestCase
         $app['config']->shouldReceive('get')->with('app.mix_hot_proxy_url');
 
         $manifest = $this->makeManifest();
-        mix('unversioned.css');
+        ws_mix('unversioned.css');
         unlink($manifest);
 
-        $result = mix('/unversioned.css');
+        $result = ws_mix('/unversioned.css');
 
         $this->assertSame('/versioned.css', $result->toHtml());
     }
@@ -84,7 +84,7 @@ class FoundationHelpersTest extends TestCase
 
         $manifest = $this->makeManifest();
 
-        $result = mix('unversioned.css');
+        $result = ws_mix('unversioned.css');
 
         $this->assertSame('/versioned.css', $result->toHtml());
 
@@ -96,7 +96,7 @@ class FoundationHelpersTest extends TestCase
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('The Mix manifest does not exist.');
 
-        mix('unversioned.css', 'missing');
+        ws_mix('unversioned.css', 'missing');
     }
 
     public function testMixWithManifestDirectory()
@@ -109,7 +109,7 @@ class FoundationHelpersTest extends TestCase
         mkdir($directory = __DIR__.'/mix');
         $manifest = $this->makeManifest('mix');
 
-        $result = mix('unversioned.css', 'mix');
+        $result = ws_mix('unversioned.css', 'mix');
 
         $this->assertSame('/mix/versioned.css', $result->toHtml());
 
@@ -122,7 +122,7 @@ class FoundationHelpersTest extends TestCase
         mkdir($directory = __DIR__.'/mix');
         $manifest = $this->makeManifest('/mix');
 
-        $result = mix('unversioned.css', 'mix');
+        $result = ws_mix('unversioned.css', 'mix');
 
         $this->assertSame('/mix/versioned.css', $result->toHtml());
 
@@ -134,7 +134,7 @@ class FoundationHelpersTest extends TestCase
     {
         $path = $this->makeHotModuleReloadFile('https://laravel.com/docs');
 
-        $result = mix('unversioned.css');
+        $result = ws_mix('unversioned.css');
 
         $this->assertSame('//laravel.com/docs/unversioned.css', $result->toHtml());
 
@@ -145,7 +145,7 @@ class FoundationHelpersTest extends TestCase
     {
         $path = $this->makeHotModuleReloadFile('http://laravel.com/docs');
 
-        $result = mix('unversioned.css');
+        $result = ws_mix('unversioned.css');
 
         $this->assertSame('//laravel.com/docs/unversioned.css', $result->toHtml());
 
@@ -157,7 +157,7 @@ class FoundationHelpersTest extends TestCase
         mkdir($directory = __DIR__.'/mix');
         $path = $this->makeHotModuleReloadFile('https://laravel.com/docs', 'mix');
 
-        $result = mix('unversioned.css', 'mix');
+        $result = ws_mix('unversioned.css', 'mix');
 
         $this->assertSame('//laravel.com/docs/unversioned.css', $result->toHtml());
 
@@ -170,7 +170,7 @@ class FoundationHelpersTest extends TestCase
         mkdir($directory = __DIR__.'/mix');
         $path = $this->makeHotModuleReloadFile('http://laravel.com/docs', 'mix');
 
-        $result = mix('unversioned.css', 'mix');
+        $result = ws_mix('unversioned.css', 'mix');
 
         $this->assertSame('//laravel.com/docs/unversioned.css', $result->toHtml());
 
@@ -182,7 +182,7 @@ class FoundationHelpersTest extends TestCase
     {
         $path = $this->makeHotModuleReloadFile('');
 
-        $result = mix('unversioned.css');
+        $result = ws_mix('unversioned.css');
 
         $this->assertSame('//localhost:8080/unversioned.css', $result->toHtml());
 
@@ -194,7 +194,7 @@ class FoundationHelpersTest extends TestCase
         mkdir($directory = __DIR__.'/mix');
         $path = $this->makeHotModuleReloadFile('', 'mix');
 
-        $result = mix('unversioned.css', 'mix');
+        $result = ws_mix('unversioned.css', 'mix');
 
         $this->assertSame('//localhost:8080/unversioned.css', $result->toHtml());
 
@@ -204,11 +204,11 @@ class FoundationHelpersTest extends TestCase
 
     protected function makeHotModuleReloadFile($url, $directory = '')
     {
-        app()->singleton('path.public', function () {
+        ws_app()->singleton('path.public', function () {
             return __DIR__;
         });
 
-        $path = public_path(Str::finish($directory, '/').'hot');
+        $path = ws_public_path(Str::finish($directory, '/').'hot');
 
         // Laravel mix when run 'hot' has a new line after the
         // url, so for consistency this "\n" is added.
@@ -219,11 +219,11 @@ class FoundationHelpersTest extends TestCase
 
     protected function makeManifest($directory = '')
     {
-        app()->singleton('path.public', function () {
+        ws_app()->singleton('path.public', function () {
             return __DIR__;
         });
 
-        $path = public_path(Str::finish($directory, '/').'mix-manifest.json');
+        $path = ws_public_path(Str::finish($directory, '/').'mix-manifest.json');
 
         touch($path);
 
@@ -242,6 +242,6 @@ class FoundationHelpersTest extends TestCase
             return 'expected';
         });
 
-        $this->assertSame('expected', mix('asset.png'));
+        $this->assertSame('expected', ws_mix('asset.png'));
     }
 }

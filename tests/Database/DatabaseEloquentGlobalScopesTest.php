@@ -4,6 +4,7 @@ namespace WpStarter\Tests\Database;
 
 use WpStarter\Database\Capsule\Manager as DB;
 use WpStarter\Database\Eloquent\Builder;
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use WpStarter\Database\Eloquent\Model;
 use WpStarter\Database\Eloquent\Scope;
 use PHPUnit\Framework\TestCase;
@@ -14,7 +15,7 @@ class DatabaseEloquentGlobalScopesTest extends TestCase
     {
         parent::setUp();
 
-        tap(new DB)->addConnection([
+        ws_tap(new DB)->addConnection([
             'driver' => 'sqlite',
             'database' => ':memory:',
         ])->bootEloquent();
@@ -192,7 +193,7 @@ class EloquentGlobalScopesTestModel extends Model
 
 class ActiveScope implements Scope
 {
-    public function apply(Builder $builder, Model $model)
+    public function apply(Builder $builder, ModelContract $model)
     {
         return $builder->where('active', 1);
     }

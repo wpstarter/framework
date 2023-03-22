@@ -16,7 +16,7 @@ class FilesystemTest extends TestCase
     protected function setUp(): void
     {
         $this->afterApplicationCreated(function () {
-            File::put($file = storage_path('app/public/StardewTaylor.png'), File::get(__DIR__.'/Fixtures/StardewTaylor.png'));
+            File::put($file = ws_storage_path('app/public/StardewTaylor.png'), File::get(__DIR__.'/Fixtures/StardewTaylor.png'));
             $this->stubFile = $file;
         });
 

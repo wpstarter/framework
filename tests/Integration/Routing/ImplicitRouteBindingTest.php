@@ -72,7 +72,7 @@ PHP);
     {
         $user = ImplicitBindingUser::create(['name' => 'Dries']);
 
-        config(['app.key' => str_repeat('a', 32)]);
+        ws_config(['app.key' => str_repeat('a', 32)]);
 
         Route::post('/user/{user}', function (ImplicitBindingUser $user) {
             return $user;
@@ -92,7 +92,7 @@ PHP);
 
         $user->delete();
 
-        config(['app.key' => str_repeat('a', 32)]);
+        ws_config(['app.key' => str_repeat('a', 32)]);
 
         Route::post('/user/{user}', function (ImplicitBindingUser $user) {
             return $user;
@@ -109,7 +109,7 @@ PHP);
 
         $user->delete();
 
-        config(['app.key' => str_repeat('a', 32)]);
+        ws_config(['app.key' => str_repeat('a', 32)]);
 
         Route::post('/user/{user}', function (ImplicitBindingUser $user) {
             return $user;
@@ -129,7 +129,7 @@ PHP);
         $post = ImplicitBindingPost::create(['user_id' => 2]);
         $this->assertEmpty($user->posts);
 
-        config(['app.key' => str_repeat('a', 32)]);
+        ws_config(['app.key' => str_repeat('a', 32)]);
 
         Route::scopeBindings()->group(function () {
             Route::get('/user/{user}/post/{post}', function (ImplicitBindingUser $user, ImplicitBindingPost $post) {
@@ -150,7 +150,7 @@ PHP);
 
         $user->delete();
 
-        config(['app.key' => str_repeat('a', 32)]);
+        ws_config(['app.key' => str_repeat('a', 32)]);
         Route::scopeBindings()->group(function () {
             Route::get('/user/{user}/post/{post}', function (ImplicitBindingUser $user, ImplicitBindingPost $post) {
                 return [$user, $post];
@@ -201,7 +201,7 @@ PHP);
         $post = ImplicitBindingPost::create(['user_id' => 2]);
         $this->assertEmpty($user->posts);
 
-        config(['app.key' => str_repeat('a', 32)]);
+        ws_config(['app.key' => str_repeat('a', 32)]);
 
         Route::group(['scoping' => false], function () {
             Route::get('/user/{user}/post/{post}', function (ImplicitBindingUser $user, ImplicitBindingPost $post) {

@@ -27,7 +27,7 @@ class ValidationInRuleTest extends TestCase
 
         $this->assertSame('in:"1","2","3","4"', (string) $rule);
 
-        $rule = Rule::in(collect([1, 2, 3, 4]));
+        $rule = Rule::in(ws_collect([1, 2, 3, 4]));
 
         $this->assertSame('in:"1","2","3","4"', (string) $rule);
 

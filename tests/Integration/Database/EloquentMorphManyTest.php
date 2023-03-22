@@ -43,7 +43,7 @@ class EloquentMorphManyTest extends DatabaseTestCase
     {
         $post = Post::create(['title' => 'foo']);
 
-        $comment = tap((new Comment(['name' => 'foo']))->commentable()->associate($post))->save();
+        $comment = ws_tap((new Comment(['name' => 'foo']))->commentable()->associate($post))->save();
 
         (new Comment(['name' => 'bar']))->commentable()->associate($comment)->save();
 
