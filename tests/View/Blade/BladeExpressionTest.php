@@ -11,8 +11,8 @@ class BladeExpressionTest extends AbstractBladeTestCase
 
     public function testExpressionWithinHTML()
     {
-        $this->assertSame('<html <?php echo e($foo); ?>>', $this->compiler->compileString('<html {{ $foo }}>'));
-        $this->assertSame('<html<?php echo e($foo); ?>>', $this->compiler->compileString('<html{{ $foo }}>'));
-        $this->assertSame('<html <?php echo e($foo); ?> <?php echo app(\'translator\')->get(\'foo\'); ?>>', $this->compiler->compileString('<html {{ $foo }} @lang(\'foo\')>'));
+        $this->assertSame('<html <?php echo ws_e($foo); ?>>', $this->compiler->compileString('<html {{ $foo }}>'));
+        $this->assertSame('<html<?php echo ws_e($foo); ?>>', $this->compiler->compileString('<html{{ $foo }}>'));
+        $this->assertSame('<html <?php echo ws_e($foo); ?> <?php echo app(\'translator\')->get(\'foo\'); ?>>', $this->compiler->compileString('<html {{ $foo }} @lang(\'foo\')>'));
     }
 }

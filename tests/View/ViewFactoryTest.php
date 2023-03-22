@@ -223,7 +223,7 @@ class ViewFactoryTest extends TestCase
         $callback = $factory->composer('foo', 'FooComposer');
         $callback = $callback[0];
 
-        $this->assertSame('composed', $callback('ws_view'));
+        $this->assertSame('composed', $callback('view'));
     }
 
     public function testClassCallbacksWithMethods()
@@ -236,7 +236,7 @@ class ViewFactoryTest extends TestCase
         $callback = $factory->composer('foo', 'FooComposer@doComposer');
         $callback = $callback[0];
 
-        $this->assertSame('composed', $callback('ws_view'));
+        $this->assertSame('composed', $callback('view'));
     }
 
     public function testCallComposerCallsProperEvent()
