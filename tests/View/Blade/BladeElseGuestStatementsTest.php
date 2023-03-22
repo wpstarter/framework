@@ -11,7 +11,7 @@ breeze
 @elseguest("standard")
 wheeze
 @endguest';
-        $expected = '<?php if(auth()->guard("api")->guest()): ?>
+        $expected = '<?php if(ws_auth()->guard("api")->guest()): ?>
 breeze
 <?php elseif(auth()->guard("standard")->guest()): ?>
 wheeze
