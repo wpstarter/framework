@@ -33,7 +33,7 @@ class BladeVerbatimTest extends AbstractBladeTestCase
     public function testMultipleVerbatimBlocksAreCompiled()
     {
         $string = '@verbatim {{ $a }} @endverbatim {{ $b }} @verbatim {{ $c }} @endverbatim';
-        $expected = ' {{ $a }}  <?php echo e($b); ?>  {{ $c }} ';
+        $expected = ' {{ $a }}  <?php echo ws_e($b); ?>  {{ $c }} ';
         $this->assertEquals($expected, $this->compiler->compileString($string));
     }
 
