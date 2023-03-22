@@ -20,7 +20,7 @@ breeze
         $string = '@auth
 breeze
 @endauth';
-        $expected = '<?php if(auth()->guard()->check()): ?>
+        $expected = '<?php if(ws_auth()->guard()->check()): ?>
 breeze
 <?php endif; ?>';
         $this->assertEquals($expected, $this->compiler->compileString($string));
