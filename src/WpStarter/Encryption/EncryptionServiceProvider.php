@@ -45,7 +45,7 @@ class EncryptionServiceProvider extends ServiceProvider
     protected function registerOpisSecurityKey()
     {
         if (\PHP_VERSION_ID < 80100) {
-            $config = $this->app->make('config')->get('app');
+            $config = $this->app->make('ws_config')->get('app');
 
             if (! class_exists(OpisSerializableClosure::class) || empty($config['key'])) {
                 return;
@@ -62,7 +62,7 @@ class EncryptionServiceProvider extends ServiceProvider
      */
     protected function registerSerializableClosureSecurityKey()
     {
-        $config = $this->app->make('config')->get('app');
+        $config = $this->app->make('ws_config')->get('app');
 
         if (! class_exists(SerializableClosure::class) || empty($config['key'])) {
             return;

@@ -47,7 +47,7 @@ class AuthenticationTest extends TestCase
         AuthenticationTestUser::create([
             'username' => 'username',
             'email' => 'email',
-            'password' => bcrypt('password'),
+            'password' => ws_bcrypt('password'),
             'is_active' => true,
         ]);
 
@@ -82,7 +82,7 @@ class AuthenticationTest extends TestCase
         AuthenticationTestUser::create([
             'username' => 'username2',
             'email' => 'email2',
-            'password' => bcrypt('password'),
+            'password' => ws_bcrypt('password'),
             'is_active' => false,
         ]);
 
@@ -264,12 +264,12 @@ class AuthenticationTest extends TestCase
 
     public function testAuthViaAttemptRemembering()
     {
-        $provider = new EloquentUserProvider(app('hash'), AuthenticationTestUser::class);
+        $provider = new EloquentUserProvider(ws_app('hash'), AuthenticationTestUser::class);
 
         $user = AuthenticationTestUser::create([
             'username' => 'username2',
             'email' => 'email2',
-            'password' => bcrypt('password'),
+            'password' => ws_bcrypt('password'),
             'remember_token' => $token = Str::random(),
             'is_active' => false,
         ]);

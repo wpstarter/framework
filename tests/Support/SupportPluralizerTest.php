@@ -94,9 +94,9 @@ class SupportPluralizerTest extends TestCase
 
     public function testPluralSupportsCollections()
     {
-        $this->assertSame('users', Str::plural('user', collect()));
-        $this->assertSame('user', Str::plural('user', collect(['one'])));
-        $this->assertSame('users', Str::plural('user', collect(['one', 'two'])));
+        $this->assertSame('users', Str::plural('user', ws_collect()));
+        $this->assertSame('user', Str::plural('user', ws_collect(['one'])));
+        $this->assertSame('users', Str::plural('user', ws_collect(['one', 'two'])));
     }
 
     public function testPluralStudlySupportsArrays()
@@ -108,9 +108,9 @@ class SupportPluralizerTest extends TestCase
 
     public function testPluralStudlySupportsCollections()
     {
-        $this->assertPluralStudly('SomeUsers', 'SomeUser', collect());
-        $this->assertPluralStudly('SomeUser', 'SomeUser', collect(['one']));
-        $this->assertPluralStudly('SomeUsers', 'SomeUser', collect(['one', 'two']));
+        $this->assertPluralStudly('SomeUsers', 'SomeUser', ws_collect());
+        $this->assertPluralStudly('SomeUser', 'SomeUser', ws_collect(['one']));
+        $this->assertPluralStudly('SomeUsers', 'SomeUser', ws_collect(['one', 'two']));
     }
 
     private function assertPluralStudly($expected, $value, $count = 2)

@@ -85,7 +85,7 @@ class DatabaseEloquentBelongsToManySyncReturnValueTypeTest extends TestCase
 
         $changes = $user->articles()->sync($articleIDs);
 
-        collect($changes['attached'])->map(function ($id) {
+        ws_collect($changes['attached'])->map(function ($id) {
             $this->assertSame(gettype($id), (new BelongsToManySyncTestTestArticle)->getKeyType());
         });
 
@@ -103,7 +103,7 @@ class DatabaseEloquentBelongsToManySyncReturnValueTypeTest extends TestCase
 
         $changes = $user->articles()->syncWithPivotValues($articleIDs, ['visible' => true]);
 
-        collect($changes['attached'])->each(function ($id) {
+        ws_collect($changes['attached'])->each(function ($id) {
             $this->assertSame(gettype($id), (new BelongsToManySyncTestTestArticle)->getKeyType());
         });
 

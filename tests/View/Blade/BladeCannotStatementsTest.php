@@ -11,11 +11,9 @@ breeze
 @elsecannot(\'delete\', [$post])
 sneeze
 @endcannot';
-        $expected = '<?php if (app(\\WpStarter\\Contracts\\Auth\\Access\\Gate::class)->denies(\'update\', [$post])): ?>
-breeze
-<?php elseif (app(\\WpStarter\\Contracts\\Auth\\Access\\Gate::class)->denies(\'delete\', [$post])): ?>
+        $expected = ', [$post])): ?>
 sneeze
-<?php endif; ?>';
+<?php endif; ?>\'';
         $this->assertEquals($expected, $this->compiler->compileString($string));
     }
 }

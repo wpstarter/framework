@@ -99,7 +99,7 @@ class JobChainingTest extends TestCase
 
     public function testJobsCanBeChainedOnSuccessUsingHelper()
     {
-        dispatch(new JobChainingTestFirstJob)->chain([
+        ws_dispatch(new JobChainingTestFirstJob)->chain([
             new JobChainingTestSecondJob,
         ]);
 

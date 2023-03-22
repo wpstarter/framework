@@ -28,7 +28,7 @@ class DatabaseCustomCastsTest extends DatabaseTestCase
         $model = new TestEloquentModelWithCustomCasts;
 
         $model->array_object = ['name' => 'Taylor'];
-        $model->collection = collect(['name' => 'Taylor']);
+        $model->collection = ws_collect(['name' => 'Taylor']);
         $model->stringable = Str::of('Taylor');
 
         $model->save();

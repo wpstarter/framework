@@ -28,7 +28,7 @@ class EloquentMorphLazyEagerLoadingTest extends DatabaseTestCase
 
         $user = User::create();
 
-        $post = tap((new Post)->user()->associate($user))->save();
+        $post = ws_tap((new Post)->user()->associate($user))->save();
 
         (new Comment)->commentable()->associate($post)->save();
     }

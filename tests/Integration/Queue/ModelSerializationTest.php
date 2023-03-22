@@ -136,7 +136,7 @@ class ModelSerializationTest extends TestCase
 
     public function testItReloadsRelationships()
     {
-        $order = tap(Order::create(), function (Order $order) {
+        $order = ws_tap(Order::create(), function (Order $order) {
             $order->wasRecentlyCreated = false;
         });
 
@@ -156,7 +156,7 @@ class ModelSerializationTest extends TestCase
 
     public function testItReloadsNestedRelationships()
     {
-        $order = tap(Order::create(), function (Order $order) {
+        $order = ws_tap(Order::create(), function (Order $order) {
             $order->wasRecentlyCreated = false;
         });
 
@@ -196,7 +196,7 @@ class ModelSerializationTest extends TestCase
      */
     public function testItCanUnserializeNestedRelationshipsWithoutPivot()
     {
-        $user = tap(User::create([
+        $user = ws_tap(User::create([
             'email' => 'taylor@laravel.com',
         ]), function (User $user) {
             $user->wasRecentlyCreated = false;

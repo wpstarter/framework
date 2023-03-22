@@ -26,6 +26,6 @@ class TestResponsableResponse implements Responsable
 {
     public function toResponse($request)
     {
-        return response('hello world', 201, ['X-Test-Header' => 'Taylor']);
+        return ws_response('hello world', 201, ['X-Test-Header' => 'Taylor']);
     }
 }

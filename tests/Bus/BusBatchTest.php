@@ -282,7 +282,7 @@ class BusBatchTest extends TestCase
         $batch = $this->createTestBatch($queue);
 
         $this->assertFalse($batch->finished());
-        $batch->finishedAt = now();
+        $batch->finishedAt = ws_now();
         $this->assertTrue($batch->finished());
 
         $batch->options['then'] = [];
@@ -304,7 +304,7 @@ class BusBatchTest extends TestCase
         $this->assertTrue($batch->hasCatchCallbacks());
 
         $this->assertFalse($batch->cancelled());
-        $batch->cancelledAt = now();
+        $batch->cancelledAt = ws_now();
         $this->assertTrue($batch->cancelled());
 
         $this->assertIsString(json_encode($batch));
@@ -348,7 +348,7 @@ class BusBatchTest extends TestCase
 
     public function test_options_serialization_on_postgres()
     {
-        $pendingBatch = (new PendingBatch(new Container, collect()))
+        $pendingBatch = (new PendingBatch(new Container, ws_collect()))
             ->onQueue('test-queue');
 
         $connection = m::spy(PostgresConnection::class);
@@ -386,7 +386,7 @@ class BusBatchTest extends TestCase
                 'failed_jobs' => '',
                 'failed_job_ids' => '[]',
                 'options' => $serialize,
-                'created_at' => now()->timestamp,
+                'created_at' => ws_now()->timestamp,
                 'cancelled_at' => null,
                 'finished_at' => null,
             ]);
@@ -416,7 +416,7 @@ class BusBatchTest extends TestCase
     {
         $repository = new DatabaseBatchRepository(new BatchFactory($queue), DB::connection(), 'job_batches');
 
-        $pendingBatch = (new PendingBatch(new Container, collect()))
+        $pendingBatch = (new PendingBatch(new Container, ws_collect()))
                             ->then(function (Batch $batch) {
                                 $_SERVER['__then.batch'] = $batch;
                                 $_SERVER['__then.count']++;

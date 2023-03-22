@@ -3529,9 +3529,9 @@ SQL;
         $builder = $this->getMockQueryBuilder();
         $builder->orders[] = ['column' => 'foobar', 'direction' => 'asc'];
 
-        $chunk1 = collect(['foo1', 'foo2']);
-        $chunk2 = collect(['foo3', 'foo4']);
-        $chunk3 = collect([]);
+        $chunk1 = ws_collect(['foo1', 'foo2']);
+        $chunk2 = ws_collect(['foo3', 'foo4']);
+        $chunk3 = ws_collect([]);
         $builder->shouldReceive('forPage')->once()->with(1, 2)->andReturnSelf();
         $builder->shouldReceive('forPage')->once()->with(2, 2)->andReturnSelf();
         $builder->shouldReceive('forPage')->once()->with(3, 2)->andReturnSelf();
@@ -3552,8 +3552,8 @@ SQL;
         $builder = $this->getMockQueryBuilder();
         $builder->orders[] = ['column' => 'foobar', 'direction' => 'asc'];
 
-        $chunk1 = collect(['foo1', 'foo2']);
-        $chunk2 = collect(['foo3']);
+        $chunk1 = ws_collect(['foo1', 'foo2']);
+        $chunk2 = ws_collect(['foo3']);
         $builder->shouldReceive('forPage')->once()->with(1, 2)->andReturnSelf();
         $builder->shouldReceive('forPage')->once()->with(2, 2)->andReturnSelf();
         $builder->shouldReceive('get')->times(2)->andReturn($chunk1, $chunk2);
@@ -3572,8 +3572,8 @@ SQL;
         $builder = $this->getMockQueryBuilder();
         $builder->orders[] = ['column' => 'foobar', 'direction' => 'asc'];
 
-        $chunk1 = collect(['foo1', 'foo2']);
-        $chunk2 = collect(['foo3']);
+        $chunk1 = ws_collect(['foo1', 'foo2']);
+        $chunk2 = ws_collect(['foo3']);
         $builder->shouldReceive('forPage')->once()->with(1, 2)->andReturnSelf();
         $builder->shouldReceive('forPage')->never()->with(2, 2);
         $builder->shouldReceive('get')->times(1)->andReturn($chunk1);
@@ -3594,7 +3594,7 @@ SQL;
         $builder = $this->getMockQueryBuilder();
         $builder->orders[] = ['column' => 'foobar', 'direction' => 'asc'];
 
-        $chunk = collect([]);
+        $chunk = ws_collect([]);
         $builder->shouldReceive('forPage')->once()->with(1, 0)->andReturnSelf();
         $builder->shouldReceive('get')->times(1)->andReturn($chunk);
 
@@ -3611,9 +3611,9 @@ SQL;
         $builder = $this->getMockQueryBuilder();
         $builder->orders[] = ['column' => 'foobar', 'direction' => 'asc'];
 
-        $chunk1 = collect([(object) ['someIdField' => 1], (object) ['someIdField' => 2]]);
-        $chunk2 = collect([(object) ['someIdField' => 10], (object) ['someIdField' => 11]]);
-        $chunk3 = collect([]);
+        $chunk1 = ws_collect([(object) ['someIdField' => 1], (object) ['someIdField' => 2]]);
+        $chunk2 = ws_collect([(object) ['someIdField' => 10], (object) ['someIdField' => 11]]);
+        $chunk3 = ws_collect([]);
         $builder->shouldReceive('forPageAfterId')->once()->with(2, 0, 'someIdField')->andReturnSelf();
         $builder->shouldReceive('forPageAfterId')->once()->with(2, 2, 'someIdField')->andReturnSelf();
         $builder->shouldReceive('forPageAfterId')->once()->with(2, 11, 'someIdField')->andReturnSelf();
@@ -3634,8 +3634,8 @@ SQL;
         $builder = $this->getMockQueryBuilder();
         $builder->orders[] = ['column' => 'foobar', 'direction' => 'asc'];
 
-        $chunk1 = collect([(object) ['someIdField' => 1], (object) ['someIdField' => 2]]);
-        $chunk2 = collect([(object) ['someIdField' => 10]]);
+        $chunk1 = ws_collect([(object) ['someIdField' => 1], (object) ['someIdField' => 2]]);
+        $chunk2 = ws_collect([(object) ['someIdField' => 10]]);
         $builder->shouldReceive('forPageAfterId')->once()->with(2, 0, 'someIdField')->andReturnSelf();
         $builder->shouldReceive('forPageAfterId')->once()->with(2, 2, 'someIdField')->andReturnSelf();
         $builder->shouldReceive('get')->times(2)->andReturn($chunk1, $chunk2);
@@ -3654,7 +3654,7 @@ SQL;
         $builder = $this->getMockQueryBuilder();
         $builder->orders[] = ['column' => 'foobar', 'direction' => 'asc'];
 
-        $chunk = collect([]);
+        $chunk = ws_collect([]);
         $builder->shouldReceive('forPageAfterId')->once()->with(0, 0, 'someIdField')->andReturnSelf();
         $builder->shouldReceive('get')->times(1)->andReturn($chunk);
 
@@ -3671,8 +3671,8 @@ SQL;
         $builder = $this->getMockQueryBuilder();
         $builder->orders[] = ['column' => 'foobar', 'direction' => 'asc'];
 
-        $chunk1 = collect([(object) ['table_id' => 1], (object) ['table_id' => 10]]);
-        $chunk2 = collect([]);
+        $chunk1 = ws_collect([(object) ['table_id' => 1], (object) ['table_id' => 10]]);
+        $chunk2 = ws_collect([]);
         $builder->shouldReceive('forPageAfterId')->once()->with(2, 0, 'table.id')->andReturnSelf();
         $builder->shouldReceive('forPageAfterId')->once()->with(2, 10, 'table.id')->andReturnSelf();
         $builder->shouldReceive('get')->times(2)->andReturn($chunk1, $chunk2);
@@ -3695,7 +3695,7 @@ SQL;
         $builder = $this->getMockQueryBuilder();
         $path = 'http://foo.bar?page=3';
 
-        $results = collect([['test' => 'foo'], ['test' => 'bar']]);
+        $results = ws_collect([['test' => 'foo'], ['test' => 'bar']]);
 
         $builder->shouldReceive('getCountForPagination')->once()->andReturn(2);
         $builder->shouldReceive('forPage')->once()->with($page, $perPage)->andReturnSelf();
@@ -3721,7 +3721,7 @@ SQL;
         $builder = $this->getMockQueryBuilder();
         $path = 'http://foo.bar?page=3';
 
-        $results = collect([['test' => 'foo'], ['test' => 'bar']]);
+        $results = ws_collect([['test' => 'foo'], ['test' => 'bar']]);
 
         $builder->shouldReceive('getCountForPagination')->once()->andReturn(2);
         $builder->shouldReceive('forPage')->once()->with($page, $perPage)->andReturnSelf();
@@ -3782,7 +3782,7 @@ SQL;
         $builder = $this->getMockQueryBuilder();
         $path = 'http://foo.bar?page=3';
 
-        $results = collect([['id' => 3, 'name' => 'Taylor'], ['id' => 5, 'name' => 'Mohamed']]);
+        $results = ws_collect([['id' => 3, 'name' => 'Taylor'], ['id' => 5, 'name' => 'Mohamed']]);
 
         $builder->shouldReceive('getCountForPagination')->once()->andReturn(2);
         $builder->shouldReceive('forPage')->once()->with($page, $perPage)->andReturnSelf();
@@ -3814,7 +3814,7 @@ SQL;
 
         $path = 'http://foo.bar?cursor='.$cursor->encode();
 
-        $results = collect([['test' => 'foo'], ['test' => 'bar']]);
+        $results = ws_collect([['test' => 'foo'], ['test' => 'bar']]);
 
         $builder->shouldReceive('get')->once()->andReturnUsing(function () use ($builder, $results) {
             $this->assertEquals(
@@ -3852,7 +3852,7 @@ SQL;
 
         $path = 'http://foo.bar?cursor='.$cursor->encode();
 
-        $results = collect([['test' => 'foo', 'another' => 1], ['test' => 'bar', 'another' => 2]]);
+        $results = ws_collect([['test' => 'foo', 'another' => 1], ['test' => 'bar', 'another' => 2]]);
 
         $builder->shouldReceive('get')->once()->andReturnUsing(function () use ($builder, $results) {
             $this->assertEquals(
@@ -3890,7 +3890,7 @@ SQL;
 
         $path = 'http://foo.bar?cursor='.$cursor->encode();
 
-        $results = collect([['test' => 'foo'], ['test' => 'bar']]);
+        $results = ws_collect([['test' => 'foo'], ['test' => 'bar']]);
 
         $builder->shouldReceive('get')->once()->andReturnUsing(function () use ($builder, $results) {
             $this->assertEquals(
@@ -3960,7 +3960,7 @@ SQL;
 
         $path = 'http://foo.bar?cursor=3';
 
-        $results = collect([['id' => 3, 'name' => 'Taylor'], ['id' => 5, 'name' => 'Mohamed']]);
+        $results = ws_collect([['id' => 3, 'name' => 'Taylor'], ['id' => 5, 'name' => 'Mohamed']]);
 
         $builder->shouldReceive('get')->once()->andReturnUsing(function () use ($builder, $results) {
             $this->assertEquals(
@@ -3998,7 +3998,7 @@ SQL;
 
         $path = 'http://foo.bar?cursor='.$cursor->encode();
 
-        $results = collect([['foo' => 1, 'bar' => 2, 'baz' => 4], ['foo' => 1, 'bar' => 1, 'baz' => 1]]);
+        $results = ws_collect([['foo' => 1, 'bar' => 2, 'baz' => 4], ['foo' => 1, 'bar' => 1, 'baz' => 1]]);
 
         $builder->shouldReceive('get')->once()->andReturnUsing(function () use ($builder, $results) {
             $this->assertEquals(
@@ -4025,7 +4025,7 @@ SQL;
 
     public function testCursorPaginateWithUnionWheres()
     {
-        $ts = now()->toDateTimeString();
+        $ts = ws_now()->toDateTimeString();
 
         $perPage = 16;
         $columns = ['test'];
@@ -4042,9 +4042,9 @@ SQL;
 
         $path = 'http://foo.bar?cursor='.$cursor->encode();
 
-        $results = collect([
-            ['id' => 1, 'created_at' => now(), 'type' => 'video'],
-            ['id' => 2, 'created_at' => now(), 'type' => 'news'],
+        $results = ws_collect([
+            ['id' => 1, 'created_at' => ws_now(), 'type' => 'video'],
+            ['id' => 2, 'created_at' => ws_now(), 'type' => 'news'],
         ]);
 
         $builder->shouldReceive('get')->once()->andReturnUsing(function () use ($builder, $results, $ts) {
@@ -4072,7 +4072,7 @@ SQL;
 
     public function testCursorPaginateWithUnionWheresWithRawOrderExpression()
     {
-        $ts = now()->toDateTimeString();
+        $ts = ws_now()->toDateTimeString();
 
         $perPage = 16;
         $columns = ['test'];
@@ -4089,9 +4089,9 @@ SQL;
 
         $path = 'http://foo.bar?cursor='.$cursor->encode();
 
-        $results = collect([
-            ['id' => 1, 'created_at' => now(), 'type' => 'video', 'is_published' => true],
-            ['id' => 2, 'created_at' => now(), 'type' => 'news', 'is_published' => true],
+        $results = ws_collect([
+            ['id' => 1, 'created_at' => ws_now(), 'type' => 'video', 'is_published' => true],
+            ['id' => 2, 'created_at' => ws_now(), 'type' => 'news', 'is_published' => true],
         ]);
 
         $builder->shouldReceive('get')->once()->andReturnUsing(function () use ($builder, $results, $ts) {
@@ -4119,7 +4119,7 @@ SQL;
 
     public function testCursorPaginateWithUnionWheresReverseOrder()
     {
-        $ts = now()->toDateTimeString();
+        $ts = ws_now()->toDateTimeString();
 
         $perPage = 16;
         $columns = ['test'];
@@ -4136,9 +4136,9 @@ SQL;
 
         $path = 'http://foo.bar?cursor='.$cursor->encode();
 
-        $results = collect([
-            ['id' => 1, 'created_at' => now(), 'type' => 'video'],
-            ['id' => 2, 'created_at' => now(), 'type' => 'news'],
+        $results = ws_collect([
+            ['id' => 1, 'created_at' => ws_now(), 'type' => 'video'],
+            ['id' => 2, 'created_at' => ws_now(), 'type' => 'news'],
         ]);
 
         $builder->shouldReceive('get')->once()->andReturnUsing(function () use ($builder, $results, $ts) {
@@ -4166,7 +4166,7 @@ SQL;
 
     public function testCursorPaginateWithUnionWheresMultipleOrders()
     {
-        $ts = now()->toDateTimeString();
+        $ts = ws_now()->toDateTimeString();
 
         $perPage = 16;
         $columns = ['test'];
@@ -4183,9 +4183,9 @@ SQL;
 
         $path = 'http://foo.bar?cursor='.$cursor->encode();
 
-        $results = collect([
-            ['id' => 1, 'created_at' => now(), 'type' => 'video'],
-            ['id' => 2, 'created_at' => now(), 'type' => 'news'],
+        $results = ws_collect([
+            ['id' => 1, 'created_at' => ws_now(), 'type' => 'video'],
+            ['id' => 2, 'created_at' => ws_now(), 'type' => 'news'],
         ]);
 
         $builder->shouldReceive('get')->once()->andReturnUsing(function () use ($builder, $results, $ts) {

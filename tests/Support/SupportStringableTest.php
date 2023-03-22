@@ -21,7 +21,7 @@ class SupportStringableTest extends TestCase
     public function testClassBasename()
     {
         $this->assertEquals(
-            class_basename(static::class),
+            ws_class_basename(static::class),
             $this->stringable(static::class)->classBasename()
         );
     }
@@ -301,7 +301,7 @@ class SupportStringableTest extends TestCase
 
     public function testWhenEmpty()
     {
-        tap($this->stringable(), function ($stringable) {
+        ws_tap($this->stringable(), function ($stringable) {
             $this->assertSame($stringable, $stringable->whenEmpty(function () {
                 //
             }));
@@ -318,7 +318,7 @@ class SupportStringableTest extends TestCase
 
     public function testWhenNotEmpty()
     {
-        tap($this->stringable(), function ($stringable) {
+        ws_tap($this->stringable(), function ($stringable) {
             $this->assertSame($stringable, $stringable->whenNotEmpty(function ($stringable) {
                 return $stringable.'.';
             }));

@@ -34,12 +34,12 @@ class TestDatabasesTest extends TestCase
     {
         DB::shouldReceive('purge')->once();
 
-        config()->shouldReceive('get')
+        ws_config()->shouldReceive('get')
             ->once()
             ->with('database.connections.mysql.url', false)
             ->andReturn(false);
 
-        config()->shouldReceive('set')
+        ws_config()->shouldReceive('set')
             ->once()
             ->with('database.connections.mysql.database', 'my_database_test_1');
 
@@ -53,12 +53,12 @@ class TestDatabasesTest extends TestCase
     {
         DB::shouldReceive('purge')->once();
 
-        config()->shouldReceive('get')
+        ws_config()->shouldReceive('get')
             ->once()
             ->with('database.connections.mysql.url', false)
             ->andReturn($url);
 
-        config()->shouldReceive('set')
+        ws_config()->shouldReceive('set')
             ->once()
             ->with('database.connections.mysql.url', $testUrl);
 
@@ -73,7 +73,7 @@ class TestDatabasesTest extends TestCase
         };
 
         $method = new ReflectionMethod($instance, 'switchToDatabase');
-        tap($method)->setAccessible(true)->invoke($instance, $database);
+        ws_tap($method)->setAccessible(true)->invoke($instance, $database);
     }
 
     public function databaseUrls()

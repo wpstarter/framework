@@ -18,7 +18,7 @@ class BladePhpStatementsTest extends AbstractBladeTestCase
         $this->assertEquals($expected, $this->compiler->compileString($string));
 
         $string = '{{ "Ignore: @php" }}';
-        $expected = '<?php echo e("Ignore: @php"); ?>';
+        $expected = '<?php echo ws_e("Ignore: @php"); ?>';
         $this->assertEquals($expected, $this->compiler->compileString($string));
     }
 

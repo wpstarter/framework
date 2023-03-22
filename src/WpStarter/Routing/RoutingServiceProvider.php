@@ -75,7 +75,7 @@ class RoutingServiceProvider extends ServiceProvider
             });
 
             $url->setKeyResolver(function () {
-                return $this->app->make('config')->get('app.key');
+                return $this->app->make('ws_config')->get('app.key');
             });
 
             // If the route collection is "rebound", for example, when the routes stay

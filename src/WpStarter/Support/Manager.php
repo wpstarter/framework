@@ -45,7 +45,7 @@ abstract class Manager
     public function __construct(Container $container)
     {
         $this->container = $container;
-        $this->config = $container->make('config');
+        $this->config = $container->make('ws_config');
     }
 
     /**

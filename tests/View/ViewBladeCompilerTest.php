@@ -99,7 +99,7 @@ class ViewBladeCompilerTest extends TestCase
         $compiler = new BladeCompiler($this->getFiles(), __DIR__);
         $compiler->setEchoFormat('%s');
 
-        $this->assertSame('<?php echo e($name); ?>', $compiler->compileString('{{{ $name }}}'));
+        $this->assertSame('<?php echo ws_e($name); ?>', $compiler->compileString('{{{ $name }}}'));
         $this->assertSame('<?php echo $name; ?>', $compiler->compileString('{{ $name }}'));
         $this->assertSame('<?php echo $name; ?>', $compiler->compileString('{{
             $name

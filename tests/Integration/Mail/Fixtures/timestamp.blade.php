@@ -1,1 +1,1 @@
-{{__('nom')}} {{ WpStarter\Support\Carbon::tomorrow()->diffForHumans() }}
+{{ws___('nom')}} {{ WpStarter\Support\Carbon::tomorrow()->diffForHumans() }}

@@ -12,7 +12,7 @@ class InteractsWithContainerTest extends TestCase
     {
         $instance = $this->withoutMix();
 
-        $this->assertSame('', mix('path/to/asset.png'));
+        $this->assertSame('', ws_mix('path/to/asset.png'));
         $this->assertSame($this, $instance);
     }
 
@@ -24,7 +24,7 @@ class InteractsWithContainerTest extends TestCase
         $this->withoutMix();
         $instance = $this->withMix();
 
-        $this->assertSame($handler, resolve(Mix::class));
+        $this->assertSame($handler, ws_resolve(Mix::class));
         $this->assertSame($this, $instance);
     }
 

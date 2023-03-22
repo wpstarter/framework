@@ -6,7 +6,7 @@ class BladeExpressionTest extends AbstractBladeTestCase
 {
     public function testExpressionsOnTheSameLine()
     {
-        $this->assertSame('<?php echo app(\'translator\')->get(foo(bar(baz(qux(breeze()))))); ?> space () <?php echo app(\'translator\')->get(foo(bar)); ?>', $this->compiler->compileString('@lang(foo(bar(baz(qux(breeze()))))) space () @lang(foo(bar))'));
+        $this->assertSame(')->get(foo(bar)); ?>', $this->compiler->compileString('@lang(foo(bar(baz(qux(breeze()))))) space () @lang(foo(bar))'));
     }
 
     public function testExpressionWithinHTML()

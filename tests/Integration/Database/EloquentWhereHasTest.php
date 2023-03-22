@@ -34,12 +34,12 @@ class EloquentWhereHasTest extends DatabaseTestCase
         });
 
         $user = User::create();
-        $post = tap((new Post(['public' => true]))->user()->associate($user))->save();
+        $post = ws_tap((new Post(['public' => true]))->user()->associate($user))->save();
         (new Comment)->commentable()->associate($post)->save();
         (new Text(['content' => 'test']))->post()->associate($post)->save();
 
         $user = User::create();
-        $post = tap((new Post(['public' => false]))->user()->associate($user))->save();
+        $post = ws_tap((new Post(['public' => false]))->user()->associate($user))->save();
         (new Comment)->commentable()->associate($post)->save();
         (new Text(['content' => 'test2']))->post()->associate($post)->save();
     }

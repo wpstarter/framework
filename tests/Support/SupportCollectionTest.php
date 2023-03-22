@@ -2053,7 +2053,7 @@ class SupportCollectionTest extends TestCase
         $this->assertEquals(['first' => 'Taylor'], $data->except(['last', 'email', 'missing'])->all());
         $this->assertEquals(['first' => 'Taylor'], $data->except('last', 'email', 'missing')->all());
 
-        $this->assertEquals(['first' => 'Taylor'], $data->except(collect(['last', 'email', 'missing']))->all());
+        $this->assertEquals(['first' => 'Taylor'], $data->except(ws_collect(['last', 'email', 'missing']))->all());
         $this->assertEquals(['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'], $data->except(['last'])->all());
         $this->assertEquals(['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'], $data->except('last')->all());
     }
@@ -3657,7 +3657,7 @@ class SupportCollectionTest extends TestCase
         $data = new Collection([4, 5, 6]);
         $data->push('Jonny', 'from', 'Laroe');
         $data->push(...[11 => 'Jonny', 12 => 'from', 13 => 'Laroe']);
-        $data->push(...collect(['a', 'b', 'c']));
+        $data->push(...ws_collect(['a', 'b', 'c']));
         $actual = $data->push(...[])->toArray();
 
         $this->assertSame($expected, $actual);
@@ -3782,11 +3782,11 @@ class SupportCollectionTest extends TestCase
         $this->assertEquals($data->all(), $data->only(null)->all());
         $this->assertEquals(['first' => 'Taylor'], $data->only(['first', 'missing'])->all());
         $this->assertEquals(['first' => 'Taylor'], $data->only('first', 'missing')->all());
-        $this->assertEquals(['first' => 'Taylor'], $data->only(collect(['first', 'missing']))->all());
+        $this->assertEquals(['first' => 'Taylor'], $data->only(ws_collect(['first', 'missing']))->all());
 
         $this->assertEquals(['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'], $data->only(['first', 'email'])->all());
         $this->assertEquals(['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'], $data->only('first', 'email')->all());
-        $this->assertEquals(['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'], $data->only(collect(['first', 'email']))->all());
+        $this->assertEquals(['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'], $data->only(ws_collect(['first', 'email']))->all());
     }
 
     /**

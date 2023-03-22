@@ -45,7 +45,7 @@ class CommandSchedulingTest extends TestCase
         $this->fs = new Filesystem;
 
         $this->id = Str::random();
-        $this->logfile = storage_path("logs/command_scheduling_test_{$this->id}.log");
+        $this->logfile = ws_storage_path("logs/command_scheduling_test_{$this->id}.log");
 
         $this->writeArtisanScript();
     }
@@ -53,10 +53,10 @@ class CommandSchedulingTest extends TestCase
     protected function tearDown(): void
     {
         $this->fs->delete($this->logfile);
-        $this->fs->delete(base_path('artisan'));
+        $this->fs->delete(ws_base_path('artisan'));
 
         if (! is_null($this->originalArtisan)) {
-            $this->fs->put(base_path('artisan'), $this->originalArtisan);
+            $this->fs->put(ws_base_path('artisan'), $this->originalArtisan);
         }
 
         parent::tearDown();
@@ -130,7 +130,7 @@ class CommandSchedulingTest extends TestCase
 
     protected function writeArtisanScript()
     {
-        $path = base_path('artisan');
+        $path = ws_base_path('artisan');
 
         // Save existing artisan script if there is one
         if ($this->fs->exists($path)) {

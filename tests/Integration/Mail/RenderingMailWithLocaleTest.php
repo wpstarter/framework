@@ -14,7 +14,7 @@ class RenderingMailWithLocaleTest extends TestCase
 
         View::addLocation(__DIR__.'/Fixtures');
 
-        app('translator')->setLoaded([
+        ws_app('translator')->setLoaded([
             '*' => [
                 '*' => [
                     'en' => ['nom' => 'name'],

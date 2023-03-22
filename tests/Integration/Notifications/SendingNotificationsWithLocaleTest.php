@@ -31,7 +31,7 @@ class SendingNotificationsWithLocaleTest extends TestCase
 
         View::addLocation(__DIR__.'/Fixtures');
 
-        app('translator')->setLoaded([
+        ws_app('translator')->setLoaded([
             '*' => [
                 '*' => [
                     'en' => ['hi' => 'hello'],
@@ -63,7 +63,7 @@ class SendingNotificationsWithLocaleTest extends TestCase
         NotificationFacade::send($user, new GreetingMailNotification);
 
         $this->assertStringContainsString('hello',
-            app('mailer')->getSwiftMailer()->getTransport()->messages()[0]->getBody()
+            ws_app('mailer')->getSwiftMailer()->getTransport()->messages()[0]->getBody()
         );
     }
 
@@ -77,7 +77,7 @@ class SendingNotificationsWithLocaleTest extends TestCase
         NotificationFacade::locale('fr')->send($user, new GreetingMailNotification);
 
         $this->assertStringContainsString('bonjour',
-            app('mailer')->getSwiftMailer()->getTransport()->messages()[0]->getBody()
+            ws_app('mailer')->getSwiftMailer()->getTransport()->messages()[0]->getBody()
         );
     }
 
@@ -97,11 +97,11 @@ class SendingNotificationsWithLocaleTest extends TestCase
         NotificationFacade::send($users, (new GreetingMailNotification)->locale('fr'));
 
         $this->assertStringContainsString('bonjour',
-            app('mailer')->getSwiftMailer()->getTransport()->messages()[0]->getBody()
+            ws_app('mailer')->getSwiftMailer()->getTransport()->messages()[0]->getBody()
         );
 
         $this->assertStringContainsString('bonjour',
-            app('mailer')->getSwiftMailer()->getTransport()->messages()[1]->getBody()
+            ws_app('mailer')->getSwiftMailer()->getTransport()->messages()[1]->getBody()
         );
     }
 
@@ -115,7 +115,7 @@ class SendingNotificationsWithLocaleTest extends TestCase
         NotificationFacade::locale('fr')->send($user, new GreetingMailNotificationWithMailable);
 
         $this->assertStringContainsString('bonjour',
-            app('mailer')->getSwiftMailer()->getTransport()->messages()[0]->getBody()
+            ws_app('mailer')->getSwiftMailer()->getTransport()->messages()[0]->getBody()
         );
     }
 
@@ -135,11 +135,11 @@ class SendingNotificationsWithLocaleTest extends TestCase
         $user->notify((new GreetingMailNotification)->locale('fr'));
 
         $this->assertStringContainsString('bonjour',
-            app('mailer')->getSwiftMailer()->getTransport()->messages()[0]->getBody()
+            ws_app('mailer')->getSwiftMailer()->getTransport()->messages()[0]->getBody()
         );
 
         Assert::assertMatchesRegularExpression('/dans (1|un) jour/',
-            app('mailer')->getSwiftMailer()->getTransport()->messages()[0]->getBody()
+            ws_app('mailer')->getSwiftMailer()->getTransport()->messages()[0]->getBody()
         );
 
         $this->assertTrue($this->app->isLocale('en'));
@@ -157,7 +157,7 @@ class SendingNotificationsWithLocaleTest extends TestCase
         $recipient->notify(new GreetingMailNotification);
 
         $this->assertStringContainsString('bonjour',
-            app('mailer')->getSwiftMailer()->getTransport()->messages()[0]->getBody()
+            ws_app('mailer')->getSwiftMailer()->getTransport()->messages()[0]->getBody()
         );
     }
 
@@ -182,13 +182,13 @@ class SendingNotificationsWithLocaleTest extends TestCase
         );
 
         $this->assertStringContainsString('bonjour',
-            app('mailer')->getSwiftMailer()->getTransport()->messages()[0]->getBody()
+            ws_app('mailer')->getSwiftMailer()->getTransport()->messages()[0]->getBody()
         );
         $this->assertStringContainsString('hola',
-            app('mailer')->getSwiftMailer()->getTransport()->messages()[1]->getBody()
+            ws_app('mailer')->getSwiftMailer()->getTransport()->messages()[1]->getBody()
         );
         $this->assertStringContainsString('hello',
-            app('mailer')->getSwiftMailer()->getTransport()->messages()[2]->getBody()
+            ws_app('mailer')->getSwiftMailer()->getTransport()->messages()[2]->getBody()
         );
     }
 
@@ -204,7 +204,7 @@ class SendingNotificationsWithLocaleTest extends TestCase
         );
 
         $this->assertStringContainsString('bonjour',
-            app('mailer')->getSwiftMailer()->getTransport()->messages()[0]->getBody()
+            ws_app('mailer')->getSwiftMailer()->getTransport()->messages()[0]->getBody()
         );
     }
 
@@ -220,7 +220,7 @@ class SendingNotificationsWithLocaleTest extends TestCase
         );
 
         $this->assertStringContainsString('bonjour',
-            app('mailer')->getSwiftMailer()->getTransport()->messages()[0]->getBody()
+            ws_app('mailer')->getSwiftMailer()->getTransport()->messages()[0]->getBody()
         );
     }
 }
@@ -258,7 +258,7 @@ class GreetingMailNotification extends Notification
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->greeting(__('hi'))
+            ->greeting(ws___('hi'))
             ->line(Carbon::tomorrow()->diffForHumans());
     }
 }

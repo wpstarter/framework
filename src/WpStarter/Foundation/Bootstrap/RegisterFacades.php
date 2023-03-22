@@ -22,7 +22,7 @@ class RegisterFacades
         Facade::setFacadeApplication($app);
 
         AliasLoader::getInstance(array_merge(
-            $app->make('config')->get('app.aliases', []),
+            $app->make('ws_config')->get('app.aliases', []),
             $app->make(PackageManifest::class)->aliases()
         ))->register();
     }

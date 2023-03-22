@@ -18,7 +18,7 @@ class ValidationNotInRuleTest extends TestCase
 
         $this->assertSame('not_in:"1","2","3","4"', (string) $rule);
 
-        $rule = Rule::notIn(collect([1, 2, 3, 4]));
+        $rule = Rule::notIn(ws_collect([1, 2, 3, 4]));
 
         $this->assertSame('not_in:"1","2","3","4"', (string) $rule);
 

@@ -77,7 +77,7 @@ class CommandTest extends TestCase
             }
         };
 
-        $application = app();
+        $application = ws_app();
         $command->setLaravel($application);
 
         $input = new ArrayInput([

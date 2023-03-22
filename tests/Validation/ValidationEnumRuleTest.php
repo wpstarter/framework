@@ -24,7 +24,7 @@ class ValidationEnumRuleTest extends TestCase
     public function testvalidationPassesWhenPassingCorrectEnum()
     {
         $v = new Validator(
-            resolve('translator'),
+            ws_resolve('translator'),
             [
                 'status' => 'pending',
                 'int_status' => 1,
@@ -41,7 +41,7 @@ class ValidationEnumRuleTest extends TestCase
     public function testValidationFailsWhenProvidingNoExistingCases()
     {
         $v = new Validator(
-            resolve('translator'),
+            ws_resolve('translator'),
             [
                 'status' => 'finished',
             ],
@@ -57,7 +57,7 @@ class ValidationEnumRuleTest extends TestCase
     public function testValidationFailsWhenProvidingDifferentType()
     {
         $v = new Validator(
-            resolve('translator'),
+            ws_resolve('translator'),
             [
                 'status' => 10,
             ],
@@ -73,7 +73,7 @@ class ValidationEnumRuleTest extends TestCase
     public function testValidationPassesWhenProvidingDifferentTypeThatIsCastableToTheEnumType()
     {
         $v = new Validator(
-            resolve('translator'),
+            ws_resolve('translator'),
             [
                 'status' => '1',
             ],
@@ -88,7 +88,7 @@ class ValidationEnumRuleTest extends TestCase
     public function testValidationFailsWhenProvidingNull()
     {
         $v = new Validator(
-            resolve('translator'),
+            ws_resolve('translator'),
             [
                 'status' => null,
             ],
@@ -104,7 +104,7 @@ class ValidationEnumRuleTest extends TestCase
     public function testValidationPassesWhenProvidingNullButTheFieldIsNullable()
     {
         $v = new Validator(
-            resolve('translator'),
+            ws_resolve('translator'),
             [
                 'status' => null,
             ],
@@ -119,7 +119,7 @@ class ValidationEnumRuleTest extends TestCase
     public function testValidationFailsOnPureEnum()
     {
         $v = new Validator(
-            resolve('translator'),
+            ws_resolve('translator'),
             [
                 'status' => 'one',
             ],
@@ -134,7 +134,7 @@ class ValidationEnumRuleTest extends TestCase
     public function testValidationFailsWhenProvidingStringToIntegerType()
     {
         $v = new Validator(
-            resolve('translator'),
+            ws_resolve('translator'),
             [
                 'status' => 'abc',
             ],

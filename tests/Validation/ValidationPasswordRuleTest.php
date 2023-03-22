@@ -196,7 +196,7 @@ class ValidationPasswordRuleTest extends TestCase
         ]);
 
         $v = new Validator(
-            resolve('translator'),
+            ws_resolve('translator'),
             ['my_password' => 'Nuno'],
             ['my_password' => ['nullable', 'confirmed', Password::min(3)->letters()]]
         );
@@ -252,7 +252,7 @@ class ValidationPasswordRuleTest extends TestCase
         ];
 
         $v = new Validator(
-            resolve('translator'),
+            ws_resolve('translator'),
             ['password' => '1234'],
             $rules
         );
@@ -260,7 +260,7 @@ class ValidationPasswordRuleTest extends TestCase
         $this->assertFalse($v->passes());
 
         $v1 = new Validator(
-            resolve('translator'),
+            ws_resolve('translator'),
             ['password' => '12341234'],
             $rules
         );
@@ -317,7 +317,7 @@ class ValidationPasswordRuleTest extends TestCase
     {
         foreach ($values as $value) {
             $v = new Validator(
-                resolve('translator'),
+                ws_resolve('translator'),
                 ['my_password' => $value, 'my_password_confirmation' => $value],
                 ['my_password' => is_object($rule) ? clone $rule : $rule]
             );
