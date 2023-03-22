@@ -1,5 +1,5 @@
 {
-    "name": "wpstarter/redis",
+    "name": "wp-starter/redis",
     "description": "The WpStarter Redis package.",
     "license": "MIT",
     "homepage": "https://wpstarter.dev",
