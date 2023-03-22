@@ -8,5 +8,5 @@ Button Text
 @endcomponent
 
 Thanks,<br>
-{{ config('app.name') }}
+{{ ws_config('app.name') }}
 @endcomponent
