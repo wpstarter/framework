@@ -13,7 +13,7 @@ wheeze
 @endauth';
         $expected = '<?php if(ws_auth()->guard("api")->check()): ?>
 breeze
-<?php elseif(auth()->guard("standard")->check()): ?>
+<?php elseif(ws_auth()->guard("standard")->check()): ?>
 wheeze
 <?php endif; ?>';
         $this->assertEquals($expected, $this->compiler->compileString($string));
