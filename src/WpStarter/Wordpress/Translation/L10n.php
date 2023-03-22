@@ -64,7 +64,7 @@ class L10n
      * @return string Translated text.
      */
     function __( $text, $domain = null ) {
-        return ws___( $text, $domain ?? $this->defaultDomain );
+        return __( $text, $domain ?? $this->defaultDomain );
     }
 
 

@@ -171,7 +171,7 @@ class SessionManager extends Manager
         $store = $this->config->get('session.store') ?: $driver;
 
         return new CacheBasedSessionHandler(
-            clone $this->container->make('ws_cache')->store($store),
+            clone $this->container->make('cache')->store($store),
             $this->config->get('session.lifetime')
         );
     }
