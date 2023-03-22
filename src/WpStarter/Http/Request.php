@@ -177,7 +177,7 @@ class Request extends SymfonyRequest implements Arrayable, ArrayAccess
         foreach ($serverVars as $key=>$value){
             if($filename = basename($value)){
                 $changed[]=$key;
-                $newValue=str_replace([$filename,'/wp-admin/'],['index.php','/'],$value);
+                $newValue=str_replace([$filename,'/wp-admin/'],[$filename,'/'],$value);
                 $this->server->set($key,$newValue);
             }
         }
