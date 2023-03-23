@@ -1,0 +1,38 @@
+{
+    "name": "wp-starter/container",
+    "description": "The WpStarter Container package.",
+    "license": "MIT",
+    "homepage": "https://wpstarter.dev",
+    "support": {
+        "issues": "https://github.com/wpstarter/framework/issues",
+        "source": "https://github.com/wpstarter/framework"
+    },
+    "authors": [
+        {
+            "name": "As247",
+            "email": "as247@wpstarter.dev"
+        }
+    ],
+    "require": {
+        "php": "^7.3|^8.0",
+        "wp-starter/contracts": "^1.0",
+        "psr/container": "^1.0"
+    },
+    "provide": {
+        "psr/container-implementation": "1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "WpStarter\\Container\\": ""
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.x-dev"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev"
+}

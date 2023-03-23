@@ -1,0 +1,47 @@
+{
+    "name": "wp-starter/console",
+    "description": "The WpStarter Console package.",
+    "license": "MIT",
+    "homepage": "https://wpstarter.dev",
+    "support": {
+        "issues": "https://github.com/wpstarter/framework/issues",
+        "source": "https://github.com/wpstarter/framework"
+    },
+    "authors": [
+        {
+            "name": "As247",
+            "email": "as247@wpstarter.dev"
+        }
+    ],
+    "require": {
+        "php": "^7.3|^8.0",
+        "wp-starter/collections": "^1.0",
+        "wp-starter/contracts": "^1.0",
+        "wp-starter/macroable": "^1.0",
+        "wp-starter/support": "^1.0",
+        "symfony/console": "^5.4",
+        "symfony/process": "^5.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "WpStarter\\Console\\": ""
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.x-dev"
+        }
+    },
+    "suggest": {
+        "dragonmantank/cron-expression": "Required to use scheduler (^3.0.2).",
+        "guzzlehttp/guzzle": "Required to use the ping methods on schedules (^6.5.5|^7.0.1).",
+        "wp-starter/bus": "Required to use the scheduled job dispatcher (^8.0).",
+        "wp-starter/container": "Required to use the scheduler (^8.0).",
+        "wp-starter/filesystem": "Required to use the generator command (^8.0).",
+        "wp-starter/queue": "Required to use closures for scheduled jobs (^8.0)."
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev"
+}

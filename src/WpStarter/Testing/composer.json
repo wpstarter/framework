@@ -1,0 +1,45 @@
+{
+    "name": "wp-starter/testing",
+    "description": "The WpStarter Testing package.",
+    "license": "MIT",
+    "homepage": "https://wpstarter.dev",
+    "support": {
+        "issues": "https://github.com/wpstarter/framework/issues",
+        "source": "https://github.com/wpstarter/framework"
+    },
+    "authors": [
+        {
+            "name": "As247",
+            "email": "as247@wpstarter.dev"
+        }
+    ],
+    "require": {
+        "php": "^7.3|^8.0",
+        "wp-starter/collections": "^1.0",
+        "wp-starter/contracts": "^1.0",
+        "wp-starter/macroable": "^1.0",
+        "wp-starter/support": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "WpStarter\\Testing\\": ""
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.x-dev"
+        }
+    },
+    "suggest": {
+        "brianium/paratest": "Required to run tests in parallel (^6.0).",
+        "wp-starter/console": "Required to assert console commands (^8.0).",
+        "wp-starter/database": "Required to assert databases (^8.0).",
+        "wp-starter/http": "Required to assert responses (^8.0).",
+        "mockery/mockery": "Required to use mocking (^1.4.4).",
+        "phpunit/phpunit": "Required to use assertions and run tests (^8.5.19|^9.5.8)."
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev"
+}

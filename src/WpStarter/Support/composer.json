@@ -1,0 +1,55 @@
+{
+    "name": "wp-starter/support",
+    "description": "The WpStarter Support package.",
+    "license": "MIT",
+    "homepage": "https://wpstarter.dev",
+    "support": {
+        "issues": "https://github.com/wpstarter/framework/issues",
+        "source": "https://github.com/wpstarter/framework"
+    },
+    "authors": [
+        {
+            "name": "As247",
+            "email": "as247@wpstarter.dev"
+        }
+    ],
+    "require": {
+        "php": "^7.3|^8.0",
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "doctrine/inflector": "^1.4|^2.0",
+        "wp-starter/collections": "^1.0",
+        "wp-starter/contracts": "^1.0",
+        "wp-starter/macroable": "^1.0",
+        "nesbot/carbon": "^2.53.1",
+        "voku/portable-ascii": "^1.6.1"
+    },
+    "conflict": {
+        "tightenco/collect": "<5.5.33"
+    },
+    "autoload": {
+        "psr-4": {
+            "WpStarter\\Support\\": ""
+        },
+        "files": [
+            "helpers.php"
+        ]
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.x-dev"
+        }
+    },
+    "suggest": {
+        "wp-starter/filesystem": "Required to use the composer class (^8.0).",
+        "league/commonmark": "Required to use Str::markdown() and Stringable::markdown() (^1.3|^2.0.2).",
+        "ramsey/uuid": "Required to use Str::uuid() (^4.2.2).",
+        "symfony/process": "Required to use the composer class (^5.4).",
+        "symfony/var-dumper": "Required to use the dd function (^5.4).",
+        "vlucas/phpdotenv": "Required to use the Env class and env helper (^5.4.1)."
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev"
+}

@@ -1,0 +1,47 @@
+{
+    "name": "wp-starter/cache",
+    "description": "The WpStarter Cache package.",
+    "license": "MIT",
+    "homepage": "https://wpstarter.dev",
+    "support": {
+        "issues": "https://github.com/wpstarter/framework/issues",
+        "source": "https://github.com/wpstarter/framework"
+    },
+    "authors": [
+        {
+            "name": "As247",
+            "email": "as247@wpstarter.dev"
+        }
+    ],
+    "require": {
+        "php": "^7.3|^8.0",
+        "wp-starter/collections": "^1.0",
+        "wp-starter/contracts": "^1.0",
+        "wp-starter/macroable": "^1.0",
+        "wp-starter/support": "^1.0"
+    },
+    "provide": {
+        "psr/simple-cache-implementation": "1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "WpStarter\\Cache\\": ""
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.x-dev"
+        }
+    },
+    "suggest": {
+        "ext-memcached": "Required to use the memcache cache driver.",
+        "wp-starter/database": "Required to use the database cache driver (^8.0).",
+        "wp-starter/filesystem": "Required to use the file cache driver (^8.0).",
+        "wp-starter/redis": "Required to use the redis cache driver (^8.0).",
+        "symfony/cache": "Required to PSR-6 cache bridge (^5.4)."
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev"
+}
