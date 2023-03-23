@@ -1,7 +1,7 @@
 {
     "name": "wpstarter/framework",
-    "description": "The Wordpress Starter Framework.",
-    "keywords": ["wordpress", "stater", "laravel"],
+    "description": "The WpStarter Framework - Laravel Framework for WordPress",
+    "keywords": ["wordpress", "stater", "laravel","wp","framework"],
     "license": "MIT",
     "homepage": "https://github.com/as247",
     "require": {
