@@ -66,7 +66,7 @@ class Menu
 
     public function initialize(){
         if(!$this->title){
-            $this->title=Str::title($this->slug);
+            $this->title=Str::headline($this->slug);
         }
         if(!$this->pageTitle){
             $this->pageTitle=$this->title;
@@ -84,8 +84,14 @@ class Menu
         return $this;
     }
 
+    /**
+     * Create new group for children menu
+     * @param $callback
+     * @return $this
+     */
     public function group($callback){
         $this->router->group(['parent'=>$this->slug],$callback);
+        return $this;
     }
 
 
