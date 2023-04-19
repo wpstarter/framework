@@ -7,6 +7,7 @@ use WpStarter\Contracts\Foundation\Application;
 use WpStarter\Routing\Pipeline;
 use WpStarter\Wordpress\Admin\Routing\Response;
 use WpStarter\Wordpress\Admin\Routing\Router;
+use WpStarter\Wordpress\Http\Response\PassThrough;
 
 class Kernel implements Contracts\Kernel
 {
@@ -107,13 +108,15 @@ class Kernel implements Contracts\Kernel
         }
         if (!$request->isNotFoundHttpExceptionFromRoute()) {
             //We just ignore no route matching exception and allow application continue running
-            if ($response instanceof Response) {
-                //Our responses converted from StringAble, we only send headers for them
-                $response->sendHeaders();
-            } else {//Normal response from controller middleware, etc...
-                $response->send();
-                $this->terminate($request, $response);
-                exit;
+            if(!$response instanceof PassThrough) {//Not a ws_pass
+                if ($response instanceof Response) {
+                    //Our responses converted from StringAble, we only send headers for them
+                    $response->sendHeaders();
+                } else {//Normal response from controller middleware, etc...
+                    $response->send();
+                    $this->terminate($request, $response);
+                    exit;
+                }
             }
         }
         add_action('shutdown', function () use ($request, $response) {
