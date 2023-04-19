@@ -9,6 +9,7 @@ use WpStarter\Wordpress\Admin\Contracts\Kernel;
 use WpStarter\Wordpress\Admin\Notice\NoticeManager;
 use WpStarter\Wordpress\Admin\Notice\SessionStore;
 use WpStarter\Wordpress\Admin\Routing\Router;
+use WpStarter\Wordpress\Admin\Services\ScreenOption;
 
 class AdminServiceProvider extends ServiceProvider
 {
@@ -23,6 +24,12 @@ class AdminServiceProvider extends ServiceProvider
             return new NoticeManager(new SessionStore($app['session']));
         });
         $this->app->alias('wp.admin.notice',NoticeManager::class);
+
+        $this->app->singleton('wp.admin.screen_option',function ($app){
+            return new ScreenOption();
+        });
+        $this->app->alias('wp.admin.screen_option',ScreenOption::class);
+
         UrlGenerator::macro('admin',function($slug=null,$params=[]){
             if(!$slug){
                 if($menu=ws_app('wp.admin.router')->current()){
