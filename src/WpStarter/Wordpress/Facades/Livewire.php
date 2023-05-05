@@ -5,7 +5,7 @@ namespace WpStarter\Wordpress\Facades;
 use WpStarter\Support\Facades\Facade;
 
 /**
- * @method static enqueue()
+ * @method static boolean enqueue($styleOptions=[],$scriptOptions=[])
  */
 class Livewire extends Facade
 {
