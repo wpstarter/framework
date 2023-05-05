@@ -64,9 +64,13 @@ class RouteCollection extends BaseRouteCollection
 
     protected function getShortcodeAtts($content,$shortcode){
         preg_match_all( '/' . get_shortcode_regex($shortcode) . '/', $content, $matches, PREG_SET_ORDER );
-        if ( empty( $matches ) ) {
-            return false;
+        $atts=[];
+        if ( ! empty( $matches ) ) {
+            $atts = shortcode_parse_atts($matches[0][3]??'');
         }
-        return shortcode_parse_atts($matches[0][3]??'');
+        if(!is_array($atts)){
+            $atts=[];
+        }
+        return $atts;
     }
 }
