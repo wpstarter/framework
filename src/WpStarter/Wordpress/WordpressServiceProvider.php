@@ -11,6 +11,7 @@ use WpStarter\Wordpress\Auth\AuthServiceProvider;
 use WpStarter\Wordpress\Console\Commands\Database\MigrationWipeCommand;
 use WpStarter\Wordpress\Database\WpConnection;
 use WpStarter\Wordpress\Database\WpConnector;
+use WpStarter\Wordpress\Dependency\Livewire;
 use WpStarter\Wordpress\Dependency\ResourceManager;
 use WpStarter\Wordpress\Http\Response\Handler;
 use WpStarter\Wordpress\Http\Response\PassThrough;
@@ -125,6 +126,9 @@ class WordpressServiceProvider extends ServiceProvider
             return new ResourceManager($this->app);
         });
         $this->app->alias('resources', ResourceManager::class);
+
+        $this->app->singleton(Livewire::class);
+        $this->app->alias(Livewire::class,'wp.livewire');
     }
 
     protected function bootResourceManager()

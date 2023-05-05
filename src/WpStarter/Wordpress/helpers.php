@@ -141,3 +141,14 @@ if(!function_exists('ws_admin_notice')){
         return ws_app('wp.admin.notice')->notify($message,$type);
     }
 }
+
+if(!function_exists('ws_enqueue_livewire')){
+    /**
+     * @param $styleOptions
+     * @param $scriptOptions
+     * @return boolean
+     */
+    function ws_enqueue_livewire($styleOptions=[],$scriptOptions=[]){
+        return ws_app('wp.livewire')->enqueue($styleOptions,$scriptOptions);
+    }
+}
