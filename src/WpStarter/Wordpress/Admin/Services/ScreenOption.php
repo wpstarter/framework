@@ -2,6 +2,8 @@
 
 namespace WpStarter\Wordpress\Admin\Services;
 
+use WpStarter\Support\Arr;
+
 class ScreenOption
 {
     protected $priority=10;
@@ -36,8 +38,10 @@ class ScreenOption
         }
         return $screen_option;
     }
-    function add($option,$valueCallback=true){
-        $this->options[$option]=$valueCallback;
+    function add($options,$valueCallback=true){
+        foreach (Arr::wrap($options) as $option) {
+            $this->options[$option] = $valueCallback;
+        }
         return $this;
     }
 }
