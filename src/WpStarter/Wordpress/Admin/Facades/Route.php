@@ -8,8 +8,8 @@ use WpStarter\Wordpress\Admin\Routing\MenuCollection;
 use WpStarter\Wordpress\Admin\View\Layout;
 
 /**
- * @method static Menu add($slug, $callback, $capability = 'read', $title ='' ,$page_title = '', $icon = '', $position = null)
- * @method static Menu menu($slug)
+ * @method static Menu add(string $slug, array|string|callable $callback, $capability = 'read', $title ='' ,$page_title = '', $icon = '', $position = null)
+ * @method static Menu menu(string $slug)
  * @method static Menu current()
  * @method static MenuCollection menus()
  * @method static \WpStarter\Wordpress\Admin\Routing\RouteRegistrar parent($parent)

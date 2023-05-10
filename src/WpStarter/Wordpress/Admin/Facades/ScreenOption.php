@@ -5,7 +5,7 @@ namespace WpStarter\Wordpress\Admin\Facades;
 use WpStarter\Support\Facades\Facade;
 
 /**
- * @method static \WpStarter\Wordpress\Admin\Services\ScreenOption add($option,$callback=false)
+ * @method static \WpStarter\Wordpress\Admin\Services\ScreenOption add(array|string $options,\Closure $callback=null)
  */
 class ScreenOption extends Facade
 {
@@ -13,4 +13,5 @@ class ScreenOption extends Facade
     {
         return 'wp.admin.screen_option';
     }
+
 }
