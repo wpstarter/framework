@@ -90,7 +90,7 @@ class ResourceManager
     {
         $resources = $this->app['config']['resources'];
         $this->defaultVersion = $resources['default_version']
-            ?? defined('WS_ASSETS_VERSION') ? WS_ASSETS_VERSION : defined('WS_VERSION') ? WS_VERSION : '';
+            ?? defined('WS_ASSETS_VERSION') ? WS_ASSETS_VERSION : ( defined('WS_VERSION') ? WS_VERSION : '' );
         unset($resources['default_version']);
         if ($resources) {
             foreach ($resources as $resource) {
