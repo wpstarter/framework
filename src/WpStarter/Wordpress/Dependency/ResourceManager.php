@@ -8,12 +8,12 @@ use WpStarter\Support\Arr;
 
 /**
  * Class ResourceManager
- * @method ResourceManager addJs($handle = null, $src = false, $deps = array(), $ver = false, $in_footer = true, $data = array())
- * @method ResourceManager addCss($handle = null, $src = false, $deps = array(), $ver = false, $media = 'all')
- * @method ResourceManager addAdminJs($handle = null, $src = false, $deps = array(), $ver = false, $in_footer = true, $data = array())
- * @method ResourceManager addAdminCss($handle = null, $src = false, $deps = array(), $ver = false, $media = 'all')
- * @method ResourceManager registerJs($handle = null, $src = false, $deps = array(), $ver = false, $in_footer = true, $data = array())
- * @method ResourceManager registerCss($handle = null, $src = false, $deps = array(), $ver = false, $media = 'all')
+ * @method $this addJs($handle = null, $src = false, $deps = array(), $ver = false, $in_footer = true, $data = array())
+ * @method $this addCss($handle = null, $src = false, $deps = array(), $ver = false, $media = 'all')
+ * @method $this addAdminJs($handle = null, $src = false, $deps = array(), $ver = false, $in_footer = true, $data = array())
+ * @method $this addAdminCss($handle = null, $src = false, $deps = array(), $ver = false, $media = 'all')
+ * @method $this registerJs($handle = null, $src = false, $deps = array(), $ver = false, $in_footer = true, $data = array())
+ * @method $this registerCss($handle = null, $src = false, $deps = array(), $ver = false, $media = 'all')
  */
 class ResourceManager
 {
@@ -89,7 +89,9 @@ class ResourceManager
     function loadResources()
     {
         $resources = $this->app['config']['resources'];
-        $this->defaultVersion = $resources['default_version'] ?? defined('WS_VERSION') ? WS_VERSION : '';
+        $this->defaultVersion = $resources['default_version']
+            ?? defined('WS_ASSETS_VERSION') ? WS_ASSETS_VERSION : defined('WS_VERSION') ? WS_VERSION : '';
+        unset($resources['default_version']);
         if ($resources) {
             foreach ($resources as $resource) {
                 $this->loadResource($resource);
