@@ -48,7 +48,11 @@ class Kernel extends HttpKernel
         if(!$request->isNotFoundHttpExceptionFromRoute()) {
             $this->processResponse($request, $response);
         }else{
-            $this->registerWpHandler($request);
+            if(function_exists('add_action')) {
+                $this->registerWpHandler($request);
+            }else{
+                $this->processResponse($request, $response);
+            }
         }
         return $response;
     }
@@ -61,7 +65,7 @@ class Kernel extends HttpKernel
      */
     protected function processResponse($request, $response){
         //Not a not found response from router
-        if($response instanceof \WpStarter\Wordpress\Http\Response){
+        if($response instanceof \WpStarter\Wordpress\Http\Response && function_exists('add_action')){
             //Got a WordPress response, process it
             $handler=$this->app->make(\WpStarter\Wordpress\Http\Response\Handler::class);
             /**
