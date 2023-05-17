@@ -50,8 +50,6 @@ class Kernel extends HttpKernel
         }else{
             if(function_exists('add_action')) {
                 $this->registerWpHandler($request);
-            }else{
-                $this->processResponse($request, $response);
             }
         }
         return $response;
