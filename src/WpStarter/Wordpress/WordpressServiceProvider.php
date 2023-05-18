@@ -49,11 +49,11 @@ class WordpressServiceProvider extends ServiceProvider
 
     function boot()
     {
+        User::setConnectionResolver($this->app['db']);
+        User::setEventDispatcher($this->app['events']);
         if (!is_wp()) {
             return;
         }
-        User::setConnectionResolver($this->app['db']);
-        User::setEventDispatcher($this->app['events']);
         $this->bootServices();
         $this->autoRestartQueue();
     }
