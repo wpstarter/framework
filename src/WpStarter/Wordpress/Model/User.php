@@ -88,7 +88,9 @@ abstract class User extends WP_User implements
     public function __construct($attributes = [], $site_id = 0)
     {
         $this->bootIfNotBooted();
+        $this->initializeTraits();
         parent::__construct(0, '', $site_id);
+        $this->syncOriginal();
         $this->fill($attributes);
     }
 
@@ -146,20 +148,24 @@ abstract class User extends WP_User implements
         if (!isset(static::$booted[static::class])) {
             static::$booted[static::class] = true;
 
-            //Check for fillable
-
-            if ($needRemove = array_intersect($this->wp_fields, $this->fillable)) {
-                throw new \LogicException('Please remove following fields from fillable: ' . join(',', $needRemove));
-            }
-
             $this->fireModelEvent('booting', false);
 
+            static::booting();
             static::boot();
+            static::booted();
 
             $this->fireModelEvent('booted', false);
         }
     }
-
+    /**
+     * Perform any actions required before the model boots.
+     *
+     * @return void
+     */
+    protected static function booting()
+    {
+        //
+    }
     /**
      * The "booting" method of the model.
      *
@@ -169,6 +175,8 @@ abstract class User extends WP_User implements
     {
         static::bootTraits();
     }
+
+
 
     /**
      * Boot all of the bootable traits on the model.
@@ -202,6 +210,27 @@ abstract class User extends WP_User implements
         }
     }
 
+    /**
+     * Initialize any initializable traits on the model.
+     *
+     * @return void
+     */
+    protected function initializeTraits()
+    {
+        foreach (static::$traitInitializers[static::class] as $method) {
+            $this->{$method}();
+        }
+    }
+
+    /**
+     * Perform any actions required after the model boots.
+     *
+     * @return void
+     */
+    protected static function booted()
+    {
+        //
+    }
     /**
      * Update the model in the database.
      *

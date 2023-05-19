@@ -41,7 +41,7 @@ trait GuardsAttributes
      */
     public function getFillable()
     {
-        return array_merge($this->fillable, $this->wp_fields);
+        return array_merge($this->fillable);
     }
 
     /**
