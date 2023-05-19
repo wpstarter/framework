@@ -141,7 +141,7 @@ class WpConnection extends MySqlConnection
         }
         $bindings = array_map(function ($replace) {
             if (is_string($replace)) {
-                $replace = "'" . esc_sql($replace) . "'";
+                $replace = "'" . $this->escSql($replace) . "'";
             } elseif ($replace === null) {
                 $replace = "null";
             }
@@ -150,6 +150,13 @@ class WpConnection extends MySqlConnection
         $query = str_replace(array('%', '?'), array('%%', '%s'), $query);
         $query = vsprintf($query, $bindings);
         return $query;
+    }
+
+    protected function escSql($sql){
+        if(function_exists('esc_sql')){
+            return esc_sql($sql);
+        }
+        return addslashes($sql);
     }
 
     /**
