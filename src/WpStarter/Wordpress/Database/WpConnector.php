@@ -56,6 +56,9 @@ class WpConnector extends MySqlConnector implements ConnectorInterface
     protected function createPdoConnection($dsn, $username, $password, $options)
     {
         global $wpdb;
+        if(!isset($wpdb)){
+            throw new \RuntimeException("[wpdb] is not loaded");
+        }
         return new WpPdo($wpdb, $dsn, $username, $password, $options);
     }
 
