@@ -1,12 +1,19 @@
 <?php
 
-namespace WpStarter\Wordpress\Dependency;
+namespace WpStarter\Wordpress\Services;
 
 class Livewire
 {
     protected $done;
     protected $styleOptions=[];
     protected $scriptOptions=[];
+
+    function allowPlugins($plugins){
+
+    }
+    function disallowPlugins($plugins){
+
+    }
     function enqueue($styleOptions=[],$scriptOptions=[]){
         if(function_exists('add_action') && class_exists(\Livewire\Livewire::class) && !$this->done) {
             $this->styleOptions=$styleOptions;
