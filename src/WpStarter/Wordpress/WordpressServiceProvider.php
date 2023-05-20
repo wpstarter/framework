@@ -11,7 +11,6 @@ use WpStarter\Wordpress\Auth\AuthServiceProvider;
 use WpStarter\Wordpress\Console\Commands\Database\MigrationWipeCommand;
 use WpStarter\Wordpress\Database\WpConnection;
 use WpStarter\Wordpress\Database\WpConnector;
-use WpStarter\Wordpress\Dependency\Livewire;
 use WpStarter\Wordpress\Dependency\ResourceManager;
 use WpStarter\Wordpress\Http\Response\Handler;
 use WpStarter\Wordpress\Http\Response\PassThrough;
@@ -19,6 +18,7 @@ use WpStarter\Wordpress\Mail\Transport\WpTransport;
 use WpStarter\Wordpress\Model\User;
 use WpStarter\Wordpress\Providers\CarbonServiceProvider;
 use WpStarter\Wordpress\Routing\RoutingServiceProvider;
+use WpStarter\Wordpress\Services\Livewire;
 use WpStarter\Wordpress\Shortcode\ShortcodeManager;
 use WpStarter\Wordpress\Translation\TranslationServiceProvider;
 
