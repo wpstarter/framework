@@ -1,6 +1,6 @@
 <?php
 
-namespace WpStarter\Exceptions;
+namespace WpStarter\Wordpress\Exceptions;
 
 use Exception;
 use Throwable;
