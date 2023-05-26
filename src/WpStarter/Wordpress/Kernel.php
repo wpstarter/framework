@@ -45,16 +45,14 @@ class Kernel extends HttpKernel
     public function handle($request)
     {
         $response = parent::handle($request);
-        if(!function_exists('add_action')){
+        if(!is_wp()){
             //No WordPress, kernel will return response instead of processing it
             return $response;
         }
         if(!$request->isNotFoundHttpExceptionFromRoute()) {
             $this->processResponse($request, $response);
         }else{
-            if(function_exists('add_action')) {
-                $this->registerWpHandler($request);
-            }
+            $this->registerWpHandler($request);
         }
         return $response;
     }
