@@ -15,7 +15,7 @@ class Livewire
 
     }
     function enqueue($styleOptions=[],$scriptOptions=[]){
-        if(function_exists('add_action') && class_exists(\Livewire\Livewire::class) && !$this->done) {
+        if(class_exists(\Livewire\Livewire::class) && !$this->done) {
             $this->styleOptions=$styleOptions;
             $this->scriptOptions=$scriptOptions;
             add_action('wp_print_styles', [$this,'outputStyles'], 11);//After other styles

@@ -3,6 +3,11 @@
 use WpStarter\Wordpress\Http\Response\Content;
 use WpStarter\Wordpress\Http\Response\Shortcode;
 use WpStarter\Wordpress\Http\Response\Page;
+
+if(!function_exists('add_filter')){
+    require_once __DIR__.'/noop.php';
+}
+
 if (!function_exists('is_wp')) {
     /**
      * Check if we are running in wp
@@ -10,7 +15,7 @@ if (!function_exists('is_wp')) {
      */
     function is_wp()
     {
-        return function_exists('add_filter');
+        return function_exists('add_filter') && defined('ABSPATH');
     }
 }
 if (!function_exists('wp_view')) {

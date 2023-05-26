@@ -6,7 +6,7 @@ class StartSession extends \WpStarter\Session\Middleware\StartSession
 {
     protected function saveSession($request)
     {
-        if (function_exists('add_action')){
+        if (is_wp()){
             add_action('shutdown', function () use ($request) {
                 parent::saveSession($request);
             });

@@ -14,7 +14,7 @@ class ScreenOption
         $this->bootIfNotBooted();
     }
     protected function bootIfNotBooted(){
-        if(static::$booted || ! function_exists('add_action')){
+        if(static::$booted){
             return ;
         }
         $this->boot();
