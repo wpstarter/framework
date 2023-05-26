@@ -9,7 +9,7 @@ use WpStarter\Contracts\Support\Arrayable;
 use WpStarter\Contracts\Support\Jsonable;
 use WpStarter\Database\Eloquent\Contracts\Model;
 use WpStarter\Database\Eloquent\MassAssignmentException;
-use WpStarter\Exceptions\WpErrorException;
+use WpStarter\Wordpress\Exceptions\WpErrorException;
 use WpStarter\Wordpress\Model\Concerns\SupportMethods;
 use WpStarter\Wordpress\Model\Concerns\UserQuery;
 
