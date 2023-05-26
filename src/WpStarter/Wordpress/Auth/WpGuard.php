@@ -19,7 +19,11 @@ class WpGuard implements Guard
         if(!is_null($this->user)){
             return $this->user;
         }
-        return $this->provider->retrieveById(wp_get_current_user());
+        $wpUser=wp_get_current_user();
+        if($wpUser && $wpUser->ID) {//WordPress may have ID=0
+            $this->user = $this->provider->retrieveById($wpUser);
+        }
+        return $this->user;
     }
 
     public function validate(array $credentials = [])

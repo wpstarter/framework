@@ -78,3 +78,13 @@ function includes_url() {}
  * @ignore
  */
 function wp_guess_url() {}
+
+/**
+ * @ignore
+ */
+function wp_get_current_user(){}
+
+/**
+ * @ignore
+ */
+function wp_authenticate(){}
