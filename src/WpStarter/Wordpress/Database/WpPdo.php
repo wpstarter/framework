@@ -24,7 +24,7 @@ class WpPdo extends PDO
         $this->db = $wpdb;
     }
 
-
+    #[\ReturnTypeWillChange]
     public function beginTransaction()
     {
         if ($this->in_transaction) {
@@ -34,6 +34,7 @@ class WpPdo extends PDO
         return $this->exec('START TRANSACTION');
     }
 
+    #[\ReturnTypeWillChange]
     public function commit()
     {
         if (!$this->in_transaction) {
@@ -43,6 +44,7 @@ class WpPdo extends PDO
         return $this->exec('COMMIT');
     }
 
+    #[\ReturnTypeWillChange]
     public function rollBack()
     {
         if (!$this->in_transaction) {
@@ -52,11 +54,13 @@ class WpPdo extends PDO
         return $this->exec('ROLLBACK');
     }
 
+    #[\ReturnTypeWillChange]
     public function inTransaction()
     {
         return $this->in_transaction;
     }
 
+    #[\ReturnTypeWillChange]
     public function exec($statement)
     {
         $error = $this->db->suppress_errors();
@@ -68,6 +72,7 @@ class WpPdo extends PDO
         return $result;
     }
 
+    #[\ReturnTypeWillChange]
     function query($query, $pM = null, $pA = null, $pC = null, ...$args)
     {
         $statement = $this->prepare($query);
@@ -78,6 +83,7 @@ class WpPdo extends PDO
         return $statement;
     }
 
+    #[\ReturnTypeWillChange]
     public function prepare($query, $options = null)
     {
         $statement = new WpPdoStatement($this);
@@ -85,6 +91,7 @@ class WpPdo extends PDO
         return $statement;
     }
 
+    #[\ReturnTypeWillChange]
     public function lastInsertId($name = null)
     {
         return $this->db->insert_id;
