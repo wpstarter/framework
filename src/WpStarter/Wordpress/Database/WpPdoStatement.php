@@ -28,7 +28,7 @@ class WpPdoStatement extends \PDOStatement
         $this->cursor=-1;
         $this->resultCount=$this->columnCount=0;
         $this->pdo->exec($this->bindParamsForQuery($this->sqlQueryString));
-        $this->result=$this->pdo->get_last_result();
+        $this->result=$this->pdo->getWpdb()->last_result;
         $this->resultCount=count($this->result);
         if(isset($this->result[0])){
             $this->columnCount=count(get_object_vars($this->result[0]));
