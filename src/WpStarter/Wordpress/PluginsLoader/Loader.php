@@ -15,12 +15,18 @@ class Loader
     {
         $this->rules=new RulesCollection();
     }
-    public static function getInstance(){
-        if(!static::$instance){
-            static::$instance=new static();
-        }
-        return static::$instance;
+    function run(){
+        add_filter('option_active_plugins',[$this,'filterPlugins']);
     }
+    function filterPlugins($plugins){
+        $request=$this->getRequest();
+        $rule=$this->findRule($request);
+        if($rule){
+            $plugins=$rule->run($plugins);
+        }
+        return $plugins;
+    }
+
     /**
      * Get the currently dispatched rule instance.
      *
@@ -160,21 +166,24 @@ class Loader
 
         return $rule;
     }
-    function run(){
-        add_filter('option_active_plugins',[$this,'filterPlugins']);
-    }
-    function filterPlugins($plugins){
-        $request=$this->getRequest();
-        $rule=$this->findRule($request);
-        if($rule){
-            $plugins=$rule->run($plugins);
-        }
-        return $plugins;
+
+    public function setRequest($request){
+        $this->request=$request;
+        return $this;
     }
     public function getRequest(){
         if(!$this->request){
             $this->request=Request::capture();
         }
         return $this->request;
+    }
+    /**
+     * @return static
+     */
+    public static function getInstance(){
+        if(!static::$instance){
+            static::$instance=new static();
+        }
+        return static::$instance;
     }
 }
