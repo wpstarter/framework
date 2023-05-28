@@ -12,8 +12,6 @@ use PDOException;
  */
 class WpPdo extends PDO
 {
-    use ForwardToWpdb;
-
     /**
      * @var \wpdb
      */
@@ -56,7 +54,7 @@ class WpPdo extends PDO
             throw new PDOException("Failed to start transaction. Transaction is already started.");
         }
         $this->in_transaction = true;
-        return $this->db->query('START TRANSACTION');
+        return $this->exec('START TRANSACTION');
     }
 
     /**
@@ -72,7 +70,7 @@ class WpPdo extends PDO
             throw new PDOException("There is no active transaction to commit");
         }
         $this->in_transaction = false;
-        return $this->db->query('COMMIT');
+        return $this->exec('COMMIT');
     }
 
     /**
@@ -88,7 +86,7 @@ class WpPdo extends PDO
             throw new PDOException("There is no active transaction to rollback");
         }
         $this->in_transaction = false;
-        return $this->db->query('ROLLBACK');
+        return $this->exec('ROLLBACK');
     }
 
     /**
@@ -133,7 +131,13 @@ class WpPdo extends PDO
      */
     public function exec($statement)
     {
-        return $this->db->query($statement);
+        $error = $this->db->suppress_errors();
+        $result=$this->db->query($statement);
+        $this->db->suppress_errors($error);
+        if ($this->db->last_error) {
+            throw new \Exception($this->db->last_error);
+        }
+        return $result;
     }
 
     /**
