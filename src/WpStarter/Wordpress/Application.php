@@ -11,7 +11,7 @@ class Application extends \WpStarter\Foundation\Application
      *
      * @var string
      */
-    const VERSION = '1.4.11';
+    const VERSION = '1.5.0';
 
     protected $bootstrappedList = [];
 
