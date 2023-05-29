@@ -19,6 +19,7 @@ use WpStarter\Wordpress\Model\User;
 use WpStarter\Wordpress\Providers\CarbonServiceProvider;
 use WpStarter\Wordpress\Routing\RoutingServiceProvider;
 use WpStarter\Wordpress\Services\Livewire;
+use WpStarter\Wordpress\Services\QueryMonitor;
 use WpStarter\Wordpress\Shortcode\ShortcodeManager;
 use WpStarter\Wordpress\Translation\TranslationServiceProvider;
 
@@ -61,6 +62,7 @@ class WordpressServiceProvider extends ServiceProvider
     protected function bootServices(){
         $this->bootResourceManager();
         $this->bootShortcodeManager();
+        $this->bootQueryMonitor();
     }
     protected function autoRestartQueue(){
         add_action('activated_plugin',function(){
@@ -97,6 +99,11 @@ class WordpressServiceProvider extends ServiceProvider
     protected function bootShortcodeManager()
     {
         $this->app->make(ShortcodeManager::class)->boot();
+    }
+
+    protected function bootQueryMonitor()
+    {
+        $this->app->make(QueryMonitor::class)->boot();
     }
 
     protected function configureDatabase()
