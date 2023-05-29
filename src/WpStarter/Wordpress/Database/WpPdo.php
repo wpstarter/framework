@@ -18,9 +18,11 @@ class WpPdo extends PDO
     protected $db;
     protected $in_transaction;
 
+    protected static $attributeCache=[];
+
     public function __construct($wpdb, $dsn, $username, $password, $options)
     {
-        parent::__construct($dsn, $username, $password, $options);
+        //parent::__construct($dsn, $username, $password, $options);
         $this->db = $wpdb;
     }
 
@@ -95,6 +97,44 @@ class WpPdo extends PDO
     public function lastInsertId($name = null)
     {
         return $this->db->insert_id;
+    }
+
+    #[\ReturnTypeWillChange]
+    public function getAttribute(int $attribute)
+    {
+        switch ($attribute){
+            case PDO::ATTR_DRIVER_NAME:
+                return 'mysql';
+            case PDO::ATTR_SERVER_VERSION:
+                return $this->getServerVersion();
+        }
+        return null;
+    }
+
+    #[\ReturnTypeWillChange]
+    public function setAttribute(int $attribute, mixed $value)
+    {
+        static::$attributeCache[$attribute]=$value;
+        return true;
+    }
+
+    protected function getServerVersion( ) {
+        if(!isset(static::$attributeCache['version'])){
+            $version=null;
+            if ( method_exists( $this->db, 'db_server_info' ) ) {
+                $version = $this->db->db_server_info();
+            }
+
+            if ( ! $version ) {
+                $version = $this->db->get_var( 'SELECT VERSION()' );
+            }
+
+            if(!$version){
+                $version='Unknown';
+            }
+            static::$attributeCache['version']=$version;
+        }
+        return static::$attributeCache['version'];
     }
 
     public function __call($name, $arguments)
