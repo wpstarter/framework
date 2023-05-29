@@ -100,7 +100,7 @@ class WpPdo extends PDO
     }
 
     #[\ReturnTypeWillChange]
-    public function getAttribute(int $attribute)
+    public function getAttribute($attribute)
     {
         switch ($attribute){
             case PDO::ATTR_DRIVER_NAME:
@@ -112,7 +112,7 @@ class WpPdo extends PDO
     }
 
     #[\ReturnTypeWillChange]
-    public function setAttribute(int $attribute, mixed $value)
+    public function setAttribute($attribute, $value)
     {
         static::$attributeCache[$attribute]=$value;
         return true;
