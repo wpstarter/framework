@@ -11,7 +11,7 @@ class Application extends \WpStarter\Foundation\Application
      *
      * @var string
      */
-    const VERSION = '1.5.0';
+    const VERSION = '1.5.2';
 
     protected $bootstrappedList = [];
 
@@ -19,6 +19,11 @@ class Application extends \WpStarter\Foundation\Application
     {
         parent::registerBaseServiceProviders();
         $this->register(new RoutingServiceProvider($this));
+    }
+    public function registerCoreContainerAliases()
+    {
+        parent::registerCoreContainerAliases();
+        $this->alias('app',self::class);
     }
 
     function bootstrapWith(array $bootstrappers)
@@ -38,6 +43,5 @@ class Application extends \WpStarter\Foundation\Application
             $this->make($bootstrapper)->bootstrap($this);
             $this['events']->dispatch('bootstrapped: ' . $bootstrapper, [$this]);
         }
-
     }
 }
