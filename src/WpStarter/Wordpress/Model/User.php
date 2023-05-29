@@ -329,9 +329,9 @@ abstract class User extends WP_User implements
         if (is_wp_error($result)) {
             throw (new WpErrorException($result->get_error_message()))->setWpError($result);
         }
-        $this->performUpdateExtra();
         $this->ID = $result;
         $this->wasRecentlyCreated = true;
+        $this->performUpdateExtra();
         $this->fireModelEvent('created', false);
         return $result;
     }
