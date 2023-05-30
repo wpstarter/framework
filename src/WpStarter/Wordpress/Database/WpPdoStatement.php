@@ -48,6 +48,9 @@ class WpPdoStatement extends \PDOStatement
 
     protected function proccessRowForMode($row, $mode, ...$args)
     {
+        if(is_null($mode)){
+            $mode=$this->defaultFetchMode[0]??null;
+        }
         switch ($mode) {
             case PDO::FETCH_BOTH:
             default:
