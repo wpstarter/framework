@@ -22,7 +22,7 @@ class QueryMonitor
             return 'WpStarter';
         });
         add_filter('qm/environment-constants',function($constance){
-            $constance['WpStarter']=$this->version;
+            $constance=['WpStarter'=>$this->version]+$constance;
             return $constance;
         });
     }
