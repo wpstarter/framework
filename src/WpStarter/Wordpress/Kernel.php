@@ -42,17 +42,20 @@ class Kernel extends HttpKernel
         parent::__construct($app, $router);
     }
 
-    public function handle($request)
+    public function handle($request, $processResponse=false)
     {
         $response = parent::handle($request);
-        if(!is_wp()){
-            //No WordPress, kernel will return response instead of processing it
-            return $response;
-        }
-        if(!$request->isNotFoundHttpExceptionFromRoute()) {
-            $this->processResponse($request, $response);
+        if($request->isNotFoundHttpExceptionFromRoute()) {
+            //Not found response and come from no route match...
+            if($processResponse) {
+                $this->registerWpHandler($request);
+            }else{//Expected to return response
+                $response=$this->handleWp($request,$processResponse);
+            }
         }else{
-            $this->registerWpHandler($request);
+            if($processResponse) {
+                $this->processResponse($request, $response);
+            }
         }
         return $response;
     }
@@ -84,12 +87,17 @@ class Kernel extends HttpKernel
     {
         $hook=(array)$this->wpHandleHook;
         add_action($hook[0]??'template_redirect', function ()use($request) {
-            $this->handleWp($request);
+            $this->handleWp($request,true);
         }, $hook[1]??1);
     }
 
-
-    function handleWp($request)
+    /**
+     * Handle WordPress Route
+     * @param $request
+     * @param bool $processResponse
+     * @return \Symfony\Component\HttpFoundation\Response|\WpStarter\Http\Response
+     */
+    function handleWp($request, $processResponse=false)
     {
         try {
             $request->setRouteNotFoundHttpException(false);
@@ -99,8 +107,11 @@ class Kernel extends HttpKernel
             $response = $this->renderException($request, $e);
         }
         if (!$request->isNotFoundHttpExceptionFromRoute()) {
-            $this->processResponse($request,$response);
-        }
+            if($processResponse) {
+                $this->processResponse($request, $response);
+            }
+        }//No roure match continue to wp
+        return $response;
 
     }
 
