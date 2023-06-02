@@ -4,12 +4,6 @@ use WpStarter\Wordpress\Http\Response\Content;
 use WpStarter\Wordpress\Http\Response\Shortcode;
 use WpStarter\Wordpress\Http\Response\Page;
 
-if(!function_exists('add_filter') // Not run inside WordPress
-    && empty($GLOBALS['_composer_bin_dir']) // Not load autoload.php from vendor before WordPress
-){
-    require_once __DIR__.'/noop.php';
-}
-
 if (!function_exists('is_wp')) {
     /**
      * Check if we are running in wp

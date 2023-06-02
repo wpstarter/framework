@@ -11,12 +11,16 @@ class Application extends \WpStarter\Foundation\Application
      *
      * @var string
      */
-    const VERSION = '1.5.7';
+    const VERSION = '1.6.0';
 
     protected $bootstrappedList = [];
 
     protected function registerBaseServiceProviders()
     {
+        if(!function_exists('add_filter') // Not run inside WordPress
+        ){
+            require_once __DIR__.'/noop.php';
+        }
         parent::registerBaseServiceProviders();
         $this->register(new RoutingServiceProvider($this));
     }
