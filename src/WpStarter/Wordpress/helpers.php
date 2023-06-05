@@ -153,3 +153,17 @@ if(!function_exists('ws_enqueue_livewire')){
         return ws_app('wp.livewire')->enqueue($styleOptions,$scriptOptions);
     }
 }
+if(!function_exists('ws_determine_locale')){
+    /**
+     * determine locale use wp function or return default locale
+     * @param string $default default locale
+     * @return string
+     */
+    function ws_determine_locale($default='en'){
+        $locale=$default;
+        if(function_exists('determine_locale')){
+            $locale=determine_locale();
+        }
+        return $locale?:$default;
+    }
+}
