@@ -1,8 +1,10 @@
 <?php
 
-namespace WpStarter\Wordpress\PluginsLoader;
+namespace WpStarter\Wordpress\Plugins;
 
 use WpStarter\Http\Request;
+use WpStarter\Wordpress\Plugins\Loader\Rule;
+use WpStarter\Wordpress\Plugins\Loader\RulesCollection;
 
 class Loader
 {
