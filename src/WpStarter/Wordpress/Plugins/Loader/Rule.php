@@ -1,9 +1,11 @@
 <?php
 
-namespace WpStarter\Wordpress\PluginsLoader;
+namespace WpStarter\Wordpress\Plugins\Loader;
 
 use WpStarter\Http\Request;
 use WpStarter\Routing\RouteUri;
+use WpStarter\Support\Arr;
+use WpStarter\Support\Str;
 
 class Rule
 {
@@ -52,12 +54,34 @@ class Rule
         }
         return array_filter($plugins,function($plugin){
             if($this->whitelist){
-                return in_array($plugin,$this->whitelist);
+                foreach ($this->whitelist as $whiteList){
+                    if($this->pluginMatch($whiteList,$plugin)){
+                        return true;
+                    }
+                }
+                return false;
             }else{
-                return !in_array($plugin,$this->blacklist);
+                foreach ($this->blacklist as $blackList){
+                    if($this->pluginMatch($blackList,$plugin)){
+                        return false;
+                    }
+                }
+                return true;
             }
         });
 
+    }
+    protected function pluginMatch($rule, $plugin){
+        if($rule instanceof \Closure){
+            if($rule($plugin)){
+                return true;
+            }
+        }else{
+            if(Str::is($rule,$plugin)){
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -139,17 +163,22 @@ class Rule
      * Determine if the rule matches a given request.
      *
      * @param  \WpStarter\Http\Request  $request
-     * @param  bool  $includingMethod
      * @return bool
      */
-    public function matches(Request $request, $includingMethod = true)
+    public function matches(Request $request)
     {
-
-        if($request->path()===$this->uri()){
+        if(!empty($this->action['domain'])){
+            if(!in_array($request->getHost(),Arr::wrap($this->action['domain']))){
+                return false;
+            }
+        }
+        if($this->uri() instanceof \Closure){
+            return $this->uri()($request);
+        }
+        if($request->is($this->uri())){
             return true;
         }
-
-        return true;
+        return false;
     }
 
     /**

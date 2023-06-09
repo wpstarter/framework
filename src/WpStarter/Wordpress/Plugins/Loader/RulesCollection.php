@@ -1,6 +1,6 @@
 <?php
 
-namespace WpStarter\Wordpress\PluginsLoader;
+namespace WpStarter\Wordpress\Plugins\Loader;
 
 use WpStarter\Http\Request;
 use WpStarter\Support\Arr;
@@ -81,7 +81,7 @@ class RulesCollection
         });
 
         return $rules->merge($fallbacks)->first(function (Rule $rule) use ($request, $includingMethod) {
-            return $rule->matches($request, $includingMethod);
+            return $rule->matches($request);
         });
     }
 }
