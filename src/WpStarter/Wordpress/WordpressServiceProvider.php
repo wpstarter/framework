@@ -12,6 +12,7 @@ use WpStarter\Wordpress\Console\Commands\Database\MigrationWipeCommand;
 use WpStarter\Wordpress\Database\WpConnection;
 use WpStarter\Wordpress\Database\WpConnector;
 use WpStarter\Wordpress\Dependency\ResourceManager;
+use WpStarter\Wordpress\Dependency\ScriptQueue;
 use WpStarter\Wordpress\Http\Response\Handler;
 use WpStarter\Wordpress\Http\Response\PassThrough;
 use WpStarter\Wordpress\Mail\Transport\WpTransport;
@@ -141,5 +142,6 @@ class WordpressServiceProvider extends ServiceProvider
     protected function bootResourceManager()
     {
         $this->app->make(ResourceManager::class)->boot();
+        $this->app->make(ScriptQueue::class)->boot();
     }
 }
