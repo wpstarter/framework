@@ -147,6 +147,43 @@ if (! function_exists('ws_asset')) {
     }
 }
 
+if (! function_exists('ws_enqueue_js')) {
+
+    /**
+     * Enqueue some javascript.
+     *
+     * @param string|null $handle
+     * @param string|null $src
+     * @param string[] $deps
+     * @param string|bool $ver
+     * @param boolean $in_footer
+     * @param array $data
+     * @return void
+     */
+    function ws_enqueue_js($handle = null, $src = false, $deps = [], $ver = false, $in_footer = true, array $data = [])
+    {
+        ws_app('resources')->addJs($handle, $src, $deps , $ver, $in_footer, $data);
+    }
+}
+
+if (! function_exists('ws_enqueue_css')) {
+
+    /**
+     * Enqueue some css styles.
+     *
+     * @param string|null $handle
+     * @param string|null $src
+     * @param string[] $deps
+     * @param string|bool $ver
+     * @param string $media
+     * @return void
+     */
+    function ws_enqueue_css($handle = null, $src = false, $deps = array(), $ver = false, $media = 'all')
+    {
+        ws_app('resources')->addCss($handle, $src, $deps , $ver, $media);
+    }
+}
+
 if (! function_exists('ws_auth')) {
     /**
      * Get the available auth instance.
