@@ -167,3 +167,49 @@ if(!function_exists('ws_determine_locale')){
         return $locale?:$default;
     }
 }
+if (! function_exists('ws_resources')) {
+
+    /**
+     * Get resource manager instance
+     * @return \WpStarter\Wordpress\Dependency\ResourceManager
+     */
+    function ws_resources(){
+        return ws_app('resources');
+    }
+}
+if (! function_exists('ws_enqueue_js')) {
+
+    /**
+     * Enqueue some javascript.
+     *
+     * @param string|null $handle
+     * @param string|null $src
+     * @param string[] $deps
+     * @param string|bool $ver
+     * @param boolean $in_footer
+     * @param array $data
+     * @return void
+     */
+    function ws_enqueue_js($handle = null, $src = false, $deps = [], $ver = false, $in_footer = true, array $data = [])
+    {
+        ws_resources()->addJs($handle, $src, $deps , $ver, $in_footer, $data);
+    }
+}
+
+if (! function_exists('ws_enqueue_css')) {
+
+    /**
+     * Enqueue some css styles.
+     *
+     * @param string|null $handle
+     * @param string|null $src
+     * @param string[] $deps
+     * @param string|bool $ver
+     * @param string $media
+     * @return void
+     */
+    function ws_enqueue_css($handle = null, $src = false, $deps = array(), $ver = false, $media = 'all')
+    {
+        ws_resources()->addCss($handle, $src, $deps , $ver, $media);
+    }
+}
