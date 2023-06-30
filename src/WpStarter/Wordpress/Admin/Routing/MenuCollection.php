@@ -35,7 +35,11 @@ class MenuCollection implements \Countable, \IteratorAggregate
 
     public function add(Menu $menu)
     {
-        $this->menus[$menu->slug] = $menu;
+        $slug=$menu->slug;
+        if($menu->parent){
+            $slug=$menu->parent.'_'.$slug;
+        }
+        $this->menus[$slug] = $menu;
         return $this;
     }
     #[\ReturnTypeWillChange]
