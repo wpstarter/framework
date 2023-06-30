@@ -298,6 +298,8 @@ class Menu
         if($hide) {
             $this->hide = $this->parent;
             $this->parent = 'ws-admin-hidden-menu';
+            global $_parent_pages;
+            $_parent_pages['ws-admin-hidden-menu']=false;
         }else{
             if($this->parent ==='ws-admin-hidden-menu'){
                 $this->parent = $this->hide;
