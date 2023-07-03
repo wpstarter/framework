@@ -82,7 +82,12 @@ class Router
         $this->events = $events;
     }
 
-    public function newMenu($slug, $controller, $capability = 'read', $title ='' , $page_title = '', $icon = '', $position = null)
+    public function newMenu($slug, $controller, $capability = 'read', $title ='' , $pageTitle = '', $icon = '', $position = null){
+        return (new Menu($slug, $controller, $capability, $title ,$pageTitle, $icon, $position))
+            ->setRouter($this)
+            ->setContainer($this->container);
+    }
+    public function createMenu($slug, $controller, $capability = 'read', $title ='' , $pageTitle = '', $icon = '', $position = null)
     {
 
         if ($this->hasGroupStack()) {
@@ -90,18 +95,23 @@ class Router
                 $controller=$this->prependGroupNamespace($controller);
             }
         }
-        $menu = (new Menu($slug, $controller, $capability, $title ,$page_title, $icon, $position))
-            ->setRouter($this)
-            ->setContainer($this->container);
+        $menu = $this->newMenu($slug,$controller,$capability,$title,$pageTitle,$icon,$position);
         if($this->hasGroupStack()){
             $this->mergeFromLastGroup($menu);
         }
 
         return $menu;
     }
+
+
+    /**
+     * @param Menu $menu
+     * @return void
+     */
     protected function mergeFromLastGroup($menu){
-        $menu->middleware($this->getLastGroupMiddleware());
-        $menu->parent($this->getLastGroupParent());
+        $menu->middleware($this->getLastGroupAttribute('middleware',[]));
+        $menu->parent($this->getLastGroupAttribute('parent'));
+        $menu->name($this->getLastGroupAttribute('name',''));
     }
     protected function prependGroupNamespace($class)
     {
@@ -109,32 +119,19 @@ class Router
         return isset($group['namespace']) && strpos($class, '\\') !== 0
             ? $group['namespace'].'\\'.$class : $class;
     }
-    protected function getLastGroupMiddleware(){
+
+    protected function getLastGroupAttribute($attribute,$default=null){
         if($this->hasGroupStack()){
             $last=end($this->groupStack);
-            return $last['middleware']??[];
+            return $last[$attribute]??$default;
         }
-        return [];
+        return $default;
     }
-    protected function getLastGroupParent(){
-        if($this->hasGroupStack()){
-            $last=end($this->groupStack);
-            return $last['parent']??'';
-        }
-        return '';
-    }
+
 
     public function add($slug, $controller, $capability = 'read', $title ='' , $page_title = '', $icon = '', $position = null)
     {
-        $this->addMenu($menu = $this->newMenu($slug, $controller, $capability, $title ,$page_title, $icon, $position));
-        return $menu;
-    }
-
-
-    function addMenu(Menu $menu)
-    {
-        $this->menus->add($menu);
-        return $this;
+        return $this->menus->add($this->createMenu($slug, $controller, $capability, $title ,$page_title, $icon, $position));
     }
 
     function register()
@@ -169,7 +166,7 @@ class Router
                     $menu->position
                 );
             }
-            $this->menus->addByHook($menu->hookSuffix, $menu);
+            $this->menus->addLookups($menu);
         }
     }
 
@@ -182,7 +179,7 @@ class Router
     }
 
 
-    
+
     /**
      * Dispatch the request to the application.
      *
@@ -604,7 +601,7 @@ class Router
     }
 
     /**
-     * Find menu by slug
+     * Find menu by name or slug
      * @param $slug
      * @return Menu|null
      */
