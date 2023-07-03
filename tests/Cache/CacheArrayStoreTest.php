@@ -2,6 +2,11 @@
 
 namespace WpStarter\Tests\Cache;
 
+use PHPUnit\Framework\Constraint\LogicalNot;
+use PHPUnit\Framework\Constraint\ObjectHasAttribute;
+use PHPUnit\Framework\Exception;
+use PHPUnit\Framework\ExpectationFailedException;
+use PHPUnit\Framework\InvalidArgumentException;
 use WpStarter\Cache\ArrayStore;
 use WpStarter\Support\Carbon;
 use PHPUnit\Framework\TestCase;
@@ -229,5 +234,63 @@ class CacheArrayStoreTest extends TestCase
         $wannabeOwner->forceRelease();
 
         $this->assertFalse($wannabeOwner->release());
+    }
+
+    /**
+     * Asserts that an object has a specified attribute.
+     *
+     * @param object $object
+     *
+     * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+     * @throws Exception
+     * @throws ExpectationFailedException
+     *
+     * @deprecated https://github.com/sebastianbergmann/phpunit/issues/4601
+     */
+    public static function assertObjectHasAttribute(string $attributeName, $object, string $message = ''): void
+    {
+        if (!(bool) preg_match('/[^\x00-\x1f\x7f-\x9f]+/', $attributeName)) {
+            throw InvalidArgumentException::create(1, 'valid attribute name');
+        }
+
+        if (!is_object($object)) {
+            throw InvalidArgumentException::create(2, 'object');
+        }
+
+        static::assertThat(
+            $object,
+            new ObjectHasAttribute($attributeName),
+            $message,
+        );
+    }
+
+    /**
+     * Asserts that an object does not have a specified attribute.
+     *
+     * @param object $object
+     *
+     * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+     * @throws Exception
+     * @throws ExpectationFailedException
+     *
+     * @deprecated https://github.com/sebastianbergmann/phpunit/issues/4601
+     */
+    public static function assertObjectNotHasAttribute(string $attributeName, $object, string $message = ''): void
+    {
+        if (!(bool) preg_match('/[^\x00-\x1f\x7f-\x9f]+/', $attributeName)) {
+            throw InvalidArgumentException::create(1, 'valid attribute name');
+        }
+
+        if (!is_object($object)) {
+            throw InvalidArgumentException::create(2, 'object');
+        }
+
+        static::assertThat(
+            $object,
+            new LogicalNot(
+                new ObjectHasAttribute($attributeName),
+            ),
+            $message,
+        );
     }
 }
