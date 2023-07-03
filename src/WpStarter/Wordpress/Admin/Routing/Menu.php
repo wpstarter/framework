@@ -42,6 +42,7 @@ class Menu
 
     protected $hide=false;
 
+    public $name;
     public $pageTitle;
     public $title;
     public $capability;
@@ -90,7 +91,7 @@ class Menu
      * @return $this
      */
     public function group($callback){
-        $this->router->group(['parent'=>$this->slug],$callback);
+        $this->router->group(['parent'=>$this->slug,'name'=>$this->name],$callback);
         return $this;
     }
 
@@ -143,6 +144,39 @@ class Menu
         $params[$this->getActionKey()]=$action;
 
         return ws_admin_url($this->slug,$params);
+    }
+
+    /**
+     * Add or change the menu name.
+     *
+     * @param  string  $name
+     * @return $this
+     */
+    public function name($name)
+    {
+        $this->name = isset($this->name) ? $this->name.$name : $name;
+
+        return $this;
+    }
+    /**
+     * Determine whether the menu's name matches the given patterns.
+     *
+     * @param  mixed  ...$patterns
+     * @return bool
+     */
+    public function named(...$patterns)
+    {
+        if (is_null($menuName = $this->name)) {
+            return false;
+        }
+
+        foreach ($patterns as $pattern) {
+            if (Str::is($pattern, $menuName)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

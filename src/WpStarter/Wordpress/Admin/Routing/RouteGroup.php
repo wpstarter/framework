@@ -24,11 +24,12 @@ class RouteGroup
         }
 
         $new = array_merge($new, [
+            'name' => static::formatName($new, $old),
             'namespace' => static::formatNamespace($new, $old),
         ]);
 
         return array_merge_recursive(Arr::except(
-            $old, ['namespace']
+            $old, ['name','namespace']
         ), $new);
     }
 
@@ -48,5 +49,20 @@ class RouteGroup
         }
 
         return $old['namespace'] ?? null;
+    }
+    /**
+     * Format the "name" for the new group attributes.
+     *
+     * @param  array  $new
+     * @param  array  $old
+     * @return string
+     */
+    protected static function formatName($new, $old)
+    {
+        if (isset($old['name'])) {
+            $new['name'] = $old['name'].($new['name'] ?? '');
+        }
+
+        return $new['name'] ?? '';
     }
 }
