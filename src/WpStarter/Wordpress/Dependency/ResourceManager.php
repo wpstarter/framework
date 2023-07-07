@@ -4,6 +4,7 @@ namespace WpStarter\Wordpress\Dependency;
 
 use WpStarter\Contracts\Foundation\Application;
 use WpStarter\Support\Arr;
+use WpStarter\Support\Str;
 
 
 /**
@@ -173,7 +174,7 @@ class ResourceManager
     {
         $js = array_pad($js, 6, null);
         @list($handle, $src, $deps, $ver, $in_footer, $data) = $js;
-        $src = ws_asset($src);
+        $src = $this->getSrc($src);
         $deps = Arr::wrap($deps);
         empty($ver) && $ver = $this->defaultVersion;
         wp_register_script($handle, $src, $deps, $ver, $in_footer);
@@ -194,7 +195,7 @@ class ResourceManager
     {
         $css = array_pad($css, 5, null);
         @list($handle, $src, $deps, $ver, $media) = $css;
-        $src = ws_asset($src);
+        $src = $this->getSrc($src);
         $deps = Arr::wrap($deps);
         empty($ver) && $ver = $this->defaultVersion;
         isset($media) || $media = 'all';
@@ -206,20 +207,20 @@ class ResourceManager
         $type = $this->typeAlias($type);
         if (count($data) == 1 && strpos($data[0], '/')) {
             $data[1] = $data[0];
-            $data[0] = 'imr-' . md5($data[1]);
+            $data[0] = 'wsr-' . md5($data[1]);
         }
         if ($this->did[$type]) {
             if (strpos($type, 'j') !== false) {
                 if ($type == 'rj') {
                     $this->_registerJs($data);
                 } else {
-                    $this->enqueue_js(array($data));
+                    $this->enqueueJs(array($data));
                 }
             } else {
                 if ($type == 'rc') {
                     $this->_registerCss($data);
                 } else {
-                    $this->enqueue_css(array($data));
+                    $this->enqueueCss(array($data));
                 }
             }
         } else {
@@ -232,8 +233,8 @@ class ResourceManager
     function enqueueAdminCssJs()
     {
         $this->did['ac'] = $this->did['aj'] = true;
-        $this->enqueue_css($this->resources['ac']);
-        $this->enqueue_js($this->resources['aj']);
+        $this->enqueueCss($this->resources['ac']);
+        $this->enqueueJs($this->resources['aj']);
     }
 
 
@@ -243,11 +244,11 @@ class ResourceManager
     function enqueueCssJs()
     {
         $this->did['c'] = $this->did['j'] = true;
-        $this->enqueue_css($this->resources['c']);
-        $this->enqueue_js($this->resources['j']);
+        $this->enqueueCss($this->resources['c']);
+        $this->enqueueJs($this->resources['j']);
     }
 
-    function enqueue_css($css_queue)
+    function enqueueCss($css_queue)
     {
         global $wp_styles;
         !is_array($css_queue) && $css_queue = array();
@@ -258,13 +259,13 @@ class ResourceManager
             $deps = $deps ? (array)$deps : [];
             empty($ver) && $ver = $this->defaultVersion;
             isset($media) || $media = 'all';
-            $src = ws_asset($src);
+            $src = $this->getSrc($src);
 
             wp_enqueue_style($handle, $src, $deps, $ver, $media);
         }
     }
 
-    function enqueue_js($js_queue)
+    function enqueueJs($js_queue)
     {
         !is_array($js_queue) && $js_queue = array();
         foreach ($js_queue as $js) {
@@ -273,7 +274,7 @@ class ResourceManager
             $deps = $deps ? (array)$deps : [];
             empty($ver) && $ver = $this->defaultVersion;
             isset($in_footer) || $in_footer = true;
-            $src = ws_asset($src);
+            $src = $this->getSrc($src);
             wp_enqueue_script($handle, $src, $deps, $ver, $in_footer);
             $this->setupTranslation($handle);
             if ($data) {
@@ -339,6 +340,10 @@ class ResourceManager
         $content = 'wp.i18n.setLocaleData( ' . json_encode($locale) . ', "' . $domain . '" );';
         wp_script_add_data($handle, 'data', $content);
         unset($this->js_translations[$handle]);
+    }
+
+    protected function getSrc($src){
+        return ws_asset($src);
     }
 
     function __invoke()
