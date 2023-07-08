@@ -297,8 +297,10 @@ class ResourceManager
         if (!empty($translations->headers['Plural-Forms'])) {
             $locale['']['plural_forms'] = $translations->headers['Plural-Forms'];
         }
-        foreach ($translations->entries as $msgid => $entry) {
-            $locale[$msgid] = $entry->translations;
+        if(isset($translations->entries)) {
+            foreach ($translations->entries as $msgid => $entry) {
+                $locale[$msgid] = $entry->translations;
+            }
         }
         return $locale;
     }
