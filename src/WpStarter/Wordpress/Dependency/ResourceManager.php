@@ -18,11 +18,11 @@ use WpStarter\Support\Str;
  */
 class ResourceManager
 {
-    var $resources = array();
-    var $did = array();
-    var $last = array();
-    var $js_translations = [];
-    var $typeAlias = array(
+    protected $resources = [];
+    protected $did = [];
+    protected $last = [];
+    protected $jsTranslations = [];
+    protected $typeAlias = [
         'css' => 'c',
         'js' => 'j',
         'admincss' => 'ac',
@@ -33,9 +33,11 @@ class ResourceManager
         'registercss' => 'rc',
         'rjs' => 'rj',
         'rcss' => 'rc',
-    );
+    ];
     protected $app;
     protected $defaultVersion;
+
+    protected $booted;
 
     /**
      * @param Application $application
@@ -47,6 +49,19 @@ class ResourceManager
             $this->resources[$type] = array();
             $this->did[$type] = false;
         }
+    }
+
+    function addFile($file){
+        $file_name = basename($file);
+
+        $file_extension = pathinfo($file_name, PATHINFO_EXTENSION);
+        if ($file_extension == 'css') {
+            $this->addCss(array($file_name, $file));
+        }
+        if ($file_extension == 'js') {
+            $this->addJs(array($file_name, $file));
+        }
+        return $this;
     }
 
     /**
@@ -63,23 +78,30 @@ class ResourceManager
         return $this;
     }
 
-    function addAdminVendor($handle)
-    {
+    function addAdminVendor($handle){
         $this->addAdminJs($handle);
         $this->addAdminCss($handle);
         return $this;
     }
 
-    function boot()
-    {
+    function boot(){
+        if($this->booted){
+            return ;
+        }
+        $this->booted=true;
         $this->loadResources();
-        add_action('init', array($this, 'ensureWpScriptStyle'));
-        add_action('wp_enqueue_scripts', array($this, 'enqueueCssJs'), 100);
-        add_action('admin_enqueue_scripts', array($this, 'enqueueAdminCssJs'), 100);
+        add_action('init', function(){
+            $this->ensureWpScriptStyle();
+        });
+        add_action('wp_enqueue_scripts', function(){
+            $this->enqueueCssJs();
+        }, 100);
+        add_action('admin_enqueue_scripts', function(){
+            $this->enqueueAdminCssJs();
+        }, 100);
     }
 
-    function ensureWpScriptStyle()
-    {
+    protected function ensureWpScriptStyle(){
         wp_enqueue_script(false);
         wp_enqueue_style(false);
         $this->register();
@@ -87,8 +109,7 @@ class ResourceManager
     }
 
 
-    function loadResources()
-    {
+    protected function loadResources(){
         $resources = $this->app['config']['resources'];
         $this->defaultVersion = $resources['default_version']
             ?? defined('WS_ASSETS_VERSION') ? WS_ASSETS_VERSION : ( defined('WS_VERSION') ? WS_VERSION : '' );
@@ -100,8 +121,7 @@ class ResourceManager
         }
     }
 
-    function loadResource($resource)
-    {
+    protected function loadResource($resource){
         foreach ($resource as $type => $res) {
             $type = $this->typeAlias($type);
             if (is_array($this->resources[$type]) && is_array($res)) {
@@ -110,8 +130,7 @@ class ResourceManager
         }
     }
 
-    protected function typeAlias($type)
-    {
+    protected function typeAlias($type){
         $type = strtolower($type);
         if (isset($this->typeAlias[$type])) {
             return $this->typeAlias[$type];
@@ -119,23 +138,9 @@ class ResourceManager
         return $type;
     }
 
-    function addResource($file)
-    {
 
-        $file_name = basename($file);
 
-        $file_extension = pathinfo($file_name, PATHINFO_EXTENSION);
-        if ($file_extension == 'css') {
-            $this->addCss(array($file_name, $file));
-        }
-        if ($file_extension == 'js') {
-            $this->addJs(array($file_name, $file));
-        }
-        return $this;
-    }
-
-    function __call($method, $args)
-    {
+    function __call($method, $args){
         if (!$args) {
             return $this;
         }
@@ -155,8 +160,7 @@ class ResourceManager
         return $this;
     }
 
-    protected function register()
-    {
+    protected function register(){
         $this->did['rc'] = $this->did['rj'] = true;
         if (isset($this->resources['rc']) && is_array($this->resources['rc'])) {
             foreach ($this->resources['rc'] as $css) {
@@ -170,8 +174,7 @@ class ResourceManager
         }
     }
 
-    protected function _registerJs($js)
-    {
+    protected function _registerJs($js){
         $js = array_pad($js, 6, null);
         @list($handle, $src, $deps, $ver, $in_footer, $data) = $js;
         $src = $this->getSrc($src);
@@ -191,8 +194,7 @@ class ResourceManager
         }
     }
 
-    protected function _registerCss($css)
-    {
+    protected function _registerCss($css){
         $css = array_pad($css, 5, null);
         @list($handle, $src, $deps, $ver, $media) = $css;
         $src = $this->getSrc($src);
@@ -202,8 +204,7 @@ class ResourceManager
         wp_register_style($handle, $src, $deps, $ver, $media);
     }
 
-    protected function add($type, $data)
-    {
+    protected function add($type, $data){
         $type = $this->typeAlias($type);
         if (count($data) == 1 && strpos($data[0], '/')) {
             $data[1] = $data[0];
@@ -230,8 +231,7 @@ class ResourceManager
         }
     }
 
-    function enqueueAdminCssJs()
-    {
+    protected function enqueueAdminCssJs(){
         $this->did['ac'] = $this->did['aj'] = true;
         $this->enqueueCss($this->resources['ac']);
         $this->enqueueJs($this->resources['aj']);
@@ -241,16 +241,13 @@ class ResourceManager
     /**
      * @use \WP_Scripts $wp_scripts
      */
-    function enqueueCssJs()
-    {
+    protected function enqueueCssJs(){
         $this->did['c'] = $this->did['j'] = true;
         $this->enqueueCss($this->resources['c']);
         $this->enqueueJs($this->resources['j']);
     }
 
-    function enqueueCss($css_queue)
-    {
-        global $wp_styles;
+    protected function enqueueCss($css_queue){
         !is_array($css_queue) && $css_queue = array();
         foreach ($css_queue as $css) {
             @list($handle, $src, $deps, $ver, $media) = array_pad((array)$css, 5, null);
@@ -265,8 +262,7 @@ class ResourceManager
         }
     }
 
-    function enqueueJs($js_queue)
-    {
+    protected function enqueueJs($js_queue){
         !is_array($js_queue) && $js_queue = array();
         foreach ($js_queue as $js) {
             @list($handle, $src, $deps, $ver, $in_footer, $data) = array_pad((array)$js, 6, null);
@@ -290,56 +286,64 @@ class ResourceManager
         }
     }
 
-    public function getTranslationData($domain)
-    {
+    protected function getTranslationData($domain){
         $translations = get_translations_for_domain($domain);
-
         $locale = array(
             '' => array(
                 'domain' => $domain,
                 'lang' => determine_locale(),
             ),
         );
-
         if (!empty($translations->headers['Plural-Forms'])) {
             $locale['']['plural_forms'] = $translations->headers['Plural-Forms'];
         }
-
         foreach ($translations->entries as $msgid => $entry) {
             $locale[$msgid] = $entry->translations;
         }
-
         return $locale;
     }
 
-    public function translateUsing($domain)
-    {
+    public function translateUsing($domain, $path=''){
         if ($this->last) {
             $handle = $this->last[0] ?? null;
             if ($handle) {
-                $this->setTranslation($handle, $domain);
+                $this->setTranslation($handle, $domain, $path);
             }
         }
         return $this;
 
     }
 
-    public function setTranslation($handle, $domain)
-    {
-        $this->js_translations[$handle] = $domain;
+    public function setTranslation($handle, $domain, $path=''){
+        $this->jsTranslations[$handle] = ['domain'=>$domain,'path'=>$path];
         return $this;
     }
 
-    protected function setupTranslation($handle)
-    {
-        $domain = $this->js_translations[$handle] ?? null;
+    protected function setupTranslation($handle){
+        $translate = $this->jsTranslations[$handle] ?? [];
+        $domain=$translate['domain']??'';
+        $path=$domain['path']??'';
         if (!$domain) {
             return;
         }
-        $locale = $this->getTranslationData($domain);
-        $content = 'wp.i18n.setLocaleData( ' . json_encode($locale) . ', "' . $domain . '" );';
-        wp_script_add_data($handle, 'data', $content);
-        unset($this->js_translations[$handle]);
+        if($path){
+            //We got path use wp way which load translation from json
+            wp_set_script_translations($handle,$domain,$path);
+        }else{
+            //Only domain then load from mo
+            $obj=wp_scripts()->query($handle);
+            if(!$obj){
+                return ;
+            }
+            if ( ! in_array( 'wp-i18n', $obj->deps, true ) ) {
+                $obj->deps[] = 'wp-i18n';
+            }
+            $locale = $this->getTranslationData($domain);
+            $content = 'wp.i18n.setLocaleData( ' . json_encode($locale) . ', "' . $domain . '" );';
+            wp_script_add_data($handle, 'data', $content);
+        }
+
+        unset($this->jsTranslations[$handle]);
     }
 
     protected function getSrc($src){
