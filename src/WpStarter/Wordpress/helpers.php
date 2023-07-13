@@ -67,11 +67,14 @@ if (!function_exists('ws_plugin_url')) {
      */
     function ws_plugin_url($path = '', $scheme = null)
     {
-        if(defined('ABSPATH') && defined('__WS_FILE__')) {
-            $basePath = str_replace(ABSPATH, '', __WS_FILE__);
+        static $basePath;
+        if(!$basePath && defined('ABSPATH') && defined('__WS_FILE__')) {
+            $basePath = str_replace(
+                str_replace('\\','/',ABSPATH), '',
+                str_replace('\\','/',__WS_FILE__));
             $basePath = trim(dirname($basePath), '\/');
-            return site_url($basePath . '/' . ltrim($path, '/'), $scheme);
         }
+        return site_url($basePath . '/' . ltrim($path, '/'), $scheme);
     }
 }
 if (!function_exists('ws_admin_menu')) {
@@ -88,7 +91,7 @@ if (!function_exists('ws_admin_menu')) {
 if (!function_exists('ws_admin_url')) {
     /**
      * Get url to admin page
-     * @param string $slug The slug name to refer to this menu by (should be unique for this menu).
+     * @param string $slug The slug or name of the menu
      * @param array $params Query to add to url
      */
     function ws_admin_url($slug=null,$params=[])
