@@ -148,6 +148,17 @@ class Router extends \WpStarter\Routing\Router
         return $response->prepare($request);
     }
 
+    public function __call($method, $parameters)
+    {
+        if (static::hasMacro($method)) {
+            return $this->macroCall($method, $parameters);
+        }
 
+        if ($method === 'middleware') {
+            return (new RouteRegistrar($this))->attribute($method, is_array($parameters[0]) ? $parameters[0] : $parameters);
+        }
+
+        return (new RouteRegistrar($this))->attribute($method, array_key_exists(0, $parameters) ? $parameters[0] : true);
+    }
 
 }
