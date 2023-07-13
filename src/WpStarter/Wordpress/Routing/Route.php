@@ -42,9 +42,9 @@ class Route extends \WpStarter\Routing\Route
         // validator implementations. We will spin through each one making sure it
         // passes and then we will know if the route as a whole matches request.
         return static::$validators = [
-            new UriValidator, new MethodValidator,
+            new ShortcodeValidator, new MethodValidator,
             new SchemeValidator, new HostValidator,
-            new ShortcodeValidator(),
+
         ];
     }
 
