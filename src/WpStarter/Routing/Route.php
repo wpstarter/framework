@@ -321,7 +321,7 @@ class Route
     {
         $this->compileRoute();
 
-        foreach (self::getValidators() as $validator) {
+        foreach (static::getValidators() as $validator) {
             if (! $includingMethod && $validator instanceof MethodValidator) {
                 continue;
             }
