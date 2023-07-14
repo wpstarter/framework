@@ -36,7 +36,7 @@ class AdminServiceProvider extends ServiceProvider
                     $slug=$menu->slug;
                 }
             }else{
-                if($menu=ws_app('wp.admin.router')->menu($slug)){
+                if($menu=ws_app('wp.admin.router')->getRoutes()->getByName($slug)){
                     $slug=$menu->slug;
                 }
             }
