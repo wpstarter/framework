@@ -33,11 +33,11 @@ class AdminServiceProvider extends ServiceProvider
         UrlGenerator::macro('admin',function($slug=null,$params=[]){
             if(!$slug){
                 if($menu=ws_app('wp.admin.router')->current()){
-                    $slug=$menu->slug;
+                    $slug=$menu->uri();
                 }
             }else{
                 if($menu=ws_app('wp.admin.router')->getRoutes()->getByName($slug)){
-                    $slug=$menu->slug;
+                    $slug=$menu->uri();
                 }
             }
             $url=menu_page_url($slug,false);
