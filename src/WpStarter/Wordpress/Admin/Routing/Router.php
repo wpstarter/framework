@@ -102,6 +102,8 @@ class Router extends \WpStarter\Routing\Router
                 );
             }
         }
+        $this->routes->refreshNameLookups();
+        $this->routes->refreshActionLookups();
     }
     protected function getContent(Menu $menu)
     {
