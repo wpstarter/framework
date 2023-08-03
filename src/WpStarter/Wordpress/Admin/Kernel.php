@@ -221,7 +221,7 @@ class Kernel implements Contracts\Kernel
     protected function gatherRouteMiddleware($request)
     {
         if ($menu = $this->router->current()) {
-            return $this->router->gatherMenuMiddleware($menu);
+            return $this->router->gatherRouteMiddleware($menu);
         }
 
         return [];
