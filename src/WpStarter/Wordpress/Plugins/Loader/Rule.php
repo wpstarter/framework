@@ -12,7 +12,7 @@ class Rule
     /**
      * The URI pattern the rule responds to.
      *
-     * @var string
+     * @var string|callable
      */
     public $uri;
 
@@ -116,6 +116,23 @@ class Rule
     }
 
     /**
+     * Set match by input param
+     * @param $input
+     * @param $value
+     * @return $this
+     */
+    function where($input,$value){
+        $this->action['where'][$input]=$value;
+        return $this;
+    }
+
+    function getWhere(){
+        return $this->action['where']??[];
+    }
+
+
+
+    /**
      * Get the URI associated with the rule.
      *
      * @return string
@@ -172,13 +189,31 @@ class Rule
                 return false;
             }
         }
-        if($this->uri() instanceof \Closure){
-            return $this->uri()($request);
+
+        if($uri=$this->uri()) {//Has uri
+            if($uri instanceof \Closure){//Advanced matching
+                return $uri($request);
+            }
+            return $request->is($uri) && $this->inputMatches($request);
         }
-        if($request->is($this->uri())){
+
+        return $this->inputMatches($request,false);
+    }
+
+    protected function inputMatches(Request $request, $fallback=true){
+        if($where=$this->getWhere()){
+            foreach ($where as $var=>$val){
+                if($request->input($var)!==$val){
+                    return false;
+                }
+            }
             return true;
         }
-        return false;
+        $callable=$this->action['uses']??null;
+        if($callable){
+            return $callable($request);
+        }
+        return $fallback;
     }
 
     /**

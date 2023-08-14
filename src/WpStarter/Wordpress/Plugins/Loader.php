@@ -42,7 +42,7 @@ class Loader
      * Add a rule to the underlying rule collection.
      *
      * @param  array|string  $methods
-     * @param  string  $uri
+     * @param  string|\Closure  $uri
      * @param  array|string|callable|null  $action
      * @return Rule
      */
@@ -55,18 +55,21 @@ class Loader
      * Create a new rule instance.
      *
      * @param  array|string  $methods
-     * @param  string  $uri
+     * @param  string|\Closure  $uri
      * @param  mixed  $action
      * @return Rule
      */
     protected function createRule($methods, $uri, $action)
     {
+        if(!is_array($action)){
+            $action = ['uses' => $action];
+        }
         return new Rule($methods,$uri,$action);
     }
     /**
      * Register a new GET rule with the PluginsLoader.
      *
-     * @param  string  $uri
+     * @param  string|\Closure  $uri
      * @param  array|string|callable|null  $action
      * @return Rule
      */
@@ -78,7 +81,7 @@ class Loader
     /**
      * Register a new POST rule with the PluginsLoader.
      *
-     * @param  string  $uri
+     * @param  string|\Closure  $uri
      * @param  array|string|callable|null  $action
      * @return Rule
      */
@@ -90,7 +93,7 @@ class Loader
     /**
      * Register a new PUT rule with the PluginsLoader.
      *
-     * @param  string  $uri
+     * @param  string|\Closure  $uri
      * @param  array|string|callable|null  $action
      * @return Rule
      */
@@ -102,7 +105,7 @@ class Loader
     /**
      * Register a new PATCH rule with the PluginsLoader.
      *
-     * @param  string  $uri
+     * @param  string|\Closure  $uri
      * @param  array|string|callable|null  $action
      * @return Rule
      */
@@ -114,7 +117,7 @@ class Loader
     /**
      * Register a new DELETE rule with the PluginsLoader.
      *
-     * @param  string  $uri
+     * @param  string|\Closure  $uri
      * @param  array|string|callable|null  $action
      * @return Rule
      */
@@ -126,7 +129,7 @@ class Loader
     /**
      * Register a new OPTIONS rule with the PluginsLoader.
      *
-     * @param  string  $uri
+     * @param  string|\Closure  $uri
      * @param  array|string|callable|null  $action
      * @return Rule
      */
@@ -138,7 +141,7 @@ class Loader
     /**
      * Register a new rule responding to all verbs.
      *
-     * @param  string  $uri
+     * @param  string|\Closure  $uri
      * @param  array|string|callable|null  $action
      * @return Rule
      */
@@ -150,7 +153,7 @@ class Loader
      * Register a new rule with the given verbs.
      *
      * @param  array|string  $methods
-     * @param  string  $uri
+     * @param  string|\Closure  $uri
      * @param  array|string|callable|null  $action
      * @return Rule
      */
