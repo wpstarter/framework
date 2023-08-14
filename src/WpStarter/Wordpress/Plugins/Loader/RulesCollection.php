@@ -29,7 +29,11 @@ class RulesCollection
      */
     protected function addToCollections($rule)
     {
-        $domainAndUri = $rule->getDomain().$rule->uri();
+        $uri=$rule->uri();
+        if($uri instanceof \Closure){
+            $uri=spl_object_hash($uri);
+        }
+        $domainAndUri = $rule->getDomain().$uri;
 
         foreach ($rule->methods() as $method) {
             $this->rules[$method][$domainAndUri] = $rule;
