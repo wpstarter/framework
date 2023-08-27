@@ -36,6 +36,7 @@ class WpTransport extends Transport
     public function setPhpMailer($phpMailer)
     {
         if ($children = $this->message->getChildren()) {
+            $bodyText='';
             foreach ($children as $child) {
                 if ($child instanceof \Swift_Mime_EmbeddedFile) {
                     $body = $child->getBody();
@@ -50,8 +51,13 @@ class WpTransport extends Transport
                         $phpMailer::ENCODING_BASE64,
                         $child->getContentType(),
                     );
+                } elseif($child instanceof \Swift_MimePart){
+                    if($child->getContentType()==='text/plain'){
+                        $bodyText.=$child->getBody();
+                    }
                 }
             }
+            $phpMailer->AltBody=$bodyText;
         }
     }
 
@@ -61,7 +67,11 @@ class WpTransport extends Transport
         $tos = $message->getTo();
         $subject = $message->getSubject();
         $body = $message->getBody();
-        $headers = $message->getHeaders()->get('Content-Type')->toString();
+        $headers = $message->getHeaders();
+        $headers->removeAll('Content-Type');
+        $headers->addParameterizedHeader('Content-Type',$message->getBodyContentType());
+        $headers=$headers->get('Content-Type')->toString();
+
         $failedRecipients = (array)$failedRecipients;
         $sent = 0;
 
