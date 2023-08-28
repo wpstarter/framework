@@ -2,6 +2,16 @@
 /**
  * @ignore
  */
+function __() {}
+
+/**
+ * @ignore
+ */
+function _x() {}
+
+/**
+ * @ignore
+ */
 function add_filter() {}
 
 /**
@@ -89,3 +99,7 @@ function wp_get_current_user(){}
  * @ignore
  */
 function wp_authenticate(){}
+/**
+ * @ignore
+ */
+function wp_parse_str($input_string, &$result){}
