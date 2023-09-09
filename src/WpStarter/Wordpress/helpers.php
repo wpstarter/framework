@@ -11,7 +11,7 @@ if (!function_exists('is_wp')) {
      */
     function is_wp()
     {
-        return function_exists('add_filter') && defined('ABSPATH');
+        return function_exists('wp_check_php_mysql_versions') && defined('ABSPATH');
     }
 }
 if (!function_exists('wp_view')) {
