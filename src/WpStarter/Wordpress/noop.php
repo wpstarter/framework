@@ -17,6 +17,11 @@ function add_filter() {}
 /**
  * @ignore
  */
+function remove_filter() {}
+
+/**
+ * @ignore
+ */
 function esc_attr() {}
 
 /**
@@ -42,12 +47,18 @@ function add_action() {}
 /**
  * @ignore
  */
+function remove_action(){}
+
+/**
+ * @ignore
+ */
 function did_action() {}
 
 /**
  * @ignore
  */
 function do_action() {}
+
 /**
  * @ignore
  */
