@@ -2,10 +2,12 @@
 
 namespace WpStarter\Wordpress\Admin\View;
 
+use WpStarter\Support\Traits\Macroable;
 use WpStarter\Wordpress\Admin\Notice\NoticeManager;
 
 class Layout
 {
+    use Macroable;
     protected $title;
     protected $subTitle;
     protected $action;
