@@ -2,8 +2,11 @@
 
 namespace WpStarter\Wordpress\Admin\View;
 
+use WpStarter\Support\Traits\Macroable;
+
 class Action
 {
+    use Macroable;
     protected $text;
     protected $link;
     protected $desc;
