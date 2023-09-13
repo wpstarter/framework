@@ -3,7 +3,6 @@
 namespace WpStarter\Wordpress\Auth;
 
 use WpStarter\Wordpress\Model\User as Model;
-use WpStarter\Auth\Authenticatable;
 use WpStarter\Auth\MustVerifyEmail;
 use WpStarter\Auth\Passwords\CanResetPassword;
 use WpStarter\Contracts\Auth\Access\Authorizable as AuthorizableContract;

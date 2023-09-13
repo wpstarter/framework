@@ -38,13 +38,12 @@ class WpUserProvider implements UserProvider
         if($identifier instanceof \WP_User){
             if(is_callable([$class,'fromWpUser'])) {
                 return $class::fromWpUser($identifier);
+            }else{
+                $identifier=$identifier->ID;
             }
         }
-        else{
-            $model=$this->createModel();
-            return $model->find($identifier);
-        }
-        return null;
+        $model=$this->createModel();
+        return $model->find($identifier);
     }
 
 
@@ -94,13 +93,56 @@ class WpUserProvider implements UserProvider
         // TODO: Implement updateRememberToken() method.
     }
 
+    /**
+     * Retrieve a user by the given credentials.
+     *
+     * @param  array  $credentials
+     * @return \WpStarter\Contracts\Auth\Authenticatable|null
+     */
     public function retrieveByCredentials(array $credentials)
     {
-        // TODO: Implement retrieveByCredentials() method.
+        if(isset($credentials['user_id'])){
+            $user=get_user_by('id', $credentials['user_login']);
+            if($user){
+                return $this->retrieveById($user);
+            }
+        }elseif(isset($credentials['user_slug'])){
+            $user=get_user_by('slug', $credentials['user_login']);
+            if($user){
+                return $this->retrieveById($user);
+            }
+        }elseif(isset($credentials['user_login'])){
+            $user=get_user_by('login', $credentials['user_login']);
+            if($user){
+                return $this->retrieveById($user);
+            }
+        }elseif(isset($credentials['username'])){
+            $user=get_user_by('login', $credentials['username']);
+            if($user){
+                return $this->retrieveById($user);
+            }
+        }
+        elseif(isset($credentials['user_email'])){
+            $user=get_user_by('email', $credentials['user_email']);
+            if($user){
+                return $this->retrieveById($user);
+            }
+        }
+        return null;
     }
-
+    /**
+     * Validate a user against the given credentials.
+     *
+     * @param  \WpStarter\Contracts\Auth\Authenticatable  $user
+     * @param  array  $credentials
+     * @return bool
+     */
     public function validateCredentials(Authenticatable $user, array $credentials)
     {
-        // TODO: Implement validateCredentials() method.
+        $password=$credentials['user_password']??$credentials['user_pass']??$credentials['password']??null;
+        if(!$password){
+            return false;
+        }
+        return wp_check_password($password,$user->getAuthPassword(),$user->getAuthIdentifier());
     }
 }
