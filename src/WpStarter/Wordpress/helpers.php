@@ -6,7 +6,7 @@ use WpStarter\Wordpress\Http\Response\Page;
 
 if (!function_exists('is_wp')) {
     /**
-     * Check if we are running in wp
+     * Check if we are running inside WordPresss
      * @return bool
      */
     function is_wp()

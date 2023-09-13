@@ -47,7 +47,11 @@ class LoadConfiguration
         });
 
         //WordPress require timezone UTC
-        //date_default_timezone_set($config->get('app.timezone', 'UTC'));
+        if(!is_wp()){
+            //Not run inside WordPress
+            date_default_timezone_set($config->get('app.timezone', 'UTC'));
+        }
+
 
 
         mb_internal_encoding('UTF-8');
