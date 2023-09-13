@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   mysql_57:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     services:
       mysql:
@@ -47,7 +47,7 @@ jobs:
           DB_USERNAME: root
 
   mysql_8:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     services:
       mysql:
@@ -90,7 +90,7 @@ jobs:
           DB_USERNAME: root
 
   mariadb_10:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     services:
       mysql:
@@ -132,7 +132,7 @@ jobs:
           DB_CONNECTION: mysql
           DB_USERNAME: root
   mariadb_11:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     services:
       mysql:
@@ -174,7 +174,7 @@ jobs:
           DB_CONNECTION: mysql
           DB_USERNAME: root
   pgsql:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     services:
       postgresql:
