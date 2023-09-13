@@ -20,11 +20,27 @@ use WpStarter\Support\Facades\Facade;
  */
 class Layout extends Facade
 {
-    public static function getFacadeRoot()
+    protected static function getFacadeAccessor()
+    {
+        return 'wp.admin.layout';
+    }
+    /**
+     * Resolve the facade root instance from the container.
+     *
+     * @param  string  $name
+     * @return mixed
+     */
+    protected static function resolveFacadeInstance($name)
     {
         if($route=Route::current()){
             return $route->layout();
         }
-        return new \WpStarter\Wordpress\Admin\View\Layout();
+        if (! isset(static::$resolvedInstance[$name]) && ! isset(static::$app, static::$app[$name])) {
+            $layout=new \WpStarter\Wordpress\Admin\View\Layout();
+            $layout->setNoticeManager(static::$app['wp.admin.notice']);
+            static::swap($layout);
+        }
+
+        return parent::resolveFacadeInstance($name);
     }
 }
