@@ -4,9 +4,8 @@ namespace WpStarter\Wordpress\Services;
 
 class Livewire
 {
-    protected $done;
-    protected $styleOptions=[];
-    protected $scriptOptions=[];
+    protected $done=false;
+    protected $doneAdmin=false;
 
     function allowPlugins($plugins){
 
@@ -16,19 +15,33 @@ class Livewire
     }
     function enqueue($styleOptions=[],$scriptOptions=[]){
         if(class_exists(\Livewire\Livewire::class) && !$this->done) {
-            $this->styleOptions=$styleOptions;
-            $this->scriptOptions=$scriptOptions;
-            add_action('wp_print_styles', [$this,'outputStyles'], 11);//After other styles
-            add_action('wp_print_footer_scripts', [$this,'outputScripts'], 9);//before other scripts
+            add_action('wp_print_styles', function () use ($styleOptions){
+                $this->outputStyles($styleOptions);
+            }, 11);//After other styles
+            add_action('wp_print_footer_scripts', function () use ($scriptOptions){
+                $this->outputScripts($scriptOptions);
+            }, 9);//before other scripts
             $this->done=true;
         }
         return $this->done;
     }
-    function outputStyles(){
-        echo \Livewire\Livewire::styles();
+    function enqueueAdmin($styleOptions=[],$scriptOptions=[]){
+        if(class_exists(\Livewire\Livewire::class) && !$this->doneAdmin) {
+            add_action('admin_print_styles', function () use ($styleOptions){
+                $this->outputStyles($styleOptions);
+            }, 11);//After other styles
+            add_action('admin_print_footer_scripts', function () use ($scriptOptions){
+                $this->outputScripts($scriptOptions);
+            }, 9);//before other scripts
+            $this->doneAdmin=true;
+        }
+        return $this->doneAdmin;
     }
-    function outputScripts(){
-        echo \Livewire\Livewire::scripts();
+    function outputStyles($styleOptions=[]){
+        echo \Livewire\Livewire::styles($styleOptions);
+    }
+    function outputScripts($scriptOptions=[]){
+        echo \Livewire\Livewire::scripts($scriptOptions);
     }
     function paginateLinks( $args = [] ) {
         global $wp_query, $wp_rewrite;
