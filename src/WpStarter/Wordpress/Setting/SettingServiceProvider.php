@@ -20,6 +20,7 @@ abstract class SettingServiceProvider extends ServiceProvider
     public function boot(){
         if($this->autoRestartQueue) {
             add_action('update_option_' . $this->getOptionKey(), function () {
+                $this->app['setting']->reload();
                 Artisan::call('queue:restart');
             });
         }
