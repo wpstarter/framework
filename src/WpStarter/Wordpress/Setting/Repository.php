@@ -7,6 +7,7 @@ use WpStarter\Support\Arr;
 class Repository implements \ArrayAccess
 {
     protected $data;
+    protected $changes=[];
     protected $optionKey;
 
     public function __construct($optionKey)
@@ -27,10 +28,11 @@ class Repository implements \ArrayAccess
     {
         if (is_array($key)) {
             foreach ($key as $k => $v) {
-                Arr::set($this->data, $k, $v);
+                $this->set($k, $v);
             }
         } else {
             Arr::set($this->data, $key, $value);
+            Arr::set($this->changes, $key, $value);
         }
         return $this;
     }
@@ -51,10 +53,22 @@ class Repository implements \ArrayAccess
         $this->data = get_option($this->optionKey);
         return $this;
     }
+    function resetChanges(){
+        $this->changes=[];
+        return $this;
+    }
 
     function save($autoload = false)
     {
-        return update_option($this->optionKey, $this->data, $autoload);
+        if(!$this->changes){
+            return true;//no changes
+        }
+        $data=$this->data;
+        foreach ($this->changes as $key=>$value){
+            Arr::set($data,$key,$value);
+        }
+        $this->resetChanges();
+        return update_option($this->optionKey, $data, $autoload);
     }
 
     public function __get($name)
