@@ -4,15 +4,14 @@ namespace WpStarter\Wordpress\Auth;
 
 use WpStarter\Auth\GuardHelpers;
 use WpStarter\Contracts\Auth\Authenticatable;
-use WpStarter\Contracts\Auth\Guard;
 use WpStarter\Contracts\Auth\StatefulGuard;
-use WpStarter\Contracts\Auth\UserProvider;
 use WpStarter\Support\Traits\Macroable;
 
 class WpGuard implements StatefulGuard
 {
     use GuardHelpers, Macroable;
-    public function __construct(UserProvider $provider)
+    public $lastAttempted;
+    public function __construct(WpUserProvider $provider)
     {
         $this->provider=$provider;
     }
@@ -41,7 +40,9 @@ class WpGuard implements StatefulGuard
 
     public function validate(array $credentials = [])
     {
-        return wp_authenticate($credentials['username'],$credentials['password']);
+        $this->lastAttempted = $user = $this->provider->retrieveByCredentials($credentials);
+
+        return $this->provider->validateCredentials($user, $credentials);
     }
     /**
      * Attempt to authenticate a user using the given credentials.
@@ -52,8 +53,10 @@ class WpGuard implements StatefulGuard
      */
     public function attempt(array $credentials = [], $remember = false)
     {
-        if($user=$this->provider->retrieveByCredentials($credentials)){
-            if($this->provider->validateCredentials($user, $credentials)){
+        do_action_ref_array( 'wp_authenticate', array( &$credentials['user_login'], &$credentials['user_password'] ) );
+        if($this->lastAttempted=$user=$this->provider->retrieveByCredentials($credentials)){
+            //We use wp_authenticate() to check to keep the hooks triggered
+            if($this->provider->validateCredentialsByWpAuthenticate($user, $credentials)){
                 $this->login($user, $remember);
                 return true;
             }
@@ -68,11 +71,10 @@ class WpGuard implements StatefulGuard
      */
     public function once(array $credentials = [])
     {
-        if($user=$this->provider->retrieveByCredentials($credentials)){
-            if($this->provider->validateCredentials($user, $credentials)){
-                $this->setUser($user);
-                return true;
-            }
+        if ($this->validate($credentials)) {
+            $this->setUser($this->lastAttempted);
+
+            return true;
         }
         return false;
     }
@@ -86,6 +88,7 @@ class WpGuard implements StatefulGuard
     public function login(Authenticatable $user, $remember = false)
     {
         wp_set_auth_cookie($user->getAuthIdentifier(), $remember);
+        do_action('wp_login', $user->user_login, $user);
         $this->setUser($user);
     }
     /**
@@ -134,8 +137,7 @@ class WpGuard implements StatefulGuard
      */
     public function logout()
     {
-        wp_clear_auth_cookie();
-        wp_set_current_user(0);
+        wp_logout();
         $this->user=null;
     }
 }
