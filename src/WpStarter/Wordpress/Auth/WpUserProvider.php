@@ -102,17 +102,20 @@ class WpUserProvider implements UserProvider
     public function retrieveByCredentials(array $credentials)
     {
         if(isset($credentials['user_id'])){
-            $user=get_user_by('id', $credentials['user_login']);
+            $user=get_user_by('id', $credentials['user_id']);
             if($user){
                 return $this->retrieveById($user);
             }
         }elseif(isset($credentials['user_slug'])){
-            $user=get_user_by('slug', $credentials['user_login']);
+            $user=get_user_by('slug', $credentials['user_slug']);
             if($user){
                 return $this->retrieveById($user);
             }
         }elseif(isset($credentials['user_login'])){
             $user=get_user_by('login', $credentials['user_login']);
+            if ( ! $user && is_email( $credentials['user_login'] ) ) {
+                $user = get_user_by( 'email', $credentials['user_login'] );
+            }
             if($user){
                 return $this->retrieveById($user);
             }
@@ -140,9 +143,14 @@ class WpUserProvider implements UserProvider
     public function validateCredentials(Authenticatable $user, array $credentials)
     {
         $password=$credentials['user_password']??$credentials['user_pass']??$credentials['password']??null;
-        if(!$password){
-            return false;
-        }
+
         return wp_check_password($password,$user->getAuthPassword(),$user->getAuthIdentifier());
+    }
+
+    public function validateCredentialsByWpAuthenticate(Authenticatable $user, $credentials)
+    {
+        $password=$credentials['user_password']??$credentials['user_pass']??$credentials['password']??null;
+        $user=wp_authenticate( $user->user_login, $password );
+        return !is_wp_error($user);
     }
 }
