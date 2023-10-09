@@ -6,7 +6,7 @@ use WpStarter\Support\Facades\Facade;
 use WpStarter\Wordpress\Admin\Routing\Menu;
 
 /**
- * @method static Menu add(string $slug, array|string|callable $callback, $capability = 'read', $title ='' ,$page_title = '', $icon = '', $position = null)
+ * @method static Menu add(string $slug, array|string|callable $callback, $capability = '', $title ='' ,$page_title = '', $icon = '', $position = null)
  * @method static \WpStarter\Routing\PendingResourceRegistration apiResource(string $name, string $controller, array $options = [])
  * @method static \WpStarter\Routing\PendingResourceRegistration resource(string $name, string $controller, array $options = [])
  * @method static Menu any(string $uri, array|string|callable|null $action = null)

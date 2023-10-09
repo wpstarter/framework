@@ -57,7 +57,11 @@ class Menu extends Route
      * @return $this
      */
     public function group($callback){
-        $this->router->group(['parent'=>$this->uri(),'name'=>$this->getName()],$callback);
+        $this->router->group([
+            'parent'=>$this->uri(),
+            'name'=>$this->getName(),
+            'capability'=>$this->getAction('capability')
+        ],$callback);
         return $this;
     }
 
