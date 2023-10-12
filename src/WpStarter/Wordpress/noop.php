@@ -22,22 +22,12 @@ function remove_filter() {}
 /**
  * @ignore
  */
-function esc_attr() {}
+function did_filter() {}
 
 /**
  * @ignore
  */
 function apply_filters() {}
-
-/**
- * @ignore
- */
-function get_option() {}
-
-/**
- * @ignore
- */
-function is_lighttpd_before_150() {}
 
 /**
  * @ignore
@@ -68,6 +58,21 @@ function do_action_ref_array() {}
  * @ignore
  */
 function get_bloginfo() {}
+
+/**
+ * @ignore
+ */
+function get_option() {}
+
+/**
+ * @ignore
+ */
+function is_lighttpd_before_150() {}
+
+/**
+ * @ignore
+ */
+function esc_attr() {}
 
 /**
  * @ignore

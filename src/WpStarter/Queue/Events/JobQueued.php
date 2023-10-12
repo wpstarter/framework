@@ -2,6 +2,8 @@
 
 namespace WpStarter\Queue\Events;
 
+use WpStarter\Queue\Jobs\QueuedJob;
+
 class JobQueued
 {
     /**
@@ -12,18 +14,12 @@ class JobQueued
     public $connectionName;
 
     /**
-     * The job ID.
-     *
-     * @var string|int|null
-     */
-    public $id;
-
-    /**
      * The job instance.
      *
-     * @var \Closure|string|object
+     * @var \WpStarter\Contracts\Queue\Job
      */
     public $job;
+
 
     /**
      * Create a new event instance.
@@ -33,10 +29,9 @@ class JobQueued
      * @param  \Closure|string|object  $job
      * @return void
      */
-    public function __construct($connectionName, $id, $job)
+    public function __construct($connectionName, $id, $job, $payload, $queue, $delay)
     {
         $this->connectionName = $connectionName;
-        $this->id = $id;
-        $this->job = $job;
+        $this->job = new QueuedJob($connectionName, $id, $job, $payload, $queue, $delay);
     }
 }
