@@ -16,6 +16,6 @@ class RoutingServiceProvider extends ServiceProvider
 
     function boot()
     {
-
+        Route::mixin(new RouteHook());
     }
 }
