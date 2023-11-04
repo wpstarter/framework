@@ -44,6 +44,7 @@ class Kernel extends HttpKernel
 
     public function handle($request, $processResponse=false)
     {
+        $request->setRouteNotFoundHttpException(false);
         $response = parent::handle($request);
         if($request->isNotFoundHttpExceptionFromRoute()) {
             //Not found response and come from no route match...
@@ -87,7 +88,9 @@ class Kernel extends HttpKernel
     {
         $hook=(array)$this->wpHandleHook;
         add_action($hook[0]??'template_redirect', function ()use($request) {
-            $this->handleWp($request,true);
+            if($request->isNotFoundHttpExceptionFromRoute()) {
+                $this->handleWp($request, true);
+            }
         }, $hook[1]??1);
     }
 

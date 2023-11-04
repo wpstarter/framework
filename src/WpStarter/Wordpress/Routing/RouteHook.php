@@ -9,9 +9,8 @@ class RouteHook
      * @return \Closure
      */
     function hook(){
-        return function($hook, $priority=10){
-            $this->action['hook']=$hook;
-            $this->action['priority']=$priority;
+        return function($hook, $priority=null){
+            $this->action['hook']=$hook.($priority?(':'.$priority):'');
             return $this;
         };
     }
