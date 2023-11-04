@@ -20,6 +20,18 @@ class JobQueued
      */
     public $job;
 
+    /**
+     * The job command instance before serialized.
+     * @var \Closure|object|string
+     */
+    public $command;
+
+    /**
+     * The job id.
+     * @var string|int|null
+     */
+    public $id;
+
 
     /**
      * Create a new event instance.
@@ -32,6 +44,8 @@ class JobQueued
     public function __construct($connectionName, $id, $job, $payload, $queue, $delay)
     {
         $this->connectionName = $connectionName;
+        $this->command=$job;
+        $this->id=$id;
         $this->job = new QueuedJob($connectionName, $id, $job, $payload, $queue, $delay);
     }
 }

@@ -16,7 +16,7 @@ class QueuedJob extends Job
 
     public function getJobId()
     {
-        return $this->getJobId();
+        return $this->id;
     }
 
     public function getRawBody()
