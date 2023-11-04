@@ -26,6 +26,12 @@ class JobQueued
      */
     public $command;
 
+    /**
+     * The job id.
+     * @var string|int|null
+     */
+    public $id;
+
 
     /**
      * Create a new event instance.
@@ -39,6 +45,7 @@ class JobQueued
     {
         $this->connectionName = $connectionName;
         $this->command=$job;
+        $this->id=$id;
         $this->job = new QueuedJob($connectionName, $id, $job, $payload, $queue, $delay);
     }
 }
