@@ -472,7 +472,7 @@ class RedisQueueIntegrationTest extends TestCase
     {
         $events = m::mock(Dispatcher::class);
         $events->shouldReceive('dispatch')->withArgs(function (JobQueued $jobQueued) {
-            $this->assertInstanceOf(RedisQueueIntegrationTestJob::class, $jobQueued->job->payload()['data']['command']);
+            $this->assertInstanceOf(RedisQueueIntegrationTestJob::class, $jobQueued->job->command);
             $this->assertIsString(RedisQueueIntegrationTestJob::class, $jobQueued->job->getJobId());
 
             return true;
