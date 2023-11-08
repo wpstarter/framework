@@ -10,6 +10,7 @@ use WpStarter\Wordpress\Admin\Notice\NoticeManager;
 use WpStarter\Wordpress\Admin\Notice\SessionStore;
 use WpStarter\Wordpress\Admin\Routing\Router;
 use WpStarter\Wordpress\Admin\Services\ScreenOption;
+use WpStarter\Http\Request;
 
 class AdminServiceProvider extends ServiceProvider
 {
@@ -56,8 +57,8 @@ class AdminServiceProvider extends ServiceProvider
         if(!is_wp()){
             return ;
         }
-        if($this->app->bound(Kernel::class)) {
-            $this->app->make(Kernel::class)->handle($this->app['request']);
+        if(is_admin() && $this->app->bound(Kernel::class)) {
+            $this->app->make(Kernel::class)->handle(Request::capture());
             $this->loadViewsFrom(__DIR__ . '/resources/views', 'wp.admin');
         }
     }
