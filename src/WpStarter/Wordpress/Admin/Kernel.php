@@ -5,6 +5,7 @@ namespace WpStarter\Wordpress\Admin;
 use WpStarter\Contracts\Debug\ExceptionHandler;
 use WpStarter\Contracts\Foundation\Application;
 use WpStarter\Routing\Pipeline;
+use WpStarter\Support\Facades\Facade;
 use WpStarter\Wordpress\Admin\Routing\Response;
 use WpStarter\Wordpress\Admin\Routing\Router;
 use WpStarter\Wordpress\Http\Response\PassThrough;
@@ -133,6 +134,12 @@ class Kernel implements Contracts\Kernel
      */
     protected function sendRequestThroughRouter($request, $screenId)
     {
+        $this->app->instance('request', $request);
+
+        Facade::clearResolvedInstance('request');
+
+        $this->bootstrap();
+
         return (new Pipeline($this->app))
             ->send($request)
             ->through($this->app->shouldSkipMiddleware() ? [] : $this->middleware)
@@ -387,7 +394,9 @@ class Kernel implements Contracts\Kernel
 
     public function bootstrap()
     {
-
+        if (! $this->app->hasBeenBootstrapped()) {
+            //No bootstrap here
+        }
     }
 
     public function getApplication()
