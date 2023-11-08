@@ -4,8 +4,10 @@ namespace WpStarter\Wordpress;
 
 use WpStarter\Contracts\Foundation\Application;
 use WpStarter\Foundation\Http\Kernel as HttpKernel;
+use WpStarter\Http\Request;
 use WpStarter\Routing\Pipeline;
 use WpStarter\Routing\Router;
+use WpStarter\Support\Facades\Facade;
 use WpStarter\Wordpress\Routing\Router as ShortcodeRouter;
 
 class Kernel extends HttpKernel
@@ -89,7 +91,7 @@ class Kernel extends HttpKernel
         $hook=(array)$this->wpHandleHook;
         add_action($hook[0]??'template_redirect', function ()use($request) {
             if($request->isNotFoundHttpExceptionFromRoute()) {
-                $this->handleWp($request, true);
+                $this->handleWp(Request::capture(), true);
             }
         }, $hook[1]??1);
     }
@@ -126,6 +128,10 @@ class Kernel extends HttpKernel
      */
     protected function wpSendRequestThroughRouter($request)
     {
+        $this->app->instance('request', $request);
+
+        Facade::clearResolvedInstance('request');
+
         return (new Pipeline($this->app))
             ->send($request)
             ->through($this->app->shouldSkipMiddleware() ? [] : $this->middleware)
