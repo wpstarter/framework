@@ -56,7 +56,7 @@ class AdminServiceProvider extends ServiceProvider
         if(!is_wp()){
             return ;
         }
-        if($this->app->bound(Kernel::class)) {
+        if(is_admin() && $this->app->bound(Kernel::class)) {
             $this->app->make(Kernel::class)->handle($this->app['request']);
             $this->loadViewsFrom(__DIR__ . '/resources/views', 'wp.admin');
         }
