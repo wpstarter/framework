@@ -8,8 +8,10 @@ use WpStarter\Support\Collection;
 class Updater
 {
     protected $pluginsRepository;
+    protected $pluginsDir;
     public function __construct($pluginsDir)
     {
+        $this->pluginsDir=$pluginsDir;
         $this->pluginsRepository=new Repository($pluginsDir);
     }
 
@@ -26,7 +28,16 @@ class Updater
             'locale'       => json_encode( [] ),
             'all'          => json_encode( true ),
         );
-        $userAgent = 'WordPress/6.2.2'  . '; ' . 'http://localhost';
+        if(defined('ABSPATH') && defined('WPINC')){
+            $versionFile = ABSPATH . WPINC . '/version.php';
+        }else{
+            $versionFile = dirname(dirname($this->pluginsDir)) . '/wp-includes/version.php';
+        }
+        $wp_version = '6.x';
+        if ( file_exists( $versionFile ) ) {
+            include $versionFile;
+        }
+        $userAgent = 'WordPress/'.$wp_version  . '; ' . 'http://localhost';
         $formData=http_build_query($data);
         $headers = array(
             'Content-Type: application/x-www-form-urlencoded',
