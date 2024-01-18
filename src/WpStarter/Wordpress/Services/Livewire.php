@@ -188,7 +188,7 @@ class Livewire
             $link .= $args['add_fragment'];
 
             $page_links[] = sprintf(
-                '<a class="next page-numbers" href="%s" wire:click.prevent="nextPagek(%s)">%s</a>',
+                '<a class="next page-numbers" href="%s" wire:click.prevent="nextPage(%s)">%s</a>',
                 esc_url( apply_filters( 'livewire_paginate_links', $link, 'next' ) ),
                 "'{$args['page_name']}'",
                 $args['next_text']
