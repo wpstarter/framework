@@ -120,7 +120,7 @@ abstract class User extends WP_User implements
             if($allMeta=get_user_meta($user_id)){
                 foreach ($allMeta as $key=>$values){
                     if(!isset($this->data->{$key})) {
-                        $this->data->{$key} = $values[0];
+                        $this->data->{$key} = maybe_unserialize($values[0]);
                     }
                 }
             }
