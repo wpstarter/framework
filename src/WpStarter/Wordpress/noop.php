@@ -84,7 +84,7 @@ function is_admin() {
 /**
  * @ignore
  */
-function site_url() {}
+function network_site_url() {}
 
 /**
  * @ignore
