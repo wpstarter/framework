@@ -74,7 +74,7 @@ if (!function_exists('ws_plugin_url')) {
                 str_replace('\\','/',__WS_FILE__));
             $basePath = trim(dirname($basePath), '\/');
         }
-        return site_url($basePath . '/' . ltrim($path, '/'), $scheme);
+        return network_site_url($basePath . '/' . ltrim($path, '/'), $scheme);
     }
 }
 if (!function_exists('ws_admin_menu')) {
