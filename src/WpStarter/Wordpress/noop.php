@@ -89,6 +89,11 @@ function network_site_url() {}
 /**
  * @ignore
  */
+function site_url() {}
+
+/**
+ * @ignore
+ */
 function admin_url() {}
 
 /**
