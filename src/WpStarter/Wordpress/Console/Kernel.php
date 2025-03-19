@@ -3,15 +3,11 @@
 namespace WpStarter\Wordpress\Console;
 
 use WpStarter\Foundation\Console\Kernel as ConsoleKernel;
+use WpStarter\Wordpress\Bootstrap\HasEarlyBootstrappers;
 
 class Kernel extends ConsoleKernel
 {
-    protected $earlyBootstrapers = [
-        \WpStarter\Foundation\Bootstrap\LoadEnvironmentVariables::class,
-        \WpStarter\Foundation\Bootstrap\LoadConfiguration::class,
-        \WpStarter\Wordpress\Bootstrap\HandleExceptions::class,
-        \WpStarter\Foundation\Bootstrap\RegisterFacades::class,
-    ];
+    use HasEarlyBootstrappers;
     /**
      * The bootstrap classes for the application.
      *
@@ -26,11 +22,4 @@ class Kernel extends ConsoleKernel
         \WpStarter\Foundation\Bootstrap\RegisterProviders::class,
         \WpStarter\Foundation\Bootstrap\BootProviders::class,
     ];
-
-    function earlyBootstrap()
-    {
-        foreach ($this->earlyBootstrapers as $bootstraper) {
-            $this->app->bootstrapOne($bootstraper);
-        }
-    }
 }

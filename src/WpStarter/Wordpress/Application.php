@@ -11,9 +11,13 @@ class Application extends \WpStarter\Foundation\Application
      *
      * @var string
      */
-    const VERSION = '1.9.9';
-
-    protected $bootstrappedList = [];
+    const VERSION = '1.9.10';
+    /**
+     * Indicates if the application has been early bootstrapped before.
+     *
+     * @var bool
+     */
+    protected $hasBeenEarlyBootstrapped = false;
 
     protected function registerBaseServiceProviders()
     {
@@ -30,22 +34,30 @@ class Application extends \WpStarter\Foundation\Application
         $this->alias('app',self::class);
     }
 
-    function bootstrapWith(array $bootstrappers)
+    /**
+     * Run the given array of bootstrap classes.
+     *
+     * @param  string[]  $bootstrappers
+     * @return void
+     */
+    public function earlyBootstrapWith(array $bootstrappers)
     {
-        $this->hasBeenBootstrapped = true;
-
+        $this->hasBeenEarlyBootstrapped = true;
         foreach ($bootstrappers as $bootstrapper) {
-            $this->bootstrapOne($bootstrapper);
+            $this['events']->dispatch('bootstrapping: '.$bootstrapper, [$this]);
+
+            $this->make($bootstrapper)->bootstrap($this);
+
+            $this['events']->dispatch('bootstrapped: '.$bootstrapper, [$this]);
         }
     }
-
-    function bootstrapOne($bootstrapper)
+    /**
+     * Determine if the application has been early bootstrapped before.
+     *
+     * @return bool
+     */
+    public function hasBeenEarlyBootstrapped()
     {
-        if (!isset($this->bootstrappedList[$bootstrapper])) {
-            $this->bootstrappedList[$bootstrapper] = true;
-            $this['events']->dispatch('bootstrapping: ' . $bootstrapper, [$this]);
-            $this->make($bootstrapper)->bootstrap($this);
-            $this['events']->dispatch('bootstrapped: ' . $bootstrapper, [$this]);
-        }
+        return $this->hasBeenEarlyBootstrapped;
     }
 }

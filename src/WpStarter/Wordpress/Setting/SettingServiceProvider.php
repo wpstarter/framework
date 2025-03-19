@@ -19,15 +19,21 @@ abstract class SettingServiceProvider extends ServiceProvider
 
     public function boot(){
         if($this->autoRestartQueue) {
-            add_action('update_option_' . $this->getOptionKey(), function () {
-                $this->app['setting']->reload();
-                Artisan::call('queue:restart');
-            });
+            add_action('update_option_' . $this->getOptionKey(), [$this,'reloadSettings']);
         }
         if($this->autoSave) {
-            add_action('shutdown', function () {
-                $this->app['setting']->save();
-            });
+            add_action('shutdown', [$this,'saveSettings']);
+        }
+    }
+    public function saveSettings(){
+        if($this->app->bound('setting')) {
+            $this->app['setting']->save();
+        }
+    }
+    public function reloadSettings(){
+        if($this->app->bound('setting')) {
+            $this->app['setting']->reload();
+            Artisan::call('queue:restart');
         }
     }
 

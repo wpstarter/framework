@@ -8,21 +8,17 @@ use WpStarter\Http\Request;
 use WpStarter\Routing\Pipeline;
 use WpStarter\Routing\Router;
 use WpStarter\Support\Facades\Facade;
+use WpStarter\Wordpress\Bootstrap\HasEarlyBootstrappers;
 use WpStarter\Wordpress\Routing\Router as ShortcodeRouter;
 
 class Kernel extends HttpKernel
 {
+    use HasEarlyBootstrappers;
     protected $wpHandleHook=['template_redirect',1];
     /**
      * @var \WpStarter\Wordpress\Application
      */
     protected $app;
-    protected $earlyBootstrapers = [
-        \WpStarter\Foundation\Bootstrap\LoadEnvironmentVariables::class,
-        \WpStarter\Foundation\Bootstrap\LoadConfiguration::class,
-        \WpStarter\Wordpress\Bootstrap\HandleExceptions::class,
-        \WpStarter\Foundation\Bootstrap\RegisterFacades::class,
-    ];
     /**
      * The bootstrap classes for the application.
      *
@@ -163,13 +159,5 @@ class Kernel extends HttpKernel
             $this->wpRouter->aliasMiddleware($key, $middleware);
         }
 
-    }
-
-
-    function earlyBootstrap()
-    {
-        foreach ($this->earlyBootstrapers as $bootstraper) {
-            $this->app->bootstrapOne($bootstraper);
-        }
     }
 }
