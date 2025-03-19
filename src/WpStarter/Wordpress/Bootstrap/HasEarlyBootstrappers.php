@@ -2,7 +2,7 @@
 
 namespace WpStarter\Wordpress\Bootstrap;
 
-trait HasEarlyBootstrapers
+trait HasEarlyBootstrappers
 {
     protected $earlyBootstrappers = [
         \WpStarter\Foundation\Bootstrap\LoadEnvironmentVariables::class,

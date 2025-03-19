@@ -8,12 +8,12 @@ use WpStarter\Http\Request;
 use WpStarter\Routing\Pipeline;
 use WpStarter\Routing\Router;
 use WpStarter\Support\Facades\Facade;
-use WpStarter\Wordpress\Bootstrap\HasEarlyBootstrapers;
+use WpStarter\Wordpress\Bootstrap\HasEarlyBootstrappers;
 use WpStarter\Wordpress\Routing\Router as ShortcodeRouter;
 
 class Kernel extends HttpKernel
 {
-    use HasEarlyBootstrapers;
+    use HasEarlyBootstrappers;
     protected $wpHandleHook=['template_redirect',1];
     /**
      * @var \WpStarter\Wordpress\Application

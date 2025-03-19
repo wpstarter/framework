@@ -3,11 +3,11 @@
 namespace WpStarter\Wordpress\Console;
 
 use WpStarter\Foundation\Console\Kernel as ConsoleKernel;
-use WpStarter\Wordpress\Bootstrap\HasEarlyBootstrapers;
+use WpStarter\Wordpress\Bootstrap\HasEarlyBootstrappers;
 
 class Kernel extends ConsoleKernel
 {
-    use HasEarlyBootstrapers;
+    use HasEarlyBootstrappers;
     /**
      * The bootstrap classes for the application.
      *
