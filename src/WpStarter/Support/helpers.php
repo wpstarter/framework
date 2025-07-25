@@ -181,7 +181,7 @@ if (! function_exists('ws_optional')) {
      * @param  callable|null  $callback
      * @return mixed
      */
-    function ws_optional($value = null, callable $callback = null)
+    function ws_optional($value = null, ?callable $callback = null)
     {
         if (is_null($callback)) {
             return new Optional($value);
@@ -372,7 +372,7 @@ if (! function_exists('ws_with')) {
      * @param  callable|null  $callback
      * @return mixed
      */
-    function ws_with($value, callable $callback = null)
+    function ws_with($value, ?callable $callback = null)
     {
         return is_null($callback) ? $value : $callback($value);
     }

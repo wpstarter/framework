@@ -10,7 +10,7 @@ class WpErrorException extends Exception
 {
     protected $wp_error;
 
-    public function __construct(string $message = "", $code = 0, Throwable $previous = null)
+    public function __construct(string $message = "", $code = 0, ?Throwable $previous = null)
     {
         parent::__construct($message, 0, $previous);
         $this->code = $code;
