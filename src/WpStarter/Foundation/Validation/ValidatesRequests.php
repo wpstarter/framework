@@ -17,7 +17,7 @@ trait ValidatesRequests
      *
      * @throws \WpStarter\Validation\ValidationException
      */
-    public function validateWith($validator, Request $request = null)
+    public function validateWith($validator, ?Request $request = null)
     {
         $request = $request ?: ws_request();
 

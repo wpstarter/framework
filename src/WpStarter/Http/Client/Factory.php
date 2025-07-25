@@ -98,7 +98,7 @@ class Factory
      * @param  \WpStarter\Contracts\Events\Dispatcher|null  $dispatcher
      * @return void
      */
-    public function __construct(Dispatcher $dispatcher = null)
+    public function __construct(?Dispatcher $dispatcher = null)
     {
         $this->dispatcher = $dispatcher;
 

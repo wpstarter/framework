@@ -16,7 +16,7 @@ class SetRequestForConsole
     public function bootstrap(Application $app)
     {
         $uri = $app->make('config')->get('app.url', 'http://localhost');
-
+        $uri = (string) $uri;
         $components = parse_url($uri);
 
         $server = $_SERVER;

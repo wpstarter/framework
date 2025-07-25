@@ -27,7 +27,7 @@ class Manager
      * @param  \WpStarter\Container\Container|null  $container
      * @return void
      */
-    public function __construct(Container $container = null)
+    public function __construct(?Container $container = null)
     {
         $this->setupContainer($container ?: new Container);
 

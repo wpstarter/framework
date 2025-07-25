@@ -9,6 +9,7 @@ use WpStarter\Contracts\Auth\Access\Authorizable as AuthorizableContract;
 use WpStarter\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use WpStarter\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use WpStarter\Foundation\Auth\Access\Authorizable;
+use WP_User;
 
 class User extends Model implements
     AuthenticatableContract,
@@ -16,10 +17,10 @@ class User extends Model implements
 {
     use Authenticatable, Authorizable;
     /**
-     * @param \WP_User|null $wp_user
+     * @param WP_User|null $wp_user
      * @return static|null
      */
-    public static function fromWpUser(\WP_User $wp_user = null)
+    public static function fromWpUser(?WP_User $wp_user = null)
     {
         if (!$wp_user) {
             return null;
