@@ -158,7 +158,7 @@ class ResponseFactory implements FactoryContract
                 flush();
             }
 
-            if (filled($endStreamWith)) {
+            if (ws_filled($endStreamWith)) {
                 $endEvent = 'update';
 
                 if ($endStreamWith instanceof StreamedEvent) {
@@ -203,7 +203,7 @@ class ResponseFactory implements FactoryContract
             return new StreamedResponse(function () use ($callback) {
                 foreach ($callback() as $chunk) {
                     echo $chunk;
-                    when(ob_get_level() > 0, fn () => ob_flush());
+                    ws_when(ob_get_level() > 0, fn () => ob_flush());
                     flush();
                 }
             }, $status, array_merge($headers, ['X-Accel-Buffering' => 'no']));

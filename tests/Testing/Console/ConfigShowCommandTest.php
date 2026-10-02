@@ -16,7 +16,7 @@ class ConfigShowCommandTest extends TestCase
 
     public function testDisplayConfig()
     {
-        config()->set('test', [
+        ws_config()->set('test', [
             'string' => 'Test',
             'int' => 1,
             'float' => 1.2,
@@ -46,7 +46,7 @@ class ConfigShowCommandTest extends TestCase
 
     public function testDisplayNestedConfigItems()
     {
-        config()->set('test', [
+        ws_config()->set('test', [
             'nested' => [
                 'foo' => 'bar',
             ],
@@ -60,7 +60,7 @@ class ConfigShowCommandTest extends TestCase
 
     public function testDisplaySingleValue()
     {
-        config()->set('foo', 'bar');
+        ws_config()->set('foo', 'bar');
 
         $this->artisan(ConfigShowCommand::class, ['config' => 'foo'])
             ->assertSuccessful()

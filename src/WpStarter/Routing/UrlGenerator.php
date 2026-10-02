@@ -847,7 +847,7 @@ class UrlGenerator implements UrlGeneratorContract
         $this->cachedRoot = null;
         $this->cachedScheme = null;
 
-        tap($this->routeGenerator?->defaultParameters ?: [], function ($defaults) {
+        ws_tap($this->routeGenerator?->defaultParameters ?: [], function ($defaults) {
             $this->routeGenerator = null;
 
             if (! empty($defaults)) {

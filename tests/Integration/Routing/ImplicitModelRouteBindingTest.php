@@ -85,7 +85,7 @@ PHP);
     {
         $user = ImplicitBindingUser::create(['name' => 'Dries']);
 
-        config(['app.key' => str_repeat('a', 32)]);
+        ws_config(['app.key' => str_repeat('a', 32)]);
 
         Route::post('/user/{user}', function (ImplicitBindingUser $user) {
             return $user;
@@ -107,7 +107,7 @@ PHP);
 
         $user->delete();
 
-        config(['app.key' => str_repeat('a', 32)]);
+        ws_config(['app.key' => str_repeat('a', 32)]);
 
         Route::post('/user/{user}', function (ImplicitBindingUser $user) {
             return $user;
@@ -124,7 +124,7 @@ PHP);
 
         $user->delete();
 
-        config(['app.key' => str_repeat('a', 32)]);
+        ws_config(['app.key' => str_repeat('a', 32)]);
 
         Route::post('/user/{user}', function (ImplicitBindingUser $user) {
             return $user;
@@ -146,7 +146,7 @@ PHP);
         $post = ImplicitBindingPost::create(['user_id' => 2]);
         $this->assertEmpty($user->posts);
 
-        config(['app.key' => str_repeat('a', 32)]);
+        ws_config(['app.key' => str_repeat('a', 32)]);
 
         Route::scopeBindings()->group(function () {
             Route::get('/user/{user}/post/{post}', function (ImplicitBindingUser $user, ImplicitBindingPost $post) {
@@ -167,7 +167,7 @@ PHP);
 
         $user->delete();
 
-        config(['app.key' => str_repeat('a', 32)]);
+        ws_config(['app.key' => str_repeat('a', 32)]);
         Route::scopeBindings()->group(function () {
             Route::get('/user/{user}/post/{post}', function (ImplicitBindingUser $user, ImplicitBindingPost $post) {
                 return [$user, $post];
@@ -218,7 +218,7 @@ PHP);
         $post = ImplicitBindingPost::create(['user_id' => 2]);
         $this->assertEmpty($user->posts);
 
-        config(['app.key' => str_repeat('a', 32)]);
+        ws_config(['app.key' => str_repeat('a', 32)]);
 
         Route::group(['scope_bindings' => false], function () {
             Route::get('/user/{user}/post/{post}', function (ImplicitBindingUser $user, ImplicitBindingPost $post) {
@@ -248,7 +248,7 @@ PHP);
             'user_id' => $user->id,
         ]);
 
-        config(['app.key' => str_repeat('a', 32)]);
+        ws_config(['app.key' => str_repeat('a', 32)]);
 
         $function = function (ImplicitBindingUser $user, ImplicitBindingComment $comment) {
             return [$user, $comment];
@@ -279,7 +279,7 @@ PHP);
             'post_id' => $post->id,
         ]);
 
-        config(['app.key' => str_repeat('a', 32)]);
+        ws_config(['app.key' => str_repeat('a', 32)]);
 
         $function = function (ImplicitBindingPost $post, ImplicitBindingTag $tag) {
             return [$post, $tag];

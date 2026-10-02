@@ -286,7 +286,7 @@ class DatabaseEloquentSoftDeletesIntegrationTest extends TestCase
     public function testForceDestroyDeletesRecordsFromCollection()
     {
         $this->createUsers();
-        $deleted = SoftDeletesTestUser::forceDestroy(collect([1, 2]));
+        $deleted = SoftDeletesTestUser::forceDestroy(ws_collect([1, 2]));
 
         $this->assertSame(2, $deleted);
 

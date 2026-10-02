@@ -112,7 +112,7 @@ class RateLimiter
             $result = true;
         }
 
-        return tap($result, function () use ($key, $decaySeconds) {
+        return ws_tap($result, function () use ($key, $decaySeconds) {
             $this->hit($key, $decaySeconds);
         });
     }

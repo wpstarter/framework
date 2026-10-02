@@ -36,17 +36,17 @@ class EloquentCastTest extends MySqlTestCase
 
     public function testItCastTimestampsCreatedByTheBuilderWhenTimeHasNotPassed()
     {
-        Carbon::setTestNow(now());
-        $createdAt = now()->timestamp;
+        Carbon::setTestNow(ws_now());
+        $createdAt = ws_now()->timestamp;
 
         $castUser = UserWithIntTimestampsViaCasts::create([
-            'email' => fake()->unique()->email,
+            'email' => ws_fake()->unique()->email,
         ]);
         $attributeUser = UserWithIntTimestampsViaAttribute::create([
-            'email' => fake()->unique()->email,
+            'email' => ws_fake()->unique()->email,
         ]);
         $mutatorUser = UserWithIntTimestampsViaMutator::create([
-            'email' => fake()->unique()->email,
+            'email' => ws_fake()->unique()->email,
         ]);
 
         $this->assertSame($createdAt, $castUser->created_at->timestamp);
@@ -57,13 +57,13 @@ class EloquentCastTest extends MySqlTestCase
         $this->assertSame($createdAt, $mutatorUser->updated_at->timestamp);
 
         $castUser->update([
-            'email' => fake()->unique()->email,
+            'email' => ws_fake()->unique()->email,
         ]);
         $attributeUser->update([
-            'email' => fake()->unique()->email,
+            'email' => ws_fake()->unique()->email,
         ]);
         $mutatorUser->update([
-            'email' => fake()->unique()->email,
+            'email' => ws_fake()->unique()->email,
         ]);
 
         $this->assertSame($createdAt, $castUser->created_at->timestamp);
@@ -79,17 +79,17 @@ class EloquentCastTest extends MySqlTestCase
 
     public function testItCastTimestampsCreatedByTheBuilderWhenTimeHasPassed()
     {
-        Carbon::setTestNow(now());
-        $createdAt = now()->timestamp;
+        Carbon::setTestNow(ws_now());
+        $createdAt = ws_now()->timestamp;
 
         $castUser = UserWithIntTimestampsViaCasts::create([
-            'email' => fake()->unique()->email,
+            'email' => ws_fake()->unique()->email,
         ]);
         $attributeUser = UserWithIntTimestampsViaAttribute::create([
-            'email' => fake()->unique()->email,
+            'email' => ws_fake()->unique()->email,
         ]);
         $mutatorUser = UserWithIntTimestampsViaMutator::create([
-            'email' => fake()->unique()->email,
+            'email' => ws_fake()->unique()->email,
         ]);
 
         $this->assertSame($createdAt, $castUser->created_at->timestamp);
@@ -99,17 +99,17 @@ class EloquentCastTest extends MySqlTestCase
         $this->assertSame($createdAt, $mutatorUser->created_at->timestamp);
         $this->assertSame($createdAt, $mutatorUser->updated_at->timestamp);
 
-        Carbon::setTestNow(now()->addSecond());
-        $updatedAt = now()->timestamp;
+        Carbon::setTestNow(ws_now()->addSecond());
+        $updatedAt = ws_now()->timestamp;
 
         $castUser->update([
-            'email' => fake()->unique()->email,
+            'email' => ws_fake()->unique()->email,
         ]);
         $attributeUser->update([
-            'email' => fake()->unique()->email,
+            'email' => ws_fake()->unique()->email,
         ]);
         $mutatorUser->update([
-            'email' => fake()->unique()->email,
+            'email' => ws_fake()->unique()->email,
         ]);
 
         $this->assertSame($createdAt, $castUser->created_at->timestamp);
@@ -125,19 +125,19 @@ class EloquentCastTest extends MySqlTestCase
 
     public function testItCastTimestampsUpdatedByAMutator()
     {
-        Carbon::setTestNow(now());
+        Carbon::setTestNow(ws_now());
 
         $mutatorUser = UserWithUpdatedAtViaMutator::create([
-            'email' => fake()->unique()->email,
+            'email' => ws_fake()->unique()->email,
         ]);
 
         $this->assertNull($mutatorUser->updated_at);
 
-        Carbon::setTestNow(now()->addSecond());
-        $updatedAt = now()->timestamp;
+        Carbon::setTestNow(ws_now()->addSecond());
+        $updatedAt = ws_now()->timestamp;
 
         $mutatorUser->update([
-            'email' => fake()->unique()->email,
+            'email' => ws_fake()->unique()->email,
         ]);
 
         $this->assertSame($updatedAt, $mutatorUser->updated_at->timestamp);

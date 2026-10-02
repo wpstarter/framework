@@ -333,7 +333,7 @@ class Application extends SymfonyApplication implements ApplicationContract
     #[\Override]
     protected function getDefaultInputDefinition(): InputDefinition
     {
-        return tap(parent::getDefaultInputDefinition(), function ($definition) {
+        return ws_tap(parent::getDefaultInputDefinition(), function ($definition) {
             $definition->addOption($this->getEnvironmentOption());
         });
     }

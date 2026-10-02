@@ -2,7 +2,7 @@
 
 use WpStarter\Support\Traits\ReflectsClosures;
 
-if (! function_exists('lazy')) {
+if (! function_exists('ws_lazy')) {
     /**
      * Create a lazy instance.
      *
@@ -14,7 +14,7 @@ if (! function_exists('lazy')) {
      * @param  array<string, mixed>  $eager
      * @return TValue
      */
-    function lazy($class, $callback = 0, $options = 0, $eager = [])
+    function ws_lazy($class, $callback = 0, $options = 0, $eager = [])
     {
         static $closureReflector;
 
@@ -50,7 +50,7 @@ if (! function_exists('lazy')) {
     }
 }
 
-if (! function_exists('proxy')) {
+if (! function_exists('ws_proxy')) {
     /**
      * Create a lazy proxy instance.
      *
@@ -62,7 +62,7 @@ if (! function_exists('proxy')) {
      * @param  array<string, mixed>  $eager
      * @return TValue
      */
-    function proxy($class, $callback = 0, $options = 0, $eager = [])
+    function ws_proxy($class, $callback = 0, $options = 0, $eager = [])
     {
         static $closureReflector;
 

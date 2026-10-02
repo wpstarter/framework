@@ -27,7 +27,7 @@ class RepositoryTest extends TestCase
         });
 
         $this->assertSame(1, $value);
-        $this->assertCount(0, defer());
+        $this->assertCount(0, ws_defer());
         $this->assertSame(1, $cache->get('foo'));
         $this->assertSame(946684800, $cache->get('wpstarter:cache:flexible:created:foo'));
 
@@ -36,11 +36,11 @@ class RepositoryTest extends TestCase
             return ++$count;
         });
         $this->assertSame(1, $value);
-        $this->assertCount(0, defer());
+        $this->assertCount(0, ws_defer());
         $this->assertSame(1, $cache->get('foo'));
         $this->assertSame(946684800, $cache->get('wpstarter:cache:flexible:created:foo'));
 
-        Carbon::setTestNow(now()->addSeconds(11));
+        Carbon::setTestNow(ws_now()->addSeconds(11));
 
         // Cache is now "stale". The stored value should be used and a deferred
         // callback should be registered to refresh the cache.
@@ -48,7 +48,7 @@ class RepositoryTest extends TestCase
             return ++$count;
         });
         $this->assertSame(1, $value);
-        $this->assertCount(1, defer());
+        $this->assertCount(1, ws_defer());
         $this->assertSame(1, $cache->get('foo'));
         $this->assertSame(946684800, $cache->get('wpstarter:cache:flexible:created:foo'));
 
@@ -59,14 +59,14 @@ class RepositoryTest extends TestCase
             return ++$count;
         });
         $this->assertSame(1, $value);
-        $this->assertCount(1, defer());
+        $this->assertCount(1, ws_defer());
         $this->assertSame(1, $cache->get('foo'));
         $this->assertSame(946684800, $cache->get('wpstarter:cache:flexible:created:foo'));
 
         // We will now simulate the end of the request lifecycle by executing the
         // deferred callback. This should refresh the cache.
-        defer()->invoke();
-        $this->assertCount(0, defer());
+        ws_defer()->invoke();
+        $this->assertCount(0, ws_defer());
         $this->assertSame(2, $cache->get('foo')); // this has been updated!
         $this->assertSame(946684811, $cache->get('wpstarter:cache:flexible:created:foo')); // this has been updated!
 
@@ -75,31 +75,31 @@ class RepositoryTest extends TestCase
             return ++$count;
         });
         $this->assertSame(2, $value);
-        $this->assertCount(0, defer());
+        $this->assertCount(0, ws_defer());
         $this->assertSame(2, $cache->get('foo'));
         $this->assertSame(946684811, $cache->get('wpstarter:cache:flexible:created:foo'));
 
         // Let's now progress time beyond the stale TTL...
-        Carbon::setTestNow(now()->addSeconds(21));
+        Carbon::setTestNow(ws_now()->addSeconds(21));
 
         // Now the values should have left the cache. We should refresh.
         $value = $cache->flexible('foo', [10, 20], function () use (&$count) {
             return ++$count;
         });
         $this->assertSame(3, $value);
-        $this->assertCount(0, defer());
+        $this->assertCount(0, ws_defer());
         $this->assertSame(3, $cache->get('foo'));
         $this->assertSame(946684832, $cache->get('wpstarter:cache:flexible:created:foo'));
 
         // Now lets see what happens when another request, job, or command is
         // also trying to refresh the same key at the same time. Will push past
         // the "fresh" TTL and register a deferred callback.
-        Carbon::setTestNow(now()->addSeconds(11));
+        Carbon::setTestNow(ws_now()->addSeconds(11));
         $value = $cache->flexible('foo', [10, 20], function () use (&$count) {
             return ++$count;
         });
         $this->assertSame(3, $value);
-        $this->assertCount(1, defer());
+        $this->assertCount(1, ws_defer());
         $this->assertSame(3, $cache->get('foo'));
         $this->assertSame(946684832, $cache->get('wpstarter:cache:flexible:created:foo'));
 
@@ -110,29 +110,29 @@ class RepositoryTest extends TestCase
         $lock = $cache->lock('wpstarter:cache:flexible:lock:foo');
 
         $this->assertTrue($lock->acquire());
-        defer()->first()();
+        ws_defer()->first()();
         $this->assertSame(3, $value);
-        $this->assertCount(1, defer());
+        $this->assertCount(1, ws_defer());
         $this->assertSame(3, $cache->get('foo'));
         $this->assertSame(946684832, $cache->get('wpstarter:cache:flexible:created:foo'));
         $this->assertTrue($lock->release());
 
         // Now we have cleared the lock we will, one last time, confirm that
         // the deferred callback does refresh the value when the lock is not active.
-        defer()->invoke();
-        $this->assertCount(0, defer());
+        ws_defer()->invoke();
+        $this->assertCount(0, ws_defer());
         $this->assertSame(4, $cache->get('foo'));
         $this->assertSame(946684843, $cache->get('wpstarter:cache:flexible:created:foo'));
 
         // The last thing is to check that we don't refresh the cache in the
         // deferred callback if another thread has already done the work for us.
         // We will make the cache stale...
-        Carbon::setTestNow(now()->addSeconds(11));
+        Carbon::setTestNow(ws_now()->addSeconds(11));
         $value = $cache->flexible('foo', [10, 20], function () use (&$count) {
             return ++$count;
         });
         $this->assertSame(4, $value);
-        $this->assertCount(1, defer());
+        $this->assertCount(1, ws_defer());
         $this->assertSame(4, $cache->get('foo'));
         $this->assertSame(946684843, $cache->get('wpstarter:cache:flexible:created:foo'));
 
@@ -144,12 +144,12 @@ class RepositoryTest extends TestCase
         ]);
 
         // then we will run the refresh callback
-        defer()->invoke();
+        ws_defer()->invoke();
         $value = $cache->flexible('foo', [10, 20], function () use (&$count) {
             return ++$count;
         });
         $this->assertSame(99, $value);
-        $this->assertCount(0, defer());
+        $this->assertCount(0, ws_defer());
         $this->assertSame(99, $cache->get('foo'));
         $this->assertSame(946684863, $cache->get('wpstarter:cache:flexible:created:foo'));
     }
@@ -250,17 +250,17 @@ class RepositoryTest extends TestCase
         }, alwaysDefer: true);
 
         // First call to flexible() should not defer
-        $this->assertCount(0, defer());
+        $this->assertCount(0, ws_defer());
 
-        Carbon::setTestNow(now()->addSeconds(11));
+        Carbon::setTestNow(ws_now()->addSeconds(11));
 
         // Second callback should defer with always now true
         $cache->flexible('foo', [10, 20], function () use (&$count) {
             return ++$count;
         }, alwaysDefer: true);
 
-        $this->assertCount(1, defer());
-        $this->assertTrue(defer()->first()->always);
+        $this->assertCount(1, ws_defer());
+        $this->assertTrue(ws_defer()->first()->always);
     }
 
     public function testItRoundsDateTimeValuesToAccountForTimePassedDuringScriptExecution()
@@ -272,7 +272,7 @@ class RepositoryTest extends TestCase
             $events[] = $event;
         });
 
-        $result = $cache->put('foo', 'bar', now()->addSecond());
+        $result = $cache->put('foo', 'bar', ws_now()->addSecond());
 
         $this->assertTrue($result);
         $this->assertCount(1, $events);

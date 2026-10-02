@@ -935,7 +935,7 @@ class LazyZoo
 
     public function __construct()
     {
-        $this->animals = collect([
+        $this->animals = ws_collect([
             new LazyTiger,
             new LazyLion,
             new LazyZebra,

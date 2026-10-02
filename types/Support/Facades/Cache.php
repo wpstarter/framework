@@ -18,7 +18,7 @@ assertType('mixed', Cache::pull('cache', function (): int {
 assertType('mixed', Cache::sear('cache', function (): int {
     return 33;
 }));
-assertType('mixed', Cache::remember('cache', now(), function (): int {
+assertType('mixed', Cache::remember('cache', ws_now(), function (): int {
     return 36;
 }));
 assertType('mixed', Cache::rememberForever('cache', function (): int {

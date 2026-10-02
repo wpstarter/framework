@@ -21,7 +21,7 @@ trait ConfirmableTrait
     {
         $callback = is_null($callback) ? $this->getDefaultConfirmCallback() : $callback;
 
-        $shouldConfirm = value($callback);
+        $shouldConfirm = ws_value($callback);
 
         if ($shouldConfirm) {
             if ($this->hasOption('force') && $this->option('force')) {

@@ -92,7 +92,7 @@ class ValidatedInput implements ValidatedData
      */
     public function input($key = null, $default = null)
     {
-        return data_get(
+        return ws_data_get(
             $this->all(), $key, $default
         );
     }

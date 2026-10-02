@@ -239,15 +239,15 @@ class DatabaseCacheStoreTest extends DatabaseTestCase
 
     public function testResolvingSQLiteConnectionDoesNotThrowExceptions()
     {
-        $originalConfiguration = config('database');
+        $originalConfiguration = ws_config('database');
 
-        app('config')->set('database.default', 'sqlite');
-        app('config')->set('database.connections.sqlite.database', __DIR__.'/non-existing-file');
+        ws_app('config')->set('database.default', 'sqlite');
+        ws_app('config')->set('database.connections.sqlite.database', __DIR__.'/non-existing-file');
 
         $store = $this->getStore();
         $this->assertInstanceOf(SQLiteConnection::class, $store->getConnection());
 
-        app('config')->set('database', $originalConfiguration);
+        ws_app('config')->set('database', $originalConfiguration);
     }
 
     /**
@@ -260,12 +260,12 @@ class DatabaseCacheStoreTest extends DatabaseTestCase
 
     protected function getCacheTableName()
     {
-        return config('cache.stores.database.table');
+        return ws_config('cache.stores.database.table');
     }
 
     protected function withCachePrefix(string $key)
     {
-        return config('cache.prefix').$key;
+        return ws_config('cache.prefix').$key;
     }
 
     protected function insertToCacheTable(string $key, $value, $ttl = 60)

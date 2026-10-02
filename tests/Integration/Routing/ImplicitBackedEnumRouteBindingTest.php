@@ -49,7 +49,7 @@ PHP);
 
     public function testWithoutRouteCachingEnabled()
     {
-        config(['app.key' => str_repeat('a', 32)]);
+        ws_config(['app.key' => str_repeat('a', 32)]);
 
         Route::post('/categories/{category}', function (CategoryBackedEnum $category) {
             return $category->value;
@@ -59,7 +59,7 @@ PHP);
             return $category->value;
         })->middleware('web');
 
-        Route::bind('categoryCode', fn (string $categoryCode) => CategoryBackedEnum::fromCode($categoryCode) ?? abort(404));
+        Route::bind('categoryCode', fn (string $categoryCode) => CategoryBackedEnum::fromCode($categoryCode) ?? ws_abort(404));
 
         Route::post('/categories-code/{categoryCode}', function (CategoryBackedEnum $categoryCode) {
             return $categoryCode->value;

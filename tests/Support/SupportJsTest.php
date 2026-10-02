@@ -20,7 +20,7 @@ class SupportJsTest extends TestCase
         $this->assertSame('1', (string) Js::from(1));
         $this->assertSame('1.1', (string) Js::from(1.1));
         $this->assertSame('[]', (string) Js::from([]));
-        $this->assertSame('[]', (string) Js::from(collect()));
+        $this->assertSame('[]', (string) Js::from(ws_collect()));
         $this->assertSame('null', (string) Js::from(null));
         $this->assertSame("'Hello world'", (string) Js::from('Hello world'));
         $this->assertEquals(

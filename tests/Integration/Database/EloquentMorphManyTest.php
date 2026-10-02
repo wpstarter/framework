@@ -42,7 +42,7 @@ class EloquentMorphManyTest extends DatabaseTestCase
     {
         $post = Post::create(['title' => 'foo']);
 
-        $comment = tap((new Comment(['name' => 'foo']))->commentable()->associate($post))->save();
+        $comment = ws_tap((new Comment(['name' => 'foo']))->commentable()->associate($post))->save();
 
         (new Comment(['name' => 'bar']))->commentable()->associate($comment)->save();
 
@@ -56,13 +56,13 @@ class EloquentMorphManyTest extends DatabaseTestCase
         $post = Post::create(['title' => 'Your favorite book by C.S. Lewis']);
 
         Carbon::setTestNow('1990-02-02 12:00:00');
-        $oldestComment = tap((new Comment(['name' => 'The Allegory Of Love']))->commentable()->associate($post))->save();
+        $oldestComment = ws_tap((new Comment(['name' => 'The Allegory Of Love']))->commentable()->associate($post))->save();
 
         Carbon::setTestNow('2000-07-02 09:00:00');
-        tap((new Comment(['name' => 'The Screwtape Letters']))->commentable()->associate($post))->save();
+        ws_tap((new Comment(['name' => 'The Screwtape Letters']))->commentable()->associate($post))->save();
 
         Carbon::setTestNow('2022-01-01 00:00:00');
-        $latestComment = tap((new Comment(['name' => 'The Silver Chair']))->commentable()->associate($post))->save();
+        $latestComment = ws_tap((new Comment(['name' => 'The Silver Chair']))->commentable()->associate($post))->save();
 
         $this->assertInstanceOf(MorphOne::class, $post->comments()->one());
 

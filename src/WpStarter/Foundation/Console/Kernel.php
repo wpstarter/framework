@@ -286,7 +286,7 @@ class Kernel implements KernelContract
      */
     public function resolveConsoleSchedule()
     {
-        return tap(new Schedule($this->scheduleTimezone()), function ($schedule) {
+        return ws_tap(new Schedule($this->scheduleTimezone()), function ($schedule) {
             $this->schedule($schedule->useCache($this->scheduleCache()));
         });
     }
@@ -374,7 +374,7 @@ class Kernel implements KernelContract
 
             $possibleCommands[$file] = $commandClassName;
 
-            $command = rescue(fn () => new ReflectionClass($commandClassName), null, false);
+            $command = ws_rescue(fn () => new ReflectionClass($commandClassName), null, false);
 
             return $command instanceof ReflectionClass
                 && $command->isSubClassOf(Command::class)

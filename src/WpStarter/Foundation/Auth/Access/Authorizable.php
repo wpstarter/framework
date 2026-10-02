@@ -15,7 +15,7 @@ trait Authorizable
      */
     public function can($abilities, $arguments = [])
     {
-        return app(Gate::class)->forUser($this)->check($abilities, $arguments);
+        return ws_app(Gate::class)->forUser($this)->check($abilities, $arguments);
     }
 
     /**
@@ -27,7 +27,7 @@ trait Authorizable
      */
     public function canAny($abilities, $arguments = [])
     {
-        return app(Gate::class)->forUser($this)->any($abilities, $arguments);
+        return ws_app(Gate::class)->forUser($this)->any($abilities, $arguments);
     }
 
     /**

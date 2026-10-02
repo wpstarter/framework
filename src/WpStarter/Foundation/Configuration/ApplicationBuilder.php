@@ -226,12 +226,12 @@ class ApplicationBuilder
                             throw $e;
                         }
 
-                        report($e);
+                        ws_report($e);
 
                         $exception = $e->getMessage();
                     }
 
-                    return response(View::file(__DIR__.'/../resources/health-up.blade.php', [
+                    return ws_response(View::file(__DIR__.'/../resources/health-up.blade.php', [
                         'exception' => $exception,
                     ]), status: $exception ? 500 : 200);
                 });
@@ -275,7 +275,7 @@ class ApplicationBuilder
     {
         $this->app->afterResolving(HttpKernel::class, function ($kernel) use ($callback) {
             $middleware = (new Middleware)
-                ->redirectGuestsTo(fn () => route('login'));
+                ->redirectGuestsTo(fn () => ws_route('login'));
 
             if (! is_null($callback)) {
                 $callback($middleware);

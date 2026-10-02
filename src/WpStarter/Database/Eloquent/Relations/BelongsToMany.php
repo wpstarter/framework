@@ -194,7 +194,7 @@ class BelongsToMany extends Relation
             return $table;
         }
 
-        if (in_array(AsPivot::class, class_uses_recursive($model))) {
+        if (in_array(AsPivot::class, ws_class_uses_recursive($model))) {
             $this->using($table);
         }
 
@@ -681,13 +681,13 @@ class BelongsToMany extends Relation
     public function createOrFirst(array $attributes = [], Closure|array $values = [], array $joining = [], $touch = true)
     {
         try {
-            return $this->getQuery()->withSavepointIfNeeded(fn () => $this->create(array_merge($attributes, value($values)), $joining, $touch));
+            return $this->getQuery()->withSavepointIfNeeded(fn () => $this->create(array_merge($attributes, ws_value($values)), $joining, $touch));
         } catch (UniqueConstraintViolationException $e) {
             // ...
         }
 
         try {
-            return tap($this->related->where($attributes)->first() ?? throw $e, function ($instance) use ($joining, $touch) {
+            return ws_tap($this->related->where($attributes)->first() ?? throw $e, function ($instance) use ($joining, $touch) {
                 $this->getQuery()->withSavepointIfNeeded(fn () => $this->attach($instance, $joining, $touch));
             });
         } catch (UniqueConstraintViolationException $e) {
@@ -706,7 +706,7 @@ class BelongsToMany extends Relation
      */
     public function updateOrCreate(array $attributes, array $values = [], array $joining = [], $touch = true)
     {
-        return tap($this->firstOrCreate($attributes, $values, $joining, $touch), function ($instance) use ($values) {
+        return ws_tap($this->firstOrCreate($attributes, $values, $joining, $touch), function ($instance) use ($values) {
             if (! $instance->wasRecentlyCreated) {
                 $instance->fill($values);
 
@@ -992,7 +992,7 @@ class BelongsToMany extends Relation
     {
         $this->query->addSelect($this->shouldSelect($columns));
 
-        return tap($this->query->paginate($perPage, $columns, $pageName, $page), function ($paginator) {
+        return ws_tap($this->query->paginate($perPage, $columns, $pageName, $page), function ($paginator) {
             $this->hydratePivotRelation($paginator->items());
         });
     }
@@ -1010,7 +1010,7 @@ class BelongsToMany extends Relation
     {
         $this->query->addSelect($this->shouldSelect($columns));
 
-        return tap($this->query->simplePaginate($perPage, $columns, $pageName, $page), function ($paginator) {
+        return ws_tap($this->query->simplePaginate($perPage, $columns, $pageName, $page), function ($paginator) {
             $this->hydratePivotRelation($paginator->items());
         });
     }
@@ -1028,7 +1028,7 @@ class BelongsToMany extends Relation
     {
         $this->query->addSelect($this->shouldSelect($columns));
 
-        return tap($this->query->cursorPaginate($perPage, $columns, $cursorName, $cursor), function ($paginator) {
+        return ws_tap($this->query->cursorPaginate($perPage, $columns, $cursorName, $cursor), function ($paginator) {
             $this->hydratePivotRelation($paginator->items());
         });
     }
@@ -1300,7 +1300,7 @@ class BelongsToMany extends Relation
      */
     protected function guessInverseRelation()
     {
-        return Str::camel(Str::pluralStudly(class_basename($this->getParent())));
+        return Str::camel(Str::pluralStudly(ws_class_basename($this->getParent())));
     }
 
     /**
@@ -1510,7 +1510,7 @@ class BelongsToMany extends Relation
             $grammar = $this->query->getQuery()->getGrammar();
 
             if ($grammar instanceof MySqlGrammar && $grammar->useLegacyGroupLimit($this->query->getQuery())) {
-                $column = 'pivot_'.last(explode('.', $column));
+                $column = 'pivot_'.ws_last(explode('.', $column));
             }
 
             $this->query->groupLimit($value, $column);

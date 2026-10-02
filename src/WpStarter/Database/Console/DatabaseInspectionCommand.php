@@ -43,8 +43,8 @@ abstract class DatabaseInspectionCommand extends Command
      */
     protected function getConfigFromDatabase($database)
     {
-        $database ??= config('database.default');
+        $database ??= ws_config('database.default');
 
-        return Arr::except(config('database.connections.'.$database), ['password']);
+        return Arr::except(ws_config('database.connections.'.$database), ['password']);
     }
 }

@@ -63,14 +63,14 @@ trait TransformsToResource
         $relativeNamespace = Str::after($modelClass, '\\Models\\');
 
         $relativeNamespace = Str::contains($relativeNamespace, '\\')
-            ? Str::before($relativeNamespace, '\\'.class_basename($modelClass))
+            ? Str::before($relativeNamespace, '\\'.ws_class_basename($modelClass))
             : '';
 
         $potentialResource = sprintf(
             '%s\\Http\\Resources\\%s%s',
             Str::before($modelClass, '\\Models'),
             strlen($relativeNamespace) > 0 ? $relativeNamespace.'\\' : '',
-            class_basename($modelClass)
+            ws_class_basename($modelClass)
         );
 
         return [$potentialResource.'Resource', $potentialResource];

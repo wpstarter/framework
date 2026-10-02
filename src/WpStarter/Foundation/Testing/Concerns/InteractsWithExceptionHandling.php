@@ -31,7 +31,7 @@ trait InteractsWithExceptionHandling
     protected function withExceptionHandling()
     {
         if ($this->originalExceptionHandler) {
-            $currentExceptionHandler = app(ExceptionHandler::class);
+            $currentExceptionHandler = ws_app(ExceptionHandler::class);
 
             $currentExceptionHandler instanceof ExceptionHandlerFake
                 ? $currentExceptionHandler->setHandler($this->originalExceptionHandler)
@@ -71,7 +71,7 @@ trait InteractsWithExceptionHandling
     protected function withoutExceptionHandling(array $except = [])
     {
         if ($this->originalExceptionHandler == null) {
-            $currentExceptionHandler = app(ExceptionHandler::class);
+            $currentExceptionHandler = ws_app(ExceptionHandler::class);
 
             $this->originalExceptionHandler = $currentExceptionHandler instanceof ExceptionHandlerFake
                 ? $currentExceptionHandler->handler()
@@ -159,7 +159,7 @@ trait InteractsWithExceptionHandling
             }
         };
 
-        $currentExceptionHandler = app(ExceptionHandler::class);
+        $currentExceptionHandler = ws_app(ExceptionHandler::class);
 
         $currentExceptionHandler instanceof ExceptionHandlerFake
             ? $currentExceptionHandler->setHandler($exceptionHandler)

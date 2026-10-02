@@ -128,7 +128,7 @@ class Repository
      */
     public function get($key, $default = null)
     {
-        return $this->data[$key] ?? value($default);
+        return $this->data[$key] ?? ws_value($default);
     }
 
     /**
@@ -140,7 +140,7 @@ class Repository
      */
     public function getHidden($key, $default = null)
     {
-        return $this->hidden[$key] ?? value($default);
+        return $this->hidden[$key] ?? ws_value($default);
     }
 
     /**
@@ -152,7 +152,7 @@ class Repository
      */
     public function pull($key, $default = null)
     {
-        return tap($this->get($key, $default), function () use ($key) {
+        return ws_tap($this->get($key, $default), function () use ($key) {
             $this->forget($key);
         });
     }
@@ -166,7 +166,7 @@ class Repository
      */
     public function pullHidden($key, $default = null)
     {
-        return tap($this->getHidden($key, $default), function () use ($key) {
+        return ws_tap($this->getHidden($key, $default), function () use ($key) {
             $this->forgetHidden($key);
         });
     }
@@ -262,7 +262,7 @@ class Repository
             return $this->get($key);
         }
 
-        return tap(value($value), function ($value) use ($key) {
+        return ws_tap(ws_value($value), function ($value) use ($key) {
             $this->add($key, $value);
         });
     }
@@ -280,7 +280,7 @@ class Repository
             return $this->getHidden($key);
         }
 
-        return tap(value($value), function ($value) use ($key) {
+        return ws_tap(ws_value($value), function ($value) use ($key) {
             $this->addHidden($key, $value);
         });
     }
@@ -666,7 +666,7 @@ class Repository
     {
         $unserialize = function ($value, $key, $hidden) {
             try {
-                return tap($this->getRestoredPropertyValue(unserialize($value)), function ($value) {
+                return ws_tap($this->getRestoredPropertyValue(unserialize($value)), function ($value) {
                     if ($value instanceof __PHP_Incomplete_Class) {
                         throw new RuntimeException('Value is incomplete class: '.json_encode($value));
                     }
@@ -677,8 +677,8 @@ class Repository
                 }
 
                 if ($e instanceof ModelNotFoundException) {
-                    if (function_exists('report')) {
-                        report($e);
+                    if (function_exists('ws_report')) {
+                        ws_report($e);
                     }
 
                     return null;

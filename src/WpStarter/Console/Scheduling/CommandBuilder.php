@@ -32,7 +32,7 @@ class CommandBuilder
     {
         $output = ProcessUtils::escapeArgument($event->output);
 
-        return laravel_cloud()
+        return wpstarter_cloud()
             ? $this->ensureCorrectUser($event, $event->command.' 2>&1 | tee '.($event->shouldAppendOutput ? '-a ' : '').$output)
             : $this->ensureCorrectUser($event, $event->command.($event->shouldAppendOutput ? ' >> ' : ' > ').$output.' 2>&1');
     }
@@ -51,7 +51,7 @@ class CommandBuilder
 
         $finished = Application::formatCommandString('schedule:finish').' "'.$event->mutexName().'"';
 
-        if (windows_os()) {
+        if (ws_windows_os()) {
             return 'start /b cmd /v:on /c "('.$event->command.' & '.$finished.' ^!ERRORLEVEL^!)'.$redirect.$output.' 2>&1"';
         }
 
@@ -70,6 +70,6 @@ class CommandBuilder
      */
     protected function ensureCorrectUser(Event $event, $command)
     {
-        return $event->user && ! windows_os() ? 'sudo -u '.$event->user.' -- sh -c \''.$command.'\'' : $command;
+        return $event->user && ! ws_windows_os() ? 'sudo -u '.$event->user.' -- sh -c \''.$command.'\'' : $command;
     }
 }

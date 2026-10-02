@@ -56,18 +56,18 @@ class PrecognitionTest extends TestCase
             ->middleware(PrecognitionInvokingController::class);
 
         $this->get('test-route');
-        $this->assertNull(request()->attributes->get('precognitive'));
-        $this->assertFalse(request()->isPrecognitive());
+        $this->assertNull(ws_request()->attributes->get('precognitive'));
+        $this->assertFalse(ws_request()->isPrecognitive());
 
         $this->get('test-route', ['Precognition' => 'true']);
-        $this->assertTrue(request()->attributes->get('precognitive'));
-        $this->assertTrue(request()->isPrecognitive());
+        $this->assertTrue(ws_request()->attributes->get('precognitive'));
+        $this->assertTrue(ws_request()->isPrecognitive());
     }
 
     public function testItReturnsTheEmptyResponseWhenNotBailing()
     {
         Route::get('test-route', function () {
-            precognitive(function () {
+            ws_precognitive(function () {
                 //
             });
 
@@ -85,8 +85,8 @@ class PrecognitionTest extends TestCase
     public function testItCanBailDuringPrecognitionRequest()
     {
         Route::get('test-route', function () {
-            precognitive(function ($bail) {
-                $bail(response()->json(['expected' => 'response']));
+            ws_precognitive(function ($bail) {
+                $bail(ws_response()->json(['expected' => 'response']));
                 fail();
             });
             fail();
@@ -191,7 +191,7 @@ class PrecognitionTest extends TestCase
     public function testItAppliesHeadersWhenExceptionThrownInPrecognition()
     {
         Route::get('test-route', function () {
-            precognitive(function () {
+            ws_precognitive(function () {
                 throw new ModelNotFoundException();
             });
             fail();
@@ -234,7 +234,7 @@ class PrecognitionTest extends TestCase
     public function testItCanReturnValuesFromPrecognitionClosure()
     {
         Route::get('test-route', function () {
-            [$first, $second, $third] = precognitive(function () {
+            [$first, $second, $third] = ws_precognitive(function () {
                 return ['expected', 'values', 'passed'];
             });
 
@@ -259,8 +259,8 @@ class PrecognitionTest extends TestCase
     public function testItCanBailWithResponseDuringNormalRequest()
     {
         Route::get('test-route', function () {
-            precognitive(function ($bail) {
-                $bail(response()->json(['expected' => 'response']));
+            ws_precognitive(function ($bail) {
+                $bail(ws_response()->json(['expected' => 'response']));
 
                 fail();
             });
@@ -279,7 +279,7 @@ class PrecognitionTest extends TestCase
     public function testArbitraryBailResponseIsParsedToResponse()
     {
         Route::get('test-route', function () {
-            precognitive(function ($bail) {
+            ws_precognitive(function ($bail) {
                 $bail(['expected' => 'response']);
 
                 fail();
@@ -355,7 +355,7 @@ class PrecognitionTest extends TestCase
     public function testClientCanSpecifyInputsToValidateWhenUsingRequestValidate()
     {
         Route::post('test-route', function (Request $request) {
-            precognitive(function () use ($request) {
+            ws_precognitive(function () use ($request) {
                 $request->validate([
                     'required_integer' => 'required|integer',
                     ...! $request->isPrecognitive() ? ['required_integer_when_not_precognitive' => 'required|integer'] : [],
@@ -393,7 +393,7 @@ class PrecognitionTest extends TestCase
     public function testClientCanSpecifyInputsToValidateWhenUsingRequestValidateWithBag()
     {
         Route::post('test-route', function (Request $request) {
-            precognitive(function () use ($request) {
+            ws_precognitive(function () use ($request) {
                 $request->validateWithBag('custom-bag', [
                     'required_integer' => 'required|integer',
                     ! $request->isPrecognitive() ? ['required_integer_when_not_precognitive' => 'required|integer'] : [],
@@ -608,8 +608,8 @@ class PrecognitionTest extends TestCase
     public function testItAppendsAnAdditionalVaryHeaderInsteadOfReplacingAnyExistingVaryHeaders()
     {
         Route::get('test-route', function () {
-            precognitive(function ($bail) {
-                $bail(response('expected')->header('Vary', 'Foo'));
+            ws_precognitive(function ($bail) {
+                $bail(ws_response('expected')->header('Vary', 'Foo'));
                 fail();
             });
             fail();
@@ -932,8 +932,8 @@ class PrecognitionTest extends TestCase
     public function testItContinuesExecutionAfterSuccessfulValidationWithoutValidationFilteringAndFormRequest()
     {
         Route::post('test-route', function (PrecognitionTestRequest $request, ClassThatBindsOnInstantiation $foo) {
-            precognitive(function ($bail) {
-                $bail(response('expected response'));
+            ws_precognitive(function ($bail) {
+                $bail(ws_response('expected response'));
                 fail();
             });
             fail();
@@ -1096,14 +1096,14 @@ class PrecognitionTest extends TestCase
     public function testItStopsExecutionAfterSuccessfulValidationWithValidationFilteringAndRequestValidate()
     {
         Route::post('test-route', function (Request $request) {
-            precognitive(function ($bail) use ($request) {
+            ws_precognitive(function ($bail) use ($request) {
                 $request->validate([
                     'required_integer' => 'required|integer',
                     'optional_integer_1' => 'integer',
                     'optional_integer_2' => 'integer',
                 ]);
 
-                $bail(response('Post-validation code was executed.'));
+                $bail(ws_response('Post-validation code was executed.'));
 
                 fail();
             });
@@ -1128,14 +1128,14 @@ class PrecognitionTest extends TestCase
     public function testItContinuesExecutionAfterSuccessfulValidationWithoutValidationFilteringAndRequestValidate()
     {
         Route::post('test-route', function (Request $request) {
-            precognitive(function ($bail) use ($request) {
+            ws_precognitive(function ($bail) use ($request) {
                 $request->validate([
                     'required_integer' => 'required|integer',
                     'optional_integer_1' => 'integer',
                     'optional_integer_2' => 'integer',
                 ]);
 
-                $bail(response('Post-validation code was executed.'));
+                $bail(ws_response('Post-validation code was executed.'));
 
                 fail();
             });
@@ -1165,25 +1165,25 @@ class PrecognitionTest extends TestCase
 
         $response = $this->get('expected-route-1');
         $response->assertOk();
-        $this->assertSame('http://localhost/expected-route-1', session()->previousUrl());
+        $this->assertSame('http://localhost/expected-route-1', ws_session()->previousUrl());
 
         $this->app->bind(CallableDispatcherContract::class, fn ($app) => new CallableDispatcher($app));
 
         $response = $this->get('precognition-route', ['Precognition' => 'true']);
         $response->assertNoContent();
-        $this->assertSame('http://localhost/expected-route-1', session()->previousUrl());
+        $this->assertSame('http://localhost/expected-route-1', ws_session()->previousUrl());
 
         $this->app->bind(CallableDispatcherContract::class, fn ($app) => new CallableDispatcher($app));
 
         $response = $this->get('expected-route-2');
         $response->assertOk();
-        $this->assertSame('http://localhost/expected-route-2', session()->previousUrl());
+        $this->assertSame('http://localhost/expected-route-2', ws_session()->previousUrl());
     }
 
     public function testItAppendsVaryHeaderToSymfonyResponse()
     {
         Route::get('test-route', function () {
-            return response()->streamDownload(function () {
+            return ws_response()->streamDownload(function () {
                 echo 'foo';
             }, null, ['Expected' => 'Header']);
         })->middleware(HandlePrecognitiveRequests::class);
@@ -1252,7 +1252,7 @@ class PrecognitionTestController
 
     public function methodWhereEscapedDotRuleIsValidatedViaControllerValidate(Request $request)
     {
-        precognitive(function () use ($request) {
+        ws_precognitive(function () use ($request) {
             $this->validate($request, [
                 'escaped\.dot' => 'required',
             ]);
@@ -1265,7 +1265,7 @@ class PrecognitionTestController
 
     public function methodWhereEscapedDotRuleIsValidatedViaControllerValidateWith()
     {
-        precognitive(function () {
+        ws_precognitive(function () {
             $this->validateWith([
                 'escaped\.dot' => 'required',
             ]);
@@ -1278,7 +1278,7 @@ class PrecognitionTestController
 
     public function methodWhereNestedRulesAreValidatedViaControllerValidate(Request $request)
     {
-        precognitive(function () use ($request) {
+        ws_precognitive(function () use ($request) {
             $this->validate($request, [
                 'nested' => ['required', 'array', 'min:1'],
                 'nested.*.name' => ['required', 'string'],
@@ -1292,7 +1292,7 @@ class PrecognitionTestController
 
     public function methodWhereArrayRulesAreValidateViaControllerValidate(Request $request)
     {
-        precognitive(function () use ($request) {
+        ws_precognitive(function () use ($request) {
             $this->validate($request, [
                 'nested_array' => ['required', 'array', 'min:1'],
                 'nested_array.*.name' => ['required', 'string'],
@@ -1308,7 +1308,7 @@ class PrecognitionTestController
 
     public function methodWhereUsersAreValidated(Request $request)
     {
-        precognitive(function () use ($request) {
+        ws_precognitive(function () use ($request) {
             $this->validate($request, [
                 'users' => ['required', 'array'],
                 'users.*.name' => ['required', 'string'],
@@ -1323,7 +1323,7 @@ class PrecognitionTestController
 
     public function methodWithMultipleRootKeys(Request $request)
     {
-        precognitive(function () use ($request) {
+        ws_precognitive(function () use ($request) {
             $this->validate($request, [
                 'user' => ['required', 'array'],
                 'user.name' => ['required', 'string'],
@@ -1339,7 +1339,7 @@ class PrecognitionTestController
 
     public function methodWhereProfileIsValidated(Request $request)
     {
-        precognitive(function () use ($request) {
+        ws_precognitive(function () use ($request) {
             $this->validate($request, [
                 'profile' => ['required', 'array'],
                 'profile.username' => ['required', 'string'],
@@ -1354,7 +1354,7 @@ class PrecognitionTestController
 
     public function methodWhereNestedRulesAreValidatedViaControllerValidateWith(Request $request)
     {
-        precognitive(function () {
+        ws_precognitive(function () {
             $this->validateWith([
                 'nested' => ['required', 'array', 'min:1'],
                 'nested.*.name' => ['required', 'string'],
@@ -1368,7 +1368,7 @@ class PrecognitionTestController
 
     public function methodWherePredictionValidatesViaControllerValidate(Request $request)
     {
-        precognitive(function () use ($request) {
+        ws_precognitive(function () use ($request) {
             $this->validate($request, [
                 'required_integer' => 'required|integer',
                 ...! $request->isPrecognitive() ? ['required_integer_when_not_precognitive' => 'required|integer'] : [],
@@ -1384,7 +1384,7 @@ class PrecognitionTestController
 
     public function methodWherePredictionValidatesViaControllerValidateWithBag(Request $request)
     {
-        precognitive(function () use ($request) {
+        ws_precognitive(function () use ($request) {
             $this->validateWithBag('custom-bag', $request, [
                 'required_integer' => 'required|integer',
                 ...! $request->isPrecognitive() ? ['required_integer_when_not_precognitive' => 'required|integer'] : [],
@@ -1400,7 +1400,7 @@ class PrecognitionTestController
 
     public function methodWherePredictionValidatesViaControllerValidateWith(Request $request)
     {
-        precognitive(function () use ($request) {
+        ws_precognitive(function () use ($request) {
             $this->validateWith([
                 'required_integer' => 'required|integer',
                 ...! $request->isPrecognitive() ? ['required_integer_when_not_precognitive' => 'required|integer'] : [],
@@ -1416,14 +1416,14 @@ class PrecognitionTestController
 
     public function methodWherePredictionReturnsResponseWithControllerValidate(Request $request)
     {
-        precognitive(function ($bail) use ($request) {
+        ws_precognitive(function ($bail) use ($request) {
             $this->validate($request, [
                 'required_integer' => 'required|integer',
                 'optional_integer_1' => 'integer',
                 'optional_integer_2' => 'integer',
             ]);
 
-            $bail(response('Post-validation code was executed.'));
+            $bail(ws_response('Post-validation code was executed.'));
 
             fail();
         });
@@ -1433,14 +1433,14 @@ class PrecognitionTestController
 
     public function methodWherePredictionReturnsResponseWithControllerValidateWithBag(Request $request)
     {
-        precognitive(function ($bail) use ($request) {
+        ws_precognitive(function ($bail) use ($request) {
             $this->validateWithBag('custom-bag', $request, [
                 'required_integer' => 'required|integer',
                 'optional_integer_1' => 'integer',
                 'optional_integer_2' => 'integer',
             ]);
 
-            $bail(response('Post-validation code was executed.'));
+            $bail(ws_response('Post-validation code was executed.'));
 
             fail();
         });
@@ -1450,14 +1450,14 @@ class PrecognitionTestController
 
     public function methodWherePredictionReturnsResponseWithControllerValidateWith(Request $request)
     {
-        precognitive(function ($bail) {
+        ws_precognitive(function ($bail) {
             $this->validateWith([
                 'required_integer' => 'required|integer',
                 'optional_integer_1' => 'integer',
                 'optional_integer_2' => 'integer',
             ]);
 
-            $bail(response('Post-validation code was executed.'));
+            $bail(ws_response('Post-validation code was executed.'));
 
             fail();
         });
@@ -1467,14 +1467,14 @@ class PrecognitionTestController
 
     public function methodWherePredictionReturnsResponseWithControllerValidateWithPassingValidator(Request $request)
     {
-        precognitive(function ($bail) use ($request) {
+        ws_precognitive(function ($bail) use ($request) {
             $this->validateWith(Validator::make($request->all(), [
                 'required_integer' => 'required|integer',
                 'optional_integer_1' => 'integer',
                 'optional_integer_2' => 'integer',
             ]));
 
-            $bail(response('Post-validation code was executed.'));
+            $bail(ws_response('Post-validation code was executed.'));
 
             fail();
         });
@@ -1551,7 +1551,7 @@ class MiddlewareReturningSymfonyResponse
 {
     public function handle($request, $next)
     {
-        return response()->streamDownload(function () {
+        return ws_response()->streamDownload(function () {
             //
         }, null, ['Expected' => 'Header']);
     }
@@ -1561,6 +1561,6 @@ class MiddlewareThatReturnsNoContent
 {
     public function handle()
     {
-        return response()->noContent();
+        return ws_response()->noContent();
     }
 }

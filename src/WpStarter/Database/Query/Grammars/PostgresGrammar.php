@@ -425,7 +425,7 @@ class PostgresGrammar extends Grammar
     protected function compileUpdateColumns(Builder $query, array $values)
     {
         return (new Collection($values))->map(function ($value, $key) {
-            $column = last(explode('.', $key));
+            $column = ws_last(explode('.', $key));
 
             if ($this->isJsonSelector($key)) {
                 return $this->compileJsonUpdateColumn($column, $value);
@@ -612,7 +612,7 @@ class PostgresGrammar extends Grammar
 
         $columns = $this->compileUpdateColumns($query, $values);
 
-        $alias = last(preg_split('/\s+as\s+/i', $query->from));
+        $alias = ws_last(preg_split('/\s+as\s+/i', $query->from));
 
         $selectSql = $this->compileSelect($query->select($alias.'.ctid'));
 
@@ -637,7 +637,7 @@ class PostgresGrammar extends Grammar
 
         $cleanBindings = Arr::except($bindings, 'select');
 
-        $values = Arr::flatten(array_map(fn ($value) => value($value), $values));
+        $values = Arr::flatten(array_map(fn ($value) => ws_value($value), $values));
 
         return array_values(
             array_merge($values, Arr::flatten($cleanBindings))
@@ -669,7 +669,7 @@ class PostgresGrammar extends Grammar
     {
         $table = $this->wrapTable($query->from);
 
-        $alias = last(preg_split('/\s+as\s+/i', $query->from));
+        $alias = ws_last(preg_split('/\s+as\s+/i', $query->from));
 
         $selectSql = $this->compileSelect($query->select($alias.'.ctid'));
 

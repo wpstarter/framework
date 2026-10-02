@@ -957,7 +957,7 @@ class PendingRequest
     {
         $results = [];
 
-        $requests = tap(new Pool($this->factory), $callback)->getRequests();
+        $requests = ws_tap(new Pool($this->factory), $callback)->getRequests();
 
         if ($concurrency === null) {
             (new Collection($requests))->each(static function ($item) {
@@ -1007,7 +1007,7 @@ class PendingRequest
      */
     public function batch(callable $callback): Batch
     {
-        return tap(new Batch($this->factory), $callback);
+        return ws_tap(new Batch($this->factory), $callback);
     }
 
     /**
@@ -1043,9 +1043,9 @@ class PendingRequest
 
         $shouldRetry = null;
 
-        return retry($this->tries ?? 1, function ($attempt) use ($method, $url, $options, &$shouldRetry) {
+        return ws_retry($this->tries ?? 1, function ($attempt) use ($method, $url, $options, &$shouldRetry) {
             try {
-                return tap($this->newResponse($this->sendRequest($method, $url, $options)), function (&$response) use ($attempt, &$shouldRetry) {
+                return ws_tap($this->newResponse($this->sendRequest($method, $url, $options)), function (&$response) use ($attempt, &$shouldRetry) {
                     $this->populateResponse($response);
 
                     $this->dispatchResponseReceivedEvent($response);
@@ -1253,7 +1253,7 @@ class PendingRequest
         }
 
         if ($attempt < $this->tries && $shouldRetry) {
-            $options['delay'] = value(
+            $options['delay'] = ws_value(
                 $this->retryDelay,
                 $attempt,
                 $response instanceof Response ? $response->toException() : $response
@@ -1448,7 +1448,7 @@ class PendingRequest
      */
     public function pushHandlers($handlerStack)
     {
-        return tap($handlerStack, function ($stack) {
+        return ws_tap($handlerStack, function ($stack) {
             $this->middleware->each(function ($middleware) use ($stack) {
                 $stack->push($middleware);
             });
@@ -1572,7 +1572,7 @@ class PendingRequest
      */
     public function runBeforeSendingCallbacks($request, array $options)
     {
-        return tap($request, function (&$request) use ($options) {
+        return ws_tap($request, function (&$request) use ($options) {
             $this->beforeSendingCallbacks->each(function ($callback) use (&$request, $options) {
                 $callbackResult = call_user_func(
                     $callback,
@@ -1614,7 +1614,7 @@ class PendingRequest
      */
     protected function newResponse($response)
     {
-        return tap(new Response($response), function (Response $laravelResponse) {
+        return ws_tap(new Response($response), function (Response $laravelResponse) {
             if ($this->truncateExceptionsAt === null) {
                 return;
             }

@@ -216,7 +216,7 @@ unset(\$__defined_vars, \$__key, \$__value); ?>";
 
         return is_string($value) ||
             (is_object($value) && ! $value instanceof ComponentAttributeBag && method_exists($value, '__toString'))
-                ? e($value)
+                ? ws_e($value)
                 : $value;
     }
 }

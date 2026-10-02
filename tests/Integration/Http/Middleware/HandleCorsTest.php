@@ -270,7 +270,7 @@ class HandleCorsTest extends TestCase
 
         $router->post('api/error', [
             'uses' => function () {
-                abort(500);
+                ws_abort(500);
             },
         ]);
 

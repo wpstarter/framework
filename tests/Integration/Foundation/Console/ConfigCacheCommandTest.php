@@ -42,7 +42,7 @@ class ConfigCacheCommandTest extends TestCase
                 'number' => 123,
                 'boolean' => true,
                 'array' => ['foo', 'bar'],
-                'from_env' => env('SOMETHING_FROM_ENV', 10),
+                'from_env' => ws_env('SOMETHING_FROM_ENV', 10),
                 'nested' => [
                     'key' => 'value',
                 ],

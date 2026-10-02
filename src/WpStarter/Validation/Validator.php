@@ -595,7 +595,7 @@ class Validator implements ValidatorContract
      */
     public function validate()
     {
-        throw_if($this->fails(), $this->exception, $this);
+        ws_throw_if($this->fails(), $this->exception, $this);
 
         return $this->validated();
     }
@@ -645,14 +645,14 @@ class Validator implements ValidatorContract
             $this->passes();
         }
 
-        throw_if($this->messages->isNotEmpty(), $this->exception, $this);
+        ws_throw_if($this->messages->isNotEmpty(), $this->exception, $this);
 
         $results = [];
 
         $missingValue = new stdClass;
 
         foreach ($this->getRules() as $key => $rules) {
-            $value = data_get($this->getData(), $key, $missingValue);
+            $value = ws_data_get($this->getData(), $key, $missingValue);
 
             if ($this->excludeUnvalidatedArrayKeys &&
                 (in_array('array', $rules) || in_array('list', $rules)) &&
@@ -1358,7 +1358,7 @@ class Validator implements ValidatorContract
             ? Str::replaceLast($lastSegmentOfAttribute, '', $attribute)
             : $attribute;
 
-        return is_array($data = data_get($this->data, $attribute))
+        return is_array($data = ws_data_get($this->data, $attribute))
             ? new Fluent($data)
             : $data;
     }

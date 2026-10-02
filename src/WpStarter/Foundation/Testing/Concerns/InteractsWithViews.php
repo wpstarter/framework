@@ -20,7 +20,7 @@ trait InteractsWithViews
      */
     protected function view(string $view, $data = [])
     {
-        return new TestView(view($view, $data));
+        return new TestView(ws_view($view, $data));
     }
 
     /**
@@ -44,7 +44,7 @@ trait InteractsWithViews
 
         file_put_contents($tempFile, $template);
 
-        return new TestView(view($tempFileInfo['filename'], $data));
+        return new TestView(ws_view($tempFileInfo['filename'], $data));
     }
 
     /**
@@ -58,11 +58,11 @@ trait InteractsWithViews
     {
         $component = $this->app->make($componentClass, $data);
 
-        $view = value($component->resolveView(), $data);
+        $view = ws_value($component->resolveView(), $data);
 
         $view = $view instanceof View
             ? $view->with($component->data())
-            : view($view, $component->data());
+            : ws_view($view, $component->data());
 
         return new TestComponent($component, $view);
     }

@@ -39,7 +39,7 @@ class InteractsWithAuthenticationTest extends TestCase
         User::forceCreate([
             'username' => 'taylorotwell',
             'email' => 'taylorotwell@laravel.com',
-            'password' => bcrypt('password'),
+            'password' => ws_bcrypt('password'),
             'is_active' => true,
         ]);
     }
@@ -98,6 +98,6 @@ class InteractsWithAuthenticationTest extends TestCase
         $this->assertGuest();
 
         $this->get('/me')
-            ->assertRedirect(route('login'));
+            ->assertRedirect(ws_route('login'));
     }
 }

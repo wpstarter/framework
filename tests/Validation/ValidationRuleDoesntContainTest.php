@@ -23,7 +23,7 @@ class ValidationRuleDoesntContainTest extends TestCase
         $rule = Rule::doesntContain(['Taylor', 'Abigail']);
         $this->assertSame('doesnt_contain:"Taylor","Abigail"', (string) $rule);
 
-        $rule = Rule::doesntContain(collect(['Taylor', 'Abigail']));
+        $rule = Rule::doesntContain(ws_collect(['Taylor', 'Abigail']));
         $this->assertSame('doesnt_contain:"Taylor","Abigail"', (string) $rule);
 
         $rule = Rule::doesntContain([ArrayKeys::key_1, ArrayKeys::key_2]);

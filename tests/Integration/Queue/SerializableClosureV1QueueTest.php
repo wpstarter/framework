@@ -21,7 +21,7 @@ class SerializableClosureV1QueueTest extends TestCase
     {
         $this->markTestSkippedWhen($this->usingInMemoryDatabase(), 'Test does not support using :memory: database connection');
 
-        tap($app->make('config'), function ($config) {
+        ws_tap($app->make('config'), function ($config) {
             $config->set([
                 'queue.default' => 'database',
             ]);

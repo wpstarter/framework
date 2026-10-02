@@ -88,7 +88,7 @@ class EnvironmentDecryptCommandTest extends TestCase
             ->assertExitCode(0);
 
         $this->filesystem->shouldHaveReceived('put')
-            ->with(base_path('.env'), 'APP_NAME=Laravel');
+            ->with(ws_base_path('.env'), 'APP_NAME=Laravel');
     }
 
     public function testItGeneratesTheEnvironmentFileWithUserProvidedKey(): void
@@ -111,7 +111,7 @@ class EnvironmentDecryptCommandTest extends TestCase
             ->assertExitCode(0);
 
         $this->filesystem->shouldHaveReceived('put')
-            ->with(base_path('.env'), 'APP_NAME="Laravel Two"');
+            ->with(ws_base_path('.env'), 'APP_NAME="Laravel Two"');
     }
 
     public function testItGeneratesTheEnvironmentFileWithKeyFromEnvironment(): void
@@ -136,7 +136,7 @@ class EnvironmentDecryptCommandTest extends TestCase
             ->assertExitCode(0);
 
         $this->filesystem->shouldHaveReceived('put')
-            ->with(base_path('.env'), 'APP_NAME="Laravel Three"');
+            ->with(ws_base_path('.env'), 'APP_NAME="Laravel Three"');
 
         unset($_SERVER['LARAVEL_ENV_ENCRYPTION_KEY']);
     }
@@ -161,7 +161,7 @@ class EnvironmentDecryptCommandTest extends TestCase
             ->assertExitCode(0);
 
         $this->filesystem->shouldHaveReceived('put')
-            ->with(base_path('.env'), 'APP_NAME="Laravel Two"');
+            ->with(ws_base_path('.env'), 'APP_NAME="Laravel Two"');
     }
 
     public function testItDecryptsMultiLineEnvironmentCorrectly(): void
@@ -202,7 +202,7 @@ class EnvironmentDecryptCommandTest extends TestCase
             ->assertExitCode(0);
 
         $this->filesystem->shouldHaveReceived('put')
-            ->with(base_path('.env'), $contents);
+            ->with(ws_base_path('.env'), $contents);
     }
 
     public function testItWritesTheEnvironmentFileCustomFilename(): void
@@ -225,7 +225,7 @@ class EnvironmentDecryptCommandTest extends TestCase
             ->assertExitCode(0);
 
         $this->filesystem->shouldHaveReceived('put')
-            ->with(base_path('.env'), 'APP_NAME="Laravel Two"');
+            ->with(ws_base_path('.env'), 'APP_NAME="Laravel Two"');
     }
 
     public function testItWritesTheEnvironmentFileCustomPath(): void
@@ -306,7 +306,7 @@ class EnvironmentDecryptCommandTest extends TestCase
             ->assertExitCode(0);
 
         $this->filesystem->shouldHaveReceived('put')
-            ->with(base_path('.env'), 'APP_NAME="Laravel Two"');
+            ->with(ws_base_path('.env'), 'APP_NAME="Laravel Two"');
     }
 
     public function testItAutoDetectsAndDecryptsReadableFormat(): void
@@ -333,7 +333,7 @@ class EnvironmentDecryptCommandTest extends TestCase
             ->assertExitCode(0);
 
         $this->filesystem->shouldHaveReceived('put')
-            ->with(base_path('.env'), "APP_NAME=Laravel\nAPP_ENV=local\n");
+            ->with(ws_base_path('.env'), "APP_NAME=Laravel\nAPP_ENV=local\n");
     }
 
     public function testItStillDecryptsBlobFormat(): void
@@ -360,7 +360,7 @@ class EnvironmentDecryptCommandTest extends TestCase
             ->assertExitCode(0);
 
         $this->filesystem->shouldHaveReceived('put')
-            ->with(base_path('.env'), $originalContent);
+            ->with(ws_base_path('.env'), $originalContent);
     }
 
     public function testItDecryptsBlobFormatWithNewlineInContent(): void
@@ -391,7 +391,7 @@ class EnvironmentDecryptCommandTest extends TestCase
             ->assertExitCode(0);
 
         $this->filesystem->shouldHaveReceived('put')
-            ->with(base_path('.env'), $originalContent);
+            ->with(ws_base_path('.env'), $originalContent);
     }
 
     public function testItDecryptsReadableFormatWithBase64Values(): void
@@ -418,6 +418,6 @@ class EnvironmentDecryptCommandTest extends TestCase
             ->assertExitCode(0);
 
         $this->filesystem->shouldHaveReceived('put')
-            ->with(base_path('.env'), "APP_KEY=base64:Ge+W23u+VZI2tbrp5QCGWrsUuxgcD65i7jtTRR2ZqfY=\nAPP_ENV=local\n");
+            ->with(ws_base_path('.env'), "APP_KEY=base64:Ge+W23u+VZI2tbrp5QCGWrsUuxgcD65i7jtTRR2ZqfY=\nAPP_ENV=local\n");
     }
 }

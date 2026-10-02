@@ -528,7 +528,7 @@ class Builder implements BuilderContract
 
         $this->model->unguarded(function () use (&$values) {
             foreach ($values as $key => $rowValues) {
-                $values[$key] = tap(
+                $values[$key] = ws_tap(
                     $this->newModelInstance($rowValues),
                     fn ($model) => $model->setUniqueIds()
                 )->getAttributes();
@@ -722,7 +722,7 @@ class Builder implements BuilderContract
     public function createOrFirst(array $attributes = [], Closure|array $values = [])
     {
         try {
-            return $this->withSavepointIfNeeded(fn () => $this->create(array_merge($attributes, value($values))));
+            return $this->withSavepointIfNeeded(fn () => $this->create(array_merge($attributes, ws_value($values))));
         } catch (UniqueConstraintViolationException $e) {
             return $this->useWritePdo()->where($attributes)->first() ?? throw $e;
         }
@@ -737,7 +737,7 @@ class Builder implements BuilderContract
      */
     public function updateOrCreate(array $attributes, array $values = [])
     {
-        return tap($this->firstOrCreate($attributes, $values), function ($instance) use ($values) {
+        return ws_tap($this->firstOrCreate($attributes, $values), function ($instance) use ($values) {
             if (! $instance->wasRecentlyCreated) {
                 $instance->fill($values)->save();
             }
@@ -756,7 +756,7 @@ class Builder implements BuilderContract
      */
     public function incrementOrCreate(array $attributes, string $column = 'count', $default = 1, $step = 1, array $extra = [])
     {
-        return tap($this->firstOrCreate($attributes, [$column => $default]), function ($instance) use ($column, $step, $extra) {
+        return ws_tap($this->firstOrCreate($attributes, [$column => $default]), function ($instance) use ($column, $step, $extra) {
             if (! $instance->wasRecentlyCreated) {
                 $instance->increment($column, $step, $extra);
             }
@@ -1117,9 +1117,9 @@ class Builder implements BuilderContract
     {
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
 
-        $total = value($total) ?? $this->toBase()->getCountForPagination();
+        $total = ws_value($total) ?? $this->toBase()->getCountForPagination();
 
-        $perPage = value($perPage, $total) ?: $this->model->getPerPage();
+        $perPage = ws_value($perPage, $total) ?: $this->model->getPerPage();
 
         $results = $total
             ? $this->forPage($page, $perPage)->get($columns)
@@ -1215,7 +1215,7 @@ class Builder implements BuilderContract
      */
     public function create(array $attributes = [])
     {
-        return tap($this->newModelInstance($attributes), function ($instance) {
+        return ws_tap($this->newModelInstance($attributes), function ($instance) {
             $instance->save();
         });
     }

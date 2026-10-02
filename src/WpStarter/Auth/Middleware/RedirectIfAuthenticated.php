@@ -40,7 +40,7 @@ class RedirectIfAuthenticated
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
-                return redirect($this->redirectTo($request));
+                return ws_redirect($this->redirectTo($request));
             }
         }
 
@@ -64,7 +64,7 @@ class RedirectIfAuthenticated
     {
         foreach (['dashboard', 'home'] as $uri) {
             if (Route::has($uri)) {
-                return route($uri);
+                return ws_route($uri);
             }
         }
 

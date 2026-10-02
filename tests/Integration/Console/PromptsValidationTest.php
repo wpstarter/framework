@@ -77,7 +77,7 @@ class DummyPromptsWithLaravelRulesCommandWithInlineMessagesAndAttributesCommand 
 
     public function handle()
     {
-        text('What is your name?', validate: literal(
+        text('What is your name?', validate: ws_literal(
             rules: ['name' => 'required'],
             messages: ['name.required' => 'Your :attribute is mandatory.'],
             attributes: ['name' => 'full name'],

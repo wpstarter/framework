@@ -40,7 +40,7 @@ class ChannelMakeCommand extends GeneratorCommand
     {
         return str_replace(
             ['DummyUser', '{{ userModel }}'],
-            class_basename($this->userProviderModel()),
+            ws_class_basename($this->userProviderModel()),
             parent::buildClass($name)
         );
     }

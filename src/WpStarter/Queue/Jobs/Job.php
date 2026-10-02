@@ -194,7 +194,7 @@ abstract class Job
         // the proper value. Otherwise, the current transaction will never commit.
         if ($e instanceof TimeoutExceededException &&
             $commandName &&
-            in_array(Batchable::class, class_uses_recursive($commandName))) {
+            in_array(Batchable::class, ws_class_uses_recursive($commandName))) {
             $batchRepository = $this->resolve(BatchRepository::class);
 
             try {

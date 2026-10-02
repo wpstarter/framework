@@ -811,7 +811,7 @@ abstract class AbstractPaginator implements CanBeEscapedWhenCastToString, Htmlab
     public function __toString()
     {
         return $this->escapeWhenCastingToString
-            ? e((string) $this->render())
+            ? ws_e((string) $this->render())
             : (string) $this->render();
     }
 

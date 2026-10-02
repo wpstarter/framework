@@ -186,7 +186,7 @@ class ThrottlesExceptionsTest extends TestCase
             $this->assertTrue($job->released);
             $this->assertTrue($job->handled);
 
-            Carbon::setTestNow(now()->addSeconds(1));
+            Carbon::setTestNow(ws_now()->addSeconds(1));
         }
 
         $result = $middleware->handle($job = $jobFactory(), $next);
@@ -240,7 +240,7 @@ class ThrottlesExceptionsTest extends TestCase
             $this->assertTrue($job->released);
             $this->assertTrue($job->handled);
 
-            Carbon::setTestNow(now()->addMilliseconds(100));
+            Carbon::setTestNow(ws_now()->addMilliseconds(100));
         }
 
         $result = $middleware->handle($job = $jobFactory(), $next);
@@ -294,7 +294,7 @@ class ThrottlesExceptionsTest extends TestCase
             $this->assertTrue($job->released);
             $this->assertTrue($job->handled);
 
-            Carbon::setTestNow(now()->addSeconds(1));
+            Carbon::setTestNow(ws_now()->addSeconds(1));
         }
 
         $result = $middleware->handle($job = $jobFactory(), $next);

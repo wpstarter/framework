@@ -83,7 +83,7 @@ class ComposerScripts
             $eventName = "composer_package.{$name}:pre_uninstall";
 
             $laravel->make(ProcessDriver::class)->run(
-                static fn () => app()['events']->dispatch($eventName)
+                static fn () => ws_app()['events']->dispatch($eventName)
             );
         } catch (Throwable $e) {
             // Ignore any errors to allow the package removal to complete...

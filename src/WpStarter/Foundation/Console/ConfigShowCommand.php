@@ -32,7 +32,7 @@ class ConfigShowCommand extends Command
     {
         $config = $this->argument('config');
 
-        if (! config()->has($config)) {
+        if (! ws_config()->has($config)) {
             $this->fail("Configuration file or key <comment>{$config}</comment> does not exist.");
         }
 
@@ -51,7 +51,7 @@ class ConfigShowCommand extends Command
      */
     public function render($name)
     {
-        $data = config($name);
+        $data = ws_config($name);
 
         if (! is_array($data)) {
             $this->title($name, $this->formatValue($data));

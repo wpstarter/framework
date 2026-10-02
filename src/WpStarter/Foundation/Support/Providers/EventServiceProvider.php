@@ -202,7 +202,7 @@ class EventServiceProvider extends ServiceProvider
      */
     protected function eventDiscoveryBasePath()
     {
-        return base_path();
+        return ws_base_path();
     }
 
     /**

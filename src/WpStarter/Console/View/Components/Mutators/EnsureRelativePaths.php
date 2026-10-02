@@ -13,7 +13,7 @@ class EnsureRelativePaths
     public function __invoke($string)
     {
         if (function_exists('app') && app()->has('path.base')) {
-            $string = str_replace(base_path().'/', '', $string);
+            $string = str_replace(ws_base_path().'/', '', $string);
         }
 
         return $string;

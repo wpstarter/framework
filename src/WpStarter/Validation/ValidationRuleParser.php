@@ -239,7 +239,7 @@ class ValidationRuleParser
      */
     private function mergeRulesForAttributeInto(&$results, $attribute, $rules)
     {
-        $merge = head($this->explodeRules([$rules]));
+        $merge = ws_head($this->explodeRules([$rules]));
 
         $results[$attribute] = array_merge(
             isset($results[$attribute]) ? $this->explodeExplicitRule($results[$attribute], $attribute) : [], $merge

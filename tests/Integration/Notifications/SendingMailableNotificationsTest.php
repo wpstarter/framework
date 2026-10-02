@@ -49,7 +49,7 @@ class SendingMailableNotificationsTest extends TestCase
 
         $user->notify(new MarkdownNotification());
 
-        $message = app('mailer')->getSymfonyTransport()->messages()[0]->getOriginalMessage();
+        $message = ws_app('mailer')->getSymfonyTransport()->messages()[0]->getOriginalMessage();
         $email = $message->toString();
         $textBody = $message->getTextBody();
 
@@ -77,7 +77,7 @@ class SendingMailableNotificationsTest extends TestCase
         ]);
 
         $user->notify(new MarkdownNotification('color-test'));
-        $mailTransport = app('mailer')->getSymfonyTransport();
+        $mailTransport = ws_app('mailer')->getSymfonyTransport();
 
         $contents = $mailTransport->messages()[0]->getOriginalMessage()->toString();
         $this->assertStringContainsString('<body style=3D"color: test;">', $contents);

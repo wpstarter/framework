@@ -93,7 +93,7 @@ trait ManagesComponents
         );
 
         try {
-            $view = value($view, $data);
+            $view = ws_value($view, $data);
 
             if ($view instanceof View) {
                 return $view->with($data)->render();
@@ -144,7 +144,7 @@ trait ManagesComponents
         $currentComponent = count($this->componentStack);
 
         if ($currentComponent === 0) {
-            return value($default);
+            return ws_value($default);
         }
 
         for ($i = $currentComponent - 1; $i >= 0; $i--) {
@@ -155,7 +155,7 @@ trait ManagesComponents
             }
         }
 
-        return value($default);
+        return ws_value($default);
     }
 
     /**
@@ -184,7 +184,7 @@ trait ManagesComponents
      */
     public function endSlot()
     {
-        last($this->componentStack);
+        ws_last($this->componentStack);
 
         $currentSlot = array_pop(
             $this->slotStack[$this->currentComponent()]

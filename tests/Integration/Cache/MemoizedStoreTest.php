@@ -494,7 +494,7 @@ class MemoizedStoreTest extends TestCase
 
         $this->travel(11)->seconds();
         Cache::memo('no-lock')->flexible('key', [10, 20], 'value-2');
-        defer()->invoke();
+        ws_defer()->invoke();
         $value = Cache::get('key');
 
         $this->assertCount(1, $exceptions);
@@ -509,7 +509,7 @@ class MemoizedStoreTest extends TestCase
 
         $this->travel(11)->seconds();
         Cache::memo()->flexible('key', [10, 20], 'value-2');
-        defer()->invoke();
+        ws_defer()->invoke();
         $value = Cache::get('key');
 
         $this->assertSame('value-2', $value);

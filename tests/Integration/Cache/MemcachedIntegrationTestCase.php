@@ -15,8 +15,8 @@ abstract class MemcachedIntegrationTestCase extends TestCase
         $testConnection = new Memcached;
 
         $testConnection->addServer(
-            env('MEMCACHED_HOST', '127.0.0.1'),
-            env('MEMCACHED_PORT', 11211)
+            ws_env('MEMCACHED_HOST', '127.0.0.1'),
+            ws_env('MEMCACHED_PORT', 11211)
         );
 
         $testConnection->getVersion();

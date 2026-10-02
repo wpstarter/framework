@@ -182,19 +182,19 @@ class BroadcastingInstallCommand extends Command
         $filesystem = new Filesystem;
 
         if (
-            ! $filesystem->exists(app()->configPath('app.php')) ||
+            ! $filesystem->exists(ws_app()->configPath('app.php')) ||
             ! $filesystem->exists('app/Providers/BroadcastServiceProvider.php')
         ) {
             return;
         }
 
-        $config = $filesystem->get(app()->configPath('app.php'));
+        $config = $filesystem->get(ws_app()->configPath('app.php'));
 
         if (str_contains($config, '// App\Providers\BroadcastServiceProvider::class')) {
             $filesystem->replaceInFile(
                 '// App\Providers\BroadcastServiceProvider::class',
                 'App\Providers\BroadcastServiceProvider::class',
-                app()->configPath('app.php'),
+                ws_app()->configPath('app.php'),
             );
         }
     }
@@ -405,17 +405,17 @@ class BroadcastingInstallCommand extends Command
 
         $this->components->info('Installing and building Node dependencies.');
 
-        if (file_exists(base_path('pnpm-lock.yaml'))) {
+        if (file_exists(ws_base_path('pnpm-lock.yaml'))) {
             $commands = [
                 'pnpm add --save-dev laravel-echo pusher-js',
                 'pnpm run build',
             ];
-        } elseif (file_exists(base_path('yarn.lock'))) {
+        } elseif (file_exists(ws_base_path('yarn.lock'))) {
             $commands = [
                 'yarn add --dev laravel-echo pusher-js',
                 'yarn run build',
             ];
-        } elseif (file_exists(base_path('bun.lock')) || file_exists(base_path('bun.lockb'))) {
+        } elseif (file_exists(ws_base_path('bun.lock')) || file_exists(ws_base_path('bun.lockb'))) {
             $commands = [
                 'bun add --dev laravel-echo pusher-js',
                 'bun run build',
@@ -434,9 +434,9 @@ class BroadcastingInstallCommand extends Command
         }
 
         $command = Process::command(implode(' && ', $commands))
-            ->path(base_path());
+            ->path(ws_base_path());
 
-        if (! windows_os()) {
+        if (! ws_windows_os()) {
             $command->tty(true);
         }
 

@@ -116,7 +116,7 @@ trait CompilesEchos
 
             return $matches[1]
                 ? $matches[0]
-                : "<?php echo e({$this->wrapInEchoHandler($matches[2])}); ?>{$whitespace}";
+                : "<?php echo ws_e({$this->wrapInEchoHandler($matches[2])}); ?>{$whitespace}";
         };
 
         return preg_replace_callback($pattern, $callback, $value);
@@ -130,7 +130,7 @@ trait CompilesEchos
      */
     protected function addBladeCompilerVariable($result)
     {
-        return "<?php \$__bladeCompiler = app('blade.compiler'); ?>".$result;
+        return "<?php \$__bladeCompiler = ws_app('blade.compiler'); ?>" .$result;
     }
 
     /**

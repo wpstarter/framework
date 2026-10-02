@@ -42,6 +42,6 @@ class DatabaseMySqlSchemaBuilderTest extends MySqlTestCase
 
         $indexes = Schema::getIndexes('table');
 
-        $this->assertSame([], collect($indexes)->firstWhere('name', 'table_raw_index')['columns']);
+        $this->assertSame([], ws_collect($indexes)->firstWhere('name', 'table_raw_index')['columns']);
     }
 }

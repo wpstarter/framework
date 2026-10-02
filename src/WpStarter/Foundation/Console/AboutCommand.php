@@ -129,7 +129,7 @@ class AboutCommand extends Command
             $data->pipe(fn ($data) => $section !== 'Environment' ? $data->sort() : $data)->each(function ($detail) {
                 [$label, $value] = $detail;
 
-                $this->components->twoColumnDetail($label, value($value, false));
+                $this->components->twoColumnDetail($label, ws_value($value, false));
             });
         });
     }
@@ -145,7 +145,7 @@ class AboutCommand extends Command
         $output = $data->flatMap(function ($data, $section) {
             return [
                 (new Stringable($section))->snake()->value() => $data->mapWithKeys(fn ($item, $key) => [
-                    $this->toSearchKeyword($item[0]) => value($item[1], true),
+                    $this->toSearchKeyword($item[0]) => ws_value($item[1], true),
                 ]),
             ];
         });
@@ -167,34 +167,34 @@ class AboutCommand extends Command
         $formatStorageLinkedStatus = fn ($value) => $value ? '<fg=green;options=bold>LINKED</>' : '<fg=yellow;options=bold>NOT LINKED</>';
 
         static::addToSection('Environment', fn () => [
-            'Application Name' => config('app.name'),
+            'Application Name' => ws_config('app.name'),
             'Laravel Version' => $this->laravel->version(),
             'PHP Version' => phpversion(),
             'Composer Version' => $this->composer->getVersion() ?? '<fg=yellow;options=bold>-</>',
             'Environment' => $this->laravel->environment(),
-            'Debug Mode' => static::format(config('app.debug'), console: $formatEnabledStatus),
-            'URL' => Str::of(config('app.url'))->replace(['http://', 'https://'], ''),
+            'Debug Mode' => static::format(ws_config('app.debug'), console: $formatEnabledStatus),
+            'URL' => Str::of(ws_config('app.url'))->replace(['http://', 'https://'], ''),
             'Maintenance Mode' => static::format($this->laravel->isDownForMaintenance(), console: $formatEnabledStatus),
-            'Timezone' => config('app.timezone'),
-            'Locale' => config('app.locale'),
+            'Timezone' => ws_config('app.timezone'),
+            'Locale' => ws_config('app.locale'),
         ]);
 
         static::addToSection('Cache', fn () => [
             'Config' => static::format($this->laravel->configurationIsCached(), console: $formatCachedStatus),
             'Events' => static::format($this->laravel->eventsAreCached(), console: $formatCachedStatus),
             'Routes' => static::format($this->laravel->routesAreCached(), console: $formatCachedStatus),
-            'Views' => static::format($this->hasPhpFiles(config('view.compiled')), console: $formatCachedStatus),
+            'Views' => static::format($this->hasPhpFiles(ws_config('view.compiled')), console: $formatCachedStatus),
         ]);
 
         static::addToSection('Drivers', fn () => array_filter([
-            'Broadcasting' => config('broadcasting.default'),
+            'Broadcasting' => ws_config('broadcasting.default'),
             'Cache' => function ($json) {
-                $cacheStore = config('cache.default');
+                $cacheStore = ws_config('cache.default');
 
-                if (config('cache.stores.'.$cacheStore.'.driver') === 'failover') {
-                    $secondary = new Collection(config('cache.stores.'.$cacheStore.'.stores'));
+                if (ws_config('cache.stores.'.$cacheStore.'.driver') === 'failover') {
+                    $secondary = new Collection(ws_config('cache.stores.'.$cacheStore.'.stores'));
 
-                    return value(static::format(
+                    return ws_value(static::format(
                         value: $cacheStore,
                         console: fn ($value) => '<fg=yellow;options=bold>'.$value.'</> <fg=gray;options=bold>/</> '.$secondary->implode(', '),
                         json: fn () => $secondary->all(),
@@ -203,14 +203,14 @@ class AboutCommand extends Command
 
                 return $cacheStore;
             },
-            'Database' => config('database.default'),
+            'Database' => ws_config('database.default'),
             'Logs' => function ($json) {
-                $logChannel = config('logging.default');
+                $logChannel = ws_config('logging.default');
 
-                if (config('logging.channels.'.$logChannel.'.driver') === 'stack') {
-                    $secondary = new Collection(config('logging.channels.'.$logChannel.'.channels'));
+                if (ws_config('logging.channels.'.$logChannel.'.driver') === 'stack') {
+                    $secondary = new Collection(ws_config('logging.channels.'.$logChannel.'.channels'));
 
-                    return value(static::format(
+                    return ws_value(static::format(
                         value: $logChannel,
                         console: fn ($value) => '<fg=yellow;options=bold>'.$value.'</> <fg=gray;options=bold>/</> '.$secondary->implode(', '),
                         json: fn () => $secondary->all(),
@@ -222,12 +222,12 @@ class AboutCommand extends Command
                 return $logs;
             },
             'Mail' => function ($json) {
-                $mailMailer = config('mail.default');
+                $mailMailer = ws_config('mail.default');
 
-                if (in_array(config('mail.mailers.'.$mailMailer.'.transport'), ['failover', 'roundrobin'])) {
-                    $secondary = new Collection(config('mail.mailers.'.$mailMailer.'.mailers'));
+                if (in_array(ws_config('mail.mailers.'.$mailMailer.'.transport'), ['failover', 'roundrobin'])) {
+                    $secondary = new Collection(ws_config('mail.mailers.'.$mailMailer.'.mailers'));
 
-                    return value(static::format(
+                    return ws_value(static::format(
                         value: $mailMailer,
                         console: fn ($value) => '<fg=yellow;options=bold>'.$value.'</> <fg=gray;options=bold>/</> '.$secondary->implode(', '),
                         json: fn () => $secondary->all(),
@@ -236,14 +236,14 @@ class AboutCommand extends Command
 
                 return $mailMailer;
             },
-            'Octane' => config('octane.server'),
+            'Octane' => ws_config('octane.server'),
             'Queue' => function ($json) {
-                $queueConnection = config('queue.default');
+                $queueConnection = ws_config('queue.default');
 
-                if (config('queue.connections.'.$queueConnection.'.driver') === 'failover') {
-                    $secondary = new Collection(config('queue.connections.'.$queueConnection.'.connections'));
+                if (ws_config('queue.connections.'.$queueConnection.'.driver') === 'failover') {
+                    $secondary = new Collection(ws_config('queue.connections.'.$queueConnection.'.connections'));
 
-                    return value(static::format(
+                    return ws_value(static::format(
                         value: $queueConnection,
                         console: fn ($value) => '<fg=yellow;options=bold>'.$value.'</> <fg=gray;options=bold>/</> '.$secondary->implode(', '),
                         json: fn () => $secondary->all(),
@@ -252,8 +252,8 @@ class AboutCommand extends Command
 
                 return $queueConnection;
             },
-            'Scout' => config('scout.driver'),
-            'Session' => config('session.driver'),
+            'Scout' => ws_config('scout.driver'),
+            'Session' => ws_config('session.driver'),
         ]));
 
         static::addToSection('Storage', fn () => [
@@ -271,11 +271,11 @@ class AboutCommand extends Command
      */
     protected function determineStoragePathLinkStatus(callable $formatStorageLinkedStatus): array
     {
-        return (new Collection(config('filesystems.links', [])))
+        return (new Collection(ws_config('filesystems.links', [])))
             ->mapWithKeys(function ($target, $link) use ($formatStorageLinkedStatus) {
-                $path = Str::replace(public_path(), '', $link);
+                $path = Str::replace(ws_public_path(), '', $link);
 
-                return [public_path($path) => static::format(file_exists($link), console: $formatStorageLinkedStatus)];
+                return [ws_public_path($path) => static::format(file_exists($link), console: $formatStorageLinkedStatus)];
             })
             ->toArray();
     }
@@ -350,12 +350,12 @@ class AboutCommand extends Command
     {
         return function ($isJson) use ($value, $console, $json) {
             if ($isJson === true && $json instanceof Closure) {
-                return value($json, $value);
+                return ws_value($json, $value);
             } elseif ($isJson === false && $console instanceof Closure) {
-                return value($console, $value);
+                return ws_value($console, $value);
             }
 
-            return value($value);
+            return ws_value($value);
         };
     }
 

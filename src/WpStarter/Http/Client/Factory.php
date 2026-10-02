@@ -302,7 +302,7 @@ class Factory
      */
     public function fakeSequence($url = '*')
     {
-        return tap($this->sequence(), function ($sequence) use ($url) {
+        return ws_tap($this->sequence(), function ($sequence) use ($url) {
             $this->fake([$url => $sequence]);
         });
     }
@@ -522,7 +522,7 @@ class Factory
      */
     public function createPendingRequest()
     {
-        return tap($this->newPendingRequest(), function ($request) {
+        return ws_tap($this->newPendingRequest(), function ($request) {
             $request
                 ->stub($this->stubCallbacks)
                 ->preventStrayRequests($this->preventStrayRequests)
@@ -537,7 +537,7 @@ class Factory
      */
     protected function newPendingRequest()
     {
-        return (new PendingRequest($this, $this->globalMiddleware))->withOptions(value($this->globalOptions));
+        return (new PendingRequest($this, $this->globalMiddleware))->withOptions(ws_value($this->globalOptions));
     }
 
     /**

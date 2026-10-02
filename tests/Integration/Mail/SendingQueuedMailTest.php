@@ -33,7 +33,7 @@ class SendingQueuedMailTest extends TestCase
     {
         Queue::fake();
 
-        $delay = now()->addMinutes(10);
+        $delay = ws_now()->addMinutes(10);
 
         Mail::to('test@mail.com')->later($delay, new SendingQueuedMailTestMail);
 

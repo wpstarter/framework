@@ -113,7 +113,7 @@ class Response implements ArrayAccess, Stringable
             return $this->decoded;
         }
 
-        return data_get($this->decoded, $key, $default);
+        return ws_data_get($this->decoded, $key, $default);
     }
 
     /**
@@ -345,7 +345,7 @@ class Response implements ArrayAccess, Stringable
         $callback = func_get_args()[0] ?? null;
 
         if ($this->failed()) {
-            throw tap($this->toException(), function ($exception) use ($callback) {
+            throw ws_tap($this->toException(), function ($exception) use ($callback) {
                 if ($callback && is_callable($callback)) {
                     $callback($this, $exception);
                 }
@@ -365,7 +365,7 @@ class Response implements ArrayAccess, Stringable
      */
     public function throwIf($condition)
     {
-        return value($condition, $this) ? $this->throw(func_get_args()[1] ?? null) : $this;
+        return ws_value($condition, $this) ? $this->throw(func_get_args()[1] ?? null) : $this;
     }
 
     /**
@@ -485,7 +485,7 @@ class Response implements ArrayAccess, Stringable
             dump('"'.$request->getMethod().' '.$request->getUri().'" '.$this->status());
         }
 
-        dump(is_null($key) ? $content : data_get($content, $key));
+        dump(is_null($key) ? $content : ws_data_get($content, $key));
 
         return $this;
     }

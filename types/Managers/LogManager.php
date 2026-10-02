@@ -6,7 +6,7 @@ use WpStarter\Log\LogManager;
 
 use function PHPStan\Testing\assertType;
 
-$logManager = resolve(LogManager::class);
+$logManager = ws_resolve(LogManager::class);
 
 $logManager->extend('emergency', function (): void {
     assertType('WpStarter\Log\LogManager', $this);

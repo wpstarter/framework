@@ -21,7 +21,7 @@ if (! function_exists('WpStarter\Support\enum_value')) {
             $value instanceof \BackedEnum => $value->value,
             $value instanceof \UnitEnum => $value->name,
 
-            default => $value ?? value($default),
+            default => $value ?? ws_value($default),
         };
     }
 }

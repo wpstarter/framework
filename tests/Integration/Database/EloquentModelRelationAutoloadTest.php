@@ -170,30 +170,30 @@ class EloquentModelRelationAutoloadTest extends DatabaseTestCase
 
     public function testRelationAutoloadVariousNestedMorphRelations()
     {
-        tap(Post::create(), function ($post) {
+        ws_tap(Post::create(), function ($post) {
             $post->likes()->create();
             $post->comments()->create();
-            tap($post->comments()->create(), function ($comment) {
+            ws_tap($post->comments()->create(), function ($comment) {
                 $comment->likes()->create();
                 $comment->likes()->create();
             });
         });
 
-        tap(Post::create(), function ($post) {
+        ws_tap(Post::create(), function ($post) {
             $post->likes()->create();
-            tap($post->comments()->create(), function ($comment) {
+            ws_tap($post->comments()->create(), function ($comment) {
                 $comment->likes()->create();
             });
         });
 
-        tap(Video::create(), function ($video) {
-            tap($video->comments()->create(), function ($comment) {
+        ws_tap(Video::create(), function ($video) {
+            ws_tap($video->comments()->create(), function ($comment) {
                 $comment->likes()->create();
             });
         });
 
-        tap(Video::create(), function ($video) {
-            tap($video->comments()->create(), function ($comment) {
+        ws_tap(Video::create(), function ($video) {
+            ws_tap($video->comments()->create(), function ($comment) {
                 $comment->likes()->create();
             });
         });

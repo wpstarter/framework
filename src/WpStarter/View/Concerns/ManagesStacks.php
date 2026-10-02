@@ -58,7 +58,7 @@ trait ManagesStacks
             throw new InvalidArgumentException('Cannot end a push stack without first starting one.');
         }
 
-        return tap(array_pop($this->pushStack), function ($last) {
+        return ws_tap(array_pop($this->pushStack), function ($last) {
             $this->extendPush($last, ob_get_clean());
         });
     }
@@ -114,7 +114,7 @@ trait ManagesStacks
             throw new InvalidArgumentException('Cannot end a prepend operation without first starting one.');
         }
 
-        return tap(array_pop($this->pushStack), function ($last) {
+        return ws_tap(array_pop($this->pushStack), function ($last) {
             $this->extendPrepend($last, ob_get_clean());
         });
     }

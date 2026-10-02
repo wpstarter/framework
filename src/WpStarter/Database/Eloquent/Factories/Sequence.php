@@ -57,7 +57,7 @@ class Sequence implements Countable
      */
     public function __invoke($attributes = [], $parent = null)
     {
-        return tap(value($this->sequence[$this->index % $this->count], $this, $attributes, $parent), function () {
+        return ws_tap(ws_value($this->sequence[$this->index % $this->count], $this, $attributes, $parent), function () {
             $this->index = $this->index + 1;
         });
     }

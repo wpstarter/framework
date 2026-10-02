@@ -112,7 +112,7 @@ class BatchRepositoryFake implements BatchRepository
     public function markAsFinished(string $batchId)
     {
         if (isset($this->batches[$batchId])) {
-            $this->batches[$batchId]->finishedAt = now();
+            $this->batches[$batchId]->finishedAt = ws_now();
         }
     }
 

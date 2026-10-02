@@ -25,7 +25,7 @@ class ReceiveFile
      */
     public function __invoke(Request $request, string $path): Response
     {
-        abort_unless(
+        ws_abort_unless(
             $this->hasValidSignature($request),
             $this->isProduction ? 404 : 403
         );
@@ -33,9 +33,9 @@ class ReceiveFile
         try {
             Storage::disk($this->disk)->put($path, $request->getContent());
 
-            return response()->noContent();
+            return ws_response()->noContent();
         } catch (PathTraversalDetected $e) {
-            abort(404);
+            ws_abort(404);
         }
     }
 

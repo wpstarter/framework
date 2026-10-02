@@ -14,7 +14,7 @@ class ConnectorTest extends DatabaseTestCase
 
     protected function defineDatabaseMigrations()
     {
-        Schema::createDatabase($this->databasePath = database_path('secondary.sqlite'));
+        Schema::createDatabase($this->databasePath = ws_database_path('secondary.sqlite'));
     }
 
     protected function destroyDatabaseMigrations()

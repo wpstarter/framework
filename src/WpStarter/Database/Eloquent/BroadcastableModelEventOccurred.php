@@ -89,7 +89,7 @@ class BroadcastableModelEventOccurred implements ShouldBroadcast
      */
     public function broadcastAs()
     {
-        $default = class_basename($this->model).ucfirst($this->event);
+        $default = ws_class_basename($this->model).ucfirst($this->event);
 
         return method_exists($this->model, 'broadcastAs')
             ? ($this->model->broadcastAs($this->event) ?: $default)

@@ -242,9 +242,9 @@ class SqsQueue extends Queue implements QueueContract, ClearableQueue
         $messageGroupId = null;
 
         if ($isObject) {
-            $messageGroupId = transform($job->messageGroup ?? (method_exists($job, 'messageGroup') ? $job->messageGroup() : null), $transformToString);
+            $messageGroupId = ws_transform($job->messageGroup ?? (method_exists($job, 'messageGroup') ? $job->messageGroup() : null), $transformToString);
         } elseif ($isFifo) {
-            $messageGroupId = transform($queue, $transformToString);
+            $messageGroupId = ws_transform($queue, $transformToString);
         }
 
         $options['MessageGroupId'] = $messageGroupId;
@@ -256,8 +256,8 @@ class SqsQueue extends Queue implements QueueContract, ClearableQueue
 
         if ($isFifo) {
             $messageDeduplicationId = match (true) {
-                $isObject && isset($job->deduplicator) && is_callable($job->deduplicator) => transform(call_user_func($job->deduplicator, $payload, $queue), $transformToString),
-                $isObject && method_exists($job, 'deduplicationId') => transform($job->deduplicationId($payload, $queue), $transformToString),
+                $isObject && isset($job->deduplicator) && is_callable($job->deduplicator) => ws_transform(call_user_func($job->deduplicator, $payload, $queue), $transformToString),
+                $isObject && method_exists($job, 'deduplicationId') => ws_transform($job->deduplicationId($payload, $queue), $transformToString),
                 default => (string) Str::orderedUuid(),
             };
         }
@@ -315,7 +315,7 @@ class SqsQueue extends Queue implements QueueContract, ClearableQueue
      */
     public function clear($queue)
     {
-        return tap($this->size($queue), function () use ($queue) {
+        return ws_tap($this->size($queue), function () use ($queue) {
             $this->sqs->purgeQueue([
                 'QueueUrl' => $this->getQueue($queue),
             ]);

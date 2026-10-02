@@ -341,7 +341,7 @@ class Password implements DataAwareRule, ImplicitRule, IteratorAggregate, Rule, 
             return true;
         }
 
-        if (blank($value) && ! $this->required && $this->validator?->hasRule($attribute, ['Nullable'])) {
+        if (ws_blank($value) && ! $this->required && $this->validator?->hasRule($attribute, ['Nullable'])) {
             return true;
         }
 

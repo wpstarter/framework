@@ -316,7 +316,7 @@ class SQLiteGrammar extends Grammar
             ->reject(fn ($value, $key) => $this->isJsonSelector($key))
             ->merge($jsonGroups)
             ->map(function ($value, $key) use ($jsonGroups) {
-                $column = last(explode('.', $key));
+                $column = ws_last(explode('.', $key));
 
                 $value = isset($jsonGroups[$key]) ? $this->compileJsonPatch($column, $value) : $this->parameter($value);
 
@@ -393,7 +393,7 @@ class SQLiteGrammar extends Grammar
 
         $columns = $this->compileUpdateColumns($query, $values);
 
-        $alias = last(preg_split('/\s+as\s+/i', $query->from));
+        $alias = ws_last(preg_split('/\s+as\s+/i', $query->from));
 
         $selectSql = $this->compileSelect($query->select($alias.'.rowid'));
 
@@ -420,7 +420,7 @@ class SQLiteGrammar extends Grammar
 
         $cleanBindings = Arr::except($bindings, 'select');
 
-        $values = Arr::flatten(array_map(fn ($value) => value($value), $values));
+        $values = Arr::flatten(array_map(fn ($value) => ws_value($value), $values));
 
         return array_values(
             array_merge($values, Arr::flatten($cleanBindings))
@@ -452,7 +452,7 @@ class SQLiteGrammar extends Grammar
     {
         $table = $this->wrapTable($query->from);
 
-        $alias = last(preg_split('/\s+as\s+/i', $query->from));
+        $alias = ws_last(preg_split('/\s+as\s+/i', $query->from));
 
         $selectSql = $this->compileSelect($query->select($alias.'.rowid'));
 

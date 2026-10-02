@@ -47,44 +47,44 @@ class SupportHelpersTest extends TestCase
     public function testE()
     {
         $str = 'A \'quote\' is <b>bold</b>';
-        $this->assertSame('A &#039;quote&#039; is &lt;b&gt;bold&lt;/b&gt;', e($str));
+        $this->assertSame('A &#039;quote&#039; is &lt;b&gt;bold&lt;/b&gt;', ws_e($str));
 
         $html = m::mock(Htmlable::class);
         $html->shouldReceive('toHtml')->andReturn($str);
-        $this->assertEquals($str, e($html));
+        $this->assertEquals($str, ws_e($html));
     }
 
     public function testEWithInvalidCodePoints()
     {
         $str = mb_convert_encoding('føø bar', 'ISO-8859-1', 'UTF-8');
-        $this->assertEquals('f�� bar', e($str));
+        $this->assertEquals('f�� bar', ws_e($str));
     }
 
     public function testEWithEnums()
     {
         $enumValue = StringBackedEnum::ADMIN_LABEL;
-        $this->assertSame('I am &#039;admin&#039;', e($enumValue));
+        $this->assertSame('I am &#039;admin&#039;', ws_e($enumValue));
 
         $enumValue = IntBackedEnum::ROLE_ADMIN;
-        $this->assertSame('1', e($enumValue));
+        $this->assertSame('1', ws_e($enumValue));
     }
 
     public function testBlank()
     {
-        $this->assertTrue(blank(null));
-        $this->assertTrue(blank(''));
-        $this->assertTrue(blank('  '));
-        $this->assertTrue(blank(new Stringable('')));
-        $this->assertTrue(blank(new Stringable('  ')));
-        $this->assertFalse(blank(10));
-        $this->assertFalse(blank(true));
-        $this->assertFalse(blank(false));
-        $this->assertFalse(blank(0));
-        $this->assertFalse(blank(0.0));
-        $this->assertFalse(blank(new Stringable(' FooBar ')));
+        $this->assertTrue(ws_blank(null));
+        $this->assertTrue(ws_blank(''));
+        $this->assertTrue(ws_blank('  '));
+        $this->assertTrue(ws_blank(new Stringable('')));
+        $this->assertTrue(ws_blank(new Stringable('  ')));
+        $this->assertFalse(ws_blank(10));
+        $this->assertFalse(ws_blank(true));
+        $this->assertFalse(ws_blank(false));
+        $this->assertFalse(ws_blank(0));
+        $this->assertFalse(ws_blank(0.0));
+        $this->assertFalse(ws_blank(new Stringable(' FooBar ')));
 
         $object = new SupportTestCountable();
-        $this->assertTrue(blank($object));
+        $this->assertTrue(ws_blank($object));
     }
 
     public function testBlankDoesntJsonSerializeModels()
@@ -97,74 +97,74 @@ class SupportHelpersTest extends TestCase
             }
         };
 
-        $this->assertFalse(blank($model));
+        $this->assertFalse(ws_blank($model));
     }
 
     public function testClassBasename()
     {
-        $this->assertSame('Baz', class_basename('Foo\Bar\Baz'));
-        $this->assertSame('Baz', class_basename('Baz'));
+        $this->assertSame('Baz', ws_class_basename('Foo\Bar\Baz'));
+        $this->assertSame('Baz', ws_class_basename('Baz'));
         // back-slash
-        $this->assertSame('Baz', class_basename('\Baz'));
-        $this->assertSame('Baz', class_basename('\\\\Baz\\'));
-        $this->assertSame('Baz', class_basename('\Foo\Bar\Baz\\'));
-        $this->assertSame('Baz', class_basename('\Foo/Bar\Baz/'));
+        $this->assertSame('Baz', ws_class_basename('\Baz'));
+        $this->assertSame('Baz', ws_class_basename('\\\\Baz\\'));
+        $this->assertSame('Baz', ws_class_basename('\Foo\Bar\Baz\\'));
+        $this->assertSame('Baz', ws_class_basename('\Foo/Bar\Baz/'));
         // forward-slash
-        $this->assertSame('Baz', class_basename('/Foo/Bar/Baz/'));
-        $this->assertSame('Baz', class_basename('/Foo///Bar/Baz//'));
+        $this->assertSame('Baz', ws_class_basename('/Foo/Bar/Baz/'));
+        $this->assertSame('Baz', ws_class_basename('/Foo///Bar/Baz//'));
         // accepts objects
-        $this->assertSame('stdClass', class_basename(new stdClass()));
+        $this->assertSame('stdClass', ws_class_basename(new stdClass()));
         // edge-cases
-        $this->assertSame('1', class_basename(1));
-        $this->assertSame('1', class_basename('1'));
-        $this->assertSame('', class_basename(''));
-        $this->assertSame('', class_basename('\\'));
-        $this->assertSame('', class_basename('\\\\'));
-        $this->assertSame('', class_basename('/'));
-        $this->assertSame('', class_basename('///'));
-        $this->assertSame('..', class_basename('\Foo\Bar\Baz\\..\\'));
+        $this->assertSame('1', ws_class_basename(1));
+        $this->assertSame('1', ws_class_basename('1'));
+        $this->assertSame('', ws_class_basename(''));
+        $this->assertSame('', ws_class_basename('\\'));
+        $this->assertSame('', ws_class_basename('\\\\'));
+        $this->assertSame('', ws_class_basename('/'));
+        $this->assertSame('', ws_class_basename('///'));
+        $this->assertSame('..', ws_class_basename('\Foo\Bar\Baz\\..\\'));
     }
 
     public function testWhen()
     {
-        $this->assertEquals('Hello', when(true, 'Hello'));
-        $this->assertNull(when(false, 'Hello'));
-        $this->assertEquals('There', when(1 === 1, 'There')); // strict types
-        $this->assertEquals('There', when(1 == '1', 'There')); // loose types
-        $this->assertNull(when(1 == 2, 'There'));
-        $this->assertNull(when('1', fn () => null));
-        $this->assertNull(when(0, fn () => null));
-        $this->assertEquals('True', when([1, 2, 3, 4], 'True')); // Array
-        $this->assertNull(when([], 'True')); // Empty Array = Falsy
-        $this->assertEquals('True', when(new StdClass, fn () => 'True')); // Object
-        $this->assertEquals('World', when(false, 'Hello', 'World'));
-        $this->assertEquals('World', when(1 === 0, 'Hello', 'World')); // strict types
-        $this->assertEquals('World', when(1 == '0', 'Hello', 'World')); // loose types
-        $this->assertNull(when('', fn () => 'There', fn () => null));
-        $this->assertNull(when(0, fn () => 'There', fn () => null));
-        $this->assertEquals('False', when([], 'True', 'False'));  // Empty Array = Falsy
-        $this->assertTrue(when(true, fn ($value) => $value, fn ($value) => ! $value)); // lazy evaluation
-        $this->assertTrue(when(false, fn ($value) => $value, fn ($value) => ! $value)); // lazy evaluation
-        $this->assertEquals('Hello', when(fn () => true, 'Hello')); // lazy evaluation condition
-        $this->assertEquals('World', when(fn () => false, 'Hello', 'World')); // lazy evaluation condition
+        $this->assertEquals('Hello', ws_when(true, 'Hello'));
+        $this->assertNull(ws_when(false, 'Hello'));
+        $this->assertEquals('There', ws_when(1 === 1, 'There')); // strict types
+        $this->assertEquals('There', ws_when(1 == '1', 'There')); // loose types
+        $this->assertNull(ws_when(1 == 2, 'There'));
+        $this->assertNull(ws_when('1', fn () => null));
+        $this->assertNull(ws_when(0, fn () => null));
+        $this->assertEquals('True', ws_when([1, 2, 3, 4], 'True')); // Array
+        $this->assertNull(ws_when([], 'True')); // Empty Array = Falsy
+        $this->assertEquals('True', ws_when(new StdClass, fn () => 'True')); // Object
+        $this->assertEquals('World', ws_when(false, 'Hello', 'World'));
+        $this->assertEquals('World', ws_when(1 === 0, 'Hello', 'World')); // strict types
+        $this->assertEquals('World', ws_when(1 == '0', 'Hello', 'World')); // loose types
+        $this->assertNull(ws_when('', fn () => 'There', fn () => null));
+        $this->assertNull(ws_when(0, fn () => 'There', fn () => null));
+        $this->assertEquals('False', ws_when([], 'True', 'False'));  // Empty Array = Falsy
+        $this->assertTrue(ws_when(true, fn ($value) => $value, fn ($value) => ! $value)); // lazy evaluation
+        $this->assertTrue(ws_when(false, fn ($value) => $value, fn ($value) => ! $value)); // lazy evaluation
+        $this->assertEquals('Hello', ws_when(fn () => true, 'Hello')); // lazy evaluation condition
+        $this->assertEquals('World', ws_when(fn () => false, 'Hello', 'World')); // lazy evaluation condition
     }
 
     public function testFilled()
     {
-        $this->assertFalse(filled(null));
-        $this->assertFalse(filled(''));
-        $this->assertFalse(filled('  '));
-        $this->assertFalse(filled(new Stringable('')));
-        $this->assertFalse(filled(new Stringable('  ')));
-        $this->assertTrue(filled(10));
-        $this->assertTrue(filled(true));
-        $this->assertTrue(filled(false));
-        $this->assertTrue(filled(0));
-        $this->assertTrue(filled(0.0));
-        $this->assertTrue(filled(new Stringable(' FooBar ')));
+        $this->assertFalse(ws_filled(null));
+        $this->assertFalse(ws_filled(''));
+        $this->assertFalse(ws_filled('  '));
+        $this->assertFalse(ws_filled(new Stringable('')));
+        $this->assertFalse(ws_filled(new Stringable('  ')));
+        $this->assertTrue(ws_filled(10));
+        $this->assertTrue(ws_filled(true));
+        $this->assertTrue(ws_filled(false));
+        $this->assertTrue(ws_filled(0));
+        $this->assertTrue(ws_filled(0.0));
+        $this->assertTrue(ws_filled(new Stringable(' FooBar ')));
 
         $object = new SupportTestCountable();
-        $this->assertFalse(filled($object));
+        $this->assertFalse(ws_filled($object));
     }
 
     public function testValue()
@@ -177,12 +177,12 @@ class SupportHelpersTest extends TestCase
             }
         };
 
-        $this->assertSame($callable, value($callable, 'foo'));
-        $this->assertSame('foo', value('foo'));
-        $this->assertSame('foo', value(function () {
+        $this->assertSame($callable, ws_value($callable, 'foo'));
+        $this->assertSame('foo', ws_value('foo'));
+        $this->assertSame('foo', ws_value(function () {
             return 'foo';
         }));
-        $this->assertSame('foo', value(function ($arg) {
+        $this->assertSame('foo', ws_value(function ($arg) {
             return $arg;
         }, 'foo'));
     }
@@ -193,8 +193,8 @@ class SupportHelpersTest extends TestCase
         $class->name = new stdClass;
         $class->name->first = 'Taylor';
 
-        $this->assertSame('Taylor', object_get($class, 'name.first'));
-        $this->assertSame('Taylor', object_get($class, 'name.first', 'default'));
+        $this->assertSame('Taylor', ws_object_get($class, 'name.first'));
+        $this->assertSame('Taylor', ws_object_get($class, 'name.first', 'default'));
     }
 
     public function testObjectGetDefaultValue()
@@ -203,18 +203,18 @@ class SupportHelpersTest extends TestCase
         $class->name = new stdClass;
         $class->name->first = 'Taylor';
 
-        $this->assertSame('default', object_get($class, 'name.family', 'default'));
-        $this->assertNull(object_get($class, 'name.family'));
+        $this->assertSame('default', ws_object_get($class, 'name.family', 'default'));
+        $this->assertNull(ws_object_get($class, 'name.family'));
     }
 
     public function testObjectGetWhenKeyIsNullOrEmpty()
     {
         $object = new stdClass;
 
-        $this->assertEquals($object, object_get($object, null));
-        $this->assertEquals($object, object_get($object, false));
-        $this->assertEquals($object, object_get($object, ''));
-        $this->assertEquals($object, object_get($object, '  '));
+        $this->assertEquals($object, ws_object_get($object, null));
+        $this->assertEquals($object, ws_object_get($object, false));
+        $this->assertEquals($object, ws_object_get($object, ''));
+        $this->assertEquals($object, ws_object_get($object, '  '));
     }
 
     public function testDataHas()
@@ -226,31 +226,31 @@ class SupportHelpersTest extends TestCase
         $sameKeyMultiLevel = (object) ['name' => 'Taylor', 'company' => ['name' => 'Laravel']];
         $plainArray = [1, 2, 3];
 
-        $this->assertTrue(data_has($object, 'users.name.0'));
-        $this->assertTrue(data_has($array, '0.users.0.name'));
-        $this->assertFalse(data_has($array, '0.users.3'));
-        $this->assertFalse(data_has($array, '0.users.3'));
-        $this->assertFalse(data_has($array, '0.users.3'));
-        $this->assertTrue(data_has($dottedArray, ['users', 'first.name']));
-        $this->assertTrue(data_has($dottedArray, ['users', 'middle.name']));
-        $this->assertFalse(data_has($dottedArray, ['users', 'last.name']));
-        $this->assertTrue(data_has($arrayAccess, 'price'));
-        $this->assertTrue(data_has($arrayAccess, 'user.name'));
-        $this->assertFalse(data_has($arrayAccess, 'foo'));
-        $this->assertFalse(data_has($arrayAccess, 'user.foo'));
-        $this->assertFalse(data_has($arrayAccess, 'foo'));
-        $this->assertFalse(data_has($arrayAccess, 'user.foo'));
-        $this->assertTrue(data_has($arrayAccess, 'email'));
-        $this->assertTrue(data_has($sameKeyMultiLevel, 'name'));
-        $this->assertTrue(data_has($sameKeyMultiLevel, 'company.name'));
-        $this->assertFalse(data_has($sameKeyMultiLevel, 'foo.name'));
-        $this->assertTrue(data_has($plainArray, 0));
-        $this->assertTrue(data_has($plainArray, '0'));
-        $this->assertFalse(data_has($plainArray, 4));
-        $this->assertFalse(data_has($plainArray, '4'));
-        $this->assertFalse(data_has($plainArray, ''));
-        $this->assertFalse(data_has($plainArray, []));
-        $this->assertFalse(data_has($plainArray, null));
+        $this->assertTrue(ws_data_has($object, 'users.name.0'));
+        $this->assertTrue(ws_data_has($array, '0.users.0.name'));
+        $this->assertFalse(ws_data_has($array, '0.users.3'));
+        $this->assertFalse(ws_data_has($array, '0.users.3'));
+        $this->assertFalse(ws_data_has($array, '0.users.3'));
+        $this->assertTrue(ws_data_has($dottedArray, ['users', 'first.name']));
+        $this->assertTrue(ws_data_has($dottedArray, ['users', 'middle.name']));
+        $this->assertFalse(ws_data_has($dottedArray, ['users', 'last.name']));
+        $this->assertTrue(ws_data_has($arrayAccess, 'price'));
+        $this->assertTrue(ws_data_has($arrayAccess, 'user.name'));
+        $this->assertFalse(ws_data_has($arrayAccess, 'foo'));
+        $this->assertFalse(ws_data_has($arrayAccess, 'user.foo'));
+        $this->assertFalse(ws_data_has($arrayAccess, 'foo'));
+        $this->assertFalse(ws_data_has($arrayAccess, 'user.foo'));
+        $this->assertTrue(ws_data_has($arrayAccess, 'email'));
+        $this->assertTrue(ws_data_has($sameKeyMultiLevel, 'name'));
+        $this->assertTrue(ws_data_has($sameKeyMultiLevel, 'company.name'));
+        $this->assertFalse(ws_data_has($sameKeyMultiLevel, 'foo.name'));
+        $this->assertTrue(ws_data_has($plainArray, 0));
+        $this->assertTrue(ws_data_has($plainArray, '0'));
+        $this->assertFalse(ws_data_has($plainArray, 4));
+        $this->assertFalse(ws_data_has($plainArray, '4'));
+        $this->assertFalse(ws_data_has($plainArray, ''));
+        $this->assertFalse(ws_data_has($plainArray, []));
+        $this->assertFalse(ws_data_has($plainArray, null));
     }
 
     public function testDataGet()
@@ -260,23 +260,23 @@ class SupportHelpersTest extends TestCase
         $dottedArray = ['users' => ['first.name' => 'Taylor', 'middle.name' => null]];
         $arrayAccess = new SupportTestArrayAccess(['price' => 56, 'user' => new SupportTestArrayAccess(['name' => 'John']), 'email' => null]);
 
-        $this->assertSame('Taylor', data_get($object, 'users.name.0'));
-        $this->assertSame('Taylor', data_get($array, '0.users.0.name'));
-        $this->assertNull(data_get($array, '0.users.3'));
-        $this->assertSame('Not found', data_get($array, '0.users.3', 'Not found'));
-        $this->assertSame('Not found', data_get($array, '0.users.3', function () {
+        $this->assertSame('Taylor', ws_data_get($object, 'users.name.0'));
+        $this->assertSame('Taylor', ws_data_get($array, '0.users.0.name'));
+        $this->assertNull(ws_data_get($array, '0.users.3'));
+        $this->assertSame('Not found', ws_data_get($array, '0.users.3', 'Not found'));
+        $this->assertSame('Not found', ws_data_get($array, '0.users.3', function () {
             return 'Not found';
         }));
-        $this->assertSame('Taylor', data_get($dottedArray, ['users', 'first.name']));
-        $this->assertNull(data_get($dottedArray, ['users', 'middle.name']));
-        $this->assertSame('Not found', data_get($dottedArray, ['users', 'last.name'], 'Not found'));
-        $this->assertEquals(56, data_get($arrayAccess, 'price'));
-        $this->assertSame('John', data_get($arrayAccess, 'user.name'));
-        $this->assertSame('void', data_get($arrayAccess, 'foo', 'void'));
-        $this->assertSame('void', data_get($arrayAccess, 'user.foo', 'void'));
-        $this->assertNull(data_get($arrayAccess, 'foo'));
-        $this->assertNull(data_get($arrayAccess, 'user.foo'));
-        $this->assertNull(data_get($arrayAccess, 'email', 'Not found'));
+        $this->assertSame('Taylor', ws_data_get($dottedArray, ['users', 'first.name']));
+        $this->assertNull(ws_data_get($dottedArray, ['users', 'middle.name']));
+        $this->assertSame('Not found', ws_data_get($dottedArray, ['users', 'last.name'], 'Not found'));
+        $this->assertEquals(56, ws_data_get($arrayAccess, 'price'));
+        $this->assertSame('John', ws_data_get($arrayAccess, 'user.name'));
+        $this->assertSame('void', ws_data_get($arrayAccess, 'foo', 'void'));
+        $this->assertSame('void', ws_data_get($arrayAccess, 'user.foo', 'void'));
+        $this->assertNull(ws_data_get($arrayAccess, 'foo'));
+        $this->assertNull(ws_data_get($arrayAccess, 'user.foo'));
+        $this->assertNull(ws_data_get($arrayAccess, 'email', 'Not found'));
     }
 
     public function testDataGetWithNestedArrays()
@@ -292,11 +292,11 @@ class SupportHelpersTest extends TestCase
             ['name' => 'dayle'],
         ]);
 
-        $this->assertEquals(['taylor', 'abigail', 'dayle'], data_get($array, '*.name'));
-        $this->assertEquals(['taylorotwell@gmail.com', null, null], data_get($array, '*.email', 'irrelevant'));
+        $this->assertEquals(['taylor', 'abigail', 'dayle'], ws_data_get($array, '*.name'));
+        $this->assertEquals(['taylorotwell@gmail.com', null, null], ws_data_get($array, '*.email', 'irrelevant'));
 
-        $this->assertEquals(['taylor', 'abigail', 'dayle'], data_get($arrayIterable, '*.name'));
-        $this->assertEquals(['taylorotwell@gmail.com', null, null], data_get($arrayIterable, '*.email', 'irrelevant'));
+        $this->assertEquals(['taylor', 'abigail', 'dayle'], ws_data_get($arrayIterable, '*.name'));
+        $this->assertEquals(['taylorotwell@gmail.com', null, null], ws_data_get($arrayIterable, '*.email', 'irrelevant'));
 
         $array = [
             'users' => [
@@ -307,10 +307,10 @@ class SupportHelpersTest extends TestCase
             'posts' => null,
         ];
 
-        $this->assertEquals(['taylor', 'abigail', 'dayle'], data_get($array, 'users.*.first'));
-        $this->assertEquals(['taylorotwell@gmail.com', null, null], data_get($array, 'users.*.email', 'irrelevant'));
-        $this->assertSame('not found', data_get($array, 'posts.*.date', 'not found'));
-        $this->assertNull(data_get($array, 'posts.*.date'));
+        $this->assertEquals(['taylor', 'abigail', 'dayle'], ws_data_get($array, 'users.*.first'));
+        $this->assertEquals(['taylorotwell@gmail.com', null, null], ws_data_get($array, 'users.*.email', 'irrelevant'));
+        $this->assertSame('not found', ws_data_get($array, 'posts.*.date', 'not found'));
+        $this->assertNull(ws_data_get($array, 'posts.*.date'));
     }
 
     public function testDataGetWithDoubleNestedArraysCollapsesResult()
@@ -338,10 +338,10 @@ class SupportHelpersTest extends TestCase
             ],
         ];
 
-        $this->assertEquals(['taylor', 'abigail', 'abigail', 'dayle', 'dayle', 'taylor'], data_get($array, 'posts.*.comments.*.author'));
-        $this->assertEquals([4, 3, 2, null, null, 1], data_get($array, 'posts.*.comments.*.likes'));
-        $this->assertEquals([], data_get($array, 'posts.*.users.*.name', 'irrelevant'));
-        $this->assertEquals([], data_get($array, 'posts.*.users.*.name'));
+        $this->assertEquals(['taylor', 'abigail', 'abigail', 'dayle', 'dayle', 'taylor'], ws_data_get($array, 'posts.*.comments.*.author'));
+        $this->assertEquals([4, 3, 2, null, null, 1], ws_data_get($array, 'posts.*.comments.*.likes'));
+        $this->assertEquals([], ws_data_get($array, 'posts.*.users.*.name', 'irrelevant'));
+        $this->assertEquals([], ws_data_get($array, 'posts.*.users.*.name'));
     }
 
     public function testDataGetFirstLastDirectives()
@@ -364,22 +364,22 @@ class SupportHelpersTest extends TestCase
             'empty' => [],
         ];
 
-        $this->assertEquals('LHR', data_get($array, 'flights.0.segments.{first}.from'));
-        $this->assertEquals('PKX', data_get($array, 'flights.0.segments.{last}.to'));
+        $this->assertEquals('LHR', ws_data_get($array, 'flights.0.segments.{first}.from'));
+        $this->assertEquals('PKX', ws_data_get($array, 'flights.0.segments.{last}.to'));
 
-        $this->assertEquals('LHR', data_get($array, 'flights.{first}.segments.{first}.from'));
-        $this->assertEquals('PEK', data_get($array, 'flights.{last}.segments.{last}.to'));
-        $this->assertEquals('PKX', data_get($array, 'flights.{first}.segments.{last}.to'));
-        $this->assertEquals('LGW', data_get($array, 'flights.{last}.segments.{first}.from'));
+        $this->assertEquals('LHR', ws_data_get($array, 'flights.{first}.segments.{first}.from'));
+        $this->assertEquals('PEK', ws_data_get($array, 'flights.{last}.segments.{last}.to'));
+        $this->assertEquals('PKX', ws_data_get($array, 'flights.{first}.segments.{last}.to'));
+        $this->assertEquals('LGW', ws_data_get($array, 'flights.{last}.segments.{first}.from'));
 
-        $this->assertEquals(['LHR', 'IST'], data_get($array, 'flights.{first}.segments.*.from'));
-        $this->assertEquals(['SAW', 'PEK'], data_get($array, 'flights.{last}.segments.*.to'));
+        $this->assertEquals(['LHR', 'IST'], ws_data_get($array, 'flights.{first}.segments.*.from'));
+        $this->assertEquals(['SAW', 'PEK'], ws_data_get($array, 'flights.{last}.segments.*.to'));
 
-        $this->assertEquals(['LHR', 'LGW'], data_get($array, 'flights.*.segments.{first}.from'));
-        $this->assertEquals(['PKX', 'PEK'], data_get($array, 'flights.*.segments.{last}.to'));
+        $this->assertEquals(['LHR', 'LGW'], ws_data_get($array, 'flights.*.segments.{first}.from'));
+        $this->assertEquals(['PKX', 'PEK'], ws_data_get($array, 'flights.*.segments.{last}.to'));
 
-        $this->assertEquals('Not found', data_get($array, 'empty.{first}', 'Not found'));
-        $this->assertEquals('Not found', data_get($array, 'empty.{last}', 'Not found'));
+        $this->assertEquals('Not found', ws_data_get($array, 'empty.{first}', 'Not found'));
+        $this->assertEquals('Not found', ws_data_get($array, 'empty.{last}', 'Not found'));
     }
 
     public function testDataGetFirstLastDirectivesOnArrayAccessIterable()
@@ -402,22 +402,22 @@ class SupportHelpersTest extends TestCase
             'empty' => new SupportTestArrayAccessIterable([]),
         ];
 
-        $this->assertEquals('LHR', data_get($arrayAccessIterable, 'flights.0.segments.{first}.from'));
-        $this->assertEquals('PKX', data_get($arrayAccessIterable, 'flights.0.segments.{last}.to'));
+        $this->assertEquals('LHR', ws_data_get($arrayAccessIterable, 'flights.0.segments.{first}.from'));
+        $this->assertEquals('PKX', ws_data_get($arrayAccessIterable, 'flights.0.segments.{last}.to'));
 
-        $this->assertEquals('LHR', data_get($arrayAccessIterable, 'flights.{first}.segments.{first}.from'));
-        $this->assertEquals('PEK', data_get($arrayAccessIterable, 'flights.{last}.segments.{last}.to'));
-        $this->assertEquals('PKX', data_get($arrayAccessIterable, 'flights.{first}.segments.{last}.to'));
-        $this->assertEquals('LGW', data_get($arrayAccessIterable, 'flights.{last}.segments.{first}.from'));
+        $this->assertEquals('LHR', ws_data_get($arrayAccessIterable, 'flights.{first}.segments.{first}.from'));
+        $this->assertEquals('PEK', ws_data_get($arrayAccessIterable, 'flights.{last}.segments.{last}.to'));
+        $this->assertEquals('PKX', ws_data_get($arrayAccessIterable, 'flights.{first}.segments.{last}.to'));
+        $this->assertEquals('LGW', ws_data_get($arrayAccessIterable, 'flights.{last}.segments.{first}.from'));
 
-        $this->assertEquals(['LHR', 'IST'], data_get($arrayAccessIterable, 'flights.{first}.segments.*.from'));
-        $this->assertEquals(['SAW', 'PEK'], data_get($arrayAccessIterable, 'flights.{last}.segments.*.to'));
+        $this->assertEquals(['LHR', 'IST'], ws_data_get($arrayAccessIterable, 'flights.{first}.segments.*.from'));
+        $this->assertEquals(['SAW', 'PEK'], ws_data_get($arrayAccessIterable, 'flights.{last}.segments.*.to'));
 
-        $this->assertEquals(['LHR', 'LGW'], data_get($arrayAccessIterable, 'flights.*.segments.{first}.from'));
-        $this->assertEquals(['PKX', 'PEK'], data_get($arrayAccessIterable, 'flights.*.segments.{last}.to'));
+        $this->assertEquals(['LHR', 'LGW'], ws_data_get($arrayAccessIterable, 'flights.*.segments.{first}.from'));
+        $this->assertEquals(['PKX', 'PEK'], ws_data_get($arrayAccessIterable, 'flights.*.segments.{last}.to'));
 
-        $this->assertEquals('Not found', data_get($arrayAccessIterable, 'empty.{first}', 'Not found'));
-        $this->assertEquals('Not found', data_get($arrayAccessIterable, 'empty.{last}', 'Not found'));
+        $this->assertEquals('Not found', ws_data_get($arrayAccessIterable, 'empty.{first}', 'Not found'));
+        $this->assertEquals('Not found', ws_data_get($arrayAccessIterable, 'empty.{last}', 'Not found'));
     }
 
     public function testDataGetFirstLastDirectivesOnKeyedArrays()
@@ -435,11 +435,11 @@ class SupportHelpersTest extends TestCase
             ],
         ];
 
-        $this->assertEquals('second', data_get($array, 'numericKeys.0'));
-        $this->assertEquals('first', data_get($array, 'numericKeys.{first}'));
-        $this->assertEquals('last', data_get($array, 'numericKeys.{last}'));
-        $this->assertEquals('first', data_get($array, 'stringKeys.{first}'));
-        $this->assertEquals('last', data_get($array, 'stringKeys.{last}'));
+        $this->assertEquals('second', ws_data_get($array, 'numericKeys.0'));
+        $this->assertEquals('first', ws_data_get($array, 'numericKeys.{first}'));
+        $this->assertEquals('last', ws_data_get($array, 'numericKeys.{last}'));
+        $this->assertEquals('first', ws_data_get($array, 'stringKeys.{first}'));
+        $this->assertEquals('last', ws_data_get($array, 'stringKeys.{last}'));
     }
 
     public function testDataGetEscapedSegmentKeys()
@@ -452,45 +452,45 @@ class SupportHelpersTest extends TestCase
             ],
         ];
 
-        $this->assertEquals('caret', data_get($array, 'symbols.\{first}.description'));
-        $this->assertEquals('dollar', data_get($array, 'symbols.{first}.description'));
-        $this->assertEquals('asterisk', data_get($array, 'symbols.\*.description'));
-        $this->assertEquals(['dollar', 'asterisk', 'caret'], data_get($array, 'symbols.*.description'));
-        $this->assertEquals('dollar', data_get($array, 'symbols.\{last}.description'));
-        $this->assertEquals('caret', data_get($array, 'symbols.{last}.description'));
+        $this->assertEquals('caret', ws_data_get($array, 'symbols.\{first}.description'));
+        $this->assertEquals('dollar', ws_data_get($array, 'symbols.{first}.description'));
+        $this->assertEquals('asterisk', ws_data_get($array, 'symbols.\*.description'));
+        $this->assertEquals(['dollar', 'asterisk', 'caret'], ws_data_get($array, 'symbols.*.description'));
+        $this->assertEquals('dollar', ws_data_get($array, 'symbols.\{last}.description'));
+        $this->assertEquals('caret', ws_data_get($array, 'symbols.{last}.description'));
     }
 
     public function testDataGetStar()
     {
         $data = ['foo' => 'bar'];
-        $this->assertEquals(['bar'], data_get($data, '*'));
+        $this->assertEquals(['bar'], ws_data_get($data, '*'));
 
-        $data = collect(['foo' => 'bar']);
-        $this->assertEquals(['bar'], data_get($data, '*'));
+        $data = ws_collect(['foo' => 'bar']);
+        $this->assertEquals(['bar'], ws_data_get($data, '*'));
     }
 
     public function testDataGetNullKey()
     {
         $data = ['foo' => 'bar'];
 
-        $this->assertEquals(['foo' => 'bar'], data_get($data, null));
-        $this->assertEquals(['foo' => 'bar'], data_get($data, null, '42'));
-        $this->assertEquals(['foo' => 'bar'], data_get($data, [null]));
+        $this->assertEquals(['foo' => 'bar'], ws_data_get($data, null));
+        $this->assertEquals(['foo' => 'bar'], ws_data_get($data, null, '42'));
+        $this->assertEquals(['foo' => 'bar'], ws_data_get($data, [null]));
 
         $data = ['foo' => 'bar', 'baz' => 42];
-        $this->assertEquals(['foo' => 'bar', 'baz' => 42], data_get($data, [null, 'foo']));
+        $this->assertEquals(['foo' => 'bar', 'baz' => 42], ws_data_get($data, [null, 'foo']));
     }
 
     public function testDataFill()
     {
         $data = ['foo' => 'bar'];
 
-        $this->assertEquals(['foo' => 'bar', 'baz' => 'boom'], data_fill($data, 'baz', 'boom'));
-        $this->assertEquals(['foo' => 'bar', 'baz' => 'boom'], data_fill($data, 'baz', 'noop'));
-        $this->assertEquals(['foo' => [], 'baz' => 'boom'], data_fill($data, 'foo.*', 'noop'));
+        $this->assertEquals(['foo' => 'bar', 'baz' => 'boom'], ws_data_fill($data, 'baz', 'boom'));
+        $this->assertEquals(['foo' => 'bar', 'baz' => 'boom'], ws_data_fill($data, 'baz', 'noop'));
+        $this->assertEquals(['foo' => [], 'baz' => 'boom'], ws_data_fill($data, 'foo.*', 'noop'));
         $this->assertEquals(
             ['foo' => ['bar' => 'kaboom'], 'baz' => 'boom'],
-            data_fill($data, 'foo.bar', 'kaboom')
+            ws_data_fill($data, 'foo.bar', 'kaboom')
         );
     }
 
@@ -500,22 +500,22 @@ class SupportHelpersTest extends TestCase
 
         $this->assertEquals(
             ['foo' => []],
-            data_fill($data, 'foo.*.bar', 'noop')
+            ws_data_fill($data, 'foo.*.bar', 'noop')
         );
 
         $this->assertEquals(
             ['foo' => [], 'bar' => [['baz' => 'original'], []]],
-            data_fill($data, 'bar', [['baz' => 'original'], []])
+            ws_data_fill($data, 'bar', [['baz' => 'original'], []])
         );
 
         $this->assertEquals(
             ['foo' => [], 'bar' => [['baz' => 'original'], ['baz' => 'boom']]],
-            data_fill($data, 'bar.*.baz', 'boom')
+            ws_data_fill($data, 'bar.*.baz', 'boom')
         );
 
         $this->assertEquals(
             ['foo' => [], 'bar' => [['baz' => 'original'], ['baz' => 'boom']]],
-            data_fill($data, 'bar.*', 'noop')
+            ws_data_fill($data, 'bar.*', 'noop')
         );
     }
 
@@ -538,7 +538,7 @@ class SupportHelpersTest extends TestCase
             ],
         ];
 
-        data_fill($data, 'posts.*.comments.*.name', 'Filled');
+        ws_data_fill($data, 'posts.*.comments.*.name', 'Filled');
 
         $this->assertEquals([
             'posts' => [
@@ -564,32 +564,32 @@ class SupportHelpersTest extends TestCase
 
         $this->assertEquals(
             ['foo' => 'bar', 'baz' => 'boom'],
-            data_set($data, 'baz', 'boom')
+            ws_data_set($data, 'baz', 'boom')
         );
 
         $this->assertEquals(
             ['foo' => 'bar', 'baz' => 'kaboom'],
-            data_set($data, 'baz', 'kaboom')
+            ws_data_set($data, 'baz', 'kaboom')
         );
 
         $this->assertEquals(
             ['foo' => [], 'baz' => 'kaboom'],
-            data_set($data, 'foo.*', 'noop')
+            ws_data_set($data, 'foo.*', 'noop')
         );
 
         $this->assertEquals(
             ['foo' => ['bar' => 'boom'], 'baz' => 'kaboom'],
-            data_set($data, 'foo.bar', 'boom')
+            ws_data_set($data, 'foo.bar', 'boom')
         );
 
         $this->assertEquals(
             ['foo' => ['bar' => 'boom'], 'baz' => ['bar' => 'boom']],
-            data_set($data, 'baz.bar', 'boom')
+            ws_data_set($data, 'baz.bar', 'boom')
         );
 
         $this->assertEquals(
             ['foo' => ['bar' => 'boom'], 'baz' => ['bar' => ['boom' => ['kaboom' => 'boom']]]],
-            data_set($data, 'baz.bar.boom.kaboom', 'boom')
+            ws_data_set($data, 'baz.bar.boom.kaboom', 'boom')
         );
     }
 
@@ -599,22 +599,22 @@ class SupportHelpersTest extends TestCase
 
         $this->assertEquals(
             ['foo' => []],
-            data_set($data, 'foo.*.bar', 'noop')
+            ws_data_set($data, 'foo.*.bar', 'noop')
         );
 
         $this->assertEquals(
             ['foo' => [], 'bar' => [['baz' => 'original'], []]],
-            data_set($data, 'bar', [['baz' => 'original'], []])
+            ws_data_set($data, 'bar', [['baz' => 'original'], []])
         );
 
         $this->assertEquals(
             ['foo' => [], 'bar' => [['baz' => 'boom'], ['baz' => 'boom']]],
-            data_set($data, 'bar.*.baz', 'boom')
+            ws_data_set($data, 'bar.*.baz', 'boom')
         );
 
         $this->assertEquals(
             ['foo' => [], 'bar' => ['overwritten', 'overwritten']],
-            data_set($data, 'bar.*', 'overwritten')
+            ws_data_set($data, 'bar.*', 'overwritten')
         );
     }
 
@@ -637,7 +637,7 @@ class SupportHelpersTest extends TestCase
             ],
         ];
 
-        data_set($data, 'posts.*.comments.*.name', 'Filled');
+        ws_data_set($data, 'posts.*.comments.*.name', 'Filled');
 
         $this->assertEquals([
             'posts' => [
@@ -663,21 +663,21 @@ class SupportHelpersTest extends TestCase
 
         $this->assertEquals(
             ['hello' => 'world'],
-            data_forget($data, 'foo')
+            ws_data_forget($data, 'foo')
         );
 
         $data = ['foo' => 'bar', 'hello' => 'world'];
 
         $this->assertEquals(
             ['foo' => 'bar', 'hello' => 'world'],
-            data_forget($data, 'nothing')
+            ws_data_forget($data, 'nothing')
         );
 
         $data = ['one' => ['two' => ['three' => 'hello', 'four' => ['five']]]];
 
         $this->assertEquals(
             ['one' => ['two' => ['four' => ['five']]]],
-            data_forget($data, 'one.two.three')
+            ws_data_forget($data, 'one.two.three')
         );
     }
 
@@ -703,7 +703,7 @@ class SupportHelpersTest extends TestCase
                     ],
                 ],
             ],
-            data_forget($data, 'article.comments.*.name')
+            ws_data_forget($data, 'article.comments.*.name')
         );
     }
 
@@ -726,7 +726,7 @@ class SupportHelpersTest extends TestCase
             ],
         ];
 
-        data_forget($data, 'posts.*.comments.*.name');
+        ws_data_forget($data, 'posts.*.comments.*.name');
 
         $this->assertEquals([
             'posts' => [
@@ -749,13 +749,13 @@ class SupportHelpersTest extends TestCase
     public function testHead()
     {
         $array = ['a', 'b', 'c'];
-        $this->assertSame('a', head($array));
+        $this->assertSame('a', ws_head($array));
     }
 
     public function testLast()
     {
         $array = ['a', 'b', 'c'];
-        $this->assertSame('c', last($array));
+        $this->assertSame('c', ws_last($array));
     }
 
     public function testClassUsesRecursiveShouldReturnTraitsOnParentClasses()
@@ -765,7 +765,7 @@ class SupportHelpersTest extends TestCase
                 SupportTestTraitTwo::class => SupportTestTraitTwo::class,
                 SupportTestTraitOne::class => SupportTestTraitOne::class,
             ],
-            class_uses_recursive(SupportTestClassTwo::class)
+            ws_class_uses_recursive(SupportTestClassTwo::class)
         );
     }
 
@@ -776,7 +776,7 @@ class SupportHelpersTest extends TestCase
                 SupportTestTraitTwo::class => SupportTestTraitTwo::class,
                 SupportTestTraitOne::class => SupportTestTraitOne::class,
             ],
-            class_uses_recursive(new SupportTestClassTwo)
+            ws_class_uses_recursive(new SupportTestClassTwo)
         );
     }
 
@@ -788,7 +788,7 @@ class SupportHelpersTest extends TestCase
                 SupportTestTraitOne::class => SupportTestTraitOne::class,
                 SupportTestTraitThree::class => SupportTestTraitThree::class,
             ],
-            class_uses_recursive(SupportTestClassThree::class)
+            ws_class_uses_recursive(SupportTestClassThree::class)
         );
     }
 
@@ -799,28 +799,28 @@ class SupportHelpersTest extends TestCase
                 'WpStarter\Tests\Support\SupportTestTraitTwo' => 'WpStarter\Tests\Support\SupportTestTraitTwo',
                 'WpStarter\Tests\Support\SupportTestTraitOne' => 'WpStarter\Tests\Support\SupportTestTraitOne',
             ],
-            trait_uses_recursive(SupportTestClassOne::class)
+            ws_trait_uses_recursive(SupportTestClassOne::class)
         );
 
-        $this->assertSame([], trait_uses_recursive(SupportTestClassTwo::class));
+        $this->assertSame([], ws_trait_uses_recursive(SupportTestClassTwo::class));
     }
 
     public function testStr()
     {
-        $stringable = str('string-value');
+        $stringable = ws_str('string-value');
 
         $this->assertInstanceOf(Stringable::class, $stringable);
         $this->assertSame('string-value', (string) $stringable);
 
-        $stringable = str($name = null);
+        $stringable = ws_str($name = null);
         $this->assertInstanceOf(Stringable::class, $stringable);
         $this->assertTrue($stringable->isEmpty());
 
-        $strAccessor = str();
+        $strAccessor = ws_str();
         $this->assertTrue((new ReflectionClass($strAccessor))->isAnonymous());
         $this->assertSame($strAccessor->limit('string-value', 3), 'str...');
 
-        $strAccessor = str();
+        $strAccessor = ws_str();
         $this->assertTrue((new ReflectionClass($strAccessor))->isAnonymous());
         $this->assertSame((string) $strAccessor, '');
     }
@@ -828,27 +828,27 @@ class SupportHelpersTest extends TestCase
     public function testTap()
     {
         $object = (object) ['id' => 1];
-        $this->assertEquals(2, tap($object, function ($object) {
+        $this->assertEquals(2, ws_tap($object, function ($object) {
             $object->id = 2;
         })->id);
 
         $mock = m::mock();
         $mock->shouldReceive('foo')->once()->andReturn('bar');
-        $this->assertEquals($mock, tap($mock)->foo());
+        $this->assertEquals($mock, ws_tap($mock)->foo());
     }
 
     public function testThrow()
     {
         $this->expectException(LogicException::class);
 
-        throw_if(true, new LogicException);
+        ws_throw_if(true, new LogicException);
     }
 
     public function testThrowDefaultException()
     {
         $this->expectException(RuntimeException::class);
 
-        throw_if(true);
+        ws_throw_if(true);
     }
 
     public function testThrowExceptionWithMessage()
@@ -856,7 +856,7 @@ class SupportHelpersTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('test');
 
-        throw_if(true, 'test');
+        ws_throw_if(true, 'test');
     }
 
     public function testThrowExceptionAsStringWithMessage()
@@ -864,7 +864,7 @@ class SupportHelpersTest extends TestCase
         $this->expectException(LogicException::class);
         $this->expectExceptionMessage('test');
 
-        throw_if(true, LogicException::class, 'test');
+        ws_throw_if(true, LogicException::class, 'test');
     }
 
     public function testThrowClosureException()
@@ -872,7 +872,7 @@ class SupportHelpersTest extends TestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('test');
 
-        throw_if(true, fn () => new \Exception('test'));
+        ws_throw_if(true, fn () => new \Exception('test'));
     }
 
     public function testThrowClosureWithParamsException()
@@ -880,7 +880,7 @@ class SupportHelpersTest extends TestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('test');
 
-        throw_if(true, fn (string $message) => new \Exception($message), 'test');
+        ws_throw_if(true, fn (string $message) => new \Exception($message), 'test');
     }
 
     public function testThrowClosureStringWithParamsException()
@@ -888,21 +888,21 @@ class SupportHelpersTest extends TestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('test');
 
-        throw_if(true, fn () => \Exception::class, 'test');
+        ws_throw_if(true, fn () => \Exception::class, 'test');
     }
 
     public function testThrowUnless()
     {
         $this->expectException(LogicException::class);
 
-        throw_unless(false, new LogicException);
+        ws_throw_unless(false, new LogicException);
     }
 
     public function testThrowUnlessDefaultException()
     {
         $this->expectException(RuntimeException::class);
 
-        throw_unless(false);
+        ws_throw_unless(false);
     }
 
     public function testThrowUnlessExceptionWithMessage()
@@ -910,7 +910,7 @@ class SupportHelpersTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('test');
 
-        throw_unless(false, 'test');
+        ws_throw_unless(false, 'test');
     }
 
     public function testThrowUnlessExceptionAsStringWithMessage()
@@ -918,12 +918,12 @@ class SupportHelpersTest extends TestCase
         $this->expectException(LogicException::class);
         $this->expectExceptionMessage('test');
 
-        throw_unless(false, LogicException::class, 'test');
+        ws_throw_unless(false, LogicException::class, 'test');
     }
 
     public function testThrowReturnIfNotThrown()
     {
-        $this->assertSame('foo', throw_unless('foo', new RuntimeException));
+        $this->assertSame('foo', ws_throw_unless('foo', new RuntimeException));
     }
 
     public function testThrowWithString()
@@ -931,14 +931,14 @@ class SupportHelpersTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Test Message');
 
-        throw_if(true, RuntimeException::class, 'Test Message');
+        ws_throw_if(true, RuntimeException::class, 'Test Message');
     }
 
     public function testOptional()
     {
-        $this->assertNull(optional(null)->something());
+        $this->assertNull(ws_optional(null)->something());
 
-        $this->assertEquals(10, optional(new class
+        $this->assertEquals(10, ws_optional(new class
         {
             public function something()
             {
@@ -949,57 +949,57 @@ class SupportHelpersTest extends TestCase
 
     public function testOptionalWithCallback()
     {
-        $this->assertNull(optional(null, function () {
+        $this->assertNull(ws_optional(null, function () {
             throw new RuntimeException(
                 'The optional callback should not be called for null'
             );
         }));
 
-        $this->assertEquals(10, optional(5, function ($number) {
+        $this->assertEquals(10, ws_optional(5, function ($number) {
             return $number * 2;
         }));
     }
 
     public function testOptionalWithArray()
     {
-        $this->assertSame('here', optional(['present' => 'here'])['present']);
-        $this->assertNull(optional(null)['missing']);
-        $this->assertNull(optional(['present' => 'here'])->missing);
+        $this->assertSame('here', ws_optional(['present' => 'here'])['present']);
+        $this->assertNull(ws_optional(null)['missing']);
+        $this->assertNull(ws_optional(['present' => 'here'])->missing);
     }
 
     public function testOptionalReturnsObjectPropertyOrNull()
     {
-        $this->assertSame('bar', optional((object) ['foo' => 'bar'])->foo);
-        $this->assertNull(optional(['foo' => 'bar'])->foo);
-        $this->assertNull(optional((object) ['foo' => 'bar'])->bar);
+        $this->assertSame('bar', ws_optional((object) ['foo' => 'bar'])->foo);
+        $this->assertNull(ws_optional(['foo' => 'bar'])->foo);
+        $this->assertNull(ws_optional((object) ['foo' => 'bar'])->bar);
     }
 
     public function testOptionalDeterminesWhetherKeyIsSet()
     {
-        $this->assertTrue(isset(optional(['foo' => 'bar'])['foo']));
-        $this->assertFalse(isset(optional(['foo' => 'bar'])['bar']));
-        $this->assertFalse(isset(optional()['bar']));
+        $this->assertTrue(isset(ws_optional(['foo' => 'bar'])['foo']));
+        $this->assertFalse(isset(ws_optional(['foo' => 'bar'])['bar']));
+        $this->assertFalse(isset(ws_optional()['bar']));
     }
 
     public function testOptionalAllowsToSetKey()
     {
-        $optional = optional([]);
+        $optional = ws_optional([]);
         $optional['foo'] = 'bar';
         $this->assertSame('bar', $optional['foo']);
 
-        $optional = optional(null);
+        $optional = ws_optional(null);
         $optional['foo'] = 'bar';
         $this->assertFalse(isset($optional['foo']));
     }
 
     public function testOptionalAllowToUnsetKey()
     {
-        $optional = optional(['foo' => 'bar']);
+        $optional = ws_optional(['foo' => 'bar']);
         $this->assertTrue(isset($optional['foo']));
         unset($optional['foo']);
         $this->assertFalse(isset($optional['foo']));
 
-        $optional = optional((object) ['foo' => 'bar']);
+        $optional = ws_optional((object) ['foo' => 'bar']);
         $this->assertFalse(isset($optional['foo']));
         $optional['foo'] = 'bar';
         $this->assertFalse(isset($optional['foo']));
@@ -1015,9 +1015,9 @@ class SupportHelpersTest extends TestCase
             return new Optional(null);
         });
 
-        $this->assertNull(optional(null)->present()->something());
+        $this->assertNull(ws_optional(null)->present()->something());
 
-        $this->assertSame('$10.00', optional(new class
+        $this->assertSame('$10.00', ws_optional(new class
         {
             public function present()
             {
@@ -1036,7 +1036,7 @@ class SupportHelpersTest extends TestCase
     {
         Sleep::fake();
 
-        $attempts = retry(2, function ($attempts) {
+        $attempts = ws_retry(2, function ($attempts) {
             if ($attempts > 1) {
                 return $attempts;
             }
@@ -1059,7 +1059,7 @@ class SupportHelpersTest extends TestCase
     {
         Sleep::fake();
 
-        $attempts = retry(2, function ($attempts) {
+        $attempts = ws_retry(2, function ($attempts) {
             if ($attempts > 1) {
                 return $attempts;
             }
@@ -1082,7 +1082,7 @@ class SupportHelpersTest extends TestCase
     {
         Sleep::fake();
 
-        $attempts = retry(3, function ($attempts) {
+        $attempts = ws_retry(3, function ($attempts) {
             if ($attempts > 2) {
                 return $attempts;
             }
@@ -1110,7 +1110,7 @@ class SupportHelpersTest extends TestCase
     {
         Sleep::fake();
 
-        $attempts = retry(2, function ($attempts) {
+        $attempts = ws_retry(2, function ($attempts) {
             if ($attempts > 1) {
                 return $attempts;
             }
@@ -1135,7 +1135,7 @@ class SupportHelpersTest extends TestCase
     {
         $this->expectException(RuntimeException::class);
 
-        retry(2, function ($attempts) {
+        ws_retry(2, function ($attempts) {
             if ($attempts > 1) {
                 return $attempts;
             }
@@ -1150,7 +1150,7 @@ class SupportHelpersTest extends TestCase
     {
         Sleep::fake();
 
-        $attempts = retry([50, 100, 200], function ($attempts) {
+        $attempts = ws_retry([50, 100, 200], function ($attempts) {
             if ($attempts > 3) {
                 return $attempts;
             }
@@ -1174,7 +1174,7 @@ class SupportHelpersTest extends TestCase
     {
         Sleep::fake();
 
-        $attempts = retry(2, function ($attempts) {
+        $attempts = ws_retry(2, function ($attempts) {
             if ($attempts > 1) {
                 return $attempts;
             }
@@ -1195,22 +1195,22 @@ class SupportHelpersTest extends TestCase
 
     public function testTransform()
     {
-        $this->assertEquals(10, transform(5, function ($value) {
+        $this->assertEquals(10, ws_transform(5, function ($value) {
             return $value * 2;
         }));
 
-        $this->assertNull(transform(null, function () {
+        $this->assertNull(ws_transform(null, function () {
             return 10;
         }));
     }
 
     public function testTransformDefaultWhenBlank()
     {
-        $this->assertSame('baz', transform(null, function () {
+        $this->assertSame('baz', ws_transform(null, function () {
             return 'bar';
         }, 'baz'));
 
-        $this->assertSame('baz', transform('', function () {
+        $this->assertSame('baz', ws_transform('', function () {
             return 'bar';
         }, function () {
             return 'baz';
@@ -1219,93 +1219,93 @@ class SupportHelpersTest extends TestCase
 
     public function testWith()
     {
-        $this->assertEquals(10, with(10));
+        $this->assertEquals(10, ws_with(10));
 
-        $this->assertEquals(10, with(5, function ($five) {
+        $this->assertEquals(10, ws_with(5, function ($five) {
             return $five + 5;
         }));
     }
 
     public function testAppendConfig()
     {
-        $this->assertSame([10000 => 'name', 10001 => 'family'], append_config([1 => 'name', 2 => 'family']));
-        $this->assertSame([10000 => 'name', 10001 => 'family'], append_config(['name', 'family']));
+        $this->assertSame([10000 => 'name', 10001 => 'family'], ws_append_config([1 => 'name', 2 => 'family']));
+        $this->assertSame([10000 => 'name', 10001 => 'family'], ws_append_config(['name', 'family']));
 
         $array = ['name' => 'Taylor', 'family' => 'Otwell'];
-        $this->assertSame($array, append_config($array));
+        $this->assertSame($array, ws_append_config($array));
     }
 
     public function testEnv()
     {
         $_SERVER['foo'] = 'bar';
-        $this->assertSame('bar', env('foo'));
+        $this->assertSame('bar', ws_env('foo'));
         $this->assertSame('bar', Env::get('foo'));
     }
 
     public function testEnvTrue()
     {
         $_SERVER['foo'] = 'true';
-        $this->assertTrue(env('foo'));
+        $this->assertTrue(ws_env('foo'));
 
         $_SERVER['foo'] = '(true)';
-        $this->assertTrue(env('foo'));
+        $this->assertTrue(ws_env('foo'));
     }
 
     public function testEnvFalse()
     {
         $_SERVER['foo'] = 'false';
-        $this->assertFalse(env('foo'));
+        $this->assertFalse(ws_env('foo'));
 
         $_SERVER['foo'] = '(false)';
-        $this->assertFalse(env('foo'));
+        $this->assertFalse(ws_env('foo'));
     }
 
     public function testEnvEmpty()
     {
         $_SERVER['foo'] = '';
-        $this->assertSame('', env('foo'));
+        $this->assertSame('', ws_env('foo'));
 
         $_SERVER['foo'] = 'empty';
-        $this->assertSame('', env('foo'));
+        $this->assertSame('', ws_env('foo'));
 
         $_SERVER['foo'] = '(empty)';
-        $this->assertSame('', env('foo'));
+        $this->assertSame('', ws_env('foo'));
     }
 
     public function testEnvNull()
     {
         $_SERVER['foo'] = 'null';
-        $this->assertNull(env('foo'));
+        $this->assertNull(ws_env('foo'));
 
         $_SERVER['foo'] = '(null)';
-        $this->assertNull(env('foo'));
+        $this->assertNull(ws_env('foo'));
     }
 
     public function testEnvDefault()
     {
         $_SERVER['foo'] = 'bar';
-        $this->assertSame('bar', env('foo', 'default'));
+        $this->assertSame('bar', ws_env('foo', 'default'));
 
         $_SERVER['foo'] = '';
-        $this->assertSame('', env('foo', 'default'));
+        $this->assertSame('', ws_env('foo', 'default'));
 
         unset($_SERVER['foo']);
-        $this->assertSame('default', env('foo', 'default'));
+        $this->assertSame('default', ws_env('foo', 'default'));
 
         $_SERVER['foo'] = null;
-        $this->assertSame('default', env('foo', 'default'));
+        $this->assertSame('default', ws_env('foo', 'default'));
     }
 
     public function testEnvEscapedString()
     {
         $_SERVER['foo'] = '"null"';
-        $this->assertSame('null', env('foo'));
+        $this->assertSame('null', ws_env('foo'));
 
         $_SERVER['foo'] = "'null'";
-        $this->assertSame('null', env('foo'));
+        $this->assertSame('null', ws_env('foo'));
 
         $_SERVER['foo'] = 'x"null"x'; // this should not be unquoted
-        $this->assertSame('x"null"x', env('foo'));
+        $this->assertSame('x"null"x', ws_env('foo'));
     }
 
     public function testWriteArrayOfEnvVariablesToFile()
@@ -1555,7 +1555,7 @@ class SupportHelpersTest extends TestCase
     {
         $_ENV['foo'] = 'From $_ENV';
         $_SERVER['foo'] = 'From $_SERVER';
-        $this->assertSame('From $_SERVER', env('foo'));
+        $this->assertSame('From $_SERVER', ws_env('foo'));
     }
 
     public function testRequiredEnvVariableThrowsAnExceptionWhenNotFound(): void
@@ -1573,9 +1573,9 @@ class SupportHelpersTest extends TestCase
 
     public function testLiteral(): void
     {
-        $this->assertEquals(1, literal(1));
-        $this->assertEquals('taylor', literal('taylor'));
-        $this->assertEquals((object) ['name' => 'Taylor', 'role' => 'Developer'], literal(name: 'Taylor', role: 'Developer'));
+        $this->assertEquals(1, ws_literal(1));
+        $this->assertEquals('taylor', ws_literal('taylor'));
+        $this->assertEquals((object) ['name' => 'Taylor', 'role' => 'Developer'], ws_literal(name: 'Taylor', role: 'Developer'));
     }
 
     public static function providesPregReplaceArrayData()
@@ -1608,7 +1608,7 @@ class SupportHelpersTest extends TestCase
     {
         $this->assertSame(
             $expectedOutput,
-            preg_replace_array($pattern, $replacements, $subject)
+            ws_preg_replace_array($pattern, $replacements, $subject)
         );
     }
 
@@ -1620,7 +1620,7 @@ class SupportHelpersTest extends TestCase
 
         SupportLazyClass::$constructorCalled = false;
 
-        $instance = lazy(SupportLazyClass::class, function (SupportLazyClass $instance) {
+        $instance = ws_lazy(SupportLazyClass::class, function (SupportLazyClass $instance) {
             $instance->__construct('foo', 'bar');
         });
 
@@ -1640,7 +1640,7 @@ class SupportHelpersTest extends TestCase
 
         SupportLazyClass::$constructorCalled = false;
 
-        $instance = lazy(SupportLazyClass::class, fn (SupportLazyClass $instance) => $instance->__construct('foo', 'bar'));
+        $instance = ws_lazy(SupportLazyClass::class, fn (SupportLazyClass $instance) => $instance->__construct('foo', 'bar'));
 
         $this->assertFalse(SupportLazyClass::$constructorCalled);
         $this->assertSame('foo', $instance->first);
@@ -1656,7 +1656,7 @@ class SupportHelpersTest extends TestCase
             $this->markTestSkipped();
         }
 
-        $instance = lazy(SupportLazyClass::class, function (SupportLazyClass $instance) {
+        $instance = ws_lazy(SupportLazyClass::class, function (SupportLazyClass $instance) {
             //
         });
 
@@ -1676,7 +1676,7 @@ class SupportHelpersTest extends TestCase
 
         SupportLazyClass::$constructorCalled = false;
 
-        $instance = lazy(SupportLazyClass::class, fn (SupportLazyClass $instance) => [
+        $instance = ws_lazy(SupportLazyClass::class, fn (SupportLazyClass $instance) => [
             'second' => 'bar',
             'first' => 'foo',
         ]);
@@ -1697,7 +1697,7 @@ class SupportHelpersTest extends TestCase
 
         SupportLazyClass::$constructorCalled = false;
 
-        $instance = lazy(SupportLazyClass::class, fn (SupportLazyClass $instance) => ['foo', 'bar']);
+        $instance = ws_lazy(SupportLazyClass::class, fn (SupportLazyClass $instance) => ['foo', 'bar']);
 
         $this->assertFalse(SupportLazyClass::$constructorCalled);
         $this->assertSame('foo', $instance->first);
@@ -1715,7 +1715,7 @@ class SupportHelpersTest extends TestCase
 
         SupportLazyClassWithArrayParameter::$constructorCalled = false;
 
-        $instance = lazy(SupportLazyClassWithArrayParameter::class, fn (SupportLazyClassWithArrayParameter $instance) => [['foo']]);
+        $instance = ws_lazy(SupportLazyClassWithArrayParameter::class, fn (SupportLazyClassWithArrayParameter $instance) => [['foo']]);
 
         $this->assertFalse(SupportLazyClassWithArrayParameter::$constructorCalled);
         $this->assertSame(['foo'], $instance->first);
@@ -1732,7 +1732,7 @@ class SupportHelpersTest extends TestCase
 
         SupportLazyClass::$constructorCalled = false;
 
-        $instance = lazy(SupportLazyClass::class, fn (SupportLazyClass $instance) => ['foo', 'second' => 'bar']);
+        $instance = ws_lazy(SupportLazyClass::class, fn (SupportLazyClass $instance) => ['foo', 'second' => 'bar']);
 
         $this->assertFalse(SupportLazyClass::$constructorCalled);
         $this->assertSame('foo', $instance->first);
@@ -1750,7 +1750,7 @@ class SupportHelpersTest extends TestCase
 
         SupportLazyClass::$constructorCalled = false;
 
-        $instance = lazy(SupportLazyClass::class, fn (SupportLazyClass $instance) => ['second' => 'bar', 'foo']);
+        $instance = ws_lazy(SupportLazyClass::class, fn (SupportLazyClass $instance) => ['second' => 'bar', 'foo']);
 
         $this->assertFalse(SupportLazyClass::$constructorCalled);
         $this->expectException(Error::class);
@@ -1767,7 +1767,7 @@ class SupportHelpersTest extends TestCase
 
         SupportLazyClass::$constructorCalled = false;
 
-        $instance = lazy(SupportLazyClass::class, function (SupportLazyClass $instance) {
+        $instance = ws_lazy(SupportLazyClass::class, function (SupportLazyClass $instance) {
             $instance->__construct('foo');
 
             return $instance;
@@ -1789,7 +1789,7 @@ class SupportHelpersTest extends TestCase
 
         SupportLazyClass::$constructorCalled = false;
 
-        $instance = lazy(SupportLazyClass::class, function (SupportLazyClass $instance) {
+        $instance = ws_lazy(SupportLazyClass::class, function (SupportLazyClass $instance) {
             return new SupportLazyClass('foo');
         });
 
@@ -1808,7 +1808,7 @@ class SupportHelpersTest extends TestCase
 
         SupportLazyClass::$constructorCalled = false;
 
-        $instance = lazy(SupportLazyClass::class, fn () => ['foo', 'bar'], eager: ['eager' => 'baz']);
+        $instance = ws_lazy(SupportLazyClass::class, fn () => ['foo', 'bar'], eager: ['eager' => 'baz']);
 
         $this->assertFalse(SupportLazyClass::$constructorCalled);
         $this->assertSame('baz', $instance->eager);
@@ -1828,7 +1828,7 @@ class SupportHelpersTest extends TestCase
 
         SupportLazyClass::$constructorCalled = false;
 
-        $instance = lazy(function (SupportLazyClass $instance) {
+        $instance = ws_lazy(function (SupportLazyClass $instance) {
             $instance->__construct('foo', 'bar');
         });
 
@@ -1848,7 +1848,7 @@ class SupportHelpersTest extends TestCase
 
         SupportLazyClass::$constructorCalled = false;
 
-        $instance = lazy(fn (SupportLazyClass $instance) => $instance->__construct('foo', 'bar'));
+        $instance = ws_lazy(fn (SupportLazyClass $instance) => $instance->__construct('foo', 'bar'));
 
         $this->assertFalse(SupportLazyClass::$constructorCalled);
         $this->assertSame('foo', $instance->first);
@@ -1864,7 +1864,7 @@ class SupportHelpersTest extends TestCase
             $this->markTestSkipped();
         }
 
-        $instance = lazy(function (SupportLazyClass $instance) {
+        $instance = ws_lazy(function (SupportLazyClass $instance) {
             //
         });
 
@@ -1885,7 +1885,7 @@ class SupportHelpersTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('The first parameter of the given Closure is missing a type hint.');
 
-        lazy(function ($instance) {
+        ws_lazy(function ($instance) {
             //
         });
     }
@@ -1898,7 +1898,7 @@ class SupportHelpersTest extends TestCase
 
         SupportLazyClass::$constructorCalled = false;
 
-        $instance = lazy(fn (SupportLazyClass $instance) => [
+        $instance = ws_lazy(fn (SupportLazyClass $instance) => [
             'second' => 'bar',
             'first' => 'foo',
         ]);
@@ -1919,7 +1919,7 @@ class SupportHelpersTest extends TestCase
 
         SupportLazyClass::$constructorCalled = false;
 
-        $instance = lazy(fn (SupportLazyClass $instance) => ['foo', 'bar']);
+        $instance = ws_lazy(fn (SupportLazyClass $instance) => ['foo', 'bar']);
 
         $this->assertFalse(SupportLazyClass::$constructorCalled);
         $this->assertSame('foo', $instance->first);
@@ -1937,7 +1937,7 @@ class SupportHelpersTest extends TestCase
 
         SupportLazyClassWithArrayParameter::$constructorCalled = false;
 
-        $instance = lazy(fn (SupportLazyClassWithArrayParameter $instance) => [['foo']]);
+        $instance = ws_lazy(fn (SupportLazyClassWithArrayParameter $instance) => [['foo']]);
 
         $this->assertFalse(SupportLazyClassWithArrayParameter::$constructorCalled);
         $this->assertSame(['foo'], $instance->first);
@@ -1954,7 +1954,7 @@ class SupportHelpersTest extends TestCase
 
         SupportLazyClass::$constructorCalled = false;
 
-        $instance = lazy(fn (SupportLazyClass $instance) => ['foo', 'second' => 'bar']);
+        $instance = ws_lazy(fn (SupportLazyClass $instance) => ['foo', 'second' => 'bar']);
 
         $this->assertFalse(SupportLazyClass::$constructorCalled);
         $this->assertSame('foo', $instance->first);
@@ -1972,7 +1972,7 @@ class SupportHelpersTest extends TestCase
 
         SupportLazyClass::$constructorCalled = false;
 
-        $instance = lazy(fn (SupportLazyClass $instance) => ['second' => 'bar', 'foo']);
+        $instance = ws_lazy(fn (SupportLazyClass $instance) => ['second' => 'bar', 'foo']);
 
         $this->assertFalse(SupportLazyClass::$constructorCalled);
         $this->expectException(Error::class);
@@ -1989,7 +1989,7 @@ class SupportHelpersTest extends TestCase
 
         SupportLazyClass::$constructorCalled = false;
 
-        $instance = lazy(function (SupportLazyClass $instance) {
+        $instance = ws_lazy(function (SupportLazyClass $instance) {
             $instance->__construct('foo');
 
             return $instance;
@@ -2011,7 +2011,7 @@ class SupportHelpersTest extends TestCase
 
         SupportLazyClass::$constructorCalled = false;
 
-        $instance = lazy(function (SupportLazyClass $instance) {
+        $instance = ws_lazy(function (SupportLazyClass $instance) {
             return new SupportLazyClass('foo');
         });
 
@@ -2031,7 +2031,7 @@ class SupportHelpersTest extends TestCase
         SupportLazyClass::$constructorCalled = false;
         $factory = fn () => new SupportLazyClass('foo', 'bar');
 
-        $instance = proxy(SupportLazyClass::class, fn (SupportLazyClass $proxy) => $factory());
+        $instance = ws_proxy(SupportLazyClass::class, fn (SupportLazyClass $proxy) => $factory());
 
         $this->assertFalse(SupportLazyClass::$constructorCalled);
         $this->assertSame('foo', $instance->first);
@@ -2050,7 +2050,7 @@ class SupportHelpersTest extends TestCase
         SupportLazyClass::$constructorCalled = false;
         $factory = fn () => new SupportLazyClass('foo', 'bar');
 
-        $instance = proxy(SupportLazyClass::class, fn () => $factory(), eager: ['eager' => 'baz']);
+        $instance = ws_proxy(SupportLazyClass::class, fn () => $factory(), eager: ['eager' => 'baz']);
 
         $this->assertFalse(SupportLazyClass::$constructorCalled);
         $this->assertSame('baz', $instance->eager);
@@ -2071,7 +2071,7 @@ class SupportHelpersTest extends TestCase
         SupportLazyClass::$constructorCalled = false;
         $factory = fn () => new SupportLazyClass('foo', 'bar');
 
-        $instance = proxy(SupportLazyClass::class, function ($proxy, $eager) use ($factory) {
+        $instance = ws_proxy(SupportLazyClass::class, function ($proxy, $eager) use ($factory) {
             $instance = $factory();
 
             foreach ($eager as $prop => $value) {
@@ -2100,7 +2100,7 @@ class SupportHelpersTest extends TestCase
         SupportLazyClass::$constructorCalled = false;
         $factory = fn () => new SupportLazyClass('foo', 'bar');
 
-        $instance = proxy(SupportLazyClass::class, fn (SupportLazyClass $proxy) => $factory());
+        $instance = ws_proxy(SupportLazyClass::class, fn (SupportLazyClass $proxy) => $factory());
 
         $this->assertFalse(SupportLazyClass::$constructorCalled);
         $this->assertSame('foo', $instance->first);
@@ -2116,7 +2116,7 @@ class SupportHelpersTest extends TestCase
             $this->markTestSkipped();
         }
 
-        $instance = proxy(SupportLazyClass::class, function (SupportLazyClass $proxy) {
+        $instance = ws_proxy(SupportLazyClass::class, function (SupportLazyClass $proxy) {
             //
         });
 
@@ -2136,7 +2136,7 @@ class SupportHelpersTest extends TestCase
 
         SupportLazyClass::$constructorCalled = false;
 
-        $instance = proxy(SupportLazyClass::class, function (SupportLazyClass $proxy) {
+        $instance = ws_proxy(SupportLazyClass::class, function (SupportLazyClass $proxy) {
             $proxy->__construct('foo');
 
             return $proxy;
@@ -2158,7 +2158,7 @@ class SupportHelpersTest extends TestCase
         SupportLazyClass::$constructorCalled = false;
         $factory = fn () => new SupportLazyClass('foo', 'bar');
 
-        $instance = proxy(function (SupportLazyClass $proxy) use ($factory) {
+        $instance = ws_proxy(function (SupportLazyClass $proxy) use ($factory) {
             return $factory();
         });
 
@@ -2179,7 +2179,7 @@ class SupportHelpersTest extends TestCase
         SupportLazyClass::$constructorCalled = false;
         $factory = fn () => new SupportLazyClass('foo', 'bar');
 
-        $instance = proxy(fn (SupportLazyClass $proxy) => $factory());
+        $instance = ws_proxy(fn (SupportLazyClass $proxy) => $factory());
 
         $this->assertFalse(SupportLazyClass::$constructorCalled);
         $this->assertSame('foo', $instance->first);
@@ -2195,7 +2195,7 @@ class SupportHelpersTest extends TestCase
             $this->markTestSkipped();
         }
 
-        $instance = proxy(function (SupportLazyClass $proxy) {
+        $instance = ws_proxy(function (SupportLazyClass $proxy) {
             //
         });
 
@@ -2216,7 +2216,7 @@ class SupportHelpersTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('The first parameter of the given Closure is missing a type hint.');
 
-        proxy(function ($proxy) {
+        ws_proxy(function ($proxy) {
             //
         });
     }
@@ -2229,7 +2229,7 @@ class SupportHelpersTest extends TestCase
 
         SupportLazyClass::$constructorCalled = false;
 
-        $instance = proxy(function (SupportLazyClass $proxy) {
+        $instance = ws_proxy(function (SupportLazyClass $proxy) {
             $proxy->__construct('foo');
 
             return $proxy;
@@ -2251,7 +2251,7 @@ class SupportHelpersTest extends TestCase
         SupportLazyClass::$constructorCalled = false;
         $factory = fn () => new SupportLazyClass('foo', 'bar');
 
-        $instance = proxy(fn (): SupportLazyClass => $factory());
+        $instance = ws_proxy(fn (): SupportLazyClass => $factory());
 
         $this->assertFalse(SupportLazyClass::$constructorCalled);
         $this->assertSame('foo', $instance->first);

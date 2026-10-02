@@ -1052,8 +1052,8 @@ class RoutingUrlGeneratorTest extends TestCase
         $this->assertSame(
             'https://www.foo.com/bar/concreteTenant/concretePost',
             $url->route('bar', [
-                'tenant' => tap(new RoutableInterfaceStub, fn ($x) => $x->key = 'concreteTenant'),
-                'post' => tap(new RoutableInterfaceStub, fn ($x) => $x->key = 'concretePost'),
+                'tenant' => ws_tap(new RoutableInterfaceStub, fn ($x) => $x->key = 'concreteTenant'),
+                'post' => ws_tap(new RoutableInterfaceStub, fn ($x) => $x->key = 'concretePost'),
             ]),
         );
 
@@ -1061,8 +1061,8 @@ class RoutingUrlGeneratorTest extends TestCase
         $this->assertSame(
             'https://www.foo.com/bar/concreteTenant/concretePost',
             $url->route('bar', [
-                tap(new RoutableInterfaceStub, fn ($x) => $x->key = 'concreteTenant'),
-                tap(new RoutableInterfaceStub, fn ($x) => $x->key = 'concretePost'),
+                ws_tap(new RoutableInterfaceStub, fn ($x) => $x->key = 'concreteTenant'),
+                ws_tap(new RoutableInterfaceStub, fn ($x) => $x->key = 'concretePost'),
             ]),
         );
     }
@@ -1083,8 +1083,8 @@ class RoutingUrlGeneratorTest extends TestCase
             'user:slug' => 'defaultUserSlug',
         ]);
 
-        $keyParam = fn ($value) => tap(new RoutableInterfaceStub, fn ($routable) => $routable->key = $value);
-        $slugParam = fn ($value) => tap(new RoutableInterfaceStub, fn ($routable) => $routable->slug = $value);
+        $keyParam = fn ($value) => ws_tap(new RoutableInterfaceStub, fn ($routable) => $routable->key = $value);
+        $slugParam = fn ($value) => ws_tap(new RoutableInterfaceStub, fn ($routable) => $routable->slug = $value);
 
         /**
          * One parameter with a default value, one without a default value.
@@ -1824,7 +1824,7 @@ class RoutingUrlGeneratorTest extends TestCase
             'user' => 'defaultUser',
         ]);
 
-        $slugParam = fn ($value) => tap(new RoutableInterfaceStub, fn ($routable) => $routable->slug = $value);
+        $slugParam = fn ($value) => ws_tap(new RoutableInterfaceStub, fn ($routable) => $routable->slug = $value);
 
         /**
          * One parameter with a default value, one parameter without a default value.

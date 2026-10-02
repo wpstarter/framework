@@ -21,11 +21,11 @@ class FailoverStoreTest extends TestCase
 
     public function testFailoverCacheDispatchesEventOnlyOnce()
     {
-        config([
-            'cache.stores.failing_array' => array_merge(config('cache.stores.array'), ['serialize' => true]),
+        ws_config([
+            'cache.stores.failing_array' => array_merge(ws_config('cache.stores.array'), ['serialize' => true]),
         ]);
 
-        config([
+        ws_config([
             'cache.stores.failover.stores' => ['failing_array', 'array'],
         ]);
 

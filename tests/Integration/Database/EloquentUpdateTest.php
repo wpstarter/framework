@@ -122,7 +122,7 @@ class EloquentUpdateTest extends DatabaseTestCase
     public function testIncrementOrDecrementIgnoresGlobalScopes()
     {
         /** @var TestUpdateModel3 $deletedModel */
-        $deletedModel = tap(TestUpdateModel3::create([
+        $deletedModel = ws_tap(TestUpdateModel3::create([
             'counter' => 0,
         ]), fn ($model) => $model->delete());
 

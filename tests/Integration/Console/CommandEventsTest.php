@@ -36,7 +36,7 @@ class CommandEventsTest extends TestCase
     {
         $this->afterApplicationCreated(function () {
             $this->files = new Filesystem;
-            $this->logfile = storage_path(sprintf('logs/command_events_test_%s.log', (string) Str::random()));
+            $this->logfile = ws_storage_path(sprintf('logs/command_events_test_%s.log', (string) Str::random()));
         });
 
         $this->beforeApplicationDestroyed(function () {
@@ -71,7 +71,7 @@ class CommandEventsTest extends TestCase
             ]);
         });
 
-        value($callback, $this);
+        ws_value($callback, $this);
 
         $this->assertLogged(
             'CommandStarting', 'taylor', 'otwell', 'coding',
@@ -122,7 +122,7 @@ class CommandEventsTest extends TestCase
             },
         );
 
-        tap($laravel[ConsoleKernel::class], function ($kernel) {
+        ws_tap($laravel[ConsoleKernel::class], function ($kernel) {
             $kernel->rerouteSymfonyCommandEvents();
             $kernel->registerCommand(new CommandEventsTestCommand);
 

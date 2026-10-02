@@ -112,7 +112,7 @@ class Storage extends Facade
             self::buildDiskConfiguration($disk, $config, root: $root)
         ));
 
-        return tap($fake, function ($fake) {
+        return ws_tap($fake, function ($fake) {
             $fake->buildTemporaryUrlsUsing(function ($path, $expiration) {
                 return URL::to($path.'?expiration='.$expiration->getTimestamp());
             });
@@ -149,7 +149,7 @@ class Storage extends Facade
      */
     protected static function getRootPath(string $disk): string
     {
-        return storage_path('framework/testing/disks/'.$disk);
+        return ws_storage_path('framework/testing/disks/'.$disk);
     }
 
     /**

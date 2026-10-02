@@ -567,7 +567,7 @@ class FoundationViteTest extends TestCase
     public function testItThrowsWhenUnableToFindAssetManifestInBuildMode()
     {
         $this->expectException(ViteException::class);
-        $this->expectExceptionMessage('Vite manifest not found at: '.public_path('build/manifest.json'));
+        $this->expectExceptionMessage('Vite manifest not found at: '.ws_public_path('build/manifest.json'));
 
         ViteFacade::asset('resources/js/app.js');
     }
@@ -575,7 +575,7 @@ class FoundationViteTest extends TestCase
     public function testItThrowsDeprecatedExecptionWhenUnableToFindAssetManifestInBuildMode()
     {
         $this->expectException(ViteManifestNotFoundException::class);
-        $this->expectExceptionMessage('Vite manifest not found at: '.public_path('build/manifest.json'));
+        $this->expectExceptionMessage('Vite manifest not found at: '.ws_public_path('build/manifest.json'));
 
         ViteFacade::asset('resources/js/app.js');
     }
@@ -1163,8 +1163,8 @@ class FoundationViteTest extends TestCase
     {
         $buildDir = Str::random();
         app()->usePublicPath(__DIR__);
-        if (! file_exists(public_path($buildDir))) {
-            mkdir(public_path($buildDir));
+        if (! file_exists(ws_public_path($buildDir))) {
+            mkdir(ws_public_path($buildDir));
         }
         $contents = json_encode([
             'resources/js/app.js' => [
@@ -1172,7 +1172,7 @@ class FoundationViteTest extends TestCase
                 'file' => 'assets/app-from-custom-manifest.versioned.js',
             ],
         ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        file_put_contents(public_path("{$buildDir}/custom-manifest.json"), $contents);
+        file_put_contents(ws_public_path("{$buildDir}/custom-manifest.json"), $contents);
 
         ViteFacade::useManifestFilename('custom-manifest.json');
 
@@ -1183,8 +1183,8 @@ class FoundationViteTest extends TestCase
             .'<script type="module" src="https://example.com/'.$buildDir.'/assets/app-from-custom-manifest.versioned.js"></script>',
             $result->toHtml());
 
-        unlink(public_path("{$buildDir}/custom-manifest.json"));
-        rmdir(public_path($buildDir));
+        unlink(ws_public_path("{$buildDir}/custom-manifest.json"));
+        rmdir(ws_public_path($buildDir));
     }
 
     public function testItOnlyOutputsUniquePreloadTags()
@@ -1260,7 +1260,7 @@ class FoundationViteTest extends TestCase
         $this->makeViteManifest();
 
         $this->expectException(ViteException::class);
-        $this->expectExceptionMessage('Unable to locate file from Vite manifest: '.public_path('build/assets/app.versioned.js'));
+        $this->expectExceptionMessage('Unable to locate file from Vite manifest: '.ws_public_path('build/assets/app.versioned.js'));
 
         ViteFacade::content('resources/js/app.js');
     }
@@ -1269,8 +1269,8 @@ class FoundationViteTest extends TestCase
     {
         app()->usePublicPath(__DIR__);
 
-        if (! file_exists(public_path($path))) {
-            mkdir(public_path($path));
+        if (! file_exists(ws_public_path($path))) {
+            mkdir(ws_public_path($path));
         }
 
         $manifest = json_encode($contents ?? [
@@ -1312,7 +1312,7 @@ class FoundationViteTest extends TestCase
             ],
         ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
-        file_put_contents(public_path("{$path}/manifest.json"), $manifest);
+        file_put_contents(ws_public_path("{$path}/manifest.json"), $manifest);
     }
 
     public function testItCanPrefetchEntrypoint()
@@ -1518,7 +1518,7 @@ class FoundationViteTest extends TestCase
         $this->makeViteManifest($manifest, $buildDir);
         app()->usePublicPath(__DIR__);
 
-        $html = (string) tap(ViteFacade::withEntryPoints(['resources/js/app.js'])->useBuildDirectory($buildDir)->prefetch(concurrency: 3))->useCspNonce('abc123')->toHtml();
+        $html = (string) ws_tap(ViteFacade::withEntryPoints(['resources/js/app.js'])->useBuildDirectory($buildDir)->prefetch(concurrency: 3))->useCspNonce('abc123')->toHtml();
 
         $expectedAssets = Js::from([
             ['rel' => 'prefetch', 'as' => 'script', 'href' => "https://example.com/{$buildDir}/assets/ConfirmPassword-CDwcgU8E.js", 'nonce' => 'abc123', 'fetchpriority' => 'low'],
@@ -1554,7 +1554,7 @@ class FoundationViteTest extends TestCase
         $this->makeViteManifest($manifest, $buildDir);
         app()->usePublicPath(__DIR__);
 
-        $html = (string) tap(ViteFacade::withEntryPoints(['resources/js/app.js']))->useBuildDirectory($buildDir)->prefetch(concurrency: 3)->usePreloadTagAttributes([
+        $html = (string) ws_tap(ViteFacade::withEntryPoints(['resources/js/app.js']))->useBuildDirectory($buildDir)->prefetch(concurrency: 3)->usePreloadTagAttributes([
             'key' => 'value',
             'key-only',
             'true-value' => true,
@@ -1676,14 +1676,14 @@ class FoundationViteTest extends TestCase
         $this->makeViteManifest($manifest, $buildDir);
         app()->usePublicPath(__DIR__);
 
-        $html = (string) tap(ViteFacade::withEntryPoints(['resources/js/app.js']))
+        $html = (string) ws_tap(ViteFacade::withEntryPoints(['resources/js/app.js']))
             ->useCspNonce('abc123')
             ->useBuildDirectory($buildDir)
             ->prefetch()
             ->toHtml();
         $this->assertStringContainsString('<script nonce="abc123">', $html);
 
-        $html = (string) tap(ViteFacade::withEntryPoints(['resources/js/app.js']))
+        $html = (string) ws_tap(ViteFacade::withEntryPoints(['resources/js/app.js']))
             ->useCspNonce('abc123')
             ->useBuildDirectory($buildDir)
             ->prefetch(concurrency: 3)
@@ -1700,7 +1700,7 @@ class FoundationViteTest extends TestCase
         $this->makeViteManifest($manifest, $buildDir);
         app()->usePublicPath(__DIR__);
 
-        $html = (string) tap(ViteFacade::withEntryPoints(['resources/js/app.js']))
+        $html = (string) ws_tap(ViteFacade::withEntryPoints(['resources/js/app.js']))
             ->useBuildDirectory($buildDir)
             ->prefetch(event: 'vite:prefetch')
             ->toHtml();
@@ -1724,18 +1724,18 @@ class FoundationViteTest extends TestCase
 
     protected function cleanViteManifest($path = 'build')
     {
-        if (file_exists(public_path("{$path}/manifest.json"))) {
-            unlink(public_path("{$path}/manifest.json"));
+        if (file_exists(ws_public_path("{$path}/manifest.json"))) {
+            unlink(ws_public_path("{$path}/manifest.json"));
         }
 
-        if (file_exists(public_path($path))) {
-            rmdir(public_path($path));
+        if (file_exists(ws_public_path($path))) {
+            rmdir(ws_public_path($path));
         }
     }
 
     protected function makeAsset($asset, $content)
     {
-        $path = public_path('build/assets');
+        $path = ws_public_path('build/assets');
 
         if (! file_exists($path)) {
             mkdir($path, recursive: true);
@@ -1746,7 +1746,7 @@ class FoundationViteTest extends TestCase
 
     protected function cleanAsset($asset)
     {
-        $path = public_path('build/assets');
+        $path = ws_public_path('build/assets');
 
         unlink($path.$asset);
 
@@ -1757,14 +1757,14 @@ class FoundationViteTest extends TestCase
     {
         app()->usePublicPath(__DIR__);
 
-        $path ??= public_path('hot');
+        $path ??= ws_public_path('hot');
 
         file_put_contents($path, 'http://localhost:3000');
     }
 
     protected function cleanViteHotFile($path = null)
     {
-        $path ??= public_path('hot');
+        $path ??= ws_public_path('hot');
 
         if (file_exists($path)) {
             unlink($path);

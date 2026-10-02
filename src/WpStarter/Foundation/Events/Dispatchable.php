@@ -12,7 +12,7 @@ trait Dispatchable
      */
     public static function dispatch(...$arguments)
     {
-        return event(new static(...$arguments));
+        return ws_event(new static(...$arguments));
     }
 
     /**
@@ -25,7 +25,7 @@ trait Dispatchable
     public static function dispatchIf($boolean, ...$arguments)
     {
         if ($boolean) {
-            return event(new static(...$arguments));
+            return ws_event(new static(...$arguments));
         }
     }
 
@@ -39,7 +39,7 @@ trait Dispatchable
     public static function dispatchUnless($boolean, ...$arguments)
     {
         if (! $boolean) {
-            return event(new static(...$arguments));
+            return ws_event(new static(...$arguments));
         }
     }
 
@@ -51,6 +51,6 @@ trait Dispatchable
      */
     public static function broadcast(...$arguments)
     {
-        return broadcast(new static(...$arguments));
+        return ws_broadcast(new static(...$arguments));
     }
 }

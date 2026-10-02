@@ -89,7 +89,7 @@ class SortedMiddleware extends Collection
      */
     protected function middlewareNames($middleware)
     {
-        $stripped = head(explode(':', $middleware));
+        $stripped = ws_head(explode(':', $middleware));
 
         yield $stripped;
 

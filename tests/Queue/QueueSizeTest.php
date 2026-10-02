@@ -18,9 +18,9 @@ class QueueSizeTest extends TestCase
 
         $job = new TestJob1;
 
-        dispatch($job);
-        dispatch(new TestJob2);
-        dispatch($job)->onQueue('Q2');
+        ws_dispatch($job);
+        ws_dispatch(new TestJob2);
+        ws_dispatch($job)->onQueue('Q2');
 
         $this->assertEquals(2, Queue::size());
         $this->assertEquals(1, Queue::size('Q2'));

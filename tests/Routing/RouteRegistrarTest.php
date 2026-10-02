@@ -1548,7 +1548,7 @@ class RouteRegistrarTest extends TestCase
      */
     protected function getRoute()
     {
-        return last($this->router->getRoutes()->get());
+        return ws_last($this->router->getRoutes()->get());
     }
 
     /**

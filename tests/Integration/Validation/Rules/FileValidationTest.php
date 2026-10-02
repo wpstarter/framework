@@ -49,7 +49,7 @@ class FileValidationTest extends TestCase
         $this->assertFalse($validator->passes());
 
         $this->assertSame([
-            0 => __('validation.mimetypes', ['attribute' => sprintf('files.%s', str_replace('_', ' ', $attribute)), 'values' => implode(', ', $mimes)]),
+            0 => ws___('validation.mimetypes', ['attribute' => sprintf('files.%s', str_replace('_', ' ', $attribute)), 'values' => implode(', ', $mimes)]),
         ], $validator->messages()->all());
     }
 

@@ -42,8 +42,8 @@ class BatchableTransactionTest extends DatabaseTestCase
 
         try {
             remote('queue:work --stop-when-empty', [
-                'DB_CONNECTION' => config('database.default'),
-                'QUEUE_CONNECTION' => config('queue.default'),
+                'DB_CONNECTION' => ws_config('database.default'),
+                'QUEUE_CONNECTION' => ws_config('queue.default'),
             ])->run();
         } catch (Throwable $e) {
             $this->assertInstanceOf(ProcessSignaledException::class, $e);

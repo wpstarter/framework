@@ -65,7 +65,7 @@ class Fluent implements Arrayable, ArrayAccess, IteratorAggregate, Jsonable, Jso
      */
     public function get($key, $default = null)
     {
-        return data_get($this->attributes, $key, $default);
+        return ws_data_get($this->attributes, $key, $default);
     }
 
     /**
@@ -77,7 +77,7 @@ class Fluent implements Arrayable, ArrayAccess, IteratorAggregate, Jsonable, Jso
      */
     public function set($key, $value)
     {
-        data_set($this->attributes, $key, $value);
+        ws_data_set($this->attributes, $key, $value);
 
         return $this;
     }
@@ -110,7 +110,7 @@ class Fluent implements Arrayable, ArrayAccess, IteratorAggregate, Jsonable, Jso
             return $this->attributes[$key];
         }
 
-        return value($default);
+        return ws_value($default);
     }
 
     /**

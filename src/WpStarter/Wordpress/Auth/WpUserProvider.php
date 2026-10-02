@@ -153,4 +153,9 @@ class WpUserProvider implements UserProvider
         $user=wp_authenticate( $user->user_login, $password );
         return !is_wp_error($user);
     }
+
+    public function rehashPasswordIfRequired(Authenticatable $user, #[\SensitiveParameter] array $credentials, bool $force = false)
+    {
+        // TODO: Implement rehashPasswordIfRequired() method.
+    }
 }

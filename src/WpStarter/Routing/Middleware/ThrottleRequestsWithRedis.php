@@ -96,7 +96,7 @@ class ThrottleRequestsWithRedis extends ThrottleRequests
             $this->getRedisConnection(), $key, $maxAttempts, $decaySeconds
         );
 
-        return tap($limiter->tooManyAttempts(), function () use ($key, $limiter) {
+        return ws_tap($limiter->tooManyAttempts(), function () use ($key, $limiter) {
             [$this->decaysAt[$key], $this->remaining[$key]] = [
                 $limiter->decaysAt, $limiter->remaining,
             ];

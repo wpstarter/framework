@@ -422,7 +422,7 @@ class SupportCollectionTest extends TestCase
         $data = new Collection(['foo', 'bar', 'baz']);
 
         $this->assertEquals(new Collection([]), $data->shift(0));
-        $this->assertEquals(collect(['foo', 'bar', 'baz']), $data);
+        $this->assertEquals(ws_collect(['foo', 'bar', 'baz']), $data);
 
         $this->expectException('InvalidArgumentException');
         (new Collection(['foo', 'bar', 'baz']))->shift(-1);
@@ -438,7 +438,7 @@ class SupportCollectionTest extends TestCase
         $itemBar = new \stdClass();
         $itemBar->text = 'x';
 
-        $items = collect([$itemFoo, $itemBar]);
+        $items = ws_collect([$itemFoo, $itemBar]);
 
         $foo = $items->shift();
         $bar = $items->shift();
@@ -864,13 +864,13 @@ class SupportCollectionTest extends TestCase
     public function testForgetCollectionOfKeys()
     {
         $c = new Collection(['foo', 'bar', 'baz']);
-        $c = $c->forget(collect([0, 2]))->all();
+        $c = $c->forget(ws_collect([0, 2]))->all();
         $this->assertFalse(isset($c[0]));
         $this->assertFalse(isset($c[2]));
         $this->assertTrue(isset($c[1]));
 
         $c = new Collection(['name' => 'taylor', 'foo' => 'bar', 'baz' => 'qux']);
-        $c = $c->forget(collect(['foo', 'baz']))->all();
+        $c = $c->forget(ws_collect(['foo', 'baz']))->all();
         $this->assertFalse(isset($c['foo']));
         $this->assertFalse(isset($c['baz']));
         $this->assertTrue(isset($c['name']));
@@ -951,9 +951,9 @@ class SupportCollectionTest extends TestCase
         $this->assertTrue((new $collection([1]))->containsOneItem());
         $this->assertFalse((new $collection([1, 2]))->containsOneItem());
 
-        $this->assertFalse(collect([1, 2, 2])->containsOneItem(fn ($number) => $number === 2));
-        $this->assertTrue(collect(['ant', 'bear', 'cat'])->containsOneItem(fn ($word) => strlen($word) === 4));
-        $this->assertFalse(collect(['ant', 'bear', 'cat'])->containsOneItem(fn ($word) => strlen($word) > 4));
+        $this->assertFalse(ws_collect([1, 2, 2])->containsOneItem(fn ($number) => $number === 2));
+        $this->assertTrue(ws_collect(['ant', 'bear', 'cat'])->containsOneItem(fn ($word) => strlen($word) === 4));
+        $this->assertFalse(ws_collect(['ant', 'bear', 'cat'])->containsOneItem(fn ($word) => strlen($word) > 4));
     }
 
     #[DataProvider('collectionClassProvider')]
@@ -964,10 +964,10 @@ class SupportCollectionTest extends TestCase
         $this->assertTrue((new $collection([1, 2]))->containsManyItems());
         $this->assertTrue((new $collection([1, 2, 3]))->containsManyItems());
 
-        $this->assertTrue(collect([1, 2, 2])->containsManyItems(fn ($number) => $number === 2));
-        $this->assertFalse(collect(['ant', 'bear', 'cat'])->containsManyItems(fn ($word) => strlen($word) === 4));
-        $this->assertFalse(collect(['ant', 'bear', 'cat'])->containsManyItems(fn ($word) => strlen($word) > 4));
-        $this->assertTrue(collect(['ant', 'bear', 'cat'])->containsManyItems(fn ($word) => strlen($word) === 3));
+        $this->assertTrue(ws_collect([1, 2, 2])->containsManyItems(fn ($number) => $number === 2));
+        $this->assertFalse(ws_collect(['ant', 'bear', 'cat'])->containsManyItems(fn ($word) => strlen($word) === 4));
+        $this->assertFalse(ws_collect(['ant', 'bear', 'cat'])->containsManyItems(fn ($word) => strlen($word) > 4));
+        $this->assertTrue(ws_collect(['ant', 'bear', 'cat'])->containsManyItems(fn ($word) => strlen($word) === 3));
     }
 
     public function testIterable()
@@ -1313,17 +1313,17 @@ class SupportCollectionTest extends TestCase
     public function testValueWithObjects($collection)
     {
         $c = new $collection([
-            literal(id: 1),
-            literal(id: 2, balance: ''),
-            literal(id: 3, balance: 200),
+            ws_literal(id: 1),
+            ws_literal(id: 2, balance: ''),
+            ws_literal(id: 3, balance: 200),
         ]);
 
         $this->assertEquals('', $c->value('balance'));
 
         $c = new $collection([
-            literal(id: 1),
-            literal(id: 2, balance: literal(currency: 'USD', value: 0)),
-            literal(id: 3, balance: literal(currency: 'USD', value: 200)),
+            ws_literal(id: 1),
+            ws_literal(id: 2, balance: ws_literal(currency: 'USD', value: 0)),
+            ws_literal(id: 3, balance: ws_literal(currency: 'USD', value: 200)),
         ]);
 
         $this->assertEquals(0, $c->value('balance.value'));
@@ -2440,11 +2440,11 @@ class SupportCollectionTest extends TestCase
         $this->assertEquals($data->all(), $data->except(null)->all());
         $this->assertEquals(['first' => 'Taylor'], $data->except(['last', 'email', 'missing'])->all());
         $this->assertEquals(['first' => 'Taylor'], $data->except('last', 'email', 'missing')->all());
-        $this->assertEquals(['first' => 'Taylor'], $data->except(collect(['last', 'email', 'missing']))->all());
+        $this->assertEquals(['first' => 'Taylor'], $data->except(ws_collect(['last', 'email', 'missing']))->all());
 
         $this->assertEquals(['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'], $data->except(['last'])->all());
         $this->assertEquals(['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'], $data->except('last')->all());
-        $this->assertEquals(['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'], $data->except(collect(['last']))->all());
+        $this->assertEquals(['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'], $data->except(ws_collect(['last']))->all());
     }
 
     #[DataProvider('collectionClassProvider')]
@@ -4439,7 +4439,7 @@ class SupportCollectionTest extends TestCase
         $data = new Collection([4, 5, 6]);
         $data->push('Jonny', 'from', 'Laroe');
         $data->push(...[11 => 'Jonny', 12 => 'from', 13 => 'Laroe']);
-        $data->push(...collect(['a', 'b', 'c']));
+        $data->push(...ws_collect(['a', 'b', 'c']));
         $actual = $data->push(...[])->toArray();
 
         $this->assertSame($expected, $actual);
@@ -4484,7 +4484,7 @@ class SupportCollectionTest extends TestCase
         $data = new Collection([4, 5, 6]);
         $data->unshift('Jonny', 'from', 'Laroe');
         $data->unshift(...[11 => 'Jonny', 12 => 'from', 13 => 'Laroe']);
-        $data->unshift(...collect(['a', 'b', 'c']));
+        $data->unshift(...ws_collect(['a', 'b', 'c']));
         $actual = $data->unshift(...[])->toArray();
 
         $this->assertSame($expected, $actual);
@@ -4599,11 +4599,11 @@ class SupportCollectionTest extends TestCase
         $this->assertEquals($data->all(), $data->only(null)->all());
         $this->assertEquals(['first' => 'Taylor'], $data->only(['first', 'missing'])->all());
         $this->assertEquals(['first' => 'Taylor'], $data->only('first', 'missing')->all());
-        $this->assertEquals(['first' => 'Taylor'], $data->only(collect(['first', 'missing']))->all());
+        $this->assertEquals(['first' => 'Taylor'], $data->only(ws_collect(['first', 'missing']))->all());
 
         $this->assertEquals(['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'], $data->only(['first', 'email'])->all());
         $this->assertEquals(['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'], $data->only('first', 'email')->all());
-        $this->assertEquals(['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'], $data->only(collect(['first', 'email']))->all());
+        $this->assertEquals(['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'], $data->only(ws_collect(['first', 'email']))->all());
     }
 
     #[DataProvider('collectionClassProvider')]
@@ -4617,7 +4617,7 @@ class SupportCollectionTest extends TestCase
         $this->assertEquals($data->all(), $data->select(null)->all());
         $this->assertEquals([['first' => 'Taylor'], ['first' => 'Jess']], $data->select(['first', 'missing'])->all());
         $this->assertEquals([['first' => 'Taylor'], ['first' => 'Jess']], $data->select('first', 'missing')->all());
-        $this->assertEquals([['first' => 'Taylor'], ['first' => 'Jess']], $data->select(collect(['first', 'missing']))->all());
+        $this->assertEquals([['first' => 'Taylor'], ['first' => 'Jess']], $data->select(ws_collect(['first', 'missing']))->all());
 
         $this->assertEquals([
             ['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'],
@@ -4632,7 +4632,7 @@ class SupportCollectionTest extends TestCase
         $this->assertEquals([
             ['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'],
             ['first' => 'Jess', 'email' => 'jessarcher@gmail.com'],
-        ], $data->select(collect(['first', 'email']))->all());
+        ], $data->select(ws_collect(['first', 'email']))->all());
     }
 
     #[DataProvider('collectionClassProvider')]
@@ -4646,7 +4646,7 @@ class SupportCollectionTest extends TestCase
         $this->assertEquals($data->all(), $data->select(null)->all());
         $this->assertEquals([['first' => 'Taylor'], ['first' => 'Jess']], $data->select(['first', 'missing'])->all());
         $this->assertEquals([['first' => 'Taylor'], ['first' => 'Jess']], $data->select('first', 'missing')->all());
-        $this->assertEquals([['first' => 'Taylor'], ['first' => 'Jess']], $data->select(collect(['first', 'missing']))->all());
+        $this->assertEquals([['first' => 'Taylor'], ['first' => 'Jess']], $data->select(ws_collect(['first', 'missing']))->all());
 
         $this->assertEquals([
             ['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'],
@@ -4661,7 +4661,7 @@ class SupportCollectionTest extends TestCase
         $this->assertEquals([
             ['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'],
             ['first' => 'Jess', 'email' => 'jessarcher@gmail.com'],
-        ], $data->select(collect(['first', 'email']))->all());
+        ], $data->select(ws_collect(['first', 'email']))->all());
     }
 
     #[DataProvider('collectionClassProvider')]
@@ -4675,7 +4675,7 @@ class SupportCollectionTest extends TestCase
         $this->assertEquals($data->all(), $data->select(null)->all());
         $this->assertEquals([['first' => 'Taylor'], ['first' => 'Jess']], $data->select(['first', 'missing'])->all());
         $this->assertEquals([['first' => 'Taylor'], ['first' => 'Jess']], $data->select('first', 'missing')->all());
-        $this->assertEquals([['first' => 'Taylor'], ['first' => 'Jess']], $data->select(collect(['first', 'missing']))->all());
+        $this->assertEquals([['first' => 'Taylor'], ['first' => 'Jess']], $data->select(ws_collect(['first', 'missing']))->all());
 
         $this->assertEquals([
             ['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'],
@@ -4690,7 +4690,7 @@ class SupportCollectionTest extends TestCase
         $this->assertEquals([
             ['first' => 'Taylor', 'email' => 'taylorotwell@gmail.com'],
             ['first' => 'Jess', 'email' => 'jessarcher@gmail.com'],
-        ], $data->select(collect(['first', 'email']))->all());
+        ], $data->select(ws_collect(['first', 'email']))->all());
     }
 
     #[DataProvider('collectionClassProvider')]
@@ -5974,7 +5974,7 @@ class SupportCollectionTest extends TestCase
 
         $data = $collection::make([new stdClass, new stdClass, new stdClass, $collection]);
         $this->expectException(UnexpectedValueException::class);
-        $this->expectExceptionMessage(sprintf('Collection should only include [%s] items, but \'%s\' found at position %d.', class_basename(new stdClass()), gettype($collection), 3));
+        $this->expectExceptionMessage(sprintf('Collection should only include [%s] items, but \'%s\' found at position %d.', ws_class_basename(new stdClass()), gettype($collection), 3));
         $data->ensure(stdClass::class);
     }
 

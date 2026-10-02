@@ -52,7 +52,7 @@ class InvokeSerializedClosureCommand extends Command
                 })),
             ]));
         } catch (Throwable $e) {
-            report($e);
+            ws_report($e);
 
             $reflection = new ReflectionClass($e);
             $constructor = $reflection->getConstructor();

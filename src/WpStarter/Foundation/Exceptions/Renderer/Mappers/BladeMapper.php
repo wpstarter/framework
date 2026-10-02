@@ -97,7 +97,7 @@ class BladeMapper
                 return $frame;
             })->toArray();
 
-        return tap($exception, fn () => (fn () => $this->trace = $trace)->call($exception));
+        return ws_tap($exception, fn () => (fn () => $this->trace = $trace)->call($exception));
     }
 
     /**
@@ -108,7 +108,7 @@ class BladeMapper
      */
     protected function findCompiledView(string $compiledPath)
     {
-        return once(fn () => $this->getKnownPaths())[$compiledPath] ?? null;
+        return ws_once(fn () => $this->getKnownPaths())[$compiledPath] ?? null;
     }
 
     /**
@@ -190,7 +190,7 @@ class BladeMapper
 
             return $this->trimEmptyLines($value);
         } catch (Throwable $e) {
-            report($e);
+            ws_report($e);
 
             return $value;
         }

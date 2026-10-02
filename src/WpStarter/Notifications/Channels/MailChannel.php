@@ -176,7 +176,7 @@ class MailChannel
         $this->addressMessage($mailMessage, $notifiable, $notification, $message);
 
         $mailMessage->subject($message->subject ?: Str::title(
-            Str::snake(class_basename($notification), ' ')
+            Str::snake(ws_class_basename($notification), ' ')
         ));
 
         $this->addAttachments($mailMessage, $message);

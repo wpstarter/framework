@@ -52,7 +52,7 @@ class Pool
      */
     public function as(string $key)
     {
-        return tap($this->factory->newPendingProcess(), function ($pendingProcess) use ($key) {
+        return ws_tap($this->factory->newPendingProcess(), function ($pendingProcess) use ($key) {
             $this->pendingProcesses[$key] = $pendingProcess;
         });
     }
@@ -114,7 +114,7 @@ class Pool
      */
     public function __call($method, $parameters)
     {
-        return tap($this->factory->{$method}(...$parameters), function ($pendingProcess) {
+        return ws_tap($this->factory->{$method}(...$parameters), function ($pendingProcess) {
             $this->pendingProcesses[] = $pendingProcess;
         });
     }

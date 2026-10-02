@@ -113,7 +113,7 @@ class View implements ArrayAccess, Htmlable, Stringable, ViewContract
      */
     public function fragmentIf($boolean, $fragment)
     {
-        if (value($boolean)) {
+        if (ws_value($boolean)) {
             return $this->fragment($fragment);
         }
 
@@ -129,7 +129,7 @@ class View implements ArrayAccess, Htmlable, Stringable, ViewContract
      */
     public function fragmentsIf($boolean, ?array $fragments = null)
     {
-        if (value($boolean)) {
+        if (ws_value($boolean)) {
             return $this->fragments($fragments);
         }
 

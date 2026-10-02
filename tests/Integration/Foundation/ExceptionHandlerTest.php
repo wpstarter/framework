@@ -64,7 +64,7 @@ class ExceptionHandlerTest extends TestCase
         {
             public function toResponse($request)
             {
-                return response('shouldnt report', 500);
+                return ws_response('shouldnt report', 500);
             }
         };
 
@@ -288,8 +288,8 @@ EOF, __DIR__.'/../../../', ['APP_RUNNING_IN_CONSOLE' => true]);
 
     public function test_it_reports_request_exceptions()
     {
-        config(['logging.default' => 'test_log']);
-        config(['logging.channels.test_log' => [
+        ws_config(['logging.default' => 'test_log']);
+        ws_config(['logging.channels.test_log' => [
             'driver' => 'monolog',
             'handler' => TestHandler::class,
         ]]);
@@ -302,7 +302,7 @@ EOF, __DIR__.'/../../../', ['APP_RUNNING_IN_CONSOLE' => true]);
         try {
             Http::throw()->get('http://laravel.test');
         } catch (RequestException $requestException) {
-            report($requestException);
+            ws_report($requestException);
         }
 
         $recordedLogs = Log::getLogger()->getHandlers()[0]->getRecords();

@@ -126,7 +126,7 @@ trait InteractsWithContainer
     protected function withoutVite()
     {
         if ($this->originalVite == null) {
-            $this->originalVite = app(Vite::class);
+            $this->originalVite = ws_app(Vite::class);
         }
 
         ViteFacade::clearResolvedInstance();
@@ -229,7 +229,7 @@ trait InteractsWithContainer
     protected function withoutMix()
     {
         if ($this->originalMix == null) {
-            $this->originalMix = app(Mix::class);
+            $this->originalMix = ws_app(Mix::class);
         }
 
         $this->swap(Mix::class, function () {

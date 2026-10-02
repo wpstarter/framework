@@ -370,7 +370,7 @@ class Sleep
             $this->pending = 0;
         }
 
-        return tap($this->pending, function () {
+        return ws_tap($this->pending, function () {
             $this->pending = null;
         });
     }
@@ -512,7 +512,7 @@ class Sleep
      */
     public function when($condition)
     {
-        $this->shouldSleep = (bool) value($condition, $this);
+        $this->shouldSleep = (bool) ws_value($condition, $this);
 
         return $this;
     }
@@ -525,7 +525,7 @@ class Sleep
      */
     public function unless($condition)
     {
-        return $this->when(! value($condition, $this));
+        return $this->when(! ws_value($condition, $this));
     }
 
     /**

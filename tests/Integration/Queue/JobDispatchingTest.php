@@ -151,7 +151,7 @@ class JobDispatchingTest extends QueueTestCase
         });
 
         MyTestDispatchableJob::dispatch();
-        dispatch(function () {
+        ws_dispatch(function () {
             //
         });
 
@@ -174,7 +174,7 @@ class JobDispatchingTest extends QueueTestCase
             $events[] = $e;
         });
 
-        dispatch(function () {
+        ws_dispatch(function () {
             //
         })->name('custom name');
 

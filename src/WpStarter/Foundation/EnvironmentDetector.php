@@ -66,7 +66,7 @@ class EnvironmentDetector
             }
 
             if (str_starts_with($value, '--env=')) {
-                return head(array_slice(explode('=', $value), 1));
+                return ws_head(array_slice(explode('=', $value), 1));
             }
         }
     }

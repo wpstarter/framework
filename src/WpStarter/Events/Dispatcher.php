@@ -704,7 +704,7 @@ class Dispatcher implements DispatcherContract
      */
     protected function propagateListenerOptions($listener, $job)
     {
-        return tap($job, function ($job) use ($listener) {
+        return ws_tap($job, function ($job) use ($listener) {
             $data = array_values($job->data);
 
             if ($listener instanceof ShouldQueueAfterCommit) {

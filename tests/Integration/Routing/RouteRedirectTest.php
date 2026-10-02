@@ -54,11 +54,11 @@ class RouteRedirectTest extends TestCase
         Route::get('to', [ApiResourceTestController::class, 'index']);
 
         Route::get('from-301', function () {
-            return to_action([ApiResourceTestController::class, 'index'], [], 301);
+            return ws_to_action([ApiResourceTestController::class, 'index'], [], 301);
         });
 
         Route::get('from-302', function () {
-            return to_action([ApiResourceTestController::class, 'index']);
+            return ws_to_action([ApiResourceTestController::class, 'index']);
         });
 
         $this->get('from-301')
@@ -79,11 +79,11 @@ class RouteRedirectTest extends TestCase
         })->name('to');
 
         Route::get('from-301', function () {
-            return to_route('to', [], 301);
+            return ws_to_route('to', [], 301);
         });
 
         Route::get('from-302', function () {
-            return to_route('to');
+            return ws_to_route('to');
         });
 
         $this->get('from-301')

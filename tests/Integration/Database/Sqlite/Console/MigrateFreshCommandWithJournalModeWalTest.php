@@ -28,7 +28,7 @@ class MigrateFreshCommandWithJournalModeWalTest extends DatabaseTestCase
         );
 
         $this->beforeApplicationDestroyed(function () use ($files) {
-            $files->delete(database_path('database.sqlite'));
+            $files->delete(ws_database_path('database.sqlite'));
         });
 
         parent::setUp();

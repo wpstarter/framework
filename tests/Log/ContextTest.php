@@ -395,7 +395,7 @@ class ContextTest extends TestCase
 
     public function test_it_adds_context_to_logging()
     {
-        $path = storage_path('logs/laravel.log');
+        $path = ws_storage_path('logs/laravel.log');
         file_put_contents($path, '');
         Str::createUuidsUsingSequence(['expected-trace-id']);
 
@@ -408,7 +408,7 @@ class ContextTest extends TestCase
             'name' => 'Tim',
             'framework' => 'Laravel',
         ]);
-        $log = Str::after(file_get_contents(storage_path('logs/laravel.log')), '] ');
+        $log = Str::after(file_get_contents(ws_storage_path('logs/laravel.log')), '] ');
 
         $this->assertSame('testing.INFO: My name is Tim {"name":"Tim","framework":"Laravel"} {"trace_id":"expected-trace-id","foo.bar":123,"bar.baz":[456,789]}', trim($log));
 
@@ -418,7 +418,7 @@ class ContextTest extends TestCase
 
     public function test_it_doesnt_override_log_instance_context()
     {
-        $path = storage_path('logs/laravel.log');
+        $path = ws_storage_path('logs/laravel.log');
         file_put_contents($path, '');
         Str::createUuidsUsingSequence(['expected-trace-id']);
 
@@ -437,7 +437,7 @@ class ContextTest extends TestCase
 
     public function test_it_doesnt_allow_context_to_be_used_as_parameters()
     {
-        $path = storage_path('logs/laravel.log');
+        $path = ws_storage_path('logs/laravel.log');
         file_put_contents($path, '');
         Str::createUuidsUsingSequence(['expected-trace-id']);
 
@@ -454,7 +454,7 @@ class ContextTest extends TestCase
 
     public function test_does_not_add_hidden_context_to_logging()
     {
-        $path = storage_path('logs/laravel.log');
+        $path = ws_storage_path('logs/laravel.log');
         file_put_contents($path, '');
         Str::createUuidsUsingSequence(['expected-trace-id']);
 
@@ -515,7 +515,7 @@ class ContextTest extends TestCase
 
     public function test_it_adds_context_to_logged_exceptions()
     {
-        $path = storage_path('logs/laravel.log');
+        $path = ws_storage_path('logs/laravel.log');
         file_put_contents($path, '');
         Str::createUuidsUsingSequence(['expected-trace-id']);
 
@@ -585,7 +585,7 @@ class ContextTest extends TestCase
 
     public function test_uses_closure_for_context_processor()
     {
-        $path = storage_path('logs/laravel.log');
+        $path = ws_storage_path('logs/laravel.log');
         file_put_contents($path, '');
 
         $this->app->bind(
@@ -614,7 +614,7 @@ class ContextTest extends TestCase
 
     public function test_can_rebind_to_separate_class()
     {
-        $path = storage_path('logs/laravel.log');
+        $path = ws_storage_path('logs/laravel.log');
         file_put_contents($path, '');
 
         $this->app->bind(ContextLogProcessor::class, MyAddContextProcessor::class);

@@ -239,7 +239,7 @@ class BladeTest extends TestCase
         $this->artisan('view:cache');
 
         $compiledFiles = Finder::create()->in(Config::get('view.compiled'))->files();
-        $found = collect($compiledFiles)
+        $found = ws_collect($compiledFiles)
             ->contains(fn (SplFileInfo $file) => str_contains($file->getContents(), 'echo "<?php echo e($scriptMessage); ?>" > output.log'));
         $this->assertTrue($found);
     }
@@ -268,7 +268,7 @@ class BladeTest extends TestCase
         View::addNamespace('templates', join_paths(__DIR__, 'templates'));
         View::addNamespace('components', join_paths(__DIR__, 'templates', 'components'));
 
-        $compiler = Mockery::mock(app('blade.compiler'))->makePartial();
+        $compiler = Mockery::mock(ws_app('blade.compiler'))->makePartial();
         $compiler->shouldReceive('compile')->with(realpath(__DIR__.'/templates/components/panel.blade.php'))->once();
 
         $this->instance('blade.compiler', $compiler);

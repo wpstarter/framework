@@ -281,7 +281,7 @@ class Migrator
             return [];
         }
 
-        return tap($this->rollbackMigrations($migrations, $paths, $options), function () {
+        return ws_tap($this->rollbackMigrations($migrations, $paths, $options), function () {
             $this->output?->writeln('');
         });
     }
@@ -368,7 +368,7 @@ class Migrator
             return [];
         }
 
-        return tap($this->resetMigrations($migrations, Arr::wrap($paths), $pretend), function () {
+        return ws_tap($this->resetMigrations($migrations, Arr::wrap($paths), $pretend), function () {
             $this->output?->writeln('');
         });
     }

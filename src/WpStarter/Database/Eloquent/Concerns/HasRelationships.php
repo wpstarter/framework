@@ -930,7 +930,7 @@ trait HasRelationships
         $segments = [
             $instance
                 ? $instance->joiningTableSegment()
-                : Str::snake(class_basename($related)),
+                : Str::snake(ws_class_basename($related)),
             $this->joiningTableSegment(),
         ];
 
@@ -949,7 +949,7 @@ trait HasRelationships
      */
     public function joiningTableSegment()
     {
-        return Str::snake(class_basename($this));
+        return Str::snake(ws_class_basename($this));
     }
 
     /**
@@ -1032,7 +1032,7 @@ trait HasRelationships
      */
     protected function newRelatedInstance($class)
     {
-        return tap(new $class, function ($instance) {
+        return ws_tap(new $class, function ($instance) {
             if (! $instance->getConnectionName()) {
                 $instance->setConnection($this->connection);
             }

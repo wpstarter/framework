@@ -126,7 +126,7 @@ class CompilerEngine extends PhpEngine
      */
     protected function getMessage(Throwable $e)
     {
-        return $e->getMessage().' (View: '.realpath(last($this->lastCompiled)).')';
+        return $e->getMessage().' (View: '.realpath(ws_last($this->lastCompiled)).')';
     }
 
     /**

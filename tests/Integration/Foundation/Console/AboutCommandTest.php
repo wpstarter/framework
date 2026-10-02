@@ -14,7 +14,7 @@ class AboutCommandTest extends TestCase
     {
         $process = remote('about --json', ['APP_ENV' => 'local'])->mustRun();
 
-        tap(json_decode($process->getOutput(), true), function ($output) {
+        ws_tap(json_decode($process->getOutput(), true), function ($output) {
             Assert::assertArraySubset([
                 'application_name' => 'Laravel',
                 'php_version' => PHP_VERSION,
@@ -47,7 +47,7 @@ class AboutCommandTest extends TestCase
     {
         $process = remote('about --json', ['APP_ENV' => 'local'])->mustRun();
 
-        tap(json_decode($process->getOutput(), true), static function (array $output) {
+        ws_tap(json_decode($process->getOutput(), true), static function (array $output) {
             Assert::assertArraySubset([
                 'views' => true,
             ], $output['cache']);

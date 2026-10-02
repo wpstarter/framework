@@ -12,7 +12,7 @@ class DatabaseEloquentLocalScopesTest extends TestCase
     {
         parent::setUp();
 
-        tap(new DB)->addConnection([
+        ws_tap(new DB)->addConnection([
             'driver' => 'sqlite',
             'database' => ':memory:',
         ])->bootEloquent();

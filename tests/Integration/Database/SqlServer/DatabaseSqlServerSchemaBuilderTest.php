@@ -33,15 +33,15 @@ class DatabaseSqlServerSchemaBuilderTest extends SqlServerTestCase
 
         $this->assertGreaterThanOrEqual(2, count($rows));
         $this->assertTrue(
-            collect($rows)->contains('name', 'migrations'),
+            ws_collect($rows)->contains('name', 'migrations'),
             'Failed asserting that table "migrations" was returned.'
         );
         $this->assertTrue(
-            collect($rows)->contains('name', 'users'),
+            ws_collect($rows)->contains('name', 'users'),
             'Failed asserting that table "users" was returned.'
         );
         $this->assertFalse(
-            collect($rows)->contains('name', 'users_view'),
+            ws_collect($rows)->contains('name', 'users_view'),
             'Failed asserting that view "users_view" was not returned.'
         );
     }
@@ -86,7 +86,7 @@ class DatabaseSqlServerSchemaBuilderTest extends SqlServerTestCase
         });
 
         $indexes = Schema::getIndexes('table');
-        $indexNames = collect($indexes)->pluck('name');
+        $indexNames = ws_collect($indexes)->pluck('name');
 
         $this->assertContains('table_title_unique', $indexNames);
         $this->assertContains('table_created_at_index', $indexNames);

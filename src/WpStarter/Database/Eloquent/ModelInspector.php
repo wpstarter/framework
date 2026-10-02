@@ -297,7 +297,7 @@ class ModelInspector
      */
     protected function getResource($model)
     {
-        return rescue(static fn () => $model->toResource()::class, null, false);
+        return ws_rescue(static fn () => $model->toResource()::class, null, false);
     }
 
     /**

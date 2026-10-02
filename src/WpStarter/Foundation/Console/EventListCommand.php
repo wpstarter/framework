@@ -194,7 +194,7 @@ class EventListCommand extends Command
     {
         $reflection = new ReflectionFunction($rawListener);
 
-        $path = str_replace([base_path(), DIRECTORY_SEPARATOR], ['', '/'], $reflection->getFileName() ?: '');
+        $path = str_replace([ws_base_path(), DIRECTORY_SEPARATOR], ['', '/'], $reflection->getFileName() ?: '');
 
         return 'Closure at: '.$path.':'.$reflection->getStartLine();
     }

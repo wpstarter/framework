@@ -47,7 +47,7 @@ class RelationResolver
      */
     public function handle(mixed $resource): Collection|Model|null
     {
-        return value($this->relationResolver, $resource);
+        return ws_value($this->relationResolver, $resource);
     }
 
     /**

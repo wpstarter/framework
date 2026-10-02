@@ -3518,7 +3518,7 @@ class Builder implements BuilderContract
         $keysToRemove = ['laravel_row'];
 
         if (is_string($this->groupLimit['column'])) {
-            $column = last(explode('.', $this->groupLimit['column']));
+            $column = ws_last(explode('.', $this->groupLimit['column']));
 
             $keysToRemove[] = '@laravel_group := '.$this->grammar->wrap($column);
             $keysToRemove[] = '@laravel_group := '.$this->grammar->wrap('pivot_'.$column);
@@ -3547,9 +3547,9 @@ class Builder implements BuilderContract
     {
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
 
-        $total = value($total) ?? $this->getCountForPagination();
+        $total = ws_value($total) ?? $this->getCountForPagination();
 
-        $perPage = value($perPage, $total);
+        $perPage = ws_value($perPage, $total);
 
         $results = $total ? $this->forPage($page, $perPage)->get($columns) : new Collection;
 
@@ -3801,7 +3801,7 @@ class Builder implements BuilderContract
 
         $separator = str_contains(strtolower($columnString), ' as ') ? ' as ' : '\.';
 
-        return last(preg_split('~'.$separator.'~i', $columnString));
+        return ws_last(preg_split('~'.$separator.'~i', $columnString));
     }
 
     /**
@@ -4649,7 +4649,7 @@ class Builder implements BuilderContract
      */
     protected function flattenValue($value)
     {
-        return is_array($value) ? head(Arr::flatten($value)) : $value;
+        return is_array($value) ? ws_head(Arr::flatten($value)) : $value;
     }
 
     /**
@@ -4747,7 +4747,7 @@ class Builder implements BuilderContract
      */
     public function cloneWithout(array $properties)
     {
-        return tap($this->clone(), function ($clone) use ($properties) {
+        return ws_tap($this->clone(), function ($clone) use ($properties) {
             foreach ($properties as $property) {
                 $clone->{$property} = null;
             }
@@ -4761,7 +4761,7 @@ class Builder implements BuilderContract
      */
     public function cloneWithoutBindings(array $except)
     {
-        return tap($this->clone(), function ($clone) use ($except) {
+        return ws_tap($this->clone(), function ($clone) use ($except) {
             foreach ($except as $type) {
                 $clone->bindings[$type] = [];
             }

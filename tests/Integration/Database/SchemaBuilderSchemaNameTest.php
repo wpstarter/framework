@@ -67,7 +67,7 @@ class SchemaBuilderSchemaNameTest extends DatabaseTestCase
 
         $schemas = $schema->getSchemas();
 
-        $this->assertSame($schema->getCurrentSchemaName(), collect($schemas)->firstWhere('default')['name']);
+        $this->assertSame($schema->getCurrentSchemaName(), ws_collect($schemas)->firstWhere('default')['name']);
         $this->assertEqualsCanonicalizing(
             match ($this->driver) {
                 'mysql', 'mariadb' => ['laravel', 'my_schema'],
@@ -215,10 +215,10 @@ class SchemaBuilderSchemaNameTest extends DatabaseTestCase
 
         $this->assertEquals(['id', 'title', 'name', 'count'], $schema->getColumnListing('my_schema.table'));
         $this->assertEquals(['id', 'name', 'count', 'title'], $schema->getColumnListing('my_table'));
-        $this->assertStringContainsString('default schema name', collect($schema->getColumns('my_schema.table'))->firstWhere('name', 'name')['default']);
-        $this->assertStringContainsString('default schema title', collect($schema->getColumns('my_schema.table'))->firstWhere('name', 'title')['default']);
-        $this->assertStringContainsString('default name', collect($schema->getColumns('my_table'))->firstWhere('name', 'name')['default']);
-        $this->assertStringContainsString('default title', collect($schema->getColumns('my_table'))->firstWhere('name', 'title')['default']);
+        $this->assertStringContainsString('default schema name', ws_collect($schema->getColumns('my_schema.table'))->firstWhere('name', 'name')['default']);
+        $this->assertStringContainsString('default schema title', ws_collect($schema->getColumns('my_schema.table'))->firstWhere('name', 'title')['default']);
+        $this->assertStringContainsString('default name', ws_collect($schema->getColumns('my_table'))->firstWhere('name', 'name')['default']);
+        $this->assertStringContainsString('default title', ws_collect($schema->getColumns('my_table'))->firstWhere('name', 'title')['default']);
     }
 
     #[DataProvider('connectionProvider')]
@@ -249,8 +249,8 @@ class SchemaBuilderSchemaNameTest extends DatabaseTestCase
         $this->assertTrue($schema->hasColumn('my_schema.table', 'new_title'));
         $this->assertFalse($schema->hasColumn('table', 'name'));
         $this->assertTrue($schema->hasColumn('table', 'new_name'));
-        $this->assertStringContainsString('default schema title', collect($schema->getColumns('my_schema.table'))->firstWhere('name', 'new_title')['default']);
-        $this->assertStringContainsString('default name', collect($schema->getColumns('table'))->firstWhere('name', 'new_name')['default']);
+        $this->assertStringContainsString('default schema title', ws_collect($schema->getColumns('my_schema.table'))->firstWhere('name', 'new_title')['default']);
+        $this->assertStringContainsString('default name', ws_collect($schema->getColumns('table'))->firstWhere('name', 'new_name')['default']);
     }
 
     #[DataProvider('connectionProvider')]
@@ -278,8 +278,8 @@ class SchemaBuilderSchemaNameTest extends DatabaseTestCase
             $table->bigInteger('count')->change();
         });
 
-        $this->assertStringContainsString('default schema name', collect($schema->getColumns('my_schema.table'))->firstWhere('name', 'name')['default']);
-        $this->assertStringContainsString('default title', collect($schema->getColumns('my_table'))->firstWhere('name', 'title')['default']);
+        $this->assertStringContainsString('default schema name', ws_collect($schema->getColumns('my_schema.table'))->firstWhere('name', 'name')['default']);
+        $this->assertStringContainsString('default title', ws_collect($schema->getColumns('my_table'))->firstWhere('name', 'title')['default']);
         $this->assertEquals($this->driver === 'sqlsrv' ? 'nvarchar' : 'varchar', $schema->getColumnType('my_schema.table', 'name'));
         $this->assertEquals($this->driver === 'sqlsrv' ? 'nvarchar' : 'varchar', $schema->getColumnType('my_table', 'title'));
         $this->assertEquals(match ($this->driver) {
@@ -324,8 +324,8 @@ class SchemaBuilderSchemaNameTest extends DatabaseTestCase
         $this->assertTrue($schema->hasColumns('table', ['id', 'count']));
         $this->assertFalse($schema->hasColumn('table', 'name'));
         $this->assertFalse($schema->hasColumn('table', 'title'));
-        $this->assertStringContainsString('default schema title', collect($schema->getColumns('my_schema.table'))->firstWhere('name', 'title')['default']);
-        $this->assertStringContainsString('10', collect($schema->getColumns('table'))->firstWhere('name', 'count')['default']);
+        $this->assertStringContainsString('default schema title', ws_collect($schema->getColumns('my_schema.table'))->firstWhere('name', 'title')['default']);
+        $this->assertStringContainsString('10', ws_collect($schema->getColumns('table'))->firstWhere('name', 'count')['default']);
     }
 
     #[DataProvider('connectionProvider')]
@@ -412,13 +412,13 @@ class SchemaBuilderSchemaNameTest extends DatabaseTestCase
             default => 'laravel',
         };
 
-        $this->assertTrue(collect($schema->getForeignKeys('my_schema.table'))->contains(
+        $this->assertTrue(ws_collect($schema->getForeignKeys('my_schema.table'))->contains(
             fn ($foreign) => $foreign['columns'] === ['my_table_id']
                 && $foreign['foreign_table'] === $tableName && $foreign['foreign_schema'] === $defaultSchemaName
                 && $foreign['foreign_columns'] === ['id']
         ));
 
-        $this->assertTrue(collect($schema->getForeignKeys('table'))->contains(
+        $this->assertTrue(ws_collect($schema->getForeignKeys('table'))->contains(
             fn ($foreign) => $foreign['columns'] === ['table_id']
                 && $foreign['foreign_table'] === $schemaTableName && $foreign['foreign_schema'] === 'my_schema'
                 && $foreign['foreign_columns'] === ['id']
@@ -456,13 +456,13 @@ class SchemaBuilderSchemaNameTest extends DatabaseTestCase
         $myTableName = $connection === 'with-prefix' ? 'example_my_tables' : 'my_tables';
         $tableName = $connection === 'with-prefix' ? 'example_table' : 'table';
 
-        $this->assertTrue(collect($schema->getForeignKeys('my_schema.table'))->contains(
+        $this->assertTrue(ws_collect($schema->getForeignKeys('my_schema.table'))->contains(
             fn ($foreign) => $foreign['columns'] === ['my_table_id']
                 && $foreign['foreign_table'] === $myTableName && $foreign['foreign_schema'] === 'my_schema'
                 && $foreign['foreign_columns'] === ['id']
         ));
 
-        $this->assertTrue(collect($schema->getForeignKeys('my_schema.second_table'))->contains(
+        $this->assertTrue(ws_collect($schema->getForeignKeys('my_schema.second_table'))->contains(
             fn ($foreign) => $foreign['columns'] === ['table_id']
                 && $foreign['foreign_table'] === $tableName && $foreign['foreign_schema'] === 'my_schema'
                 && $foreign['foreign_columns'] === ['id']
@@ -522,7 +522,7 @@ class SchemaBuilderSchemaNameTest extends DatabaseTestCase
             $table->string('name')->comment('comment on column');
         });
 
-        $tables = collect($schema->getTables());
+        $tables = ws_collect($schema->getTables());
         $tableName = $connection === 'with-prefix' ? 'example_table' : 'table';
         $defaultSchema = $this->driver === 'pgsql' ? 'public' : 'laravel';
 
@@ -533,10 +533,10 @@ class SchemaBuilderSchemaNameTest extends DatabaseTestCase
             $tables->first(fn ($table) => $table['name'] === $tableName && $table['schema'] === $defaultSchema)['comment']
         );
         $this->assertEquals('comment on schema column',
-            collect($schema->getColumns('my_schema.table'))->firstWhere('name', 'name')['comment']
+            ws_collect($schema->getColumns('my_schema.table'))->firstWhere('name', 'name')['comment']
         );
         $this->assertEquals('comment on column',
-            collect($schema->getColumns('table'))->firstWhere('name', 'name')['comment']
+            ws_collect($schema->getColumns('table'))->firstWhere('name', 'name')['comment']
         );
     }
 
@@ -574,7 +574,7 @@ class SchemaBuilderSchemaNameTest extends DatabaseTestCase
         $db->statement('grant alter on SCHEMA::my_schema to my_user');
         $db->statement("alter user my_user with default_schema = my_schema execute as user='my_user'");
 
-        config([
+        ws_config([
             'database.connections.'.$connection.'.username' => 'my_user',
             'database.connections.'.$connection.'.password' => 'Passw0rd',
         ]);

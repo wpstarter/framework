@@ -388,10 +388,10 @@ class Request extends SymfonyRequest implements Arrayable, ArrayAccess
      */
     public function merge(array $input)
     {
-        return tap($this, function (Request $request) use ($input) {
+        return ws_tap($this, function (Request $request) use ($input) {
             $request->getInputSource()
                 ->replace((new Collection($input))->reduce(
-                    fn ($requestInput, $value, $key) => data_set($requestInput, $key, $value),
+                    fn ($requestInput, $value, $key) => ws_data_set($requestInput, $key, $value),
                     $this->getInputSource()->all()
                 ));
         });
@@ -458,7 +458,7 @@ class Request extends SymfonyRequest implements Arrayable, ArrayAccess
             return $this->json;
         }
 
-        return data_get($this->json->all(), $key, $default);
+        return ws_data_get($this->json->all(), $key, $default);
     }
 
     /**

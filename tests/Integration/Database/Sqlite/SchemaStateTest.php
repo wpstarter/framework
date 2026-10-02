@@ -49,9 +49,9 @@ class SchemaStateTest extends TestCase
 
         $this->assertTrue($connection->table('sqlite_sequence')->exists());
 
-        $this->app['files']->ensureDirectoryExists(database_path('schema'));
+        $this->app['files']->ensureDirectoryExists(ws_database_path('schema'));
 
-        $connection->getSchemaState()->dump($connection, database_path('schema/sqlite-schema.sql'));
+        $connection->getSchemaState()->dump($connection, ws_database_path('schema/sqlite-schema.sql'));
 
         $this->assertFileContains([
             'CREATE TABLE migrations',

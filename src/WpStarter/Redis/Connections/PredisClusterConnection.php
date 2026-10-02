@@ -36,7 +36,7 @@ class PredisClusterConnection extends PredisConnection
             : FLUSHDB::class;
 
         foreach ($this->client as $node) {
-            $node->executeCommand(tap(new $command)->setArguments(func_get_args()));
+            $node->executeCommand(ws_tap(new $command)->setArguments(func_get_args()));
         }
     }
 }

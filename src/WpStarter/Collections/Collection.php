@@ -203,7 +203,7 @@ class Collection implements ArrayAccess, CanBeEscapedWhenCastToString, Enumerabl
     public function containsStrict($key, $value = null)
     {
         if (func_num_args() === 2) {
-            return $this->contains(fn ($item) => data_get($item, $key) === $value);
+            return $this->contains(fn ($item) => ws_data_get($item, $key) === $value);
         }
 
         if ($this->useAsCallable($key)) {
@@ -485,7 +485,7 @@ class Collection implements ArrayAccess, CanBeEscapedWhenCastToString, Enumerabl
             return $this->items[$key];
         }
 
-        return value($default);
+        return ws_value($default);
     }
 
     /**
@@ -503,7 +503,7 @@ class Collection implements ArrayAccess, CanBeEscapedWhenCastToString, Enumerabl
             return $this->items[$key ?? ''];
         }
 
-        $this->offsetSet($key, $value = value($value));
+        $this->offsetSet($key, $value = ws_value($value));
 
         return $value;
     }
@@ -712,10 +712,10 @@ class Collection implements ArrayAccess, CanBeEscapedWhenCastToString, Enumerabl
      * Determine if the collection is empty or not.
      *
      * @phpstan-assert-if-true null $this->first()
-     * @phpstan-assert-if-true null $this->last()
+     * @phpstan-assert-if-true null $this->ws_last()
      *
      * @phpstan-assert-if-false TValue $this->first()
-     * @phpstan-assert-if-false TValue $this->last()
+     * @phpstan-assert-if-false TValue $this->ws_last()
      *
      * @return bool
      */
@@ -1636,7 +1636,7 @@ class Collection implements ArrayAccess, CanBeEscapedWhenCastToString, Enumerabl
                 if (! is_string($prop) && is_callable($prop)) {
                     $result = $prop($a, $b);
                 } else {
-                    $values = [data_get($a, $prop), data_get($b, $prop)];
+                    $values = [ws_data_get($a, $prop), ws_data_get($b, $prop)];
 
                     if (! $ascending) {
                         $values = array_reverse($values);

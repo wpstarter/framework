@@ -63,13 +63,13 @@ class FactoryMakeCommand extends GeneratorCommand
      */
     protected function buildClass($name)
     {
-        $factory = class_basename(Str::ucfirst(str_replace('Factory', '', $name)));
+        $factory = ws_class_basename(Str::ucfirst(str_replace('Factory', '', $name)));
 
         $namespaceModel = $this->option('model')
             ? $this->qualifyModel($this->option('model'))
             : $this->qualifyModel($this->guessModelName($name));
 
-        $model = class_basename($namespaceModel);
+        $model = ws_class_basename($namespaceModel);
 
         $namespace = $this->getNamespace(
             Str::replaceFirst($this->rootNamespace(), 'Database\\Factories\\', $this->qualifyClass($this->getNameInput()))

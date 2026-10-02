@@ -49,7 +49,7 @@ class SendingMarkdownMailTest extends TestCase
         $mailable->assertSeeInText('Embed content: ');
         $mailable->assertDontSeeInText('Embed content: cid:');
 
-        $email = app('mailer')->getSymfonyTransport()->messages()[0]->getOriginalMessage()->toString();
+        $email = ws_app('mailer')->getSymfonyTransport()->messages()[0]->getOriginalMessage()->toString();
 
         $cid = rtrim(explode(' cid:', (new Stringable($email))->explode("\r\n")
             ->filter(fn ($line) => str_contains($line, ' content: cid:'))
@@ -75,7 +75,7 @@ class SendingMarkdownMailTest extends TestCase
         $mailable->assertSeeInText('Embed data content: ');
         $mailable->assertSeeInHtml('Embed data content: cid:');
 
-        $email = app('mailer')->getSymfonyTransport()->messages()[0]->getOriginalMessage()->toString();
+        $email = ws_app('mailer')->getSymfonyTransport()->messages()[0]->getOriginalMessage()->toString();
 
         $this->assertStringContainsString(<<<EOT
         Content-Type: image/png; name=foo.jpg\r
@@ -98,7 +98,7 @@ class SendingMarkdownMailTest extends TestCase
 
     public function testEmbeddedImagesAreInlinedWhenRenderingMailable()
     {
-        $html = app('mailer')->render('embed-image', [
+        $html = ws_app('mailer')->render('embed-image', [
             'image' => __DIR__.'/Fixtures/empty_image.jpg',
         ]);
 
@@ -114,7 +114,7 @@ class SendingMarkdownMailTest extends TestCase
             ->assertSeeInText('My message is: My message.')
             ->assertSeeInHtml('My message is: My message.');
 
-        $email = app('mailer')->getSymfonyTransport()->messages()[0]->getOriginalMessage()->toString();
+        $email = ws_app('mailer')->getSymfonyTransport()->messages()[0]->getOriginalMessage()->toString();
 
         $this->assertStringContainsString('My message is: My message.', $email);
     }
@@ -127,7 +127,7 @@ class SendingMarkdownMailTest extends TestCase
             ->assertSeeInText('My message is: My message.')
             ->assertSeeInHtml('My message is: My message.');
 
-        $email = app('mailer')->getSymfonyTransport()->messages()[0]->getOriginalMessage()->toString();
+        $email = ws_app('mailer')->getSymfonyTransport()->messages()[0]->getOriginalMessage()->toString();
 
         $this->assertStringContainsString('My message is: My message.', $email);
     }
@@ -135,13 +135,13 @@ class SendingMarkdownMailTest extends TestCase
     public function testTheme()
     {
         Mail::to('test@mail.com')->send(new BasicMailable());
-        $this->assertSame('default', app(Markdown::class)->getTheme());
+        $this->assertSame('default', ws_app(Markdown::class)->getTheme());
 
         Mail::to('test@mail.com')->send(new BasicMailableWithTheme());
-        $this->assertSame('taylor', app(Markdown::class)->getTheme());
+        $this->assertSame('taylor', ws_app(Markdown::class)->getTheme());
 
         Mail::to('test@mail.com')->send(new BasicMailable());
-        $this->assertSame('default', app(Markdown::class)->getTheme());
+        $this->assertSame('default', ws_app(Markdown::class)->getTheme());
     }
 
     public function testEmbeddedImageContentIdConsistencyAcrossMailerFailoverClones()
@@ -149,7 +149,7 @@ class SendingMarkdownMailTest extends TestCase
         Mail::to('test@mail.com')->send($mailable = new EmbedImageMailable);
 
         /** @var \Symfony\Component\Mime\Email $originalEmail */
-        $originalEmail = app('mailer')->getSymfonyTransport()->messages()[0]->getOriginalMessage();
+        $originalEmail = ws_app('mailer')->getSymfonyTransport()->messages()[0]->getOriginalMessage();
         $expectedContentId = $originalEmail->getAttachments()[0]->getContentId();
 
         // Simulate failover mailer scenario where email is cloned for retry.

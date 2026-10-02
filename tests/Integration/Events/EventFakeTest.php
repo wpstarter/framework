@@ -154,7 +154,7 @@ class EventFakeTest extends TestCase
         ]);
 
         foreach ($listenersOfSameEventInRandomOrder as $listener) {
-            Event::listen('event', $listener);
+            Event::listen('ws_event', $listener);
         }
 
         Event::subscribe(PostEventSubscriber::class);

@@ -14,14 +14,14 @@ class Users implements Arrayable
     }
 }
 
-$collection = collect([new User]);
+$collection = ws_collect([new User]);
 $arrayable = new Users;
 /** @var iterable<int, int> $iterable */
 $iterable = [1];
 /** @var Traversable<int, string> $traversable */
 $traversable = new ArrayIterator(['string']);
 
-$associativeCollection = collect(['John' => new User]);
+$associativeCollection = ws_collect(['John' => new User]);
 
 class Invokable
 {
@@ -34,13 +34,13 @@ $invokable = new Invokable;
 
 assertType('WpStarter\Support\Collection<int, User>', $collection);
 
-assertType('WpStarter\Support\Collection<int, string>', collect(['string']));
-assertType('WpStarter\Support\Collection<string, User>', collect(['string' => new User]));
-assertType('WpStarter\Support\Collection<int, User>', collect($arrayable));
-assertType('WpStarter\Support\Collection<int, User>', collect($collection));
-assertType('WpStarter\Support\Collection<int, User>', collect($collection));
-assertType('WpStarter\Support\Collection<int, int>', collect($iterable));
-assertType('WpStarter\Support\Collection<int, string>', collect($traversable));
+assertType('WpStarter\Support\Collection<int, string>', ws_collect(['string']));
+assertType('WpStarter\Support\Collection<string, User>', ws_collect(['string' => new User]));
+assertType('WpStarter\Support\Collection<int, User>', ws_collect($arrayable));
+assertType('WpStarter\Support\Collection<int, User>', ws_collect($collection));
+assertType('WpStarter\Support\Collection<int, User>', ws_collect($collection));
+assertType('WpStarter\Support\Collection<int, int>', ws_collect($iterable));
+assertType('WpStarter\Support\Collection<int, string>', ws_collect($traversable));
 
 assertType('WpStarter\Support\Collection<int, string>', $collection::make(['string']));
 assertType('WpStarter\Support\Collection<string, User>', $collection::make(['string' => new User]));
@@ -919,7 +919,7 @@ assertType('WpStarter\Support\Collection<int, User>', $collection->tap(function 
 assertType('WpStarter\Support\Collection<int, int>', $collection->pipe(function ($collection) {
     assertType('WpStarter\Support\Collection<int, User>', $collection);
 
-    return collect([1]);
+    return ws_collect([1]);
 }));
 assertType('1', $collection->make([1])->pipe(function ($collection) {
     assertType('WpStarter\Support\Collection<int, int>', $collection);
@@ -1107,8 +1107,8 @@ $collection->offsetUnset(0);
 unset($collection[0]);
 
 assertType('array<int, mixed>', $collection->toArray());
-assertType('array<string, mixed>', collect(['string' => 'string'])->toArray());
-assertType('array<int, mixed>', collect([1, 2])->toArray());
+assertType('array<string, mixed>', ws_collect(['string' => 'string'])->toArray());
+assertType('array<int, mixed>', ws_collect([1, 2])->toArray());
 
 assertType('ArrayIterator<int, User>', $collection->getIterator());
 foreach ($collection as $int => $user) {
@@ -1138,7 +1138,7 @@ class Zoo
 
     public function __construct()
     {
-        $this->animals = collect([
+        $this->animals = ws_collect([
             new Tiger,
             new Lion,
             new Zebra,

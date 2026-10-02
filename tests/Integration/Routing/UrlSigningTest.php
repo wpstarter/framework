@@ -27,7 +27,7 @@ class UrlSigningTest extends TestCase
 
         $this->assertIsString($url = URL::signedRoute('foo', ['id' => 1]));
 
-        tap($this->get($url), function ($response) {
+        ws_tap($this->get($url), function ($response) {
             $this->assertSame('valid', $response->original);
 
             $this->assertIsString($response->baseRequest->query('signature'));
@@ -45,7 +45,7 @@ class UrlSigningTest extends TestCase
 
         $this->assertIsString($url = URL::signedRoute('foo', ['post' => $model]));
 
-        tap($this->get($url), function ($response) {
+        ws_tap($this->get($url), function ($response) {
             $this->assertSame('valid', $response->original['valid']);
             $this->assertSame('routable-slug', $response->original['slug']);
 
@@ -70,7 +70,7 @@ class UrlSigningTest extends TestCase
             parse_url($url = URL::signedRoute('foo', ['post' => $model]), PHP_URL_PATH)
         );
 
-        tap($this->get($url), function ($response) {
+        ws_tap($this->get($url), function ($response) {
             $this->assertSame('valid', $response->original['valid']);
             $this->assertSame('%66oo', $response->original['slug']);
 
@@ -85,7 +85,7 @@ class UrlSigningTest extends TestCase
         })->name('foo');
 
         Carbon::setTestNow(Carbon::create(2018, 1, 1));
-        $this->assertIsString($url = URL::temporarySignedRoute('foo', now()->addMinutes(5), ['id' => 1]));
+        $this->assertIsString($url = URL::temporarySignedRoute('foo', ws_now()->addMinutes(5), ['id' => 1]));
         $this->assertSame('valid', $this->get($url)->original);
 
         Carbon::setTestNow(Carbon::create(2018, 1, 1)->addMinutes(10));
@@ -101,7 +101,7 @@ class UrlSigningTest extends TestCase
             return $request->hasValidSignature() ? 'valid' : 'invalid';
         })->name('foo');
 
-        URL::temporarySignedRoute('foo', now()->addMinutes(5), ['id' => 1, 'expires' => 253402300799]);
+        URL::temporarySignedRoute('foo', ws_now()->addMinutes(5), ['id' => 1, 'expires' => 253402300799]);
     }
 
     public function testSignedUrlWithUrlWithoutSignatureParameter()
@@ -242,7 +242,7 @@ class UrlSigningTest extends TestCase
         })->name('foo')->middleware(ValidateSignature::class);
 
         Carbon::setTestNow(Carbon::create(2018, 1, 1));
-        $this->assertIsString($url = URL::temporarySignedRoute('foo', now()->addMinutes(5), ['id' => 1]));
+        $this->assertIsString($url = URL::temporarySignedRoute('foo', ws_now()->addMinutes(5), ['id' => 1]));
         $this->assertSame('valid', $this->get($url)->original);
     }
 
@@ -253,7 +253,7 @@ class UrlSigningTest extends TestCase
         })->name('foo')->middleware(ValidateSignature::class);
 
         Carbon::setTestNow(Carbon::create(2018, 1, 1));
-        $this->assertIsString($url = URL::temporarySignedRoute('foo', now()->addMinutes(5), ['id' => 1]));
+        $this->assertIsString($url = URL::temporarySignedRoute('foo', ws_now()->addMinutes(5), ['id' => 1]));
         Carbon::setTestNow(Carbon::create(2018, 1, 1)->addMinutes(10));
 
         $response = $this->get($url);
@@ -378,24 +378,24 @@ class UrlSigningTest extends TestCase
             return $request->hasValidSignature() ? 'valid' : 'invalid';
         })->name('foo');
 
-        config(['app.key' => 'oldest-key']);
+        ws_config(['app.key' => 'oldest-key']);
         $oldestURL = URL::signedRoute('foo', ['id' => 1]);
 
-        config(['app.key' => 'old-key']);
+        ws_config(['app.key' => 'old-key']);
         $oldURL = URL::signedRoute('foo', ['id' => 1]);
 
-        config(['app.key' => 'new-key']);
+        ws_config(['app.key' => 'new-key']);
         $newUrl = URL::signedRoute('foo', ['id' => 1]);
 
-        tap($this->get($oldestURL), fn ($response) => $this->assertSame('invalid', $response->original));
-        tap($this->get($oldURL), fn ($response) => $this->assertSame('invalid', $response->original));
-        tap($this->get($newUrl), fn ($response) => $this->assertSame('valid', $response->original));
+        ws_tap($this->get($oldestURL), fn ($response) => $this->assertSame('invalid', $response->original));
+        ws_tap($this->get($oldURL), fn ($response) => $this->assertSame('invalid', $response->original));
+        ws_tap($this->get($newUrl), fn ($response) => $this->assertSame('valid', $response->original));
 
-        config(['app.previous_keys' => ['old-key', 'oldest-key']]);
+        ws_config(['app.previous_keys' => ['old-key', 'oldest-key']]);
 
-        tap($this->get($oldestURL), fn ($response) => $this->assertSame('valid', $response->original));
-        tap($this->get($oldURL), fn ($response) => $this->assertSame('valid', $response->original));
-        tap($this->get($newUrl), fn ($response) => $this->assertSame('valid', $response->original));
+        ws_tap($this->get($oldestURL), fn ($response) => $this->assertSame('valid', $response->original));
+        ws_tap($this->get($oldURL), fn ($response) => $this->assertSame('valid', $response->original));
+        ws_tap($this->get($newUrl), fn ($response) => $this->assertSame('valid', $response->original));
     }
 
     protected function createValidateSignatureMiddleware(array $ignore)

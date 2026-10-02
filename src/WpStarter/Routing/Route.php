@@ -870,7 +870,7 @@ class Route
     {
         $this->bindingFields = [];
 
-        return tap(RouteUri::parse($uri), function ($uri) {
+        return ws_tap(RouteUri::parse($uri), function ($uri) {
             $this->bindingFields = $uri->bindingFields;
         })->uri;
     }
@@ -953,7 +953,7 @@ class Route
      */
     protected function addGroupNamespaceToStringUses($action)
     {
-        $groupStack = last($this->router->getGroupStack());
+        $groupStack = ws_last($this->router->getGroupStack());
 
         if (isset($groupStack['namespace']) && ! str_starts_with($action, '\\')) {
             return $groupStack['namespace'].'\\'.$action;

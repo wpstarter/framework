@@ -222,7 +222,7 @@ class Vite implements Htmlable
      */
     public function hotFile()
     {
-        return $this->hotFile ?? public_path('/hot');
+        return $this->hotFile ?? ws_public_path('/hot');
     }
 
     /**
@@ -506,7 +506,7 @@ class Vite implements Htmlable
                 ->reject(fn ($attributes) => isset($this->preloadedAssets[$attributes['href']])))
             ->unique('href')
             ->values()
-            ->pipe(fn ($assets) => with(Js::from($assets), fn ($assets) => match ($this->prefetchStrategy) {
+            ->pipe(fn ($assets) => ws_with(Js::from($assets), fn ($assets) => match ($this->prefetchStrategy) {
                 'waterfall' => new HtmlString($base.<<<HTML
 
                     <script{$this->nonceAttribute()}>
@@ -915,7 +915,7 @@ class Vite implements Htmlable
      */
     protected function assetPath($path, $secure = null)
     {
-        return ($this->assetPathResolver ?? asset(...))($path, $secure);
+        return ($this->assetPathResolver ?? ws_asset(...))($path, $secure);
     }
 
     /**
@@ -926,7 +926,7 @@ class Vite implements Htmlable
      */
     protected function publicPath($path)
     {
-        return public_path($path);
+        return ws_public_path($path);
     }
 
     /**
@@ -960,7 +960,7 @@ class Vite implements Htmlable
      */
     protected function manifestPath($buildDirectory)
     {
-        return public_path($buildDirectory.'/'.$this->manifestFilename);
+        return ws_public_path($buildDirectory.'/'.$this->manifestFilename);
     }
 
     /**

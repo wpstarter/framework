@@ -90,7 +90,7 @@ trait InteractsWithData
     public function whenHas($key, callable $callback, ?callable $default = null)
     {
         if ($this->has($key)) {
-            return $callback(data_get($this->all(), $key)) ?: $this;
+            return $callback(ws_data_get($this->all(), $key)) ?: $this;
         }
 
         if ($default) {
@@ -168,7 +168,7 @@ trait InteractsWithData
     public function whenFilled($key, callable $callback, ?callable $default = null)
     {
         if ($this->filled($key)) {
-            return $callback(data_get($this->all(), $key)) ?: $this;
+            return $callback(ws_data_get($this->all(), $key)) ?: $this;
         }
 
         if ($default) {
@@ -202,7 +202,7 @@ trait InteractsWithData
     public function whenMissing($key, callable $callback, ?callable $default = null)
     {
         if ($this->missing($key)) {
-            return $callback(data_get($this->all(), $key)) ?: $this;
+            return $callback(ws_data_get($this->all(), $key)) ?: $this;
         }
 
         if ($default) {
@@ -364,10 +364,10 @@ trait InteractsWithData
     public function enum($key, $enumClass, $default = null)
     {
         if ($this->isNotFilled($key) || ! $this->isBackedEnum($enumClass)) {
-            return value($default);
+            return ws_value($default);
         }
 
-        return $enumClass::tryFrom($this->data($key)) ?: value($default);
+        return $enumClass::tryFrom($this->data($key)) ?: ws_value($default);
     }
 
     /**
@@ -439,7 +439,7 @@ trait InteractsWithData
         $placeholder = new stdClass;
 
         foreach (is_array($keys) ? $keys : func_get_args() as $key) {
-            $value = data_get($data, $key, $placeholder);
+            $value = ws_data_get($data, $key, $placeholder);
 
             if ($value !== $placeholder) {
                 Arr::set($results, $key, $value);

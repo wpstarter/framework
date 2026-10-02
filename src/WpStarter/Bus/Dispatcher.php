@@ -110,7 +110,7 @@ class Dispatcher implements QueueingDispatcher
      */
     public function dispatchNow($command, $handler = null)
     {
-        $uses = class_uses_recursive($command);
+        $uses = ws_class_uses_recursive($command);
 
         if (isset($uses[InteractsWithQueue::class], $uses[Queueable::class]) && ! $command->job) {
             $command->setJob(new SyncJob($this->container, json_encode([]), 'sync', 'sync'));

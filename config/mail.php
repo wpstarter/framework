@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'log'),
+    'default' => ws_env('MAIL_MAILER', 'log'),
 
     /*
     |--------------------------------------------------------------------------
@@ -39,14 +39,14 @@ return [
 
         'smtp' => [
             'transport' => 'smtp',
-            'scheme' => env('MAIL_SCHEME'),
-            'url' => env('MAIL_URL'),
-            'host' => env('MAIL_HOST', '127.0.0.1'),
-            'port' => env('MAIL_PORT', 2525),
-            'username' => env('MAIL_USERNAME'),
-            'password' => env('MAIL_PASSWORD'),
+            'scheme' => ws_env('MAIL_SCHEME'),
+            'url' => ws_env('MAIL_URL'),
+            'host' => ws_env('MAIL_HOST', '127.0.0.1'),
+            'port' => ws_env('MAIL_PORT', 2525),
+            'username' => ws_env('MAIL_USERNAME'),
+            'password' => ws_env('MAIL_PASSWORD'),
             'timeout' => null,
-            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+            'local_domain' => ws_env('MAIL_EHLO_DOMAIN', parse_url((string) ws_env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
         'ses' => [
@@ -67,12 +67,12 @@ return [
 
         'sendmail' => [
             'transport' => 'sendmail',
-            'path' => env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs -i'),
+            'path' => ws_env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs -i'),
         ],
 
         'log' => [
             'transport' => 'log',
-            'channel' => env('MAIL_LOG_CHANNEL'),
+            'channel' => ws_env('MAIL_LOG_CHANNEL'),
         ],
 
         'array' => [
@@ -111,8 +111,8 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', 'Example'),
+        'address' => ws_env('MAIL_FROM_ADDRESS', 'hello@example.com'),
+        'name' => ws_env('MAIL_FROM_NAME', 'Example'),
     ],
 
     /*
@@ -127,10 +127,10 @@ return [
     */
 
     'markdown' => [
-        'theme' => env('MAIL_MARKDOWN_THEME', 'default'),
+        'theme' => ws_env('MAIL_MARKDOWN_THEME', 'default'),
 
         'paths' => [
-            resource_path('views/vendor/mail'),
+            ws_resource_path('views/vendor/mail'),
         ],
 
         'extensions' => [

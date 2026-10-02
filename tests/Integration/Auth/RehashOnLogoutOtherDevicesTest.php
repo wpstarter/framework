@@ -19,9 +19,9 @@ class RehashOnLogoutOtherDevicesTest extends TestCase
     protected function defineRoutes($router)
     {
         $router->post('logout', function (Request $request) {
-            auth()->logoutOtherDevices($request->input('password'));
+            ws_auth()->logoutOtherDevices($request->input('password'));
 
-            return response()->noContent();
+            return ws_response()->noContent();
         })->middleware(['web', 'auth']);
     }
 

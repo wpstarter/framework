@@ -39,7 +39,7 @@ class ValidationData
             return $data;
         }
 
-        return data_set($data, $attribute, null, true);
+        return ws_data_set($data, $attribute, null, true);
     }
 
     /**

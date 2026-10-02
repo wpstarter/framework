@@ -2547,7 +2547,7 @@ class DatabaseEloquentIntegrationTest extends TestCase
         Carbon::setTestNow($future = $before->copy()->addDays(3));
 
         // Touch a random model and check that all of the others have been updated
-        $models = tap([$one, $two, $three, $four], shuffle(...));
+        $models = ws_tap([$one, $two, $three, $four], shuffle(...));
         $target = array_shift($models);
         $target->touch();
 

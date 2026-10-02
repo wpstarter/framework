@@ -15,6 +15,6 @@ return [
     |
     */
 
-    'default' => env('CONCURRENCY_DRIVER', 'process'),
+    'default' => ws_env('CONCURRENCY_DRIVER', 'process'),
 
 ];

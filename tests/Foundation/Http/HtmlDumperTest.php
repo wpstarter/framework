@@ -278,11 +278,11 @@ class HtmlDumperTest extends TestCase
 
         $dumper->setOutput($outputFile);
 
-        $cloner = tap(new VarCloner())->addCasters(ReflectionCaster::UNSET_CLOSURE_FILE_INFO);
+        $cloner = ws_tap(new VarCloner())->addCasters(ReflectionCaster::UNSET_CLOSURE_FILE_INFO);
 
         $dumper->dumpWithSource($cloner->cloneVar($value));
 
-        return tap(file_get_contents($outputFile), fn () => @unlink($outputFile));
+        return ws_tap(file_get_contents($outputFile), fn () => @unlink($outputFile));
     }
 
     protected function tearDown(): void

@@ -634,7 +634,7 @@ trait HasAttributes
             ));
         }
 
-        return tap($relation->getResults(), function ($results) use ($method) {
+        return ws_tap($relation->getResults(), function ($results) use ($method) {
             $this->setRelation($method, $results);
         });
     }
@@ -797,7 +797,7 @@ trait HasAttributes
     {
         foreach ($casts as $attribute => $cast) {
             $casts[$attribute] = match (true) {
-                is_object($cast) => value(function () use ($cast, $attribute) {
+                is_object($cast) => ws_value(function () use ($cast, $attribute) {
                     if ($cast instanceof Stringable) {
                         return (string) $cast;
                     }
@@ -806,7 +806,7 @@ trait HasAttributes
                         "The cast object for the {$attribute} attribute must implement Stringable."
                     );
                 }),
-                is_array($cast) => value(function () use ($cast) {
+                is_array($cast) => ws_value(function () use ($cast) {
                     if (count($cast) === 1) {
                         return $cast[0];
                     }
@@ -1328,7 +1328,7 @@ trait HasAttributes
      */
     protected function getArrayAttributeWithValue($path, $key, $value)
     {
-        return tap($this->getArrayAttributeByKey($key), function (&$array) use ($path, $value) {
+        return ws_tap($this->getArrayAttributeByKey($key), function (&$array) use ($path, $value) {
             Arr::set($array, str_replace('->', '.', $path), $value);
         });
     }

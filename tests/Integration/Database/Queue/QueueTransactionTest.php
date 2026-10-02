@@ -33,15 +33,15 @@ class QueueTransactionTest extends DatabaseTestCase
     #[DataProvider('timeoutJobs')]
     public function testItCanHandleTimeoutJob($job)
     {
-        dispatch($job);
+        ws_dispatch($job);
 
         $this->assertSame(1, DB::table('jobs')->count());
         $this->assertSame(0, DB::table('failed_jobs')->count());
 
         try {
             remote('queue:work --stop-when-empty', [
-                'DB_CONNECTION' => config('database.default'),
-                'QUEUE_CONNECTION' => config('queue.default'),
+                'DB_CONNECTION' => ws_config('database.default'),
+                'QUEUE_CONNECTION' => ws_config('queue.default'),
             ])->run();
         } catch (Throwable $e) {
             $this->assertInstanceOf(ProcessSignaledException::class, $e);

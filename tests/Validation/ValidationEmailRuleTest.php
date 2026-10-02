@@ -95,7 +95,7 @@ class ValidationEmailRuleTest extends TestCase
     {
         $values = Arr::wrap($values);
 
-        $translator = resolve('translator');
+        $translator = ws_resolve('translator');
 
         foreach ($values as $value) {
             $v = new Validator(

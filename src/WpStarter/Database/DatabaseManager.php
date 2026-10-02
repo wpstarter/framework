@@ -160,7 +160,7 @@ class DatabaseManager implements ConnectionResolverInterface
 
         $this->dispatchConnectionEstablishedEvent($connection);
 
-        return tap($connection, fn ($connection) => $this->connections[$name] = $connection);
+        return ws_tap($connection, fn ($connection) => $this->connections[$name] = $connection);
     }
 
     /**
@@ -330,7 +330,7 @@ class DatabaseManager implements ConnectionResolverInterface
             return $this->connection($name);
         }
 
-        return tap($this->refreshPdoConnections($name), function ($connection) {
+        return ws_tap($this->refreshPdoConnections($name), function ($connection) {
             $this->dispatchConnectionEstablishedEvent($connection);
         });
     }

@@ -336,7 +336,7 @@ class NotificationFake implements Fake, NotificationDispatcher, NotificationFact
                     : $notification,
                 'channels' => $notifiableChannels,
                 'notifiable' => $notifiable,
-                'locale' => $notification->locale ?? $this->locale ?? value(function () use ($notifiable) {
+                'locale' => $notification->locale ?? $this->locale ?? ws_value(function () use ($notifiable) {
                     if ($notifiable instanceof HasLocalePreference) {
                         return $notifiable->preferredLocale();
                     }

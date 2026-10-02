@@ -420,7 +420,7 @@ class SqlServerGrammar extends Grammar
      */
     protected function compileUpdateWithJoins(Builder $query, $table, $columns, $where)
     {
-        $alias = last(explode(' as ', $table));
+        $alias = ws_last(explode(' as ', $table));
 
         $joins = $this->compileJoins($query, $query->joins);
 
@@ -481,7 +481,7 @@ class SqlServerGrammar extends Grammar
     {
         $cleanBindings = Arr::except($bindings, 'select');
 
-        $values = Arr::flatten(array_map(fn ($value) => value($value), $values));
+        $values = Arr::flatten(array_map(fn ($value) => ws_value($value), $values));
 
         return array_values(
             array_merge($values, Arr::flatten($cleanBindings))

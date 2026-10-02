@@ -24,7 +24,7 @@ if (! function_exists('WpStarter\Support\defer')) {
             return app(DeferredCallbackCollection::class);
         }
 
-        return tap(
+        return ws_tap(
             new DeferredCallback($callback, $name, $always),
             fn ($deferred) => app(DeferredCallbackCollection::class)[] = $deferred
         );

@@ -12,7 +12,7 @@ class BuildableIntegrationTest extends TestCase
 {
     public function test_build_method_can_resolve_itself_via_container(): void
     {
-        config([
+        ws_config([
             'aim' => [
                 'api_key' => 'api-key',
                 'user_name' => 'cosmastech',
@@ -30,7 +30,7 @@ class BuildableIntegrationTest extends TestCase
         $this->assertEquals('api-key', $config->apiKey);
         $this->assertEquals('cosmastech', $config->userName);
 
-        config(['aim.away_message.duration' => 5]);
+        ws_config(['aim.away_message.duration' => 5]);
 
         try {
             $this->app->make(AolInstantMessengerConfig::class);
@@ -57,7 +57,7 @@ class AolInstantMessengerConfig implements SelfBuilding
 
     public static function newInstance()
     {
-        Validator::make(config('aim'), [
+        Validator::make(ws_config('aim'), [
             'api-key' => 'string',
             'user_name' => 'string',
             'away_message' => 'array',

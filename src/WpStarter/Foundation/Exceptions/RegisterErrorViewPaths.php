@@ -14,7 +14,7 @@ class RegisterErrorViewPaths
      */
     public function __invoke()
     {
-        View::replaceNamespace('errors', (new Collection(config('view.paths')))
+        View::replaceNamespace('errors', (new Collection(ws_config('view.paths')))
             ->map(fn ($path) => "{$path}/errors")
             ->push(__DIR__.'/views')
             ->all()

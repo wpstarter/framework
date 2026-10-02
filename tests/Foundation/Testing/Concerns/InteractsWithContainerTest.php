@@ -42,7 +42,7 @@ class InteractsWithContainerTest extends TestCase
         $this->withoutVite();
         $instance = $this->withVite();
 
-        $this->assertSame($handler, resolve(Vite::class));
+        $this->assertSame($handler, ws_resolve(Vite::class));
         $this->assertSame($this, $instance);
     }
 
@@ -58,7 +58,7 @@ class InteractsWithContainerTest extends TestCase
     {
         $instance = $this->withoutMix();
 
-        $this->assertSame('', (string) mix('path/to/asset.png'));
+        $this->assertSame('', (string) ws_mix('path/to/asset.png'));
         $this->assertSame($this, $instance);
     }
 
@@ -70,20 +70,20 @@ class InteractsWithContainerTest extends TestCase
         $this->withoutMix();
         $instance = $this->withMix();
 
-        $this->assertSame($handler, resolve(Mix::class));
+        $this->assertSame($handler, ws_resolve(Mix::class));
         $this->assertSame($this, $instance);
     }
 
     public function testWithoutDefer()
     {
         $called = [];
-        defer(function () use (&$called) {
+        ws_defer(function () use (&$called) {
             $called[] = 1;
         });
         $this->assertSame([], $called);
 
         $instance = $this->withoutDefer();
-        defer(function () use (&$called) {
+        ws_defer(function () use (&$called) {
             $called[] = 2;
         });
         $this->assertSame([2], $called);

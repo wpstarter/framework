@@ -531,7 +531,7 @@ abstract class ServiceProvider
             ->trim();
 
         if (empty($key)) {
-            $key = class_basename(get_class($this));
+            $key = ws_class_basename(get_class($this));
         }
 
         return $key;

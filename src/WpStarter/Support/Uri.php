@@ -262,7 +262,7 @@ class Uri implements Htmlable, JsonSerializable, Responsable, Stringable
             $mergedQuery = $this->query()->all();
 
             foreach ($query as $key => $value) {
-                data_set($mergedQuery, $key, $value);
+                ws_data_set($mergedQuery, $key, $value);
             }
 
             $newQuery = $mergedQuery;
@@ -270,7 +270,7 @@ class Uri implements Htmlable, JsonSerializable, Responsable, Stringable
             $newQuery = [];
 
             foreach ($query as $key => $value) {
-                data_set($newQuery, $key, $value);
+                ws_data_set($newQuery, $key, $value);
             }
         }
 
@@ -298,7 +298,7 @@ class Uri implements Htmlable, JsonSerializable, Responsable, Stringable
      */
     public function pushOntoQuery(string $key, mixed $value): static
     {
-        $currentValue = data_get($this->query()->all(), $key);
+        $currentValue = ws_data_get($this->query()->all(), $key);
 
         $values = Arr::wrap($value);
 

@@ -28,7 +28,7 @@ class BinaryCodec
      */
     public static function encode(UuidInterface|Ulid|string|null $value, string $format): ?string
     {
-        if (blank($value)) {
+        if (ws_blank($value)) {
             return null;
         }
 
@@ -56,7 +56,7 @@ class BinaryCodec
      */
     public static function decode(?string $value, string $format): ?string
     {
-        if (blank($value)) {
+        if (ws_blank($value)) {
             return null;
         }
 

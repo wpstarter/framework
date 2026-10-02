@@ -29,7 +29,7 @@ class ValidationArrayRuleTest extends TestCase
 
         $this->assertSame('array:key_1,key_2,key_3', (string) $rule);
 
-        $rule = Rule::array(collect(['key_1', 'key_2', 'key_3']));
+        $rule = Rule::array(ws_collect(['key_1', 'key_2', 'key_3']));
 
         $this->assertSame('array:key_1,key_2,key_3', (string) $rule);
 

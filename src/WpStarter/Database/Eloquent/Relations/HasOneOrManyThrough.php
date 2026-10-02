@@ -229,7 +229,7 @@ abstract class HasOneOrManyThrough extends Relation
             return $instance;
         }
 
-        return $this->createOrFirst(array_merge($attributes, value($values)));
+        return $this->createOrFirst(array_merge($attributes, ws_value($values)));
     }
 
     /**
@@ -242,7 +242,7 @@ abstract class HasOneOrManyThrough extends Relation
     public function createOrFirst(array $attributes = [], Closure|array $values = [])
     {
         try {
-            return $this->getQuery()->withSavepointIfNeeded(fn () => $this->create(array_merge($attributes, value($values))));
+            return $this->getQuery()->withSavepointIfNeeded(fn () => $this->create(array_merge($attributes, ws_value($values))));
         } catch (UniqueConstraintViolationException $exception) {
             return $this->where($attributes)->first() ?? throw $exception;
         }
@@ -257,7 +257,7 @@ abstract class HasOneOrManyThrough extends Relation
      */
     public function updateOrCreate(array $attributes, array $values = [])
     {
-        return tap($this->firstOrCreate($attributes, $values), function ($instance) use ($values) {
+        return ws_tap($this->firstOrCreate($attributes, $values), function ($instance) use ($values) {
             if (! $instance->wasRecentlyCreated) {
                 $instance->fill($values)->save();
             }

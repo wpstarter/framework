@@ -4,11 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>{{ ws_config('app.name', 'Laravel') }}</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet"/>
 
     <!-- Styles -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
@@ -29,7 +29,8 @@
             </div>
 
             <div class="ml-6">
-                <h2 class="text-xl font-semibold text-gray-900">Application {{ $exception ? 'experiencing problems' : 'up' }}</h2>
+                <h2 class="text-xl font-semibold text-gray-900">
+                    Application {{ $exception ? 'experiencing problems' : 'up' }}</h2>
 
                 <p class="mt-2 text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
                     HTTP request received.

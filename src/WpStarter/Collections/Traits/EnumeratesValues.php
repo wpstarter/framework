@@ -366,10 +366,10 @@ trait EnumeratesValues
     public function value($key, $default = null)
     {
         $value = $this->first(function ($target) use ($key) {
-            return data_has($target, $key);
+            return ws_data_has($target, $key);
         });
 
-        return data_get($value, $key, $default);
+        return ws_data_get($value, $key, $default);
     }
 
     /**
@@ -405,10 +405,10 @@ trait EnumeratesValues
      * Determine if the collection is not empty.
      *
      * @phpstan-assert-if-true TValue $this->first()
-     * @phpstan-assert-if-true TValue $this->last()
+     * @phpstan-assert-if-true TValue $this->ws_last()
      *
      * @phpstan-assert-if-false null $this->first()
-     * @phpstan-assert-if-false null $this->last()
+     * @phpstan-assert-if-false null $this->ws_last()
      *
      * @return bool
      */
@@ -699,7 +699,7 @@ trait EnumeratesValues
     {
         $values = $this->getArrayableItems($values);
 
-        return $this->filter(fn ($item) => in_array(data_get($item, $key), $values, $strict));
+        return $this->filter(fn ($item) => in_array(ws_data_get($item, $key), $values, $strict));
     }
 
     /**
@@ -736,7 +736,7 @@ trait EnumeratesValues
     public function whereNotBetween($key, $values)
     {
         return $this->filter(
-            fn ($item) => data_get($item, $key) < reset($values) || data_get($item, $key) > end($values)
+            fn ($item) => ws_data_get($item, $key) < reset($values) || ws_data_get($item, $key) > end($values)
         );
     }
 
@@ -752,7 +752,7 @@ trait EnumeratesValues
     {
         $values = $this->getArrayableItems($values);
 
-        return $this->reject(fn ($item) => in_array(data_get($item, $key), $values, $strict));
+        return $this->reject(fn ($item) => in_array(ws_data_get($item, $key), $values, $strict));
     }
 
     /**
@@ -872,7 +872,7 @@ trait EnumeratesValues
             if (! is_array($result)) {
                 throw new UnexpectedValueException(sprintf(
                     "%s::reduceSpread expects reducer to return an array, but got a '%s' instead.",
-                    class_basename(static::class), gettype($result)
+                    ws_class_basename(static::class), gettype($result)
                 ));
             }
         }
@@ -1036,7 +1036,7 @@ trait EnumeratesValues
     public function __toString()
     {
         return $this->escapeWhenCastingToString
-            ? e($this->toJson())
+            ? ws_e($this->toJson())
             : $this->toJson();
     }
 
@@ -1121,7 +1121,7 @@ trait EnumeratesValues
         }
 
         return function ($item) use ($key, $operator, $value) {
-            $retrieved = enum_value(data_get($item, $key));
+            $retrieved = enum_value(ws_data_get($item, $key));
             $value = enum_value($value);
 
             $strings = array_filter([$retrieved, $value], function ($value) {
@@ -1176,7 +1176,7 @@ trait EnumeratesValues
             return $value;
         }
 
-        return fn ($item) => data_get($item, $value);
+        return fn ($item) => ws_data_get($item, $value);
     }
 
     /**

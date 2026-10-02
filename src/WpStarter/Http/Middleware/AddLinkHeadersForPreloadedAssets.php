@@ -29,7 +29,7 @@ class AddLinkHeadersForPreloadedAssets
      */
     public function handle($request, $next, $limit = null)
     {
-        return tap($next($request), function ($response) use ($limit) {
+        return ws_tap($next($request), function ($response) use ($limit) {
             if ($response instanceof Response && Vite::preloadedAssets() !== []) {
                 $response->header('Link', (new Collection(Vite::preloadedAssets()))
                     ->when($limit, fn ($assets, $limit) => $assets->take($limit))

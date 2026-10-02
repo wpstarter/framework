@@ -33,7 +33,7 @@ class RendererTest extends TestCase
     #[WithConfig('app.debug', false)]
     public function testItCanRenderExceptionPageUsingSymfonyIfRendererIsNotDefined()
     {
-        config(['app.debug' => true]);
+        ws_config(['app.debug' => true]);
 
         $this->assertFalse($this->app->bound(Renderer::class));
 
@@ -51,7 +51,7 @@ class RendererTest extends TestCase
             {
                 public function render($throwable)
                 {
-                    return response('Custom Exception Renderer: '.$throwable->getMessage(), 500);
+                    return ws_response('Custom Exception Renderer: '.$throwable->getMessage(), 500);
                 }
             };
         });
@@ -71,7 +71,7 @@ class RendererTest extends TestCase
             {
                 public function render($throwable)
                 {
-                    return response('Custom Exception Renderer: '.$throwable->getMessage(), 500);
+                    return ws_response('Custom Exception Renderer: '.$throwable->getMessage(), 500);
                 }
             };
         });
@@ -107,7 +107,7 @@ class RendererTest extends TestCase
             {
                 public function render($throwable)
                 {
-                    return response('Custom Exception Renderer: '.$throwable->getMessage(), 500);
+                    return ws_response('Custom Exception Renderer: '.$throwable->getMessage(), 500);
                 }
             };
         });

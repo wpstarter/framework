@@ -203,7 +203,7 @@ class PostgresSchemaBuilderTest extends PostgresTestCase
 
         $indexes = Schema::getIndexes('public.table');
 
-        $this->assertSame([], collect($indexes)->firstWhere('name', 'table_raw_index')['columns']);
+        $this->assertSame([], ws_collect($indexes)->firstWhere('name', 'table_raw_index')['columns']);
     }
 
     public function testCreateIndexesOnline()
@@ -221,7 +221,7 @@ class PostgresSchemaBuilderTest extends PostgresTestCase
         });
 
         $indexes = Schema::getIndexes('public.table');
-        $indexNames = collect($indexes)->pluck('name');
+        $indexNames = ws_collect($indexes)->pluck('name');
 
         $this->assertContains('public_table_title_unique', $indexNames);
         $this->assertContains('public_table_created_at_index', $indexNames);

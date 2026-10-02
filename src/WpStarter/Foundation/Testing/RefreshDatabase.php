@@ -51,10 +51,10 @@ trait RefreshDatabase
     protected function usingInMemoryDatabase(?string $name = null)
     {
         if (is_null($name)) {
-            $name = config('database.default');
+            $name = ws_config('database.default');
         }
 
-        return config("database.connections.{$name}.database") === ':memory:';
+        return ws_config("database.connections.{$name}.database") === ':memory:';
     }
 
     /**
@@ -175,7 +175,7 @@ trait RefreshDatabase
     {
         return property_exists($this, 'connectionsToTransact')
             ? $this->connectionsToTransact
-            : [config('database.default')];
+            : [ws_config('database.default')];
     }
 
     /**

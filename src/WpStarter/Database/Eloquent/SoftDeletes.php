@@ -56,7 +56,7 @@ trait SoftDeletes
 
         $this->forceDeleting = true;
 
-        return tap($this->delete(), function ($deleted) {
+        return ws_tap($this->delete(), function ($deleted) {
             $this->forceDeleting = false;
 
             if ($deleted) {
@@ -121,7 +121,7 @@ trait SoftDeletes
     protected function performDeleteOnModel()
     {
         if ($this->forceDeleting) {
-            return tap($this->setKeysForSaveQuery($this->newModelQuery())->forceDelete(), function () {
+            return ws_tap($this->setKeysForSaveQuery($this->newModelQuery())->forceDelete(), function () {
                 $this->exists = false;
             });
         }

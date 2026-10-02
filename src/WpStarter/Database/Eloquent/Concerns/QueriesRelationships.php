@@ -746,7 +746,7 @@ trait QueriesRelationships
         }
 
         if ($relationshipName === null) {
-            $relationshipName = Str::camel(class_basename($related));
+            $relationshipName = Str::camel(ws_class_basename($related));
         }
 
         try {
@@ -803,7 +803,7 @@ trait QueriesRelationships
         }
 
         if ($relationshipName === null) {
-            $relationshipName = Str::plural(Str::camel(class_basename($related)));
+            $relationshipName = Str::plural(Str::camel(ws_class_basename($related)));
         }
 
         try {

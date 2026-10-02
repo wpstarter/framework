@@ -39,10 +39,10 @@ class EloquentMorphCountEagerLoadingTest extends DatabaseTestCase
         $post = Post::create();
         $video = Video::create();
 
-        tap((new Like)->post()->associate($post))->save();
-        tap((new Like)->post()->associate($post))->save();
+        ws_tap((new Like)->post()->associate($post))->save();
+        ws_tap((new Like)->post()->associate($post))->save();
 
-        tap((new View)->video()->associate($video))->save();
+        ws_tap((new View)->video()->associate($video))->save();
 
         (new Comment)->commentable()->associate($post)->save();
         (new Comment)->commentable()->associate($video)->save();

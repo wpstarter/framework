@@ -259,7 +259,7 @@ class PruneCommandTest extends TestCase
         $input = new ArrayInput($arguments);
         $output = new BufferedOutput;
 
-        tap(new PruneCommand())
+        ws_tap(new PruneCommand())
             ->setLaravel(Application::getInstance())
             ->run($input, $output);
 

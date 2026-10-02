@@ -496,8 +496,8 @@ class BroadcastManager implements FactoryContract
      */
     protected function rescue(Closure $callback)
     {
-        if (function_exists('rescue')) {
-            return rescue($callback);
+        if (function_exists('ws_rescue')) {
+            return ws_rescue($callback);
         }
 
         return $callback();

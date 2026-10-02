@@ -828,10 +828,10 @@ class BladeComponentTagCompilerTest extends AbstractBladeTestCase
         $paginator = new class extends AbstractPaginator {
         };
 
-        $this->assertEquals(e('<hi>'), BladeCompiler::sanitizeComponentAttribute('<hi>'));
-        $this->assertEquals(e('1'), BladeCompiler::sanitizeComponentAttribute('1'));
+        $this->assertEquals(ws_e('<hi>'), BladeCompiler::sanitizeComponentAttribute('<hi>'));
+        $this->assertEquals(ws_e('1'), BladeCompiler::sanitizeComponentAttribute('1'));
         $this->assertEquals(1, BladeCompiler::sanitizeComponentAttribute(1));
-        $this->assertEquals(e('<hi>'), BladeCompiler::sanitizeComponentAttribute($class));
+        $this->assertEquals(ws_e('<hi>'), BladeCompiler::sanitizeComponentAttribute($class));
         $this->assertSame($model, BladeCompiler::sanitizeComponentAttribute($model));
         $this->assertSame($paginator, BladeCompiler::sanitizeComponentAttribute($paginator));
     }

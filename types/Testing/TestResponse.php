@@ -9,17 +9,17 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 use function PHPStan\Testing\assertType;
 
-$response = TestResponse::fromBaseResponse(response('Laravel', 200));
+$response = TestResponse::fromBaseResponse(ws_response('Laravel', 200));
 assertType(Response::class, $response->baseResponse);
 
-$response = TestResponse::fromBaseResponse(response()->redirectTo(''));
+$response = TestResponse::fromBaseResponse(ws_response()->redirectTo(''));
 assertType(RedirectResponse::class, $response->baseResponse);
 
-$response = TestResponse::fromBaseResponse(response()->download(''));
+$response = TestResponse::fromBaseResponse(ws_response()->download(''));
 assertType(BinaryFileResponse::class, $response->baseResponse);
 
-$response = TestResponse::fromBaseResponse(response()->json());
+$response = TestResponse::fromBaseResponse(ws_response()->json());
 assertType(JsonResponse::class, $response->baseResponse);
 
-$response = TestResponse::fromBaseResponse(response()->streamDownload(fn () => 1));
+$response = TestResponse::fromBaseResponse(ws_response()->streamDownload(fn () => 1));
 assertType(StreamedResponse::class, $response->baseResponse);

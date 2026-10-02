@@ -60,7 +60,7 @@ class DumpCommand extends Command
 
         if ($this->option('prune')) {
             (new Filesystem)->deleteDirectory(
-                $path = database_path('migrations'), preserve: false
+                $path = ws_database_path('migrations'), preserve: false
             );
 
             $info .= ' and pruned';
@@ -97,7 +97,7 @@ class DumpCommand extends Command
      */
     protected function path(Connection $connection)
     {
-        return tap($this->option('path') ?: database_path('schema/'.$connection->getName().'-schema.sql'), function ($path) {
+        return ws_tap($this->option('path') ?: ws_database_path('schema/'.$connection->getName().'-schema.sql'), function ($path) {
             (new Filesystem)->ensureDirectoryExists(dirname($path));
         });
     }

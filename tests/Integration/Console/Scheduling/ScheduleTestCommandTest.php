@@ -17,7 +17,7 @@ class ScheduleTestCommandTest extends TestCase
     {
         parent::setUp();
 
-        Carbon::setTestNow(now()->startOfYear());
+        Carbon::setTestNow(ws_now()->startOfYear());
 
         $this->schedule = $this->app->make(Schedule::class);
     }
@@ -44,7 +44,7 @@ class ScheduleTestCommandTest extends TestCase
         $this->schedule->job(BarJobStub::class);
         $this->schedule->call(fn () => true)->name('callback');
 
-        $expectedOutput = windows_os()
+        $expectedOutput = ws_windows_os()
             ? 'Running ["artisan" bar:command]'
             : "Running ['artisan' bar:command]";
 

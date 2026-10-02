@@ -130,7 +130,7 @@ abstract class GeneratorCommand extends Command implements PromptsForMissingInpu
     {
         parent::__construct();
 
-        if (in_array(CreatesMatchingTest::class, class_uses_recursive($this))) {
+        if (in_array(CreatesMatchingTest::class, ws_class_uses_recursive($this))) {
             $this->addTestOptions();
         }
 
@@ -186,11 +186,11 @@ abstract class GeneratorCommand extends Command implements PromptsForMissingInpu
 
         $info = $this->type;
 
-        if (in_array(CreatesMatchingTest::class, class_uses_recursive($this))) {
+        if (in_array(CreatesMatchingTest::class, ws_class_uses_recursive($this))) {
             $this->handleTestCreation($path);
         }
 
-        if (windows_os()) {
+        if (ws_windows_os()) {
             $path = str_replace('/', '\\', $path);
         }
 
@@ -473,7 +473,7 @@ abstract class GeneratorCommand extends Command implements PromptsForMissingInpu
      */
     protected function viewPath($path = '')
     {
-        $views = $this->laravel['config']['view.paths'][0] ?? resource_path('views');
+        $views = $this->laravel['config']['view.paths'][0] ?? ws_resource_path('views');
 
         return $views.($path ? DIRECTORY_SEPARATOR.$path : $path);
     }

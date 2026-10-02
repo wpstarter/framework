@@ -21,7 +21,7 @@ class OnceTest extends TestCase
         {
             public function rand()
             {
-                return once(fn () => rand(1, PHP_INT_MAX));
+                return ws_once(fn () => rand(1, PHP_INT_MAX));
             }
         };
 
@@ -39,7 +39,7 @@ class OnceTest extends TestCase
 
             public function increment()
             {
-                return once(fn () => ++$this->count);
+                return ws_once(fn () => ++$this->count);
             }
         };
 
@@ -91,7 +91,7 @@ class OnceTest extends TestCase
         {
             public function rand(string $letter)
             {
-                return once(function () use ($letter) {
+                return ws_once(function () use ($letter) {
                     return $letter.rand(1, 10000000);
                 });
             }
@@ -111,7 +111,7 @@ class OnceTest extends TestCase
         $letter = 'a';
 
         a:
-        $results[] = once(fn () => $letter.rand(1, 10000000));
+        $results[] = ws_once(fn () => $letter.rand(1, 10000000));
 
         if (count($results) < 2) {
             goto a;
@@ -150,7 +150,7 @@ class OnceTest extends TestCase
 
             public function call()
             {
-                return once($this->invokable);
+                return ws_once($this->invokable);
             }
         };
 
@@ -169,7 +169,7 @@ class OnceTest extends TestCase
         {
             public function rand()
             {
-                return once(MyClass::staticRand(...));
+                return ws_once(MyClass::staticRand(...));
             }
         };
 
@@ -185,7 +185,7 @@ class OnceTest extends TestCase
         {
             public function rand()
             {
-                return once([MyClass::class, 'staticRand']);
+                return ws_once([MyClass::class, 'staticRand']);
             }
         };
 
@@ -205,7 +205,7 @@ class OnceTest extends TestCase
 
     public function testMemoizationWhenOnceIsWithinClosure()
     {
-        $resolver = fn () => once(fn () => rand(1, PHP_INT_MAX));
+        $resolver = fn () => ws_once(fn () => rand(1, PHP_INT_MAX));
 
         $first = $resolver();
         $second = $resolver();
@@ -251,18 +251,18 @@ class OnceTest extends TestCase
 
     public function testMemoizationWithinEvals()
     {
-        $firstResolver = eval('return fn () => once( function () { return random_int(1, PHP_INT_MAX); } ) ;');
+        $firstResolver = eval('return fn () => ws_once( function () { return random_int(1, PHP_INT_MAX); } ) ;');
 
         $firstA = $firstResolver();
         $firstB = $firstResolver();
 
-        $secondResolver = eval('return fn () => fn () => once( function () { return random_int(1, PHP_INT_MAX); } ) ;');
+        $secondResolver = eval('return fn () => fn () => ws_once( function () { return random_int(1, PHP_INT_MAX); } ) ;');
 
         $secondA = $secondResolver()();
         $secondB = $secondResolver()();
 
-        $third = eval('return once( function () { return random_int(1, PHP_INT_MAX); } ) ;');
-        $fourth = eval('return once( function () { return random_int(1, PHP_INT_MAX); } ) ;');
+        $third = eval('return ws_once( function () { return random_int(1, PHP_INT_MAX); } ) ;');
+        $fourth = eval('return ws_once( function () { return random_int(1, PHP_INT_MAX); } ) ;');
 
         $this->assertNotSame($firstA, $firstB);
         $this->assertNotSame($secondA, $secondB);
@@ -273,15 +273,15 @@ class OnceTest extends TestCase
     {
         $this->markTestSkipped('This test shows a limitation of the current implementation.');
 
-        $result = [once(fn () => rand(1, PHP_INT_MAX)), once(fn () => rand(1, PHP_INT_MAX))];
+        $result = [ws_once(fn () => rand(1, PHP_INT_MAX)), ws_once(fn () => rand(1, PHP_INT_MAX))];
 
         $this->assertNotSame($result[0], $result[1]);
     }
 
     public function testResultIsDifferentWhenCalledFromDifferentClosures()
     {
-        $resolver = fn () => once(fn () => rand(1, PHP_INT_MAX));
-        $resolver2 = fn () => once(fn () => rand(1, PHP_INT_MAX));
+        $resolver = fn () => ws_once(fn () => rand(1, PHP_INT_MAX));
+        $resolver2 = fn () => ws_once(fn () => rand(1, PHP_INT_MAX));
 
         $first = $resolver();
         $second = $resolver2();
@@ -295,7 +295,7 @@ class OnceTest extends TestCase
         {
             public function rand()
             {
-                return once(fn () => rand(1, PHP_INT_MAX));
+                return ws_once(fn () => rand(1, PHP_INT_MAX));
             }
         };
 
@@ -303,7 +303,7 @@ class OnceTest extends TestCase
         {
             public function rand()
             {
-                return once(fn () => rand(1, PHP_INT_MAX));
+                return ws_once(fn () => rand(1, PHP_INT_MAX));
             }
         };
 
@@ -319,7 +319,7 @@ class OnceTest extends TestCase
         {
             public function rand()
             {
-                return once(fn () => once(fn () => rand(1, PHP_INT_MAX)));
+                return ws_once(fn () => ws_once(fn () => rand(1, PHP_INT_MAX)));
             }
         };
 
@@ -352,7 +352,7 @@ class OnceTest extends TestCase
 
             public function null()
             {
-                return once(function () {
+                return ws_once(function () {
                     $this->i++;
 
                     return null;
@@ -375,29 +375,29 @@ class OnceTest extends TestCase
 
 $letter = 'a';
 
-$GLOBALS['onceable1'] = fn () => once(fn () => $letter.rand(1, PHP_INT_MAX));
-$GLOBALS['onceable2'] = fn () => once(fn () => $letter.rand(1, PHP_INT_MAX));
+$GLOBALS['onceable1'] = fn () => ws_once(fn () => $letter.rand(1, PHP_INT_MAX));
+$GLOBALS['onceable2'] = fn () => ws_once(fn () => $letter.rand(1, PHP_INT_MAX));
 
 function my_rand()
 {
-    return once(fn () => rand(1, PHP_INT_MAX));
+    return ws_once(fn () => rand(1, PHP_INT_MAX));
 }
 
 class MyClass
 {
     public function rand()
     {
-        return once(fn () => rand(1, PHP_INT_MAX));
+        return ws_once(fn () => rand(1, PHP_INT_MAX));
     }
 
     public static function staticRand()
     {
-        return once(fn () => rand(1, PHP_INT_MAX));
+        return ws_once(fn () => rand(1, PHP_INT_MAX));
     }
 
     public function callRand()
     {
-        return once(fn () => $this->rand());
+        return ws_once(fn () => $this->rand());
     }
 }
 

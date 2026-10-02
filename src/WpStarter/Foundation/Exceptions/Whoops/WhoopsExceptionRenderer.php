@@ -5,7 +5,7 @@ namespace WpStarter\Foundation\Exceptions\Whoops;
 use WpStarter\Contracts\Foundation\ExceptionRenderer;
 use Whoops\Run as Whoops;
 
-use function tap;
+use function ws_tap;
 
 class WhoopsExceptionRenderer implements ExceptionRenderer
 {
@@ -17,7 +17,7 @@ class WhoopsExceptionRenderer implements ExceptionRenderer
      */
     public function render($throwable)
     {
-        return tap(new Whoops, function ($whoops) {
+        return ws_tap(new Whoops, function ($whoops) {
             $whoops->appendHandler($this->whoopsHandler());
 
             $whoops->writeToOutput(false);

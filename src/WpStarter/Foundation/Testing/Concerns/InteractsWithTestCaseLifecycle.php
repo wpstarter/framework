@@ -211,7 +211,7 @@ trait InteractsWithTestCaseLifecycle
      */
     protected function setUpTraits()
     {
-        $uses = $this->traitsUsedByTest ?? array_flip(class_uses_recursive(static::class));
+        $uses = $this->traitsUsedByTest ?? array_flip(ws_class_uses_recursive(static::class));
 
         if (isset($uses[RefreshDatabase::class])) {
             $this->refreshDatabase();
@@ -238,11 +238,11 @@ trait InteractsWithTestCaseLifecycle
         }
 
         foreach ($uses as $trait) {
-            if (method_exists($this, $method = 'setUp'.class_basename($trait))) {
+            if (method_exists($this, $method = 'setUp'.ws_class_basename($trait))) {
                 $this->{$method}();
             }
 
-            if (method_exists($this, $method = 'tearDown'.class_basename($trait))) {
+            if (method_exists($this, $method = 'tearDown'.ws_class_basename($trait))) {
                 $this->beforeApplicationDestroyed(fn () => $this->{$method}());
             }
         }

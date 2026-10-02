@@ -161,7 +161,7 @@ class MigrateCommand extends BaseCommand implements Isolatable
      */
     protected function repositoryExists()
     {
-        return retry(2, fn () => $this->migrator->repositoryExists(), 0, function ($e) {
+        return ws_retry(2, fn () => $this->migrator->repositoryExists(), 0, function ($e) {
             try {
                 return $this->handleMissingDatabase($e->getPrevious());
             } catch (Throwable) {
@@ -267,7 +267,7 @@ class MigrateCommand extends BaseCommand implements Isolatable
 
             $freshConnection = $this->migrator->resolveConnection($this->option('database'));
 
-            return tap($freshConnection->unprepared(
+            return ws_tap($freshConnection->unprepared(
                 match ($connection->getDriverName()) {
                     'mysql', 'mariadb' => "CREATE DATABASE IF NOT EXISTS `{$connection->getDatabaseName()}`",
                     'pgsql' => 'CREATE DATABASE "'.$connection->getDatabaseName().'"',
@@ -332,10 +332,10 @@ class MigrateCommand extends BaseCommand implements Isolatable
             return $this->option('schema-path');
         }
 
-        if (file_exists($path = database_path('schema/'.$connection->getName().'-schema.dump'))) {
+        if (file_exists($path = ws_database_path('schema/'.$connection->getName().'-schema.dump'))) {
             return $path;
         }
 
-        return database_path('schema/'.$connection->getName().'-schema.sql');
+        return ws_database_path('schema/'.$connection->getName().'-schema.sql');
     }
 }

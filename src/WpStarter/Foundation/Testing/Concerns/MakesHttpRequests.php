@@ -631,7 +631,7 @@ trait MakesHttpRequests
             $uri = substr($uri, 1);
         }
 
-        return trim(url($uri), '/');
+        return trim(ws_url($uri), '/');
     }
 
     /**
@@ -703,7 +703,7 @@ trait MakesHttpRequests
         }
 
         return (new Collection($this->defaultCookies))
-            ->map(fn ($value, $key) => encrypt(CookieValuePrefix::create($key, app('encrypter')->getKey()).$value, false))
+            ->map(fn ($value, $key) => ws_encrypt(CookieValuePrefix::create($key, ws_app('encrypter')->getKey()).$value, false))
             ->merge($this->unencryptedCookies)
             ->all();
     }
@@ -755,7 +755,7 @@ trait MakesHttpRequests
      */
     protected function createTestResponse($response, $request)
     {
-        return tap(TestResponse::fromBaseResponse($response, $request), function ($response) {
+        return ws_tap(TestResponse::fromBaseResponse($response, $request), function ($response) {
             $response->withExceptions(
                 $this->app->bound(LoggedExceptionCollection::class)
                     ? $this->app->make(LoggedExceptionCollection::class)

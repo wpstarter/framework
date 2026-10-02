@@ -80,7 +80,7 @@ class ConcurrencyLimiter
 
         if (is_callable($callback)) {
             try {
-                return tap($callback(), function () use ($slot, $id) {
+                return ws_tap($callback(), function () use ($slot, $id) {
                     $this->release($slot, $id);
                 });
             } catch (Throwable $exception) {

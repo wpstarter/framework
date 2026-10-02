@@ -18,11 +18,11 @@ class DeferredCallbackTest extends TestCase
         $executed = false;
 
         Route::get('/test', function () use (&$executed) {
-            defer(function () use (&$executed) {
+            ws_defer(function () use (&$executed) {
                 $executed = true;
             });
 
-            dispatch(new TestSyncJob);
+            ws_dispatch(new TestSyncJob);
         })->middleware(InvokeDeferredCallbacks::class);
 
         $this->get('/test');

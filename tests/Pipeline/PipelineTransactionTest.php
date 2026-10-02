@@ -43,8 +43,8 @@ class PipelineTransactionTest extends TestCase
     public function testConnection($connection, $connectionName)
     {
         Event::fake();
-        config(['database.connections.testing2' => config('database.connections.testing')]);
-        config(['database.default' => 'testing2']);
+        ws_config(['database.connections.testing2' => ws_config('database.connections.testing')]);
+        ws_config(['database.default' => 'testing2']);
 
         $result = Pipeline::withinTransaction($connection)
             ->send('some string')

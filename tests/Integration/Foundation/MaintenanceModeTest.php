@@ -21,7 +21,7 @@ class MaintenanceModeTest extends TestCase
     protected function setUp(): void
     {
         $this->beforeApplicationDestroyed(function () {
-            @unlink(storage_path('framework/down'));
+            @unlink(ws_storage_path('framework/down'));
         });
 
         parent::setUp();
@@ -29,7 +29,7 @@ class MaintenanceModeTest extends TestCase
 
     public function testBasicMaintenanceModeResponse()
     {
-        file_put_contents(storage_path('framework/down'), json_encode([
+        file_put_contents(ws_storage_path('framework/down'), json_encode([
             'retry' => 60,
             'refresh' => 60,
         ]));
@@ -47,7 +47,7 @@ class MaintenanceModeTest extends TestCase
 
     public function testMaintenanceModeCanHaveCustomStatus()
     {
-        file_put_contents(storage_path('framework/down'), json_encode([
+        file_put_contents(ws_storage_path('framework/down'), json_encode([
             'retry' => 60,
             'status' => 200,
         ]));
@@ -64,7 +64,7 @@ class MaintenanceModeTest extends TestCase
 
     public function testMaintenanceModeCanHaveCustomTemplate()
     {
-        file_put_contents(storage_path('framework/down'), json_encode([
+        file_put_contents(ws_storage_path('framework/down'), json_encode([
             'retry' => 60,
             'template' => 'Rendered Content',
         ]));
@@ -82,7 +82,7 @@ class MaintenanceModeTest extends TestCase
 
     public function testMaintenanceModeCanRedirectWithBypassCookie()
     {
-        file_put_contents(storage_path('framework/down'), json_encode([
+        file_put_contents(ws_storage_path('framework/down'), json_encode([
             'retry' => 60,
             'secret' => 'foo',
             'template' => 'Rendered Content',
@@ -100,7 +100,7 @@ class MaintenanceModeTest extends TestCase
 
     public function testMaintenanceModeCanBeBypassedWithValidCookie()
     {
-        file_put_contents(storage_path('framework/down'), json_encode([
+        file_put_contents(ws_storage_path('framework/down'), json_encode([
             'retry' => 60,
             'secret' => 'foo',
         ]));
@@ -126,7 +126,7 @@ class MaintenanceModeTest extends TestCase
             protected $except = ['/test'];
         });
 
-        file_put_contents(storage_path('framework/down'), json_encode([
+        file_put_contents(ws_storage_path('framework/down'), json_encode([
             'retry' => 60,
         ]));
 
@@ -140,7 +140,7 @@ class MaintenanceModeTest extends TestCase
 
     public function testMaintenanceModeCantBeBypassedWithInvalidCookie()
     {
-        file_put_contents(storage_path('framework/down'), json_encode([
+        file_put_contents(ws_storage_path('framework/down'), json_encode([
             'retry' => 60,
             'secret' => 'foo',
         ]));
@@ -168,7 +168,7 @@ class MaintenanceModeTest extends TestCase
         $this->assertTrue(MaintenanceModeBypassCookie::isValid($cookie->getValue(), 'test-key'));
         $this->assertFalse(MaintenanceModeBypassCookie::isValid($cookie->getValue(), 'wrong-key'));
 
-        Carbon::setTestNow(now()->addMonths(6));
+        Carbon::setTestNow(ws_now()->addMonths(6));
         $this->assertFalse(MaintenanceModeBypassCookie::isValid($cookie->getValue(), 'test-key'));
     }
 
@@ -183,7 +183,7 @@ class MaintenanceModeTest extends TestCase
 
     public function testDispatchEventWhenMaintenanceModeIsDisabled()
     {
-        file_put_contents(storage_path('framework/down'), json_encode([
+        file_put_contents(ws_storage_path('framework/down'), json_encode([
             'retry' => 60,
             'refresh' => 60,
         ]));
@@ -202,7 +202,7 @@ class MaintenanceModeTest extends TestCase
 
         $this->artisan(DownCommand::class, ['--retry' => $datetime]);
 
-        $data = json_decode(file_get_contents(storage_path('framework/down')), true);
+        $data = json_decode(file_get_contents(ws_storage_path('framework/down')), true);
 
         $expectedDate = Carbon::parse($datetime)->format(DateTimeInterface::RFC7231);
         $this->assertSame($expectedDate, $data['retry']);
@@ -224,7 +224,7 @@ class MaintenanceModeTest extends TestCase
         $retryDate = Carbon::now()->addWeek();
         $expectedHeader = $retryDate->format(DateTimeInterface::RFC7231);
 
-        file_put_contents(storage_path('framework/down'), json_encode([
+        file_put_contents(ws_storage_path('framework/down'), json_encode([
             'retry' => $expectedHeader,
         ]));
 
@@ -240,7 +240,7 @@ class MaintenanceModeTest extends TestCase
     {
         $this->artisan(DownCommand::class, ['--retry' => 'not-a-valid-date']);
 
-        $data = json_decode(file_get_contents(storage_path('framework/down')), true);
+        $data = json_decode(file_get_contents(ws_storage_path('framework/down')), true);
 
         $this->assertNull($data['retry']);
     }
@@ -251,7 +251,7 @@ class MaintenanceModeTest extends TestCase
 
         $this->artisan(DownCommand::class, ['--retry' => '@'.$futureTimestamp]);
 
-        $data = json_decode(file_get_contents(storage_path('framework/down')), true);
+        $data = json_decode(file_get_contents(ws_storage_path('framework/down')), true);
 
         $expectedDate = Carbon::createFromTimestamp($futureTimestamp)->format(DateTimeInterface::RFC7231);
         $this->assertSame($expectedDate, $data['retry']);
@@ -262,13 +262,13 @@ class MaintenanceModeTest extends TestCase
         $this->artisan(DownCommand::class, ['--retry' => 60])
             ->expectsOutputToContain('Application is now in maintenance mode.');
 
-        $data = json_decode(file_get_contents(storage_path('framework/down')), true);
+        $data = json_decode(file_get_contents(ws_storage_path('framework/down')), true);
         $this->assertSame(60, $data['retry']);
 
         $this->artisan(DownCommand::class, ['--retry' => 120])
             ->expectsOutputToContain('Maintenance mode options updated.');
 
-        $data = json_decode(file_get_contents(storage_path('framework/down')), true);
+        $data = json_decode(file_get_contents(ws_storage_path('framework/down')), true);
         $this->assertSame(120, $data['retry']);
     }
 
@@ -280,7 +280,7 @@ class MaintenanceModeTest extends TestCase
         ]);
         $this->artisan(DownCommand::class);
 
-        $data = json_decode(file_get_contents(storage_path('framework/down')), true);
+        $data = json_decode(file_get_contents(ws_storage_path('framework/down')), true);
 
         $this->assertSame([
             '/api/*',

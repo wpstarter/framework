@@ -334,7 +334,7 @@ class HasInverseRelationStub extends Relation
         protected ?string $foreignKey = null,
     ) {
         parent::__construct($query, $parent);
-        $this->foreignKey ??= (new Stringable(class_basename($parent)))->snake()->finish('_id')->toString();
+        $this->foreignKey ??= (new Stringable(ws_class_basename($parent)))->snake()->finish('_id')->toString();
     }
 
     public function getForeignKeyName()

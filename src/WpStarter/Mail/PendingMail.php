@@ -165,7 +165,7 @@ class PendingMail
      */
     protected function fill(MailableContract $mailable)
     {
-        return tap($mailable->to($this->to)
+        return ws_tap($mailable->to($this->to)
             ->cc($this->cc)
             ->bcc($this->bcc), function (MailableContract $mailable) {
                 if ($this->locale) {

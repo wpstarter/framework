@@ -48,14 +48,14 @@ class RouteServiceProviderTest extends TestCase
 
     public function test_it_can_uses_routes_registered_using_bootstrap_file()
     {
-        $this->get(route('login'))
+        $this->get(ws_route('login'))
             ->assertOk()
             ->assertSee('Login');
     }
 
     public function test_it_can_uses_routes_registered_using_configuration_file()
     {
-        $this->get(route('dashboard'))
+        $this->get(ws_route('dashboard'))
             ->assertOk()
             ->assertSee('Hello');
     }

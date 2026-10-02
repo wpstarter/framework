@@ -231,7 +231,7 @@ class FoundationExceptionsHandlerTest extends TestCase
         $this->handler->renderable(function (CustomException $e, $request) {
             $this->assertSame($this->request, $request);
 
-            return response()->json(['response' => 'My custom exception response']);
+            return ws_response()->json(['response' => 'My custom exception response']);
         });
 
         $response = $this->handler->render($this->request, new CustomException)->getContent();
@@ -748,7 +748,7 @@ class FoundationExceptionsHandlerTest extends TestCase
             $handler->report(new RuntimeException("RuntimeException {$i}"));
         }
 
-        [$runtimeExceptions, $baseExceptions] = collect($reported)->partition(fn ($e) => $e instanceof RuntimeException);
+        [$runtimeExceptions, $baseExceptions] = ws_collect($reported)->partition(fn ($e) => $e instanceof RuntimeException);
         $this->assertCount(10, $baseExceptions);
         $this->assertCount(2, $runtimeExceptions);
     }
@@ -940,7 +940,7 @@ class ResponsableException extends Exception implements Responsable
 {
     public function toResponse($request)
     {
-        return response()->json(['response' => 'My responsable exception response']);
+        return ws_response()->json(['response' => 'My responsable exception response']);
     }
 }
 
@@ -964,7 +964,7 @@ class RenderableException extends Exception
 {
     public function render($request)
     {
-        return response()->json(['response' => 'My renderable exception response']);
+        return ws_response()->json(['response' => 'My renderable exception response']);
     }
 }
 
@@ -999,7 +999,7 @@ class CustomRenderer
 {
     public function __invoke(CustomException $e, $request)
     {
-        return response()->json(['response' => 'The CustomRenderer response']);
+        return ws_response()->json(['response' => 'The CustomRenderer response']);
     }
 }
 

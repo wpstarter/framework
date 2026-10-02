@@ -80,7 +80,7 @@ class QueueServiceProvider extends ServiceProvider implements DeferrableProvider
             // Once we have an instance of the queue manager, we will register the various
             // resolvers for the queue connectors. These connectors are responsible for
             // creating the classes that accept queue configs and instantiate queues.
-            return tap(new QueueManager($app), function ($manager) {
+            return ws_tap(new QueueManager($app), function ($manager) {
                 $this->registerConnectors($manager);
             });
         });

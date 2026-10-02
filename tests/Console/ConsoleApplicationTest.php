@@ -344,11 +344,11 @@ class TestKernel extends Kernel
     #[\Override]
     protected function commandClassFromFile(\SplFileInfo $file, string $namespace): string
     {
-        return tap(parent::commandClassFromFile($file, $namespace), fn ($command) => $this->loadedCommands[] = $command);
+        return ws_tap(parent::commandClassFromFile($file, $namespace), fn ($command) => $this->loadedCommands[] = $command);
     }
 
     public function getRegisteredCommands(): array
     {
-        return collect($this->getArtisan()->all())->values()->transform(fn ($command) => $command::class)->all();
+        return ws_collect($this->getArtisan()->all())->values()->transform(fn ($command) => $command::class)->all();
     }
 }

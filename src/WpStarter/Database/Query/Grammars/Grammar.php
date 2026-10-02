@@ -904,9 +904,9 @@ class Grammar extends BaseGrammar
 
         $column = $this->wrap($having['column']);
 
-        $min = $this->parameter(head($having['values']));
+        $min = $this->parameter(ws_head($having['values']));
 
-        $max = $this->parameter(last($having['values']));
+        $max = $this->parameter(ws_last($having['values']));
 
         return $column.' '.$between.' '.$min.' and '.$max;
     }
@@ -1395,7 +1395,7 @@ class Grammar extends BaseGrammar
     {
         $cleanBindings = Arr::except($bindings, ['select', 'join']);
 
-        $values = Arr::flatten(array_map(fn ($value) => value($value), $values));
+        $values = Arr::flatten(array_map(fn ($value) => ws_value($value), $values));
 
         return array_values(
             array_merge($bindings['join'], $values, Arr::flatten($cleanBindings))
@@ -1444,7 +1444,7 @@ class Grammar extends BaseGrammar
      */
     protected function compileDeleteWithJoins(Builder $query, $table, $where)
     {
-        $alias = last(explode(' as ', $table));
+        $alias = ws_last(explode(' as ', $table));
 
         $joins = $this->compileJoins($query, $query->joins);
 

@@ -33,7 +33,7 @@ class ResourceResponse implements Responsable
      */
     public function toResponse($request)
     {
-        return tap(response()->json(
+        return ws_tap(ws_response()->json(
             $this->wrap(
                 $this->resource->resolve($request),
                 $this->resource->with($request),

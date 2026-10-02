@@ -130,7 +130,7 @@ trait ResolvesJsonApiElements
         $morphMap = Relation::getMorphAlias($modelClassName);
 
         return Str::of(
-            $morphMap !== $modelClassName ? $morphMap : class_basename($modelClassName)
+            $morphMap !== $modelClassName ? $morphMap : ws_class_basename($modelClassName)
         )->snake()->pluralStudly();
     }
 
@@ -158,7 +158,7 @@ trait ResolvesJsonApiElements
         $data = (new Collection($data))
             ->mapWithKeys(fn ($value, $key) => is_int($key) ? [$value => $this->resource->{$value}] : [$key => $value])
             ->when(! empty($sparseFieldset), fn ($attributes) => $attributes->only($sparseFieldset))
-            ->transform(fn ($value) => value($value, $request))
+            ->transform(fn ($value) => ws_value($value, $request))
             ->all();
 
         return $this->filter($data);
@@ -251,7 +251,7 @@ trait ResolvesJsonApiElements
             $isUnique = ! $relationship instanceof BelongsToMany;
 
             yield $relationName => ['data' => $relatedModels->map(function ($relatedModel) use ($request, $resourceClass, $isUnique, $requestedRelationships) {
-                $relatedResource = rescue(fn () => $relatedModel->toResource($resourceClass), new JsonApiResource($relatedModel));
+                $relatedResource = ws_rescue(fn () => $relatedModel->toResource($resourceClass), new JsonApiResource($relatedModel));
 
                 $relatedResource->requestedRelationships = $requestedRelationships;
 
@@ -259,7 +259,7 @@ trait ResolvesJsonApiElements
                     $relatedResource->includePreviouslyLoadedRelationships()->compileResourceRelationships($request);
                 }
 
-                return transform(
+                return ws_transform(
                     [$relatedResource->resolveResourceType($request), $relatedResource->resolveResourceIdentifier($request)],
                     function ($uniqueKey) use ($relatedResource, $isUnique) {
                         $this->loadedRelationshipsMap[] = [$relatedResource, ...$uniqueKey, $isUnique];
@@ -283,13 +283,13 @@ trait ResolvesJsonApiElements
 
             return;
         } elseif ($relatedModel instanceof Pivot ||
-            in_array(AsPivot::class, class_uses_recursive($relatedModel), true)) {
+            in_array(AsPivot::class, ws_class_uses_recursive($relatedModel), true)) {
             yield $relationName => new MissingValue;
 
             return;
         }
 
-        $relatedResource = rescue(fn () => $relatedModel->toResource($resourceClass), new JsonApiResource($relatedModel));
+        $relatedResource = ws_rescue(fn () => $relatedModel->toResource($resourceClass), new JsonApiResource($relatedModel));
 
         $relatedResource->requestedRelationships = $requestedRelationships;
 
@@ -297,7 +297,7 @@ trait ResolvesJsonApiElements
             $relatedResource->includePreviouslyLoadedRelationships()->compileResourceRelationships($request);
         }
 
-        yield $relationName => ['data' => transform(
+        yield $relationName => ['data' => ws_transform(
             [$relatedResource->resolveResourceType($request), $relatedResource->resolveResourceIdentifier($request)],
             function ($uniqueKey) use ($relatedResource) {
                 $this->loadedRelationshipsMap[] = [$relatedResource, ...$uniqueKey, true];

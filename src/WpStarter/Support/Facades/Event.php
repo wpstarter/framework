@@ -55,7 +55,7 @@ class Event extends Facade
             ? static::getFacadeRoot()->dispatcher
             : static::getFacadeRoot();
 
-        return tap(new EventFake($actualDispatcher, $eventsToFake), function ($fake) {
+        return ws_tap(new EventFake($actualDispatcher, $eventsToFake), function ($fake) {
             static::swap($fake);
 
             Model::setEventDispatcher($fake);

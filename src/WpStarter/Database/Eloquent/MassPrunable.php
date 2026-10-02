@@ -15,7 +15,7 @@ trait MassPrunable
      */
     public function pruneAll(int $chunkSize = 1000)
     {
-        $query = tap($this->prunable(), function ($query) use ($chunkSize) {
+        $query = ws_tap($this->prunable(), function ($query) use ($chunkSize) {
             $query->when(! $query->getQuery()->limit, function ($query) use ($chunkSize) {
                 $query->limit($chunkSize);
             });
@@ -31,7 +31,7 @@ trait MassPrunable
                 : $query->delete();
 
             if ($count > 0) {
-                event(new ModelsPruned(static::class, $total));
+                ws_event(new ModelsPruned(static::class, $total));
             }
         } while ($count > 0);
 

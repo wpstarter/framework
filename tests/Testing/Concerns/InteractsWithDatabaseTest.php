@@ -31,7 +31,7 @@ class InteractsWithDatabaseTest extends TestCase
         $this->assertEquals(<<<'TEXT'
         '["foo","bar"]'
         TEXT,
-            $this->castAsJson(collect(['foo', 'bar']), $grammar)
+            $this->castAsJson(ws_collect(['foo', 'bar']), $grammar)
         );
 
         $this->assertEquals(<<<'TEXT'
@@ -54,7 +54,7 @@ class InteractsWithDatabaseTest extends TestCase
         $this->assertEquals(<<<'TEXT'
         '["foo","bar"]'
         TEXT,
-            $this->castAsJson(collect(['foo', 'bar']), $grammar)
+            $this->castAsJson(ws_collect(['foo', 'bar']), $grammar)
         );
 
         $this->assertEquals(<<<'TEXT'
@@ -77,7 +77,7 @@ class InteractsWithDatabaseTest extends TestCase
         $this->assertEquals(<<<'TEXT'
         json_query('["foo","bar"]')
         TEXT,
-            $this->castAsJson(collect(['foo', 'bar']), $grammar)
+            $this->castAsJson(ws_collect(['foo', 'bar']), $grammar)
         );
 
         $this->assertEquals(<<<'TEXT'
@@ -100,7 +100,7 @@ class InteractsWithDatabaseTest extends TestCase
         $this->assertEquals(<<<'TEXT'
         cast('["foo","bar"]' as json)
         TEXT,
-            $this->castAsJson(collect(['foo', 'bar']), $grammar)
+            $this->castAsJson(ws_collect(['foo', 'bar']), $grammar)
         );
 
         $this->assertEquals(<<<'TEXT'
@@ -123,7 +123,7 @@ class InteractsWithDatabaseTest extends TestCase
         $this->assertEquals(<<<'TEXT'
         json_query('["foo","bar"]', '$')
         TEXT,
-            $this->castAsJson(collect(['foo', 'bar']), $grammar)
+            $this->castAsJson(ws_collect(['foo', 'bar']), $grammar)
         );
 
         $this->assertEquals(<<<'TEXT'

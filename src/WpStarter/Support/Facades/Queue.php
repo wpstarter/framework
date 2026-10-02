@@ -97,10 +97,10 @@ class Queue extends Facade
     public static function fake($jobsToFake = [])
     {
         $actualQueueManager = static::isFake()
-            ? tap(static::getFacadeRoot(), fn ($fake) => $fake->releaseUniqueJobLocks())->queue
+            ? ws_tap(static::getFacadeRoot(), fn ($fake) => $fake->releaseUniqueJobLocks())->queue
             : static::getFacadeRoot();
 
-        return tap(new QueueFake(static::getFacadeApplication(), $jobsToFake, $actualQueueManager), function ($fake) {
+        return ws_tap(new QueueFake(static::getFacadeApplication(), $jobsToFake, $actualQueueManager), function ($fake) {
             static::swap($fake);
         });
     }

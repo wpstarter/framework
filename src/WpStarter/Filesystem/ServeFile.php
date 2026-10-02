@@ -24,19 +24,19 @@ class ServeFile
      */
     public function __invoke(Request $request, string $path)
     {
-        abort_unless(
+        ws_abort_unless(
             $this->hasValidSignature($request),
             $this->isProduction ? 404 : 403
         );
         try {
-            abort_unless(Storage::disk($this->disk)->exists($path), 404);
+            ws_abort_unless(Storage::disk($this->disk)->exists($path), 404);
 
             $headers = [
                 'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
                 'Content-Security-Policy' => "default-src 'none'; style-src 'unsafe-inline'; sandbox",
             ];
 
-            return tap(
+            return ws_tap(
                 Storage::disk($this->disk)->serve($request, $path, headers: $headers),
                 function ($response) use ($headers) {
                     if (! $response->headers->has('Content-Security-Policy')) {
@@ -45,7 +45,7 @@ class ServeFile
                 }
             );
         } catch (PathTraversalDetected $e) {
-            abort(404);
+            ws_abort(404);
         }
     }
 

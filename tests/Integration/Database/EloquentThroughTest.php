@@ -31,13 +31,13 @@ class EloquentThroughTest extends DatabaseTestCase
             $table->unsignedInteger('comment_id');
         });
 
-        $post = tap(new Post(['public' => true]))->save();
-        $comment = tap((new Comment)->commentable()->associate($post))->save();
+        $post = ws_tap(new Post(['public' => true]))->save();
+        $comment = ws_tap((new Comment)->commentable()->associate($post))->save();
         (new Like())->comment()->associate($comment)->save();
         (new Like())->comment()->associate($comment)->save();
 
-        $otherCommentable = tap(new OtherCommentable())->save();
-        $comment2 = tap((new Comment)->commentable()->associate($otherCommentable))->save();
+        $otherCommentable = ws_tap(new OtherCommentable())->save();
+        $comment2 = ws_tap((new Comment)->commentable()->associate($otherCommentable))->save();
         (new Like())->comment()->associate($comment2)->save();
     }
 

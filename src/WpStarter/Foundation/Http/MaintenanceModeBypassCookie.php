@@ -20,7 +20,7 @@ class MaintenanceModeBypassCookie
         return new Cookie('laravel_maintenance', base64_encode(json_encode([
             'expires_at' => $expiresAt->getTimestamp(),
             'mac' => hash_hmac('sha256', $expiresAt->getTimestamp(), $key),
-        ])), $expiresAt, config('session.path'), config('session.domain'));
+        ])), $expiresAt, ws_config('session.path'), ws_config('session.domain'));
     }
 
     /**

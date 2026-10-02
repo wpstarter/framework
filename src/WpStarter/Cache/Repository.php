@@ -130,7 +130,7 @@ class Repository implements ArrayAccess, CacheContract
         if (is_null($value)) {
             $this->event(new CacheMissed($this->getName(), $key));
 
-            $value = value($default);
+            $value = ws_value($default);
         } else {
             $this->event(new CacheHit($this->getName(), $key, $value));
         }
@@ -193,7 +193,7 @@ class Repository implements ArrayAccess, CacheContract
         if (is_null($value)) {
             $this->event(new CacheMissed($this->getName(), $key));
 
-            return (isset($keys[$key]) && ! array_is_list($keys)) ? value($keys[$key]) : null;
+            return (isset($keys[$key]) && ! array_is_list($keys)) ? ws_value($keys[$key]) : null;
         }
 
         // If we found a valid value we will fire the "hit" event and return the value
@@ -213,7 +213,7 @@ class Repository implements ArrayAccess, CacheContract
      */
     public function pull($key, $default = null)
     {
-        return tap($this->get($key, $default), function () use ($key) {
+        return ws_tap($this->get($key, $default), function () use ($key) {
             $this->forget($key);
         });
     }
@@ -563,7 +563,7 @@ class Repository implements ArrayAccess, CacheContract
 
         $value = $callback();
 
-        $this->put($key, $value, value($ttl, $value));
+        $this->put($key, $value, ws_value($ttl, $value));
 
         return $value;
     }
@@ -629,7 +629,7 @@ class Repository implements ArrayAccess, CacheContract
         ] = $this->many([$key, "wpstarter:cache:flexible:created:{$key}"]);
 
         if (in_array(null, [$value, $created], true)) {
-            return tap(value($callback), fn ($value) => $this->putMany([
+            return ws_tap(ws_value($callback), fn ($value) => $this->putMany([
                 $key => $value,
                 "wpstarter:cache:flexible:created:{$key}" => Carbon::now()->getTimestamp(),
             ], $ttl[1]));
@@ -650,7 +650,7 @@ class Repository implements ArrayAccess, CacheContract
                 }
 
                 $this->putMany([
-                    $key => value($callback),
+                    $key => ws_value($callback),
                     "wpstarter:cache:flexible:created:{$key}" => Carbon::now()->getTimestamp(),
                 ], $ttl[1]);
             });
@@ -707,7 +707,7 @@ class Repository implements ArrayAccess, CacheContract
 
         $this->event(new ForgettingKey($this->getName(), $key));
 
-        return tap($this->store->forget($this->itemKey($key)), function ($result) use ($key) {
+        return ws_tap($this->store->forget($this->itemKey($key)), function ($result) use ($key) {
             if ($result) {
                 $this->event(new KeyForgotten($this->getName(), $key));
             } else {

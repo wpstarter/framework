@@ -64,7 +64,7 @@ class ConditionalRules
     {
         return is_string($this->rules)
             ? explode('|', $this->rules)
-            : value($this->rules, new Fluent($data));
+            : ws_value($this->rules, new Fluent($data));
     }
 
     /**
@@ -77,6 +77,6 @@ class ConditionalRules
     {
         return is_string($this->defaultRules)
             ? explode('|', $this->defaultRules)
-            : value($this->defaultRules, new Fluent($data));
+            : ws_value($this->defaultRules, new Fluent($data));
     }
 }

@@ -402,7 +402,7 @@ class PhpRedisConnection extends Connection implements ConnectionContract
 
         return is_null($callback)
             ? $pipeline
-            : tap($pipeline, $callback)->exec();
+            : ws_tap($pipeline, $callback)->exec();
     }
 
     /**
@@ -417,7 +417,7 @@ class PhpRedisConnection extends Connection implements ConnectionContract
 
         return is_null($callback)
             ? $transaction
-            : tap($transaction, $callback)->exec();
+            : ws_tap($transaction, $callback)->exec();
     }
 
     /**

@@ -11,7 +11,7 @@ class EloquentModelEncryptedDirtyTest extends TestCase
 {
     public function testDirtyAttributeBehaviorWithNoPreviousKeys()
     {
-        config(['app.key' => str_repeat('a', 32)]);
+        ws_config(['app.key' => str_repeat('a', 32)]);
         Model::$encrypter = null;
 
         $model = new EncryptedDirtyAttributeCast([
@@ -41,8 +41,8 @@ class EloquentModelEncryptedDirtyTest extends TestCase
 
     public function testDirtyAttributeBehaviorWithPreviousKeys()
     {
-        config(['app.key' => str_repeat('a', 32)]);
-        config(['app.previous_keys' => [str_repeat('b', 32)]]);
+        ws_config(['app.key' => str_repeat('a', 32)]);
+        ws_config(['app.previous_keys' => [str_repeat('b', 32)]]);
         Model::$encrypter = null;
 
         $model = new EncryptedDirtyAttributeCast([

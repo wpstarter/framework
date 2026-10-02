@@ -15,7 +15,7 @@ class WhoopsHandler
      */
     public function forDebug()
     {
-        return tap(new PrettyPageHandler, function ($handler) {
+        return ws_tap(new PrettyPageHandler, function ($handler) {
             $handler->handleUnconditionally(true);
 
             $this->registerApplicationPaths($handler)
@@ -47,8 +47,8 @@ class WhoopsHandler
     protected function directoriesExceptVendor()
     {
         return Arr::except(
-            array_flip((new Filesystem)->directories(base_path())),
-            [base_path('vendor')]
+            array_flip((new Filesystem)->directories(ws_base_path())),
+            [ws_base_path('vendor')]
         );
     }
 
@@ -60,7 +60,7 @@ class WhoopsHandler
      */
     protected function registerBlacklist($handler)
     {
-        foreach (config('app.debug_blacklist', config('app.debug_hide', [])) as $key => $secrets) {
+        foreach (ws_config('app.debug_blacklist', ws_config('app.debug_hide', [])) as $key => $secrets) {
             foreach ($secrets as $secret) {
                 $handler->blacklist($key, $secret);
             }
@@ -77,8 +77,8 @@ class WhoopsHandler
      */
     protected function registerEditor($handler)
     {
-        if (config('app.editor', false)) {
-            $handler->setEditor(config('app.editor'));
+        if (ws_config('app.editor', false)) {
+            $handler->setEditor(ws_config('app.editor'));
         }
 
         return $this;

@@ -44,7 +44,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 use function WpStarter\Support\enum_value;
 
-if (! function_exists('abort')) {
+if (! function_exists('ws_abort')) {
     /**
      * Throw an HttpException with the given data.
      *
@@ -56,19 +56,19 @@ if (! function_exists('abort')) {
      * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
      * @throws \WpStarter\Http\Exceptions\HttpResponseException
      */
-    function abort($code, $message = '', array $headers = [])
+    function ws_abort($code, $message = '', array $headers = [])
     {
         if ($code instanceof Response) {
             throw new HttpResponseException($code);
         } elseif ($code instanceof Responsable) {
-            throw new HttpResponseException($code->toResponse(request()));
+            throw new HttpResponseException($code->toResponse(ws_request()));
         }
 
-        app()->abort($code, $message, $headers);
+        ws_app()->abort($code, $message, $headers);
     }
 }
 
-if (! function_exists('abort_if')) {
+if (! function_exists('ws_abort_if')) {
     /**
      * Throw an HttpException with the given data if the given condition is true.
      *
@@ -79,15 +79,15 @@ if (! function_exists('abort_if')) {
      * @throws \Symfony\Component\HttpKernel\Exception\HttpException
      * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
      */
-    function abort_if($boolean, $code, $message = '', array $headers = []): void
+    function ws_abort_if($boolean, $code, $message = '', array $headers = []): void
     {
         if ($boolean) {
-            abort($code, $message, $headers);
+            ws_abort($code, $message, $headers);
         }
     }
 }
 
-if (! function_exists('abort_unless')) {
+if (! function_exists('ws_abort_unless')) {
     /**
      * Throw an HttpException with the given data unless the given condition is true.
      *
@@ -98,15 +98,15 @@ if (! function_exists('abort_unless')) {
      * @throws \Symfony\Component\HttpKernel\Exception\HttpException
      * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
      */
-    function abort_unless($boolean, $code, $message = '', array $headers = []): void
+    function ws_abort_unless($boolean, $code, $message = '', array $headers = []): void
     {
         if (! $boolean) {
-            abort($code, $message, $headers);
+            ws_abort($code, $message, $headers);
         }
     }
 }
 
-if (! function_exists('action')) {
+if (! function_exists('ws_action')) {
     /**
      * Generate the URL to a controller action.
      *
@@ -114,13 +114,13 @@ if (! function_exists('action')) {
      * @param  mixed  $parameters
      * @param  bool  $absolute
      */
-    function action($name, $parameters = [], $absolute = true): string
+    function ws_action($name, $parameters = [], $absolute = true): string
     {
-        return app('url')->action($name, $parameters, $absolute);
+        return ws_app('url')->action($name, $parameters, $absolute);
     }
 }
 
-if (! function_exists('app')) {
+if (! function_exists('ws_app')) {
     /**
      * Get the available container instance.
      *
@@ -129,7 +129,7 @@ if (! function_exists('app')) {
      * @param  string|class-string<TClass>|null  $abstract
      * @return ($abstract is class-string<TClass> ? TClass : ($abstract is null ? \WpStarter\Foundation\Application : mixed))
      */
-    function app($abstract = null, array $parameters = [])
+    function ws_app($abstract = null, array $parameters = [])
     {
         if (is_null($abstract)) {
             return Container::getInstance();
@@ -147,41 +147,41 @@ if (! function_exists('app_path')) {
      */
     function app_path($path = ''): string
     {
-        return app()->path($path);
+        return ws_app()->path($path);
     }
 }
 
-if (! function_exists('asset')) {
+if (! function_exists('ws_asset')) {
     /**
      * Generate an asset path for the application.
      *
      * @param  string  $path
      * @param  bool|null  $secure
      */
-    function asset($path, $secure = null): string
+    function ws_asset($path, $secure = null): string
     {
-        return app('url')->asset($path, $secure);
+        return ws_app('url')->asset($path, $secure);
     }
 }
 
-if (! function_exists('auth')) {
+if (! function_exists('ws_auth')) {
     /**
      * Get the available auth instance.
      *
      * @param  string|null  $guard
      * @return ($guard is null ? \WpStarter\Contracts\Auth\Factory : \WpStarter\Contracts\Auth\Guard)
      */
-    function auth($guard = null): AuthFactory|Guard
+    function ws_auth($guard = null): AuthFactory|Guard
     {
         if (is_null($guard)) {
-            return app(AuthFactory::class);
+            return ws_app(AuthFactory::class);
         }
 
-        return app(AuthFactory::class)->guard($guard);
+        return ws_app(AuthFactory::class)->guard($guard);
     }
 }
 
-if (! function_exists('back')) {
+if (! function_exists('ws_back')) {
     /**
      * Create a new redirect response to the previous location.
      *
@@ -189,84 +189,84 @@ if (! function_exists('back')) {
      * @param  array  $headers
      * @param  mixed  $fallback
      */
-    function back($status = 302, $headers = [], $fallback = false): RedirectResponse
+    function ws_back($status = 302, $headers = [], $fallback = false): RedirectResponse
     {
-        return app('redirect')->back($status, $headers, $fallback);
+        return ws_app('redirect')->back($status, $headers, $fallback);
     }
 }
 
-if (! function_exists('base_path')) {
+if (! function_exists('ws_base_path')) {
     /**
      * Get the path to the base of the install.
      *
      * @param  string  $path
      */
-    function base_path($path = ''): string
+    function ws_base_path($path = ''): string
     {
-        return app()->basePath($path);
+        return ws_app()->basePath($path);
     }
 }
 
-if (! function_exists('bcrypt')) {
+if (! function_exists('ws_bcrypt')) {
     /**
      * Hash the given value against the bcrypt algorithm.
      *
      * @param  string  $value
      * @param  array  $options
      */
-    function bcrypt($value, $options = []): string
+    function ws_bcrypt($value, $options = []): string
     {
-        return app('hash')->driver('bcrypt')->make($value, $options);
+        return ws_app('hash')->driver('bcrypt')->make($value, $options);
     }
 }
 
-if (! function_exists('broadcast')) {
+if (! function_exists('ws_broadcast')) {
     /**
      * Begin broadcasting an event.
      *
      * @param  mixed  $event
      */
-    function broadcast($event = null): PendingBroadcast
+    function ws_broadcast($event = null): PendingBroadcast
     {
-        return app(BroadcastFactory::class)->event($event);
+        return ws_app(BroadcastFactory::class)->event($event);
     }
 }
 
-if (! function_exists('broadcast_if')) {
+if (! function_exists('ws_broadcast_if')) {
     /**
      * Begin broadcasting an event if the given condition is true.
      *
      * @param  bool  $boolean
      * @param  mixed  $event
      */
-    function broadcast_if($boolean, $event = null): PendingBroadcast
+    function ws_broadcast_if($boolean, $event = null): PendingBroadcast
     {
         if ($boolean) {
-            return app(BroadcastFactory::class)->event(value($event));
+            return ws_app(BroadcastFactory::class)->event(ws_value($event));
         } else {
             return new FakePendingBroadcast;
         }
     }
 }
 
-if (! function_exists('broadcast_unless')) {
+if (! function_exists('ws_broadcast_unless')) {
     /**
      * Begin broadcasting an event unless the given condition is true.
      *
      * @param  bool  $boolean
      * @param  mixed  $event
      */
-    function broadcast_unless($boolean, $event = null): PendingBroadcast
+    function ws_broadcast_unless($boolean, $event = null): PendingBroadcast
     {
         if (! $boolean) {
-            return app(BroadcastFactory::class)->event(value($event));
+            return ws_app(BroadcastFactory::class)->event(ws_value($event));
         } else {
             return new FakePendingBroadcast;
         }
     }
 }
 
-if (! function_exists('cache')) {
+if (! function_exists('ws_cache')) {
     /**
      * Get / set the specified cache value.
      *
@@ -278,14 +278,14 @@ if (! function_exists('cache')) {
      *
      * @throws \InvalidArgumentException
      */
-    function cache($key = null, $default = null)
+    function ws_cache($key = null, $default = null)
     {
         if (is_null($key)) {
-            return app('cache');
+            return ws_app('cache');
         }
 
         if (is_string($key)) {
-            return app('cache')->get($key, $default);
+            return ws_app('cache')->get($key, $default);
         }
 
         if (! is_array($key)) {
@@ -294,11 +294,11 @@ if (! function_exists('cache')) {
             );
         }
 
-        return app('cache')->put(key($key), array_first($key), ttl: $default);
+        return ws_app('cache')->put(key($key), array_first($key), ttl: $default);
     }
 }
 
-if (! function_exists('config')) {
+if (! function_exists('ws_config')) {
     /**
      * Get / set the specified configuration value.
      *
@@ -308,33 +308,33 @@ if (! function_exists('config')) {
      * @param  mixed  $default
      * @return ($key is null ? \WpStarter\Config\Repository : ($key is string ? mixed : null))
      */
-    function config($key = null, $default = null)
+    function ws_config($key = null, $default = null)
     {
         if (is_null($key)) {
-            return app('config');
+            return ws_app('config');
         }
 
         if (is_array($key)) {
-            return app('config')->set($key);
+            return ws_app('config')->set($key);
         }
 
-        return app('config')->get($key, $default);
+        return ws_app('config')->get($key, $default);
     }
 }
 
-if (! function_exists('config_path')) {
+if (! function_exists('ws_config_path')) {
     /**
      * Get the configuration path.
      *
      * @param  string  $path
      */
-    function config_path($path = ''): string
+    function ws_config_path($path = ''): string
     {
-        return app()->configPath($path);
+        return ws_app()->configPath($path);
     }
 }
 
-if (! function_exists('context')) {
+if (! function_exists('ws_context')) {
     /**
      * Get / set the specified context value.
      *
@@ -342,9 +342,9 @@ if (! function_exists('context')) {
      * @param  mixed  $default
      * @return ($key is string ? mixed : \WpStarter\Log\Context\Repository)
      */
-    function context($key = null, $default = null)
+    function ws_context($key = null, $default = null)
     {
-        $context = app(ContextRepository::class);
+        $context = ws_app(ContextRepository::class);
 
         return match (true) {
             is_null($key) => $context,
@@ -354,7 +354,7 @@ if (! function_exists('context')) {
     }
 }
 
-if (! function_exists('cookie')) {
+if (! function_exists('ws_cookie')) {
     /**
      * Create a new cookie instance.
      *
@@ -369,9 +369,9 @@ if (! function_exists('cookie')) {
      * @param  string|null  $sameSite
      * @return ($name is null ? \WpStarter\Cookie\CookieJar : \Symfony\Component\HttpFoundation\Cookie)
      */
-    function cookie($name = null, $value = null, $minutes = 0, $path = null, $domain = null, $secure = null, $httpOnly = true, $raw = false, $sameSite = null): CookieJar|Cookie
+    function ws_cookie($name = null, $value = null, $minutes = 0, $path = null, $domain = null, $secure = null, $httpOnly = true, $raw = false, $sameSite = null): CookieJar|Cookie
     {
-        $cookie = app(CookieFactory::class);
+        $cookie = ws_app(CookieFactory::class);
 
         if (is_null($name)) {
             return $cookie;
@@ -381,25 +381,25 @@ if (! function_exists('cookie')) {
     }
 }
 
-if (! function_exists('csrf_field')) {
+if (! function_exists('ws_csrf_field')) {
     /**
      * Generate a CSRF token form field.
      */
-    function csrf_field(): HtmlString
+    function ws_csrf_field(): HtmlString
     {
-        return new HtmlString('<input type="hidden" name="_token" value="'.csrf_token().'" autocomplete="off">');
+        return new HtmlString('<input type="hidden" name="_token" value="'.ws_csrf_token().'" autocomplete="off">');
     }
 }
 
-if (! function_exists('csrf_token')) {
+if (! function_exists('ws_csrf_token')) {
     /**
      * Get the CSRF token value.
      *
      * @throws \RuntimeException
      */
-    function csrf_token(): ?string
+    function ws_csrf_token(): ?string
     {
-        $session = app('session');
+        $session = ws_app('session');
 
         if (isset($session)) {
             return $session->token();
@@ -409,19 +409,19 @@ if (! function_exists('csrf_token')) {
     }
 }
 
-if (! function_exists('database_path')) {
+if (! function_exists('ws_database_path')) {
     /**
      * Get the database path.
      *
      * @param  string  $path
      */
-    function database_path($path = ''): string
+    function ws_database_path($path = ''): string
     {
-        return app()->databasePath($path);
+        return ws_app()->databasePath($path);
     }
 }
 
-if (! function_exists('decrypt')) {
+if (! function_exists('ws_decrypt')) {
     /**
      * Decrypt the given value.
      *
@@ -429,32 +429,32 @@ if (! function_exists('decrypt')) {
      * @param  bool  $unserialize
      * @return mixed
      */
-    function decrypt($value, $unserialize = true)
+    function ws_decrypt($value, $unserialize = true)
     {
-        return app('encrypter')->decrypt($value, $unserialize);
+        return ws_app('encrypter')->decrypt($value, $unserialize);
     }
 }
 
-if (! function_exists('defer')) {
+if (! function_exists('ws_defer')) {
     /**
      * Defer execution of the given callback.
      *
      * @return ($callback is null ? \WpStarter\Support\Defer\DeferredCallbackCollection : \WpStarter\Support\Defer\DeferredCallback)
      */
-    function defer(?callable $callback = null, ?string $name = null, bool $always = false): DeferredCallback|DeferredCallbackCollection
+    function ws_defer(?callable $callback = null, ?string $name = null, bool $always = false): DeferredCallback|DeferredCallbackCollection
     {
         return \WpStarter\Support\defer($callback, $name, $always);
     }
 }
 
-if (! function_exists('dispatch')) {
+if (! function_exists('ws_dispatch')) {
     /**
      * Dispatch a job to its appropriate handler.
      *
      * @param  mixed  $job
      * @return ($job is \Closure ? \WpStarter\Foundation\Bus\PendingClosureDispatch : \WpStarter\Foundation\Bus\PendingDispatch)
      */
-    function dispatch($job): PendingDispatch|PendingClosureDispatch
+    function ws_dispatch($job): PendingDispatch|PendingClosureDispatch
     {
         return $job instanceof Closure
             ? new PendingClosureDispatch(CallQueuedClosure::create($job))
@@ -462,7 +462,7 @@ if (! function_exists('dispatch')) {
     }
 }
 
-if (! function_exists('dispatch_sync')) {
+if (! function_exists('ws_dispatch_sync')) {
     /**
      * Dispatch a command to its appropriate handler in the current process.
      *
@@ -472,26 +472,26 @@ if (! function_exists('dispatch_sync')) {
      * @param  mixed  $handler
      * @return mixed
      */
-    function dispatch_sync($job, $handler = null)
+    function ws_dispatch_sync($job, $handler = null)
     {
-        return app(Dispatcher::class)->dispatchSync($job, $handler);
+        return ws_app(Dispatcher::class)->dispatchSync($job, $handler);
     }
 }
 
-if (! function_exists('encrypt')) {
+if (! function_exists('ws_encrypt')) {
     /**
      * Encrypt the given value.
      *
      * @param  mixed  $value
      * @param  bool  $serialize
      */
-    function encrypt($value, $serialize = true): string
+    function ws_encrypt($value, $serialize = true): string
     {
-        return app('encrypter')->encrypt($value, $serialize);
+        return ws_app('encrypter')->encrypt($value, $serialize);
     }
 }
 
-if (! function_exists('event')) {
+if (! function_exists('ws_event')) {
     /**
      * Dispatch an event and call the listeners.
      *
@@ -500,104 +500,104 @@ if (! function_exists('event')) {
      * @param  bool  $halt
      * @return array|null
      */
-    function event(...$args)
+    function ws_event(...$args)
     {
-        return app('events')->dispatch(...$args);
+        return ws_app('events')->dispatch(...$args);
     }
 }
 
-if (! function_exists('fake') && class_exists(\Faker\Factory::class)) {
+if (! function_exists('ws_fake') && class_exists(\Faker\Factory::class)) {
     /**
      * Get a faker instance.
      *
      * @param  string|null  $locale
      */
-    function fake($locale = null): \Faker\Generator
+    function ws_fake($locale = null): \Faker\Generator
     {
-        if (app()->bound('config')) {
-            $locale ??= app('config')->get('app.faker_locale');
+        if (ws_app()->bound('config')) {
+            $locale ??= ws_app('config')->get('app.faker_locale');
         }
 
         $locale ??= 'en_US';
 
         $abstract = \Faker\Generator::class.':'.$locale;
 
-        if (! app()->bound($abstract)) {
-            app()->singleton($abstract, fn () => \Faker\Factory::create($locale));
+        if (! ws_app()->bound($abstract)) {
+            ws_app()->singleton($abstract, fn () => \Faker\Factory::create($locale));
         }
 
-        return app()->make($abstract);
+        return ws_app()->make($abstract);
     }
 }
 
-if (! function_exists('info')) {
+if (! function_exists('ws_info')) {
     /**
      * Write some information to the log.
      *
      * @param  string  $message
      * @param  array  $context
      */
-    function info($message, $context = []): void
+    function ws_info($message, $context = []): void
     {
-        app('log')->info($message, $context);
+        ws_app('log')->info($message, $context);
     }
 }
 
-if (! function_exists('lang_path')) {
+if (! function_exists('ws_lang_path')) {
     /**
      * Get the path to the language folder.
      *
      * @param  string  $path
      */
-    function lang_path($path = ''): string
+    function ws_lang_path($path = ''): string
     {
-        return app()->langPath($path);
+        return ws_app()->langPath($path);
     }
 }
 
-if (! function_exists('logger')) {
+if (! function_exists('ws_logger')) {
     /**
      * Log a debug message to the logs.
      *
      * @param  string|null  $message
      * @return ($message is null ? \Psr\Log\LoggerInterface : null)
      */
-    function logger($message = null, array $context = []): ?LoggerInterface
+    function ws_logger($message = null, array $context = []): ?LoggerInterface
     {
         if (is_null($message)) {
-            return app('log');
+            return ws_app('log');
         }
 
-        return app('log')->debug($message, $context);
+        return ws_app('log')->debug($message, $context);
     }
 }
 
-if (! function_exists('logs')) {
+if (! function_exists('ws_logs')) {
     /**
      * Get a log driver instance.
      *
      * @param  string|null  $driver
      * @return ($driver is null ? \WpStarter\Log\LogManager : \Psr\Log\LoggerInterface)
      */
-    function logs($driver = null): LoggerInterface|LogManager
+    function ws_logs($driver = null): LoggerInterface|LogManager
     {
-        return $driver ? app('log')->driver($driver) : app('log');
+        return $driver ? ws_app('log')->driver($driver) : ws_app('log');
     }
 }
 
-if (! function_exists('method_field')) {
+if (! function_exists('ws_method_field')) {
     /**
      * Generate a form field to spoof the HTTP verb used by forms.
      *
      * @param  string  $method
      */
-    function method_field($method): HtmlString
+    function ws_method_field($method): HtmlString
     {
         return new HtmlString('<input type="hidden" name="_method" value="'.$method.'">');
     }
 }
 
-if (! function_exists('mix')) {
+if (! function_exists('ws_mix')) {
     /**
      * Get the path to a versioned Mix file.
      *
@@ -606,25 +606,25 @@ if (! function_exists('mix')) {
      *
      * @throws \Exception
      */
-    function mix($path, $manifestDirectory = ''): HtmlString|string
+    function ws_mix($path, $manifestDirectory = ''): HtmlString|string
     {
-        return app(Mix::class)(...func_get_args());
+        return ws_app(Mix::class)(...func_get_args());
     }
 }
 
-if (! function_exists('now')) {
+if (! function_exists('ws_now')) {
     /**
      * Create a new Carbon instance for the current time.
      *
      * @param  \DateTimeZone|\UnitEnum|string|null  $tz
      */
-    function now($tz = null): CarbonInterface
+    function ws_now($tz = null): CarbonInterface
     {
         return Date::now(enum_value($tz));
     }
 }
 
-if (! function_exists('old')) {
+if (! function_exists('ws_old')) {
     /**
      * Retrieve an old input item.
      *
@@ -632,13 +632,13 @@ if (! function_exists('old')) {
      * @param  \WpStarter\Database\Eloquent\Model|string|array|null  $default
      * @return string|array|null
      */
-    function old($key = null, $default = null)
+    function ws_old($key = null, $default = null)
     {
-        return app('request')->old($key, $default);
+        return ws_app('request')->old($key, $default);
     }
 }
 
-if (! function_exists('policy')) {
+if (! function_exists('ws_policy')) {
     /**
      * Get a policy instance for a given class.
      *
@@ -647,54 +647,54 @@ if (! function_exists('policy')) {
      *
      * @throws \InvalidArgumentException
      */
-    function policy($class)
+    function ws_policy($class)
     {
-        return app(Gate::class)->getPolicyFor($class);
+        return ws_app(Gate::class)->getPolicyFor($class);
     }
 }
 
-if (! function_exists('precognitive')) {
+if (! function_exists('ws_precognitive')) {
     /**
      * Handle a Precognition controller hook.
      *
      * @param  null|callable  $callable
      * @return mixed
      */
-    function precognitive($callable = null)
+    function ws_precognitive($callable = null)
     {
         $callable ??= function () {
             //
         };
 
         $payload = $callable(function ($default, $precognition = null) {
-            $response = request()->isPrecognitive()
+            $response = ws_request()->isPrecognitive()
                 ? ($precognition ?? $default)
                 : $default;
 
-            abort(Router::toResponse(request(), value($response)));
+            ws_abort(Router::toResponse(ws_request(), ws_value($response)));
         });
 
-        if (request()->isPrecognitive()) {
-            abort(204, headers: ['Precognition-Success' => 'true']);
+        if (ws_request()->isPrecognitive()) {
+            ws_abort(204, headers: ['Precognition-Success' => 'true']);
         }
 
         return $payload;
     }
 }
 
-if (! function_exists('public_path')) {
+if (! function_exists('ws_public_path')) {
     /**
      * Get the path to the public folder.
      *
      * @param  string  $path
      */
-    function public_path($path = ''): string
+    function ws_public_path($path = ''): string
     {
-        return app()->publicPath($path);
+        return ws_app()->publicPath($path);
     }
 }
 
-if (! function_exists('redirect')) {
+if (! function_exists('ws_redirect')) {
     /**
      * Get an instance of the redirector.
      *
@@ -704,63 +704,63 @@ if (! function_exists('redirect')) {
      * @param  bool|null  $secure
      * @return ($to is null ? \WpStarter\Routing\Redirector : \WpStarter\Http\RedirectResponse)
      */
-    function redirect($to = null, $status = 302, $headers = [], $secure = null): Redirector|RedirectResponse
+    function ws_redirect($to = null, $status = 302, $headers = [], $secure = null): Redirector|RedirectResponse
     {
         if (is_null($to)) {
-            return app('redirect');
+            return ws_app('redirect');
         }
 
-        return app('redirect')->to($to, $status, $headers, $secure);
+        return ws_app('redirect')->to($to, $status, $headers, $secure);
     }
 }
 
-if (! function_exists('report')) {
+if (! function_exists('ws_report')) {
     /**
      * Report an exception.
      *
      * @param  \Throwable|string  $exception
      */
-    function report($exception): void
+    function ws_report($exception): void
     {
         if (is_string($exception)) {
             $exception = new Exception($exception);
         }
 
-        app(ExceptionHandler::class)->report($exception);
+        ws_app(ExceptionHandler::class)->report($exception);
     }
 }
 
-if (! function_exists('report_if')) {
+if (! function_exists('ws_report_if')) {
     /**
      * Report an exception if the given condition is true.
      *
      * @param  bool  $boolean
      * @param  \Throwable|string  $exception
      */
-    function report_if($boolean, $exception): void
+    function ws_report_if($boolean, $exception): void
     {
         if ($boolean) {
-            report($exception);
+            ws_report($exception);
         }
     }
 }
 
-if (! function_exists('report_unless')) {
+if (! function_exists('ws_report_unless')) {
     /**
      * Report an exception unless the given condition is true.
      *
      * @param  bool  $boolean
      * @param  \Throwable|string  $exception
      */
-    function report_unless($boolean, $exception): void
+    function ws_report_unless($boolean, $exception): void
     {
         if (! $boolean) {
-            report($exception);
+            ws_report($exception);
         }
     }
 }
 
-if (! function_exists('request')) {
+if (! function_exists('ws_request')) {
     /**
      * Get an instance of the current request or an input item from the request.
      *
@@ -768,23 +768,23 @@ if (! function_exists('request')) {
      * @param  mixed  $default
      * @return ($key is null ? \WpStarter\Http\Request : ($key is string ? mixed : array<string, mixed>))
      */
-    function request($key = null, $default = null)
+    function ws_request($key = null, $default = null)
     {
         if (is_null($key)) {
-            return app('request');
+            return ws_app('request');
         }
 
         if (is_array($key)) {
-            return app('request')->only($key);
+            return ws_app('request')->only($key);
         }
 
-        $value = app('request')->__get($key);
+        $value = ws_app('request')->__get($key);
 
-        return is_null($value) ? value($default) : $value;
+        return is_null($value) ? ws_value($default) : $value;
     }
 }
 
-if (! function_exists('rescue')) {
+if (! function_exists('ws_rescue')) {
     /**
      * Catch a potential exception and return a default value.
      *
@@ -796,21 +796,21 @@ if (! function_exists('rescue')) {
      * @param  bool|callable(\Throwable): bool  $report
      * @return TValue|TFallback
      */
-    function rescue(callable $callback, $rescue = null, $report = true)
+    function ws_rescue(callable $callback, $rescue = null, $report = true)
     {
         try {
             return $callback();
         } catch (Throwable $e) {
-            if (value($report, $e)) {
-                report($e);
+            if (ws_value($report, $e)) {
+                ws_report($e);
             }
 
-            return value($rescue, $e);
+            return ws_value($rescue, $e);
         }
     }
 }
 
-if (! function_exists('resolve')) {
+if (! function_exists('ws_resolve')) {
     /**
      * Resolve a service from the container.
      *
@@ -819,25 +819,25 @@ if (! function_exists('resolve')) {
      * @param  string|class-string<TClass>  $name
      * @return ($name is class-string<TClass> ? TClass : mixed)
      */
-    function resolve($name, array $parameters = [])
+    function ws_resolve($name, array $parameters = [])
     {
-        return app($name, $parameters);
+        return ws_app($name, $parameters);
     }
 }
 
-if (! function_exists('resource_path')) {
+if (! function_exists('ws_resource_path')) {
     /**
      * Get the path to the resources folder.
      *
      * @param  string  $path
      */
-    function resource_path($path = ''): string
+    function ws_resource_path($path = ''): string
     {
-        return app()->resourcePath($path);
+        return ws_app()->resourcePath($path);
     }
 }
 
-if (! function_exists('response')) {
+if (! function_exists('ws_response')) {
     /**
      * Return a new response from the application.
      *
@@ -845,9 +845,9 @@ if (! function_exists('response')) {
      * @param  int  $status
      * @return ($content is null ? \WpStarter\Contracts\Routing\ResponseFactory : \WpStarter\Http\Response)
      */
-    function response($content = null, $status = 200, array $headers = []): ResponseFactory|IlluminateResponse
+    function ws_response($content = null, $status = 200, array $headers = []): ResponseFactory|IlluminateResponse
     {
-        $factory = app(ResponseFactory::class);
+        $factory = ws_app(ResponseFactory::class);
 
         if (func_num_args() === 0) {
             return $factory;
@@ -857,7 +857,7 @@ if (! function_exists('response')) {
     }
 }
 
-if (! function_exists('route')) {
+if (! function_exists('ws_route')) {
     /**
      * Generate the URL to a named route.
      *
@@ -865,25 +865,25 @@ if (! function_exists('route')) {
      * @param  mixed  $parameters
      * @param  bool  $absolute
      */
-    function route($name, $parameters = [], $absolute = true): string
+    function ws_route($name, $parameters = [], $absolute = true): string
     {
-        return app('url')->route($name, $parameters, $absolute);
+        return ws_app('url')->route($name, $parameters, $absolute);
     }
 }
 
-if (! function_exists('secure_asset')) {
+if (! function_exists('ws_secure_asset')) {
     /**
      * Generate an asset path for the application.
      *
      * @param  string  $path
      */
-    function secure_asset($path): string
+    function ws_secure_asset($path): string
     {
-        return asset($path, true);
+        return ws_asset($path, true);
     }
 }
 
-if (! function_exists('secure_url')) {
+if (! function_exists('ws_secure_url')) {
     /**
      * Generate a HTTPS url for the application.
      *
@@ -891,13 +891,13 @@ if (! function_exists('secure_url')) {
      * @param  mixed  $parameters
      * @return string
      */
-    function secure_url($path, $parameters = [])
+    function ws_secure_url($path, $parameters = [])
     {
-        return url($path, $parameters, true);
+        return ws_url($path, $parameters, true);
     }
 }
 
-if (! function_exists('session')) {
+if (! function_exists('ws_session')) {
     /**
      * Get / set the specified session value.
      *
@@ -907,33 +907,33 @@ if (! function_exists('session')) {
      * @param  mixed  $default
      * @return ($key is null ? \WpStarter\Session\SessionManager : ($key is string ? mixed : null))
      */
-    function session($key = null, $default = null)
+    function ws_session($key = null, $default = null)
     {
         if (is_null($key)) {
-            return app('session');
+            return ws_app('session');
         }
 
         if (is_array($key)) {
-            return app('session')->put($key);
+            return ws_app('session')->put($key);
         }
 
-        return app('session')->get($key, $default);
+        return ws_app('session')->get($key, $default);
     }
 }
 
-if (! function_exists('storage_path')) {
+if (! function_exists('ws_storage_path')) {
     /**
      * Get the path to the storage folder.
      *
      * @param  string  $path
      */
-    function storage_path($path = ''): string
+    function ws_storage_path($path = ''): string
     {
-        return app()->storagePath($path);
+        return ws_app()->storagePath($path);
     }
 }
 
-if (! function_exists('to_action')) {
+if (! function_exists('ws_to_action')) {
     /**
      * Create a new redirect response to a controller action.
      *
@@ -943,13 +943,13 @@ if (! function_exists('to_action')) {
      * @param  array  $headers
      * @return \WpStarter\Http\RedirectResponse
      */
-    function to_action($action, $parameters = [], $status = 302, $headers = [])
+    function ws_to_action($action, $parameters = [], $status = 302, $headers = [])
     {
-        return redirect()->action($action, $parameters, $status, $headers);
+        return ws_redirect()->action($action, $parameters, $status, $headers);
     }
 }
 
-if (! function_exists('to_route')) {
+if (! function_exists('ws_to_route')) {
     /**
      * Create a new redirect response to a named route.
      *
@@ -959,26 +959,26 @@ if (! function_exists('to_route')) {
      * @param  array  $headers
      * @return \WpStarter\Http\RedirectResponse
      */
-    function to_route($route, $parameters = [], $status = 302, $headers = [])
+    function ws_to_route($route, $parameters = [], $status = 302, $headers = [])
     {
-        return redirect()->route($route, $parameters, $status, $headers);
+        return ws_redirect()->route($route, $parameters, $status, $headers);
     }
 }
 
-if (! function_exists('today')) {
+if (! function_exists('ws_today')) {
     /**
      * Create a new Carbon instance for the current date.
      *
      * @param  \DateTimeZone|\UnitEnum|string|null  $tz
      * @return \WpStarter\Support\Carbon
      */
-    function today($tz = null): CarbonInterface
+    function ws_today($tz = null): CarbonInterface
     {
         return Date::today(enum_value($tz));
     }
 }
 
-if (! function_exists('trans')) {
+if (! function_exists('ws_trans')) {
     /**
      * Translate the given message.
      *
@@ -987,17 +987,17 @@ if (! function_exists('trans')) {
      * @param  string|null  $locale
      * @return ($key is null ? \WpStarter\Contracts\Translation\Translator : array|string)
      */
-    function trans($key = null, $replace = [], $locale = null): Translator|array|string
+    function ws_trans($key = null, $replace = [], $locale = null): Translator|array|string
     {
         if (is_null($key)) {
-            return app('translator');
+            return ws_app('translator');
         }
 
-        return app('translator')->get($key, $replace, $locale);
+        return ws_app('translator')->get($key, $replace, $locale);
     }
 }
 
-if (! function_exists('trans_choice')) {
+if (! function_exists('ws_trans_choice')) {
     /**
      * Translates the given message based on a count.
      *
@@ -1005,13 +1005,13 @@ if (! function_exists('trans_choice')) {
      * @param  \Countable|int|float|array  $number
      * @param  string|null  $locale
      */
-    function trans_choice($key, $number, array $replace = [], $locale = null): string
+    function ws_trans_choice($key, $number, array $replace = [], $locale = null): string
     {
-        return app('translator')->choice($key, $number, $replace, $locale);
+        return ws_app('translator')->choice($key, $number, $replace, $locale);
     }
 }
 
-if (! function_exists('__')) {
+if (! function_exists('ws___')) {
     /**
      * Translate the given message.
      *
@@ -1019,21 +1019,21 @@ if (! function_exists('__')) {
      * @param  array  $replace
      * @param  string|null  $locale
      */
-    function __($key = null, $replace = [], $locale = null): string|array|null
+    function ws___($key = null, $replace = [], $locale = null): string|array|null
     {
         if (is_null($key)) {
             return $key;
         }
 
-        return trans($key, $replace, $locale);
+        return ws_trans($key, $replace, $locale);
     }
 }
 
-if (! function_exists('uri')) {
+if (! function_exists('ws_uri')) {
     /**
      * Generate a URI for the application.
      */
-    function uri(UriInterface|Stringable|array|string $uri, mixed $parameters = [], bool $absolute = true): Uri
+    function ws_uri(UriInterface|Stringable|array|string $uri, mixed $parameters = [], bool $absolute = true): Uri
     {
         return match (true) {
             is_array($uri) || str_contains($uri, '\\') => Uri::action($uri, $parameters, $absolute),
@@ -1043,7 +1043,7 @@ if (! function_exists('uri')) {
     }
 }
 
-if (! function_exists('url')) {
+if (! function_exists('ws_url')) {
     /**
      * Generate a URL for the application.
      *
@@ -1052,25 +1052,25 @@ if (! function_exists('url')) {
      * @param  bool|null  $secure
      * @return ($path is null ? \WpStarter\Contracts\Routing\UrlGenerator : string)
      */
-    function url($path = null, $parameters = [], $secure = null): UrlGenerator|string
+    function ws_url($path = null, $parameters = [], $secure = null): UrlGenerator|string
     {
         if (is_null($path)) {
-            return app(UrlGenerator::class);
+            return ws_app(UrlGenerator::class);
         }
 
-        return app(UrlGenerator::class)->to($path, $parameters, $secure);
+        return ws_app(UrlGenerator::class)->to($path, $parameters, $secure);
     }
 }
 
-if (! function_exists('validator')) {
+if (! function_exists('ws_validator')) {
     /**
      * Create a new Validator instance.
      *
      * @return ($data is null ? \WpStarter\Contracts\Validation\Factory : \WpStarter\Contracts\Validation\Validator)
      */
-    function validator(?array $data = null, array $rules = [], array $messages = [], array $attributes = []): ValidatorContract|ValidationFactory
+    function ws_validator(?array $data = null, array $rules = [], array $messages = [], array $attributes = []): ValidatorContract|ValidationFactory
     {
-        $factory = app(ValidationFactory::class);
+        $factory = ws_app(ValidationFactory::class);
 
         if (func_num_args() === 0) {
             return $factory;
@@ -1080,7 +1080,7 @@ if (! function_exists('validator')) {
     }
 }
 
-if (! function_exists('view')) {
+if (! function_exists('ws_view')) {
     /**
      * Get the evaluated view contents for the given view.
      *
@@ -1089,9 +1089,9 @@ if (! function_exists('view')) {
      * @param  array  $mergeData
      * @return ($view is null ? \WpStarter\Contracts\View\Factory : \WpStarter\Contracts\View\View)
      */
-    function view($view = null, $data = [], $mergeData = []): ViewFactory|ViewContract
+    function ws_view($view = null, $data = [], $mergeData = []): ViewFactory|ViewContract
     {
-        $factory = app(ViewFactory::class);
+        $factory = ws_app(ViewFactory::class);
 
         if (func_num_args() === 0) {
             return $factory;

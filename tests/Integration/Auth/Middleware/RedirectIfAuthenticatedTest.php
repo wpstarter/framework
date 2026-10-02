@@ -21,14 +21,14 @@ class RedirectIfAuthenticatedTest extends TestCase
         $this->router = $this->app->make(Registrar::class);
 
         $this->router->get('/login', function () {
-            return response('Login Form');
+            return ws_response('Login Form');
         })->middleware(RedirectIfAuthenticated::class);
 
         UserFactory::new()->create();
 
         $user = AuthenticationTestUser::first();
         $this->router->get('/login', function () {
-            return response('Login Form');
+            return ws_response('Login Form');
         })->middleware(RedirectIfAuthenticated::class);
 
         UserFactory::new()->create();
@@ -50,7 +50,7 @@ class RedirectIfAuthenticatedTest extends TestCase
     public function testWhenDashboardNamedRouteIsAvailable()
     {
         $this->router->get('/named-dashboard', function () {
-            return response('Named Dashboard');
+            return ws_response('Named Dashboard');
         })->name('dashboard');
 
         $response = $this->actingAs($this->user)->get('/login');
@@ -61,7 +61,7 @@ class RedirectIfAuthenticatedTest extends TestCase
     public function testWhenHomeNamedRouteIsAvailable()
     {
         $this->router->get('/named-home', function () {
-            return response('Named Home');
+            return ws_response('Named Home');
         })->name('home');
 
         $response = $this->actingAs($this->user)->get('/login');
@@ -72,7 +72,7 @@ class RedirectIfAuthenticatedTest extends TestCase
     public function testWhenDashboardSlugIsAvailable()
     {
         $this->router->get('/dashboard', function () {
-            return response('My Dashboard');
+            return ws_response('My Dashboard');
         });
 
         $response = $this->actingAs($this->user)->get('/login');
@@ -83,7 +83,7 @@ class RedirectIfAuthenticatedTest extends TestCase
     public function testWhenHomeSlugIsAvailable()
     {
         $this->router->get('/home', function () {
-            return response('My Home');
+            return ws_response('My Home');
         })->name('home');
 
         $response = $this->actingAs($this->user)->get('/login');

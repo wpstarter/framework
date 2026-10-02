@@ -57,10 +57,10 @@ class ConfigPublishCommandTest extends TestCase
         ] as $file) {
             $this->assertFilenameExists("config-stubs/{$file}.php");
             $this->assertStringContainsString(
-                file_get_contents(package_path(['config', "{$file}.php"])), file_get_contents(config_path("{$file}.php"))
+                file_get_contents(package_path(['config', "{$file}.php"])), file_get_contents(ws_config_path("{$file}.php"))
             );
         }
 
-        $this->assertSame(config('app.providers'), ServiceProvider::defaultProviders()->toArray());
+        $this->assertSame(ws_config('app.providers'), ServiceProvider::defaultProviders()->toArray());
     }
 }

@@ -72,7 +72,7 @@ class Bus extends Facade
             ? static::getFacadeRoot()->dispatcher
             : static::getFacadeRoot();
 
-        return tap(new BusFake($actualDispatcher, $jobsToFake, $batchRepository), function ($fake) {
+        return ws_tap(new BusFake($actualDispatcher, $jobsToFake, $batchRepository), function ($fake) {
             static::swap($fake);
         });
     }

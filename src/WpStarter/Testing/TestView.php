@@ -129,7 +129,7 @@ class TestView implements Stringable
     {
         $value = Arr::wrap($value);
 
-        $values = $escape ? array_map(e(...), $value) : $value;
+        $values = $escape ? array_map(ws_e(...), $value) : $value;
 
         foreach ($values as $value) {
             PHPUnit::assertStringContainsString((string) $value, $this->rendered);
@@ -158,7 +158,7 @@ class TestView implements Stringable
      */
     public function assertSeeInOrder(array $values, $escape = true)
     {
-        $values = $escape ? array_map(e(...), $values) : $values;
+        $values = $escape ? array_map(ws_e(...), $values) : $values;
 
         PHPUnit::assertThat($values, new SeeInOrder($this->rendered));
 
@@ -187,7 +187,7 @@ class TestView implements Stringable
     {
         $value = Arr::wrap($value);
 
-        $values = $escape ? array_map(e(...), $value) : $value;
+        $values = $escape ? array_map(ws_e(...), $value) : $value;
 
         $rendered = strip_tags($this->rendered);
 
@@ -207,7 +207,7 @@ class TestView implements Stringable
      */
     public function assertSeeTextInOrder(array $values, $escape = true)
     {
-        $values = $escape ? array_map(e(...), $values) : $values;
+        $values = $escape ? array_map(ws_e(...), $values) : $values;
 
         PHPUnit::assertThat($values, new SeeInOrder(strip_tags($this->rendered)));
 
@@ -225,7 +225,7 @@ class TestView implements Stringable
     {
         $value = Arr::wrap($value);
 
-        $values = $escape ? array_map(e(...), $value) : $value;
+        $values = $escape ? array_map(ws_e(...), $value) : $value;
 
         foreach ($values as $value) {
             PHPUnit::assertStringNotContainsString((string) $value, $this->rendered);
@@ -256,7 +256,7 @@ class TestView implements Stringable
     {
         $value = Arr::wrap($value);
 
-        $values = $escape ? array_map(e(...), $value) : $value;
+        $values = $escape ? array_map(ws_e(...), $value) : $value;
 
         $rendered = strip_tags($this->rendered);
 

@@ -102,7 +102,7 @@ class PendingBatch
                 return;
             }
 
-            if (! (static::$batchableClasses[$job::class] ?? false) && ! in_array(Batchable::class, class_uses_recursive($job))) {
+            if (! (static::$batchableClasses[$job::class] ?? false) && ! in_array(Batchable::class, ws_class_uses_recursive($job))) {
                 static::$batchableClasses[$job::class] = false;
 
                 throw new RuntimeException(sprintf('Attempted to batch job [%s], but it does not use the Batchable trait.', $job::class));
@@ -438,7 +438,7 @@ class PendingBatch
      */
     public function dispatchIf($boolean)
     {
-        return value($boolean) ? $this->dispatch() : null;
+        return ws_value($boolean) ? $this->dispatch() : null;
     }
 
     /**
@@ -449,7 +449,7 @@ class PendingBatch
      */
     public function dispatchUnless($boolean)
     {
-        return ! value($boolean) ? $this->dispatch() : null;
+        return ! ws_value($boolean) ? $this->dispatch() : null;
     }
 
     /**
@@ -466,8 +466,8 @@ class PendingBatch
             try {
                 return $handler($batch);
             } catch (Throwable $e) {
-                if (function_exists('report')) {
-                    report($e);
+                if (function_exists('ws_report')) {
+                    ws_report($e);
                 }
             }
         });

@@ -69,7 +69,7 @@ class CliDumper extends BaseCliDumper
      */
     public static function register($basePath, $compiledViewPath)
     {
-        $cloner = tap(new VarCloner())->addCasters(ReflectionCaster::UNSET_CLOSURE_FILE_INFO);
+        $cloner = ws_tap(new VarCloner())->addCasters(ReflectionCaster::UNSET_CLOSURE_FILE_INFO);
 
         $dumper = new static(new ConsoleOutput(), $basePath, $compiledViewPath);
 

@@ -351,7 +351,7 @@ class Filesystem
      */
     public function link($target, $link)
     {
-        if (! windows_os()) {
+        if (! ws_windows_os()) {
             if (function_exists('symlink')) {
                 return symlink($target, $link);
             } else {

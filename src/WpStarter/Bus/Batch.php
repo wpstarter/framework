@@ -453,8 +453,8 @@ class Batch implements Arrayable, JsonSerializable
         try {
             $handler($batch, $e);
         } catch (Throwable $e) {
-            if (function_exists('report')) {
-                report($e);
+            if (function_exists('ws_report')) {
+                ws_report($e);
             }
         }
     }

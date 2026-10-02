@@ -108,12 +108,12 @@ class ScheduleGroupTest extends TestCase
     public static function groupAttributes(): array
     {
         return [
-            'user' => ['user', fake()->userName()],
-            'timezone' => ['timezone', fake()->timezone()],
+            'user' => ['user', ws_fake()->userName()],
+            'timezone' => ['timezone', ws_fake()->timezone()],
             'onOneServer' => ['onOneServer', true],
             'environments' => [
                 'environments',
-                fake()->randomElements(['local', 'production', 'testing', 'staging'], 2),
+                ws_fake()->randomElements(['local', 'production', 'testing', 'staging'], 2),
             ],
             'runInBackground' => ['runInBackground', true],
             'evenInMaintenanceMode' => ['evenInMaintenanceMode', true],
@@ -125,7 +125,7 @@ class ScheduleGroupTest extends TestCase
     public function testGroupedScheduleExecution($time, $expected, $description)
     {
         Carbon::setTestNow($time);
-        $app = app();
+        $app = ws_app();
 
         Schedule::days([1, 2, 3, 4, 5, 6])->group(function () {
             Schedule::between('07:00', '08:00')->group(function () {

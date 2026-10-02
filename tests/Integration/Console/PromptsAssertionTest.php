@@ -307,7 +307,7 @@ class PromptsAssertionTest extends TestCase
 
                 public function handle()
                 {
-                    $options = collect(['John', 'Jane', 'Sally', 'Jack']);
+                    $options = ws_collect(['John', 'Jane', 'Sally', 'Jack']);
 
                     $name = search(
                         label: 'What is your name?',
@@ -336,7 +336,7 @@ class PromptsAssertionTest extends TestCase
 
                 public function handle()
                 {
-                    $options = collect(['John', 'Jane', 'Sally', 'Jack']);
+                    $options = ws_collect(['John', 'Jane', 'Sally', 'Jack']);
 
                     $names = multisearch(
                         label: 'Which names do you like?',
@@ -379,7 +379,7 @@ class PromptsAssertionTest extends TestCase
                         options: ['John', 'Jane']
                     );
 
-                    $titles = collect(['Mr', 'Mrs', 'Ms', 'Dr']);
+                    $titles = ws_collect(['Mr', 'Mrs', 'Ms', 'Dr']);
                     $title = multisearch(
                         label: 'What is your title?',
                         options: fn (string $value) => strlen($value) > 0

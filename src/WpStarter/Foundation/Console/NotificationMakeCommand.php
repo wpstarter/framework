@@ -65,7 +65,7 @@ class NotificationMakeCommand extends GeneratorCommand
     {
         $separator = '/';
 
-        if (windows_os()) {
+        if (ws_windows_os()) {
             $separator = '\\';
         }
 

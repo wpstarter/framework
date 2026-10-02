@@ -364,10 +364,10 @@ abstract class Model implements Arrayable, ArrayAccess, CanBeEscapedWhenCastToSt
 
         static::$traitInitializers[$class] = [];
 
-        $uses = class_uses_recursive($class);
+        $uses = ws_class_uses_recursive($class);
 
-        $conventionalBootMethods = array_map(static fn ($trait) => 'boot'.class_basename($trait), $uses);
-        $conventionalInitMethods = array_map(static fn ($trait) => 'initialize'.class_basename($trait), $uses);
+        $conventionalBootMethods = array_map(static fn ($trait) => 'boot'.ws_class_basename($trait), $uses);
+        $conventionalInitMethods = array_map(static fn ($trait) => 'initialize'.ws_class_basename($trait), $uses);
 
         foreach ((new ReflectionClass($class))->getMethods() as $method) {
             if (! in_array($method->getName(), $booted) &&
@@ -1065,7 +1065,7 @@ abstract class Model implements Arrayable, ArrayAccess, CanBeEscapedWhenCastToSt
             $amount = (clone $this)->setAttribute($column, $amount)->getAttributeFromArray($column);
         }
 
-        return tap($this->setKeysForSaveQuery($this->newQueryWithoutScopes())->{$method}($column, $amount, $extra), function () use ($column) {
+        return ws_tap($this->setKeysForSaveQuery($this->newQueryWithoutScopes())->{$method}($column, $amount, $extra), function () use ($column) {
             $this->syncChanges();
 
             $this->fireModelEvent('updated', false);
@@ -1867,7 +1867,7 @@ abstract class Model implements Arrayable, ArrayAccess, CanBeEscapedWhenCastToSt
 
         $this->load((new BaseCollection($this->relations))->reject(
             fn ($relation) => $relation instanceof Pivot
-                || (is_object($relation) && in_array(AsPivot::class, class_uses_recursive($relation), true))
+                || (is_object($relation) && in_array(AsPivot::class, ws_class_uses_recursive($relation), true))
         )->keys()->all());
 
         $this->syncOriginal();
@@ -1895,7 +1895,7 @@ abstract class Model implements Arrayable, ArrayAccess, CanBeEscapedWhenCastToSt
             $this->getAttributes(), $except ? array_unique(array_merge($except, $defaults)) : $defaults
         );
 
-        return tap(new static, function ($instance) use ($attributes) {
+        return ws_tap(new static, function ($instance) use ($attributes) {
             $instance->setRawAttributes($attributes);
 
             $instance->setRelations($this->relations);
@@ -2022,7 +2022,7 @@ abstract class Model implements Arrayable, ArrayAccess, CanBeEscapedWhenCastToSt
      */
     public function getTable()
     {
-        return $this->table ?? Str::snake(Str::pluralStudly(class_basename($this)));
+        return $this->table ?? Str::snake(Str::pluralStudly(ws_class_basename($this)));
     }
 
     /**
@@ -2306,7 +2306,7 @@ abstract class Model implements Arrayable, ArrayAccess, CanBeEscapedWhenCastToSt
      */
     public function getForeignKey()
     {
-        return Str::snake(class_basename($this)).'_'.$this->getKeyName();
+        return Str::snake(ws_class_basename($this)).'_'.$this->getKeyName();
     }
 
     /**
@@ -2337,7 +2337,7 @@ abstract class Model implements Arrayable, ArrayAccess, CanBeEscapedWhenCastToSt
      */
     public static function isSoftDeletable(): bool
     {
-        return static::$isSoftDeletable[static::class] ??= in_array(SoftDeletes::class, class_uses_recursive(static::class));
+        return static::$isSoftDeletable[static::class] ??= in_array(SoftDeletes::class, ws_class_uses_recursive(static::class));
     }
 
     /**
@@ -2345,7 +2345,7 @@ abstract class Model implements Arrayable, ArrayAccess, CanBeEscapedWhenCastToSt
      */
     protected function isPrunable(): bool
     {
-        return self::$isPrunable[static::class] ??= in_array(Prunable::class, class_uses_recursive(static::class)) || static::isMassPrunable();
+        return self::$isPrunable[static::class] ??= in_array(Prunable::class, ws_class_uses_recursive(static::class)) || static::isMassPrunable();
     }
 
     /**
@@ -2353,7 +2353,7 @@ abstract class Model implements Arrayable, ArrayAccess, CanBeEscapedWhenCastToSt
      */
     protected function isMassPrunable(): bool
     {
-        return self::$isMassPrunable[static::class] ??= in_array(MassPrunable::class, class_uses_recursive(static::class));
+        return self::$isMassPrunable[static::class] ??= in_array(MassPrunable::class, ws_class_uses_recursive(static::class));
     }
 
     /**
@@ -2403,7 +2403,7 @@ abstract class Model implements Arrayable, ArrayAccess, CanBeEscapedWhenCastToSt
      */
     public function broadcastChannelRoute()
     {
-        return str_replace('\\', '.', get_class($this)).'.{'.Str::camel(class_basename($this)).'}';
+        return str_replace('\\', '.', get_class($this)).'.{'.Str::camel(ws_class_basename($this)).'}';
     }
 
     /**
@@ -2568,7 +2568,7 @@ abstract class Model implements Arrayable, ArrayAccess, CanBeEscapedWhenCastToSt
     public function __toString()
     {
         return $this->escapeWhenCastingToString
-            ? e($this->toJson())
+            ? ws_e($this->toJson())
             : $this->toJson();
     }
 

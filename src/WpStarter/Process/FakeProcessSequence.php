@@ -112,7 +112,7 @@ class FakeProcessSequence
         }
 
         if (! $this->failWhenEmpty && count($this->processes) === 0) {
-            return value($this->emptyProcess ?? new FakeProcessResult);
+            return ws_value($this->emptyProcess ?? new FakeProcessResult);
         }
 
         return array_shift($this->processes);

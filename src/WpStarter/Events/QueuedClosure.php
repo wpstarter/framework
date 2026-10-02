@@ -161,7 +161,7 @@ class QueuedClosure
     public function resolve()
     {
         return function (...$arguments) {
-            dispatch(new CallQueuedListener(InvokeQueuedClosure::class, 'handle', [
+            ws_dispatch(new CallQueuedListener(InvokeQueuedClosure::class, 'handle', [
                 'closure' => new SerializableClosure($this->closure),
                 'arguments' => $arguments,
                 'catch' => (new Collection($this->catchCallbacks))

@@ -293,7 +293,7 @@ class Arr
     {
         if (is_null($callback)) {
             if (empty($array)) {
-                return value($default);
+                return ws_value($default);
             }
 
             if (is_array($array)) {
@@ -304,14 +304,14 @@ class Arr
                 return $item;
             }
 
-            return value($default);
+            return ws_value($default);
         }
 
         $array = static::from($array);
 
         $key = array_find_key($array, $callback);
 
-        return $key !== null ? $array[$key] : value($default);
+        return $key !== null ? $array[$key] : ws_value($default);
     }
 
     /**
@@ -329,7 +329,7 @@ class Arr
     public static function last($array, ?callable $callback = null, $default = null)
     {
         if (is_null($callback)) {
-            return empty($array) ? value($default) : array_last($array);
+            return empty($array) ? ws_value($default) : array_last($array);
         }
 
         return static::first(array_reverse($array, true), $callback, $default);
@@ -480,7 +480,7 @@ class Arr
     public static function get($array, $key, $default = null)
     {
         if (! static::accessible($array)) {
-            return value($default);
+            return ws_value($default);
         }
 
         if (is_null($key)) {
@@ -492,14 +492,14 @@ class Arr
         }
 
         if (! str_contains($key, '.')) {
-            return value($default);
+            return ws_value($default);
         }
 
         foreach (explode('.', $key) as $segment) {
             if (static::accessible($array) && static::exists($array, $segment)) {
                 $array = $array[$segment];
             } else {
-                return value($default);
+                return ws_value($default);
             }
         }
 
@@ -787,7 +787,7 @@ class Arr
         foreach ($array as $item) {
             $itemValue = $value instanceof Closure
                 ? $value($item)
-                : data_get($item, $value);
+                : ws_data_get($item, $value);
 
             // If the key is "null", we will just append the value to the array and keep
             // looping. Otherwise we will key the array using the value of the key we
@@ -797,7 +797,7 @@ class Arr
             } else {
                 $itemKey = $key instanceof Closure
                     ? $key($item)
-                    : data_get($item, $key);
+                    : ws_data_get($item, $key);
 
                 if (is_object($itemKey) && method_exists($itemKey, '__toString')) {
                     $itemKey = (string) $itemKey;

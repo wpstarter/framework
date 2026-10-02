@@ -66,7 +66,7 @@ class RedisQueueTest extends TestCase
     #[DataProvider('redisDriverProvider')]
     public function testExpiredJobsArePopped($driver)
     {
-        $default = config('queue.connections.redis.queue', 'default');
+        $default = ws_config('queue.connections.redis.queue', 'default');
         $this->setQueue($driver, $default);
 
         $jobs = [
@@ -101,7 +101,7 @@ class RedisQueueTest extends TestCase
     {
         $this->tearDownRedis();
 
-        $default = config('queue.connections.redis.queue', 'default');
+        $default = ws_config('queue.connections.redis.queue', 'default');
         if ($pid = pcntl_fork() > 0) {
             $this->setUpRedis();
             $this->setQueue($driver, $default, null, 60, 10);
@@ -140,7 +140,7 @@ class RedisQueueTest extends TestCase
     #[DataProvider('redisDriverProvider')]
     public function testPopProperlyPopsJobOffOfRedis($driver)
     {
-        $default = config('queue.connections.redis.queue', 'default');
+        $default = ws_config('queue.connections.redis.queue', 'default');
         $this->setQueue($driver, $default);
 
         // Push an item into queue
@@ -175,7 +175,7 @@ class RedisQueueTest extends TestCase
     #[DataProvider('redisDriverProvider')]
     public function testPopProperlyPopsDelayedJobOffOfRedis($driver)
     {
-        $default = config('queue.connections.redis.queue', 'default');
+        $default = ws_config('queue.connections.redis.queue', 'default');
         $this->setQueue($driver, $default);
         // Push an item into queue
         $job = new RedisQueueIntegrationTestJob(10);
@@ -202,7 +202,7 @@ class RedisQueueTest extends TestCase
     #[DataProvider('redisDriverProvider')]
     public function testPopPopsDelayedJobOffOfRedisWhenExpireNull($driver)
     {
-        $default = config('queue.connections.redis.queue', 'default');
+        $default = ws_config('queue.connections.redis.queue', 'default');
         $this->setQueue($driver, $default, null, null);
 
         // Push an item into queue
@@ -232,7 +232,7 @@ class RedisQueueTest extends TestCase
     #[DataProvider('redisDriverProvider')]
     public function testBlockingPopProperlyPopsJobOffOfRedis($driver)
     {
-        $default = config('queue.connections.redis.queue', 'default');
+        $default = ws_config('queue.connections.redis.queue', 'default');
         $this->setQueue($driver, $default, null, 60, 5);
 
         // Push an item into queue
@@ -257,7 +257,7 @@ class RedisQueueTest extends TestCase
             return 'uuid';
         });
 
-        $default = config('queue.connections.redis.queue', 'default');
+        $default = ws_config('queue.connections.redis.queue', 'default');
         $this->setQueue($driver, $default, null, 60, 5);
 
         $jobs = [
@@ -284,7 +284,7 @@ class RedisQueueTest extends TestCase
     #[DataProvider('redisDriverProvider')]
     public function testNotExpireJobsWhenExpireNull($driver)
     {
-        $default = config('queue.connections.redis.queue', 'default');
+        $default = ws_config('queue.connections.redis.queue', 'default');
         $this->setQueue($driver, $default, null, null);
 
         // Make an expired reserved job
@@ -333,7 +333,7 @@ class RedisQueueTest extends TestCase
     #[DataProvider('redisDriverProvider')]
     public function testExpireJobsWhenExpireSet($driver)
     {
-        $default = config('queue.connections.redis.queue', 'default');
+        $default = ws_config('queue.connections.redis.queue', 'default');
         $this->setQueue($driver, $default, null, 30);
 
         // Push an item into queue
@@ -362,7 +362,7 @@ class RedisQueueTest extends TestCase
     #[DataProvider('redisDriverProvider')]
     public function testRelease($driver)
     {
-        $default = config('queue.connections.redis.queue', 'default');
+        $default = ws_config('queue.connections.redis.queue', 'default');
         $this->setQueue($driver, $default);
 
         // push a job into queue
@@ -403,7 +403,7 @@ class RedisQueueTest extends TestCase
     #[DataProvider('redisDriverProvider')]
     public function testReleaseInThePast($driver)
     {
-        $default = config('queue.connections.redis.queue', 'default');
+        $default = ws_config('queue.connections.redis.queue', 'default');
         $this->setQueue($driver, $default);
         $job = new RedisQueueIntegrationTestJob(30);
         $this->queue->push($job);
@@ -421,7 +421,7 @@ class RedisQueueTest extends TestCase
     #[DataProvider('redisDriverProvider')]
     public function testDelete($driver)
     {
-        $default = config('queue.connections.redis.queue', 'default');
+        $default = ws_config('queue.connections.redis.queue', 'default');
         $this->setQueue($driver, $default);
 
         $job = new RedisQueueIntegrationTestJob(30);
@@ -445,7 +445,7 @@ class RedisQueueTest extends TestCase
     #[DataProvider('redisDriverProvider')]
     public function testClear($driver)
     {
-        $default = config('queue.connections.redis.queue', 'default');
+        $default = ws_config('queue.connections.redis.queue', 'default');
         $this->setQueue($driver, $default);
 
         $job1 = new RedisQueueIntegrationTestJob(30);
@@ -465,7 +465,7 @@ class RedisQueueTest extends TestCase
     #[DataProvider('redisDriverProvider')]
     public function testSize($driver)
     {
-        $default = config('queue.connections.redis.queue', 'default');
+        $default = ws_config('queue.connections.redis.queue', 'default');
         $this->setQueue($driver, $default);
         $this->assertEquals(0, $this->queue->size());
         $this->queue->push(new RedisQueueIntegrationTestJob(1));
@@ -503,7 +503,7 @@ class RedisQueueTest extends TestCase
         $container->shouldReceive('bound')->with('events')->andReturn(true)->twice();
         $container->shouldReceive('offsetGet')->with('events')->andReturn($events)->twice();
 
-        $default = config('queue.connections.redis.queue', 'default');
+        $default = ws_config('queue.connections.redis.queue', 'default');
         $queue = new RedisQueue($this->redis[$driver], $default);
         $queue->setContainer($container);
 
@@ -524,7 +524,7 @@ class RedisQueueTest extends TestCase
         $container->shouldReceive('bound')->with('events')->andReturn(true)->times(6);
         $container->shouldReceive('offsetGet')->with('events')->andReturn($events)->times(6);
 
-        $default = config('queue.connections.redis.queue', 'default');
+        $default = ws_config('queue.connections.redis.queue', 'default');
         $queue = new RedisQueue($this->redis[$driver], $default);
         $queue->setContainer($container);
 
@@ -564,7 +564,7 @@ class RedisQueueTest extends TestCase
         $client->setOption($optSerializer, $serializerPhp);
 
         try {
-            $default = config('queue.connections.redis.queue', 'default');
+            $default = ws_config('queue.connections.redis.queue', 'default');
             $this->setQueue('phpredis', $default);
 
             // Push a delayed job (this is where the bug occurs - zadd serializes the payload)

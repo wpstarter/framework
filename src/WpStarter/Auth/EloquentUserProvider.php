@@ -191,7 +191,7 @@ class EloquentUserProvider implements UserProvider
             ? $this->createModel()->newQuery()
             : $model->newQuery();
 
-        with($query, $this->queryCallback);
+        ws_with($query, $this->queryCallback);
 
         return $query;
     }

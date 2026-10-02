@@ -65,12 +65,12 @@ class ObserverMakeCommand extends GeneratorCommand
             'DummyFullModelClass' => $modelClass,
             '{{ namespacedModel }}' => $modelClass,
             '{{namespacedModel}}' => $modelClass,
-            'DummyModelClass' => class_basename($modelClass),
-            '{{ model }}' => class_basename($modelClass),
-            '{{model}}' => class_basename($modelClass),
-            'DummyModelVariable' => lcfirst(class_basename($modelClass)),
-            '{{ modelVariable }}' => lcfirst(class_basename($modelClass)),
-            '{{modelVariable}}' => lcfirst(class_basename($modelClass)),
+            'DummyModelClass' => ws_class_basename($modelClass),
+            '{{ model }}' => ws_class_basename($modelClass),
+            '{{model}}' => ws_class_basename($modelClass),
+            'DummyModelVariable' => lcfirst(ws_class_basename($modelClass)),
+            '{{ modelVariable }}' => lcfirst(ws_class_basename($modelClass)),
+            '{{modelVariable}}' => lcfirst(ws_class_basename($modelClass)),
         ];
 
         return str_replace(

@@ -33,7 +33,7 @@ class EloquentMorphToLazyEagerLoadingTest extends DatabaseTestCase
 
         $user = User::create();
 
-        $post = tap((new Post)->user()->associate($user))->save();
+        $post = ws_tap((new Post)->user()->associate($user))->save();
 
         $video = Video::create();
 

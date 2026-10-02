@@ -113,7 +113,7 @@ class Exception
      */
     public function frames()
     {
-        return once(function () {
+        return ws_once(function () {
             $classMap = array_map(function ($path) {
                 return (string) realpath($path);
             }, array_values(ClassLoader::getRegisteredLoaders())[0]->getClassMap());

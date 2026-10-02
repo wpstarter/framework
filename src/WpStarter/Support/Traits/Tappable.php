@@ -12,6 +12,6 @@ trait Tappable
      */
     public function tap($callback = null)
     {
-        return tap($this, $callback);
+        return ws_tap($this, $callback);
     }
 }

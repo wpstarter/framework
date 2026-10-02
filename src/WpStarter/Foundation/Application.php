@@ -311,7 +311,7 @@ class Application extends Container implements ApplicationContract, CachesConfig
      */
     protected function registerLaravelCloudServices()
     {
-        if (! laravel_cloud()) {
+        if (! wpstarter_cloud()) {
             return;
         }
 
@@ -422,13 +422,13 @@ class Application extends Container implements ApplicationContract, CachesConfig
         $this->instance('path.resources', $this->resourcePath());
         $this->instance('path.storage', $this->storagePath());
 
-        $this->useBootstrapPath(value(function () {
+        $this->useBootstrapPath(ws_value(function () {
             return is_dir($directory = $this->basePath('.laravel'))
                 ? $directory
                 : $this->basePath('bootstrap');
         }));
 
-        $this->useLangPath(value(function () {
+        $this->useLangPath(ws_value(function () {
             return is_dir($directory = $this->resourcePath('lang'))
                 ? $directory
                 : $this->basePath('lang');
@@ -1722,7 +1722,7 @@ class Application extends Container implements ApplicationContract, CachesConfig
 
         $composer = json_decode(file_get_contents($this->basePath('composer.json')), true);
 
-        foreach ((array) data_get($composer, 'autoload.psr-4') as $namespace => $path) {
+        foreach ((array) ws_data_get($composer, 'autoload.psr-4') as $namespace => $path) {
             foreach ((array) $path as $pathChoice) {
                 if (realpath($this->path()) === realpath($this->basePath($pathChoice))) {
                     return $this->namespace = $namespace;

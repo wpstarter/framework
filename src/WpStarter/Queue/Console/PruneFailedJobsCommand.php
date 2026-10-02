@@ -37,7 +37,7 @@ class PruneFailedJobsCommand extends Command
         if ($failer instanceof PrunableFailedJobProvider) {
             $count = $failer->prune(Carbon::now()->subHours($this->option('hours')));
         } else {
-            $this->components->error('The ['.class_basename($failer).'] failed job storage driver does not support pruning.');
+            $this->components->error('The ['.ws_class_basename($failer).'] failed job storage driver does not support pruning.');
 
             return 1;
         }

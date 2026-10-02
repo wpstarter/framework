@@ -162,7 +162,7 @@ class ResponseSequence
         }
 
         if (! $this->failWhenEmpty && $this->isEmpty()) {
-            return value($this->emptyResponse ?? Factory::response());
+            return ws_value($this->emptyResponse ?? Factory::response());
         }
 
         $response = array_shift($this->responses);

@@ -191,7 +191,7 @@ class DatabaseConnectionsTest extends DatabaseTestCase
                 'database' => $writePath,
             ],
         ]);
-        $events = collect();
+        $events = ws_collect();
         DB::listen($events->push(...));
 
         try {
@@ -242,7 +242,7 @@ class DatabaseConnectionsTest extends DatabaseTestCase
             'driver' => 'sqlite',
             'database' => $writePath,
         ]);
-        $events = collect();
+        $events = ws_collect();
         DB::listen($events->push(...));
 
         try {
@@ -331,7 +331,7 @@ class DatabaseConnectionsTest extends DatabaseTestCase
                 'database' => $writePath,
             ],
         ]);
-        $events = collect();
+        $events = ws_collect();
         DB::listen($events->push(...));
 
         try {

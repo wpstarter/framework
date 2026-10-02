@@ -6,7 +6,7 @@ use WpStarter\Redis\RedisManager;
 
 use function PHPStan\Testing\assertType;
 
-$redisManager = resolve(RedisManager::class);
+$redisManager = ws_resolve(RedisManager::class);
 
 $redisManager->extend('custom', function (): void {
     assertType('WpStarter\Redis\RedisManager', $this);

@@ -735,7 +735,7 @@ class Router implements BindingRegistrar, RegistrarContract
      */
     public function respondWithRoute($name)
     {
-        $route = tap($this->routes->getByName($name))->bind($this->currentRequest);
+        $route = ws_tap($this->routes->getByName($name))->bind($this->currentRequest);
 
         return $this->runRoute($this->currentRequest, $route);
     }
@@ -903,7 +903,7 @@ class Router implements BindingRegistrar, RegistrarContract
     {
         $this->events->dispatch(new PreparingResponse($request, $response));
 
-        return tap(static::toResponse($request, $response), function ($response) use ($request) {
+        return ws_tap(static::toResponse($request, $response), function ($response) use ($request) {
             $this->events->dispatch(new ResponsePrepared($request, $response));
         });
     }

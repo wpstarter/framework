@@ -178,7 +178,7 @@ class SupportStrTest extends TestCase
         $this->assertTrue(Str::startsWith('jason', 'jason'));
         $this->assertTrue(Str::startsWith('jason', ['jas']));
         $this->assertTrue(Str::startsWith('jason', ['day', 'jas']));
-        $this->assertTrue(Str::startsWith('jason', collect(['day', 'jas'])));
+        $this->assertTrue(Str::startsWith('jason', ws_collect(['day', 'jas'])));
         $this->assertFalse(Str::startsWith('jason', 'day'));
         $this->assertFalse(Str::startsWith('jason', ['day']));
         $this->assertFalse(Str::startsWith('jason', null));
@@ -213,7 +213,7 @@ class SupportStrTest extends TestCase
         $this->assertFalse(Str::doesntStartWith('jason', 'jason'));
         $this->assertFalse(Str::doesntStartWith('jason', ['jas']));
         $this->assertFalse(Str::doesntStartWith('jason', ['day', 'jas']));
-        $this->assertFalse(Str::doesntStartWith('jason', collect(['day', 'jas'])));
+        $this->assertFalse(Str::doesntStartWith('jason', ws_collect(['day', 'jas'])));
         $this->assertTrue(Str::doesntStartWith('jason', 'day'));
         $this->assertTrue(Str::doesntStartWith('jason', ['day']));
         $this->assertTrue(Str::doesntStartWith('jason', null));
@@ -248,7 +248,7 @@ class SupportStrTest extends TestCase
         $this->assertTrue(Str::endsWith('jason', 'jason'));
         $this->assertTrue(Str::endsWith('jason', ['on']));
         $this->assertTrue(Str::endsWith('jason', ['no', 'on']));
-        $this->assertTrue(Str::endsWith('jason', collect(['no', 'on'])));
+        $this->assertTrue(Str::endsWith('jason', ws_collect(['no', 'on'])));
         $this->assertFalse(Str::endsWith('jason', 'no'));
         $this->assertFalse(Str::endsWith('jason', ['no']));
         $this->assertFalse(Str::endsWith('jason', ''));
@@ -281,7 +281,7 @@ class SupportStrTest extends TestCase
         $this->assertFalse(Str::doesntEndWith('jason', 'jason'));
         $this->assertFalse(Str::doesntEndWith('jason', ['on']));
         $this->assertFalse(Str::doesntEndWith('jason', ['no', 'on']));
-        $this->assertFalse(Str::doesntEndWith('jason', collect(['no', 'on'])));
+        $this->assertFalse(Str::doesntEndWith('jason', ws_collect(['no', 'on'])));
         $this->assertTrue(Str::doesntEndWith('jason', 'no'));
         $this->assertTrue(Str::doesntEndWith('jason', ['no']));
         $this->assertTrue(Str::doesntEndWith('jason', ''));
@@ -904,7 +904,7 @@ class SupportStrTest extends TestCase
         $this->assertSame('foo bar baz 8.x', Str::replace('x', '8.x', 'foo bar baz X', false));
         $this->assertSame('foo/bar/baz', Str::replace(' ', '/', 'foo bar baz'));
         $this->assertSame('foo bar baz', Str::replace(['?1', '?2', '?3'], ['foo', 'bar', 'baz'], '?1 ?2 ?3'));
-        $this->assertSame(['foo', 'bar', 'baz'], Str::replace(collect(['?1', '?2', '?3']), collect(['foo', 'bar', 'baz']), collect(['?1', '?2', '?3'])));
+        $this->assertSame(['foo', 'bar', 'baz'], Str::replace(ws_collect(['?1', '?2', '?3']), ws_collect(['foo', 'bar', 'baz']), ws_collect(['?1', '?2', '?3'])));
     }
 
     public function testReplaceArray()
@@ -1554,7 +1554,7 @@ class SupportStrTest extends TestCase
             ['Taylor', ['ylo'], true, true],
             ['Taylor', ['ylo'], true, false],
             ['Taylor', ['xxx', 'ylo'], true, true],
-            ['Taylor', collect(['xxx', 'ylo']), true, true],
+            ['Taylor', ws_collect(['xxx', 'ylo']), true, true],
             ['Taylor', ['xxx', 'ylo'], true, false],
             ['Taylor', 'xxx', false],
             ['Taylor', ['xxx'], false],

@@ -5,7 +5,7 @@ use WpStarter\Contracts\Cache\Repository;
 use function PHPStan\Testing\assertType;
 
 /** @var Repository $cache */
-$cache = resolve(Repository::class);
+$cache = ws_resolve(Repository::class);
 
 assertType('mixed', $cache->get('key'));
 assertType('mixed', $cache->get('cache', 27));
@@ -21,7 +21,7 @@ assertType('30', $cache->pull('cache', function (): int {
 assertType('33', $cache->sear('cache', function (): int {
     return 33;
 }));
-assertType('36', $cache->remember('cache', now(), function (): int {
+assertType('36', $cache->remember('cache', ws_now(), function (): int {
     return 36;
 }));
 assertType('36', $cache->rememberForever('cache', function (): int {

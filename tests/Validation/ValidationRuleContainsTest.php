@@ -23,7 +23,7 @@ class ValidationRuleContainsTest extends TestCase
         $rule = Rule::contains(['Taylor', 'Abigail']);
         $this->assertSame('contains:"Taylor","Abigail"', (string) $rule);
 
-        $rule = Rule::contains(collect(['Taylor', 'Abigail']));
+        $rule = Rule::contains(ws_collect(['Taylor', 'Abigail']));
         $this->assertSame('contains:"Taylor","Abigail"', (string) $rule);
 
         $rule = Rule::contains([ArrayKeys::key_1, ArrayKeys::key_2]);

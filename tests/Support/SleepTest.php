@@ -232,9 +232,9 @@ class SleepTest extends TestCase
     public function testItCanSleepTillGivenTime()
     {
         Sleep::fake();
-        Carbon::setTestNow(now()->startOfDay());
+        Carbon::setTestNow(ws_now()->startOfDay());
 
-        Sleep::until(now()->addMinute());
+        Sleep::until(ws_now()->addMinute());
 
         Sleep::assertSequence([
             Sleep::for(60)->seconds(),
@@ -244,9 +244,9 @@ class SleepTest extends TestCase
     public function testItCanSleepTillGivenTimestamp()
     {
         Sleep::fake();
-        Carbon::setTestNow(now()->startOfDay());
+        Carbon::setTestNow(ws_now()->startOfDay());
 
-        Sleep::until(now()->addMinute()->timestamp);
+        Sleep::until(ws_now()->addMinute()->timestamp);
 
         Sleep::assertSequence([
             Sleep::for(60)->seconds(),
@@ -256,9 +256,9 @@ class SleepTest extends TestCase
     public function testItCanSleepTillGivenTimestampAsString()
     {
         Sleep::fake();
-        Carbon::setTestNow(now()->startOfDay());
+        Carbon::setTestNow(ws_now()->startOfDay());
 
-        Sleep::until((string) now()->addMinute()->timestamp);
+        Sleep::until((string) ws_now()->addMinute()->timestamp);
 
         Sleep::assertSequence([
             Sleep::for(60)->seconds(),
@@ -282,9 +282,9 @@ class SleepTest extends TestCase
     public function testItSleepsForZeroTimeWithNegativeDateTime()
     {
         Sleep::fake();
-        Carbon::setTestNow(now()->startOfDay());
+        Carbon::setTestNow(ws_now()->startOfDay());
 
-        Sleep::until(now()->subMinutes(100));
+        Sleep::until(ws_now()->subMinutes(100));
 
         Sleep::assertSequence([
             Sleep::for(0)->seconds(),

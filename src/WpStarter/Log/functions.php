@@ -14,6 +14,6 @@ if (! function_exists('WpStarter\Log\log')) {
      */
     function log($message = null, array $context = []): ?LoggerInterface
     {
-        return logger($message, $context);
+        return ws_logger($message, $context);
     }
 }

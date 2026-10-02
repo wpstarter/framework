@@ -63,7 +63,7 @@ trait InteractsWithTime
         Carbon::setTestNow($date);
 
         if ($callback) {
-            return tap($callback($date), function () {
+            return ws_tap($callback($date), function () {
                 Carbon::setTestNow();
             });
         }

@@ -15,7 +15,7 @@ class AboutCommandTest extends TestCase
     #[DataProvider('cliDataProvider')]
     public function testItCanFormatForCliInterface($format, $expected)
     {
-        $this->assertSame($expected, value($format, false));
+        $this->assertSame($expected, ws_value($format, false));
     }
 
     public static function cliDataProvider()
@@ -31,7 +31,7 @@ class AboutCommandTest extends TestCase
     #[DataProvider('jsonDataProvider')]
     public function testItCanFormatForJsonInterface($format, $expected)
     {
-        $this->assertSame($expected, value($format, true));
+        $this->assertSame($expected, ws_value($format, true));
     }
 
     public static function jsonDataProvider()

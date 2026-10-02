@@ -28,7 +28,7 @@ function test(User $user, Post $post, Comment $comment, Article $article): void
     User::addGlobalScope('ancient', function ($builder) {
         assertType('WpStarter\Database\Eloquent\Builder<User>', $builder);
 
-        $builder->where('created_at', '<', now()->subYears(2000));
+        $builder->where('created_at', '<', ws_now()->subYears(2000));
     });
 
     assertType('WpStarter\Database\Eloquent\Builder<User>', User::query());

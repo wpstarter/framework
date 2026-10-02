@@ -104,7 +104,7 @@ class AnonymousEvent implements ShouldBroadcast
      */
     public function send(): void
     {
-        $broadcast = broadcast($this)->via($this->connection);
+        $broadcast = ws_broadcast($this)->via($this->connection);
 
         if (! $this->includeCurrentUser) {
             $broadcast->toOthers();
@@ -116,7 +116,7 @@ class AnonymousEvent implements ShouldBroadcast
      */
     public function broadcastAs(): string
     {
-        return $this->name ?: class_basename($this);
+        return $this->name ?: ws_class_basename($this);
     }
 
     /**

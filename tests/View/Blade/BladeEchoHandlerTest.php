@@ -21,7 +21,7 @@ class BladeEchoHandlerTest extends AbstractBladeTestCase
     public function testBladeHandlerCanInterceptRegularEchos()
     {
         $this->assertSame(
-            "<?php \$__bladeCompiler = app('blade.compiler'); ?><?php echo e(\$__bladeCompiler->applyEchoHandler(\$exampleObject)); ?>",
+            "<?php \$__bladeCompiler = app('blade.compiler'); ?><?php echo ws_e(\$__bladeCompiler->applyEchoHandler(\$exampleObject)); ?>",
             $this->compiler->compileString('{{$exampleObject}}')
         );
     }
@@ -37,7 +37,7 @@ class BladeEchoHandlerTest extends AbstractBladeTestCase
     public function testBladeHandlerCanInterceptEscapedEchos()
     {
         $this->assertSame(
-            "<?php \$__bladeCompiler = app('blade.compiler'); ?><?php echo e(\$__bladeCompiler->applyEchoHandler(\$exampleObject)); ?>",
+            "<?php \$__bladeCompiler = app('blade.compiler'); ?><?php echo ws_e(\$__bladeCompiler->applyEchoHandler(\$exampleObject)); ?>",
             $this->compiler->compileString('{{{$exampleObject}}}')
         );
     }
@@ -45,7 +45,7 @@ class BladeEchoHandlerTest extends AbstractBladeTestCase
     public function testWhitespaceIsPreservedCorrectly()
     {
         $this->assertSame(
-            "<?php \$__bladeCompiler = app('blade.compiler'); ?><?php echo e(\$__bladeCompiler->applyEchoHandler(\$exampleObject)); ?>\n\n",
+            "<?php \$__bladeCompiler = app('blade.compiler'); ?><?php echo ws_e(\$__bladeCompiler->applyEchoHandler(\$exampleObject)); ?>\n\n",
             $this->compiler->compileString("{{\$exampleObject}}\n")
         );
     }

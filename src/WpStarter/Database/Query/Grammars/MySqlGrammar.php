@@ -207,7 +207,7 @@ class MySqlGrammar extends Grammar
             $query->offset = null;
         }
 
-        $column = last(explode('.', $query->groupLimit['column']));
+        $column = ws_last(explode('.', $query->groupLimit['column']));
         $column = $this->wrap($column);
 
         $partition = ', @laravel_row := if(@laravel_group = '.$column.', @laravel_row + 1, 1) as `laravel_row`';

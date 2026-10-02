@@ -186,7 +186,7 @@ class FileStore implements Store, LockProvider
     {
         $raw = $this->getPayload($key);
 
-        return tap(((int) $raw['data']) + $value, function ($newValue) use ($key, $raw) {
+        return ws_tap(((int) $raw['data']) + $value, function ($newValue) use ($key, $raw) {
             $this->put($key, $newValue, $raw['time'] ?? 0);
         });
     }
@@ -305,7 +305,7 @@ class FileStore implements Store, LockProvider
     public function forget($key)
     {
         if ($this->files->exists($file = $this->path($key))) {
-            return tap($this->files->delete($file), function ($forgotten) use ($key) {
+            return ws_tap($this->files->delete($file), function ($forgotten) use ($key) {
                 if ($forgotten && $this->files->exists($file = $this->path("wpstarter:cache:flexible:created:{$key}"))) {
                     $this->files->delete($file);
                 }

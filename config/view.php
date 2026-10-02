@@ -14,7 +14,7 @@ return [
     */
 
     'paths' => [
-        resource_path('views'),
+        ws_resource_path('views'),
     ],
 
     /*
@@ -28,9 +28,9 @@ return [
     |
     */
 
-    'compiled' => env(
+    'compiled' => ws_env(
         'VIEW_COMPILED_PATH',
-        realpath(storage_path('framework/views'))
+        realpath(ws_storage_path('framework/views'))
     ),
 
 ];

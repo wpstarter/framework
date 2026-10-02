@@ -10,7 +10,7 @@ class FallbackRouteTest extends TestCase
     public function testBasicFallback()
     {
         Route::fallback(function () {
-            return response('fallback', 404);
+            return ws_response('fallback', 404);
         });
 
         Route::get('one', function () {
@@ -26,7 +26,7 @@ class FallbackRouteTest extends TestCase
     {
         Route::group(['prefix' => 'prefix'], function () {
             Route::fallback(function () {
-                return response('fallback', 404);
+                return ws_response('fallback', 404);
             });
 
             Route::get('one', function () {
@@ -43,7 +43,7 @@ class FallbackRouteTest extends TestCase
     public function testFallbackWithWildcards()
     {
         Route::fallback(function () {
-            return response('fallback', 404);
+            return ws_response('fallback', 404);
         });
 
         Route::get('one', function () {
@@ -56,7 +56,7 @@ class FallbackRouteTest extends TestCase
 
         $this->assertStringContainsString('one', $this->get('/one')->getContent());
 
-        tap($this->get('/non-existing'), function ($response) {
+        ws_tap($this->get('/non-existing'), function ($response) {
             $this->assertStringContainsString('wildcard', $response->getContent());
             $this->assertEquals(200, $response->getStatusCode());
 
@@ -67,7 +67,7 @@ class FallbackRouteTest extends TestCase
     public function testNoRoutes()
     {
         Route::fallback(function () {
-            return response('fallback', 404);
+            return ws_response('fallback', 404);
         });
 
         $this->assertStringContainsString('fallback', $this->get('/non-existing')->getContent());
@@ -77,7 +77,7 @@ class FallbackRouteTest extends TestCase
     public function testRespondWithNamedFallbackRoute()
     {
         Route::fallback(function () {
-            return response('fallback', 404);
+            return ws_response('fallback', 404);
         })->name('testFallbackRoute');
 
         Route::get('one', function () {

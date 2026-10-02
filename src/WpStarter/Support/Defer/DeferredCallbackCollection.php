@@ -50,7 +50,7 @@ class DeferredCallbackCollection implements ArrayAccess, Countable
 
         foreach ($this->callbacks as $index => $callback) {
             if ($when($callback)) {
-                rescue($callback);
+                ws_rescue($callback);
             }
 
             unset($this->callbacks[$index]);

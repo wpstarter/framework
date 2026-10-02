@@ -31,12 +31,12 @@ trait Dispatchable
         if ($boolean instanceof Closure) {
             $dispatchable = new static(...$arguments);
 
-            return value($boolean, $dispatchable)
+            return ws_value($boolean, $dispatchable)
                 ? static::newPendingDispatch($dispatchable)
                 : new Fluent;
         }
 
-        return value($boolean)
+        return ws_value($boolean)
             ? static::newPendingDispatch(new static(...$arguments))
             : new Fluent;
     }
@@ -53,12 +53,12 @@ trait Dispatchable
         if ($boolean instanceof Closure) {
             $dispatchable = new static(...$arguments);
 
-            return ! value($boolean, $dispatchable)
+            return ! ws_value($boolean, $dispatchable)
                 ? static::newPendingDispatch($dispatchable)
                 : new Fluent;
         }
 
-        return ! value($boolean)
+        return ! ws_value($boolean)
             ? static::newPendingDispatch(new static(...$arguments))
             : new Fluent;
     }

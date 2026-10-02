@@ -867,7 +867,7 @@ class EloquentBelongsToManyTest extends DatabaseTestCase
         );
 
         // Test syncing with a BaseCollection of models
-        $tagCollection = collect([$tag3, $tag4]);
+        $tagCollection = ws_collect([$tag3, $tag4]);
 
         $post->tags()->sync($tagCollection);
 
@@ -915,7 +915,7 @@ class EloquentBelongsToManyTest extends DatabaseTestCase
 
         DB::enableQueryLog();
 
-        foreach ([collect(), [], null] as $value) {
+        foreach ([ws_collect(), [], null] as $value) {
             $result = $post->tags()->sync($value, false);
 
             $this->assertEquals([

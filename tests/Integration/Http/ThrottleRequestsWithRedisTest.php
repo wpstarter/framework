@@ -59,8 +59,8 @@ class ThrottleRequestsWithRedisTest extends TestCase
             RateLimiter::for('throttle-not-found', function (Request $request) {
                 return Limit::perMinute(1)->after(fn ($response) => $response->status() === 404);
             });
-            Route::get('/', fn () => match (request('status')) {
-                '404' => abort(404),
+            Route::get('/', fn () => match (ws_request('status')) {
+                '404' => ws_abort(404),
                 default => 'ok',
             })->middleware(ThrottleRequestsWithRedis::using('throttle-not-found'));
 
@@ -84,9 +84,9 @@ class ThrottleRequestsWithRedisTest extends TestCase
             RateLimiter::for('throttle-not-found', function (Request $request) {
                 return Limit::perMinute(1)
                     ->after(fn ($response) => $response->status() === 404)
-                    ->response(fn () => response('ah ah ah', status: 429));
+                    ->response(fn () => ws_response('ah ah ah', status: 429));
             });
-            Route::get('/', fn () => abort(404))->middleware(ThrottleRequestsWithRedis::using('throttle-not-found'));
+            Route::get('/', fn () => ws_abort(404))->middleware(ThrottleRequestsWithRedis::using('throttle-not-found'));
 
             $this->get('/')->assertNotFound();
             $this->get('/')->assertTooManyRequests()->assertContent('ah ah ah');

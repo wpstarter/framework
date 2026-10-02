@@ -66,7 +66,7 @@ class LoadConfigurationTest extends TestCase
 
         $this->assertEqualsCanonicalizing(
             array_keys($app['config']->all()),
-            collect((new Filesystem)->files([
+            ws_collect((new Filesystem)->files([
                 $baseConfigPath,
                 $customConfigPath,
             ]))->map(fn ($file) => $file->getBaseName('.php'))->unique()->values()->toArray()

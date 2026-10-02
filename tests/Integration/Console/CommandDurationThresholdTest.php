@@ -119,7 +119,7 @@ class CommandDurationThresholdTest extends TestCase
 
     public function testItCanExceedThresholdWhenSpecifyingDurationAsDateTime(): void
     {
-        retry(2, function () {
+        ws_retry(2, function () {
             Carbon::setTestNow(Carbon::now());
 
             $input = new StringInput('foo');
@@ -193,7 +193,7 @@ class CommandDurationThresholdTest extends TestCase
         Carbon::setTestNow(Carbon::now());
         $kernel->handle($input = new StringInput('foo'), new ConsoleOutput);
 
-        Carbon::setTestNow(now()->addMinute());
+        Carbon::setTestNow(ws_now()->addMinute());
         $kernel->terminate($input, 21);
 
         $this->assertSame('Australia/Melbourne', $startedAt->timezone->getName());

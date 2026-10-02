@@ -451,7 +451,7 @@ class Gate implements GateContract
         // After calling the authorization callback, we will call the "after" callbacks
         // that are registered with the Gate, which allows a developer to do logging
         // if that is required for this application. Then we'll return the result.
-        return tap($this->callAfterCallbacks(
+        return ws_tap($this->callAfterCallbacks(
             $user, $ability, $arguments, $result
         ), function ($result) use ($user, $ability, $arguments) {
             $this->dispatchGateEvaluatedEvent($user, $ability, $arguments, $result);
@@ -727,13 +727,13 @@ class Gate implements GateContract
         return Arr::wrap(Collection::times(count($classDirnameSegments), function ($index) use ($class, $classDirnameSegments) {
             $classDirname = implode('\\', array_slice($classDirnameSegments, 0, $index));
 
-            return $classDirname.'\\Policies\\'.class_basename($class).'Policy';
+            return $classDirname.'\\Policies\\'.ws_class_basename($class).'Policy';
         })->when(str_contains($classDirname, '\\Models\\'), function ($collection) use ($class, $classDirname) {
-            return $collection->concat([str_replace('\\Models\\', '\\Policies\\', $classDirname).'\\'.class_basename($class).'Policy'])
-                ->concat([str_replace('\\Models\\', '\\Models\\Policies\\', $classDirname).'\\'.class_basename($class).'Policy']);
+            return $collection->concat([str_replace('\\Models\\', '\\Policies\\', $classDirname).'\\'.ws_class_basename($class).'Policy'])
+                ->concat([str_replace('\\Models\\', '\\Models\\Policies\\', $classDirname).'\\'.ws_class_basename($class).'Policy']);
         })->reverse()->values()->first(function ($class) {
             return class_exists($class);
-        }) ?: [$classDirname.'\\Policies\\'.class_basename($class).'Policy']);
+        }) ?: [$classDirname.'\\Policies\\'.ws_class_basename($class).'Policy']);
     }
 
     /**

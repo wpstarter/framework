@@ -66,10 +66,10 @@ class TrustProxies
      */
     protected function setTrustedProxyIpAddresses(Request $request)
     {
-        $trustedIps = $this->proxies() ?: config('trustedproxy.proxies');
+        $trustedIps = $this->proxies() ?: ws_config('trustedproxy.proxies');
 
         if (is_null($trustedIps) &&
-            (laravel_cloud() ||
+            (wpstarter_cloud() ||
              str_ends_with($request->host(), '.on-forge.com') ||
              str_ends_with($request->host(), '.on-vapor.com'))) {
             $trustedIps = '*';

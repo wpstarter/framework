@@ -35,7 +35,7 @@ class EloquentHasManyTest extends DatabaseTestCase
     {
         $user = EloquentHasManyTestUser::create();
 
-        $user->logins()->create(['login_time' => now()]);
+        $user->logins()->create(['login_time' => ws_now()]);
 
         $this->assertInstanceOf(HasOne::class, $user->logins()->one());
     }

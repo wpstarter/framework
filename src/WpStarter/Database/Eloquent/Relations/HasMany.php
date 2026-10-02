@@ -19,7 +19,7 @@ class HasMany extends HasOneOrMany
      */
     public function one()
     {
-        return HasOne::noConstraints(fn () => tap(
+        return HasOne::noConstraints(fn () => ws_tap(
             new HasOne(
                 $this->getQuery(),
                 $this->parent,

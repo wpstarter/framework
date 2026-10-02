@@ -65,7 +65,7 @@ class ThrottlesExceptionsWithRedis extends ThrottlesExceptions
             }
 
             if ($this->reportCallback && call_user_func($this->reportCallback, $throwable, $this->limiter)) {
-                report($throwable);
+                ws_report($throwable);
             }
 
             if ($this->shouldDelete($throwable)) {

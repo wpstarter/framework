@@ -3304,7 +3304,7 @@ class DatabaseEloquentModelTest extends TestCase
         $array = [
             'foo' => 'bar',
         ];
-        $collection = collect($array);
+        $collection = ws_collect($array);
         $model->arrayAttribute = $array;
         $model->jsonAttribute = $array;
         $model->jsonAttributeWithUnicode = $array;
@@ -3327,7 +3327,7 @@ class DatabaseEloquentModelTest extends TestCase
         $model->jsonAttributeWithUnicode = [
             'foo' => 'bar2',
         ];
-        $model->collectionAttribute = collect([
+        $model->collectionAttribute = ws_collect([
             'foo' => 'bar2',
         ]);
 

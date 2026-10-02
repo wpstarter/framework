@@ -426,7 +426,7 @@ abstract class Factory
             }
 
             if ($this->count === null) {
-                return tap($this->makeInstance($parent), function ($instance) {
+                return ws_tap($this->makeInstance($parent), function ($instance) {
                     $this->callAfterMaking(new Collection([$instance]));
                 });
             }
@@ -514,7 +514,7 @@ abstract class Factory
     protected function makeInstance(?Model $parent)
     {
         return Model::unguarded(function () use ($parent) {
-            return tap($this->newModel($this->getExpandedAttributes($parent)), function ($instance) {
+            return ws_tap($this->newModel($this->getExpandedAttributes($parent)), function ($instance) {
                 if (isset($this->connection)) {
                     $instance->setConnection($this->connection);
                 }
@@ -704,7 +704,7 @@ abstract class Factory
      */
     protected function guessRelationship(string $related)
     {
-        $guess = Str::camel(Str::plural(class_basename($related)));
+        $guess = Str::camel(Str::plural(ws_class_basename($related)));
 
         return method_exists($this->modelName(), $guess) ? $guess : Str::singular($guess);
     }
@@ -723,7 +723,7 @@ abstract class Factory
             'has' => $this->has->concat([new BelongsToManyRelationship(
                 $factory,
                 $pivot,
-                $relationship ?? Str::camel(Str::plural(class_basename(
+                $relationship ?? Str::camel(Str::plural(ws_class_basename(
                     $factory instanceof Factory
                         ? $factory->modelName()
                         : Collection::wrap($factory)->first()
@@ -743,7 +743,7 @@ abstract class Factory
     {
         return $this->newInstance(['for' => $this->for->concat([new BelongsToRelationship(
             $factory,
-            $relationship ?? Str::camel(class_basename(
+            $relationship ?? Str::camel(ws_class_basename(
                 $factory instanceof Factory ? $factory->modelName() : $factory
             ))
         )])]);
@@ -948,7 +948,7 @@ abstract class Factory
                 'Factory', '', Str::replaceFirst(static::$namespace, '', $factory::class)
             );
 
-            $factoryBasename = Str::replaceLast('Factory', '', class_basename($factory));
+            $factoryBasename = Str::replaceLast('Factory', '', ws_class_basename($factory));
 
             $appNamespace = static::appNamespace();
 

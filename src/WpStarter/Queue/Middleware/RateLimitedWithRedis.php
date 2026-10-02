@@ -76,7 +76,7 @@ class RateLimitedWithRedis extends RateLimited
             $redis, $key, $maxAttempts, $decaySeconds
         );
 
-        return tap(! $limiter->acquire(), function () use ($key, $limiter) {
+        return ws_tap(! $limiter->acquire(), function () use ($key, $limiter) {
             $this->decaysAt[$key] = $limiter->decaysAt;
         });
     }

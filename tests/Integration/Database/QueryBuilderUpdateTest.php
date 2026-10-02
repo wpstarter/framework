@@ -94,7 +94,7 @@ class QueryBuilderUpdateTest extends DatabaseTestCase
     public static function jsonValuesDataProvider()
     {
         yield ['payload', ['Laravel', 'Founder'], ['Laravel', 'Founder']];
-        yield ['payload', collect(['Laravel', 'Founder']), ['Laravel', 'Founder']];
+        yield ['payload', ws_collect(['Laravel', 'Founder']), ['Laravel', 'Founder']];
         yield ['status', StringStatus::draft, 'draft'];
     }
 }

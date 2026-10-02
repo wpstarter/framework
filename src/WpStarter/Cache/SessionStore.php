@@ -121,7 +121,7 @@ class SessionStore implements Store
     public function increment($key, $value = 1)
     {
         if (! is_null($existing = $this->get($key))) {
-            return tap(((int) $existing) + $value, function ($incremented) use ($key) {
+            return ws_tap(((int) $existing) + $value, function ($incremented) use ($key) {
                 $this->session->put($this->itemKey("{$key}.value"), $incremented);
             });
         }

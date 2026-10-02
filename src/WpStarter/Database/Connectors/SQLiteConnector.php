@@ -51,7 +51,7 @@ class SQLiteConnector extends Connector implements ConnectorInterface
             return $path;
         }
 
-        $path = realpath($path) ?: realpath(base_path($path));
+        $path = realpath($path) ?: realpath(ws_base_path($path));
 
         // Here we'll verify that the SQLite database exists before going any further
         // as the developer probably wants to know if the database exists and this

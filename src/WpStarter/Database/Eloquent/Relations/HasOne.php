@@ -99,7 +99,7 @@ class HasOne extends HasOneOrMany implements SupportsPartialRelations
      */
     public function newRelatedInstanceFor(Model $parent)
     {
-        return tap($this->related->newInstance(), function ($instance) use ($parent) {
+        return ws_tap($this->related->newInstance(), function ($instance) use ($parent) {
             $instance->setAttribute($this->getForeignKeyName(), $parent->{$this->localKey});
             $this->applyInverseRelationToModel($instance, $parent);
         });

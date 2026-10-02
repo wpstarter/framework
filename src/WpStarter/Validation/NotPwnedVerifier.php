@@ -89,7 +89,7 @@ class NotPwnedVerifier implements UncompromisedVerifier
                 'https://api.pwnedpasswords.com/range/'.$hashPrefix
             );
         } catch (Exception $e) {
-            report($e);
+            ws_report($e);
         }
 
         $body = (isset($response) && $response->successful())

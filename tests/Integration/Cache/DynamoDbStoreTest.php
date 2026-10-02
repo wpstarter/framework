@@ -67,7 +67,7 @@ class DynamoDbStoreTest extends TestCase
      */
     protected function defineEnvironment($app)
     {
-        if (! env('DYNAMODB_CACHE_TABLE')) {
+        if (! ws_env('DYNAMODB_CACHE_TABLE')) {
             $this->markTestSkipped('DynamoDB not configured.');
         }
 

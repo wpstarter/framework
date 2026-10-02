@@ -201,9 +201,9 @@ class Event
         $context = json_encode($container[Repository::class]->dehydrate());
 
         return Process::fromShellCommandline(
-            $this->buildCommand(), base_path(), ['__LARAVEL_CONTEXT' => $context], null, null
+            $this->buildCommand(), ws_base_path(), ['__LARAVEL_CONTEXT' => $context], null, null
         )->run(
-            laravel_cloud()
+            wpstarter_cloud()
                 ? fn ($type, $line) => fwrite($type === 'out' ? STDOUT : STDERR, $line)
                 : fn () => true
         );
@@ -438,7 +438,7 @@ class Event
     protected function ensureOutputIsBeingCaptured()
     {
         if (is_null($this->output) || $this->output == $this->getDefaultOutput()) {
-            $this->sendOutputTo(storage_path('logs/schedule-'.sha1($this->mutexName()).'.log'));
+            $this->sendOutputTo(ws_storage_path('logs/schedule-'.sha1($this->mutexName()).'.log'));
         }
     }
 

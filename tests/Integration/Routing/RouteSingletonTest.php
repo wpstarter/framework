@@ -17,17 +17,17 @@ class RouteSingletonTest extends TestCase
         $response = $this->get('/avatar/create');
         $this->assertEquals(404, $response->getStatusCode());
 
-        $this->assertSame('http://localhost/avatar', route('avatar.show'));
+        $this->assertSame('http://localhost/avatar', ws_route('avatar.show'));
         $response = $this->get('/avatar');
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertSame('singleton show', $response->getContent());
 
-        $this->assertSame('http://localhost/avatar/edit', route('avatar.edit'));
+        $this->assertSame('http://localhost/avatar/edit', ws_route('avatar.edit'));
         $response = $this->get('/avatar/edit');
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertSame('singleton edit', $response->getContent());
 
-        $this->assertSame('http://localhost/avatar', route('avatar.update'));
+        $this->assertSame('http://localhost/avatar', ws_route('avatar.update'));
         $response = $this->put('/avatar');
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertSame('singleton update', $response->getContent());
@@ -46,17 +46,17 @@ class RouteSingletonTest extends TestCase
     {
         Route::singleton('avatar', CreatableSingletonTestController::class)->creatable();
 
-        $this->assertSame('http://localhost/avatar/create', route('avatar.create'));
+        $this->assertSame('http://localhost/avatar/create', ws_route('avatar.create'));
         $response = $this->get('/avatar/create');
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertSame('singleton create', $response->getContent());
 
-        $this->assertSame('http://localhost/avatar', route('avatar.store'));
+        $this->assertSame('http://localhost/avatar', ws_route('avatar.store'));
         $response = $this->post('/avatar');
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertSame('singleton store', $response->getContent());
 
-        $this->assertSame('http://localhost/avatar', route('avatar.destroy'));
+        $this->assertSame('http://localhost/avatar', ws_route('avatar.destroy'));
         $response = $this->delete('/avatar');
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertSame('singleton destroy', $response->getContent());
@@ -118,22 +118,22 @@ class RouteSingletonTest extends TestCase
     {
         Route::singleton('avatar', CreatableSingletonTestController::class)->destroyable();
 
-        $this->assertSame('http://localhost/avatar', route('avatar.show'));
+        $this->assertSame('http://localhost/avatar', ws_route('avatar.show'));
         $response = $this->get('/avatar');
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertSame('singleton show', $response->getContent());
 
-        $this->assertSame('http://localhost/avatar/edit', route('avatar.edit'));
+        $this->assertSame('http://localhost/avatar/edit', ws_route('avatar.edit'));
         $response = $this->get('/avatar/edit');
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertSame('singleton edit', $response->getContent());
 
-        $this->assertSame('http://localhost/avatar', route('avatar.update'));
+        $this->assertSame('http://localhost/avatar', ws_route('avatar.update'));
         $response = $this->put('/avatar');
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertSame('singleton update', $response->getContent());
 
-        $this->assertSame('http://localhost/avatar', route('avatar.destroy'));
+        $this->assertSame('http://localhost/avatar', ws_route('avatar.destroy'));
         $response = $this->delete('/avatar');
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertSame('singleton destroy', $response->getContent());
@@ -227,7 +227,7 @@ class RouteSingletonTest extends TestCase
         $response = $this->post('/avatar');
         $this->assertEquals(405, $response->getStatusCode());
 
-        $this->assertSame('http://localhost/avatar', route('avatar.update'));
+        $this->assertSame('http://localhost/avatar', ws_route('avatar.update'));
         $response = $this->put('/avatar');
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertSame('singleton update', $response->getContent());
@@ -240,12 +240,12 @@ class RouteSingletonTest extends TestCase
         $response = $this->get('/avatar/create');
         $this->assertEquals(404, $response->getStatusCode());
 
-        $this->assertSame('http://localhost/avatar', route('avatar.store'));
+        $this->assertSame('http://localhost/avatar', ws_route('avatar.store'));
         $response = $this->post('/avatar');
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertSame('singleton store', $response->getContent());
 
-        $this->assertSame('http://localhost/avatar', route('avatar.update'));
+        $this->assertSame('http://localhost/avatar', ws_route('avatar.update'));
         $response = $this->put('/avatar');
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertSame('singleton update', $response->getContent());
@@ -307,17 +307,17 @@ class RouteSingletonTest extends TestCase
     {
         Route::apiSingleton('avatar', CreatableSingletonTestController::class)->destroyable();
 
-        $this->assertSame('http://localhost/avatar', route('avatar.show'));
+        $this->assertSame('http://localhost/avatar', ws_route('avatar.show'));
         $response = $this->get('/avatar');
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertSame('singleton show', $response->getContent());
 
-        $this->assertSame('http://localhost/avatar', route('avatar.update'));
+        $this->assertSame('http://localhost/avatar', ws_route('avatar.update'));
         $response = $this->put('/avatar');
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertSame('singleton update', $response->getContent());
 
-        $this->assertSame('http://localhost/avatar', route('avatar.destroy'));
+        $this->assertSame('http://localhost/avatar', ws_route('avatar.destroy'));
         $response = $this->delete('/avatar');
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertSame('singleton destroy', $response->getContent());
@@ -449,14 +449,14 @@ class RouteSingletonTest extends TestCase
     {
         Route::singleton('avatar', SingletonTestController::class)->name('show', 'foo.show');
 
-        $this->assertSame('http://localhost/avatar', route('foo.show'));
+        $this->assertSame('http://localhost/avatar', ws_route('foo.show'));
     }
 
     public function testSingletonNames()
     {
         Route::singleton('avatar', SingletonTestController::class)->names(['show' => 'foo.show']);
 
-        $this->assertSame('http://localhost/avatar', route('foo.show'));
+        $this->assertSame('http://localhost/avatar', ws_route('foo.show'));
     }
 
     public function testNestedSingleton()

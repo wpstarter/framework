@@ -414,7 +414,7 @@ class Store implements Session
             return $value;
         }
 
-        return tap($callback(), function ($value) use ($key) {
+        return ws_tap($callback(), function ($value) use ($key) {
             $this->put($key, $value);
         });
     }
@@ -617,7 +617,7 @@ class Store implements Session
      */
     public function regenerate($destroy = false)
     {
-        return tap($this->migrate($destroy), function () {
+        return ws_tap($this->migrate($destroy), function () {
             $this->regenerateToken();
         });
     }

@@ -50,7 +50,7 @@ trait ManagesLayouts
                 $this->sectionStack[] = $section;
             }
         } else {
-            $this->extendSection($section, $content instanceof View ? $content : e($content));
+            $this->extendSection($section, $content instanceof View ? $content : ws_e($content));
         }
     }
 
@@ -154,7 +154,7 @@ trait ManagesLayouts
      */
     public function yieldContent($section, $default = '')
     {
-        $sectionContent = $default instanceof View ? $default : e($default);
+        $sectionContent = $default instanceof View ? $default : ws_e($default);
 
         if (isset($this->sections[$section])) {
             $sectionContent = $this->sections[$section];

@@ -146,7 +146,7 @@ class FoundationServiceProvider extends AggregateServiceProvider
     public function registerRequestValidation()
     {
         Request::macro('validate', function (array $rules, ...$params) {
-            return tap(validator($this->all(), $rules, ...$params), function ($validator) {
+            return ws_tap(ws_validator($this->all(), $rules, ...$params), function ($validator) {
                 if ($this->isPrecognitive()) {
                     $validator->after(Precognition::afterValidationHook($this))
                         ->setRules(
@@ -198,7 +198,7 @@ class FoundationServiceProvider extends AggregateServiceProvider
      */
     protected function registerUriUrlGeneration()
     {
-        Uri::setUrlGeneratorResolver(fn () => app('url'));
+        Uri::setUrlGeneratorResolver(fn () => ws_app('url'));
     }
 
     /**
@@ -211,7 +211,7 @@ class FoundationServiceProvider extends AggregateServiceProvider
         $this->app->scoped(DeferredCallbackCollection::class);
 
         $this->app['events']->listen(function (CommandFinished $event) {
-            app(DeferredCallbackCollection::class)->invokeWhen(fn ($callback) => app()->runningInConsole() && ($event->exitCode === 0 || $callback->always));
+            ws_app(DeferredCallbackCollection::class)->invokeWhen(fn ($callback) => ws_app()->runningInConsole() && ($event->exitCode === 0 || $callback->always));
         });
 
         $this->app['events']->listen(function (JobAttempted $event) {
@@ -219,7 +219,7 @@ class FoundationServiceProvider extends AggregateServiceProvider
                 return;
             }
 
-            app(DeferredCallbackCollection::class)->invokeWhen(fn ($callback) => ($event->successful() || $callback->always));
+            ws_app(DeferredCallbackCollection::class)->invokeWhen(fn ($callback) => ($event->successful() || $callback->always));
         });
     }
 

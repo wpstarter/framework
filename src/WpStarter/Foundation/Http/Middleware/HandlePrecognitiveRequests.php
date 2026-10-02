@@ -46,7 +46,7 @@ class HandlePrecognitiveRequests
 
         $this->prepareForPrecognition($request);
 
-        return tap($next($request), function ($response) use ($request, $callableBinding, $controllerBinding) {
+        return ws_tap($next($request), function ($response) use ($request, $callableBinding, $controllerBinding) {
             $response->headers->set('Precognition', 'true');
 
             $this->appendVaryHeader($request, $response);
@@ -78,7 +78,7 @@ class HandlePrecognitiveRequests
      */
     protected function appendVaryHeader($request, $response)
     {
-        return tap($response, fn () => $response->headers->set('Vary', implode(', ', array_filter([
+        return ws_tap($response, fn () => $response->headers->set('Vary', implode(', ', array_filter([
             $response->headers->get('Vary'),
             'Precognition',
         ]))));

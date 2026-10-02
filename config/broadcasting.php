@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'default' => env('BROADCAST_CONNECTION', 'null'),
+    'default' => ws_env('BROADCAST_CONNECTION', 'null'),
 
     /*
     |--------------------------------------------------------------------------
@@ -32,14 +32,14 @@ return [
 
         'reverb' => [
             'driver' => 'reverb',
-            'key' => env('REVERB_APP_KEY'),
-            'secret' => env('REVERB_APP_SECRET'),
-            'app_id' => env('REVERB_APP_ID'),
+            'key' => ws_env('REVERB_APP_KEY'),
+            'secret' => ws_env('REVERB_APP_SECRET'),
+            'app_id' => ws_env('REVERB_APP_ID'),
             'options' => [
-                'host' => env('REVERB_HOST'),
-                'port' => env('REVERB_PORT', 443),
-                'scheme' => env('REVERB_SCHEME', 'https'),
-                'useTLS' => env('REVERB_SCHEME', 'https') === 'https',
+                'host' => ws_env('REVERB_HOST'),
+                'port' => ws_env('REVERB_PORT', 443),
+                'scheme' => ws_env('REVERB_SCHEME', 'https'),
+                'useTLS' => ws_env('REVERB_SCHEME', 'https') === 'https',
             ],
             'client_options' => [
                 // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html
@@ -48,16 +48,16 @@ return [
 
         'pusher' => [
             'driver' => 'pusher',
-            'key' => env('PUSHER_APP_KEY'),
-            'secret' => env('PUSHER_APP_SECRET'),
-            'app_id' => env('PUSHER_APP_ID'),
+            'key' => ws_env('PUSHER_APP_KEY'),
+            'secret' => ws_env('PUSHER_APP_SECRET'),
+            'app_id' => ws_env('PUSHER_APP_ID'),
             'options' => [
-                'cluster' => env('PUSHER_APP_CLUSTER'),
-                'host' => env('PUSHER_HOST') ?: 'api-'.env('PUSHER_APP_CLUSTER', 'mt1').'.pusher.com',
-                'port' => env('PUSHER_PORT', 443),
-                'scheme' => env('PUSHER_SCHEME', 'https'),
+                'cluster' => ws_env('PUSHER_APP_CLUSTER'),
+                'host' => ws_env('PUSHER_HOST') ?: 'api-'.ws_env('PUSHER_APP_CLUSTER', 'mt1').'.pusher.com',
+                'port' => ws_env('PUSHER_PORT', 443),
+                'scheme' => ws_env('PUSHER_SCHEME', 'https'),
                 'encrypted' => true,
-                'useTLS' => env('PUSHER_SCHEME', 'https') === 'https',
+                'useTLS' => ws_env('PUSHER_SCHEME', 'https') === 'https',
             ],
             'client_options' => [
                 // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html
@@ -66,7 +66,7 @@ return [
 
         'ably' => [
             'driver' => 'ably',
-            'key' => env('ABLY_KEY'),
+            'key' => ws_env('ABLY_KEY'),
         ],
 
         'log' => [

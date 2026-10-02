@@ -65,7 +65,7 @@ class ValidationRuleCanTest extends TestCase
         });
 
         $v = new Validator(
-            resolve('translator'),
+            ws_resolve('translator'),
             ['company' => '1'],
             ['company' => new Can('update-company')]
         );
@@ -84,7 +84,7 @@ class ValidationRuleCanTest extends TestCase
         });
 
         $v = new Validator(
-            resolve('translator'),
+            ws_resolve('translator'),
             ['company' => '1'],
             ['company' => new Can('update-company', [\App\Models\Company::class, new stdClass])]
         );
@@ -95,7 +95,7 @@ class ValidationRuleCanTest extends TestCase
     public function testCustomMessageUsingDotNotationAndFqcnWorks()
     {
         $v = new Validator(
-            resolve('translator'),
+            ws_resolve('translator'),
             [
                 'company' => '1',
                 'company_fqcn' => '1',

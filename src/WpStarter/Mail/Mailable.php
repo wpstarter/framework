@@ -422,7 +422,7 @@ class Mailable implements MailableContract, Renderable
      */
     protected function markdownRenderer()
     {
-        return tap(Container::getInstance()->make(Markdown::class), function ($markdown) {
+        return ws_tap(Container::getInstance()->make(Markdown::class), function ($markdown) {
             $markdown->theme($this->theme ?: Container::getInstance()->get(ConfigRepository::class)->get(
                 'mail.markdown.theme', 'default')
             );
@@ -472,7 +472,7 @@ class Mailable implements MailableContract, Renderable
         if ($this->subject) {
             $message->subject($this->subject);
         } else {
-            $message->subject(Str::title(Str::snake(class_basename($this), ' ')));
+            $message->subject(Str::title(Str::snake(ws_class_basename($this), ' ')));
         }
 
         return $this;
@@ -1357,7 +1357,7 @@ class Mailable implements MailableContract, Renderable
             $address = json_encode($address);
         }
 
-        if (filled($name)) {
+        if (ws_filled($name)) {
             $address .= ' ('.$name.')';
         }
 
@@ -1396,7 +1396,7 @@ class Mailable implements MailableContract, Renderable
     {
         $this->renderForAssertions();
 
-        $actualSubject = $this->subject ?: (method_exists($this, 'envelope') ? $this->envelope()->subject : null) ?: Str::title(Str::snake(class_basename($this), ' '));
+        $actualSubject = $this->subject ?: (method_exists($this, 'envelope') ? $this->envelope()->subject : null) ?: Str::title(Str::snake(ws_class_basename($this), ' '));
 
         PHPUnit::assertTrue(
             $this->hasSubject($subject),

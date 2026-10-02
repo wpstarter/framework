@@ -306,7 +306,7 @@ class LogManagerTest extends TestCase
         $config->set('logging.channels.defaultsingle', [
             'driver' => 'single',
             'name' => 'ds',
-            'path' => storage_path('logs/laravel.log'),
+            'path' => ws_storage_path('logs/laravel.log'),
             'replace_placeholders' => true,
         ]);
 
@@ -324,7 +324,7 @@ class LogManagerTest extends TestCase
         $config->set('logging.channels.formattedsingle', [
             'driver' => 'single',
             'name' => 'fs',
-            'path' => storage_path('logs/laravel.log'),
+            'path' => ws_storage_path('logs/laravel.log'),
             'formatter' => HtmlFormatter::class,
             'formatter_with' => [
                 'dateFormat' => 'Y/m/d--test',
@@ -351,7 +351,7 @@ class LogManagerTest extends TestCase
         $config->set('logging.channels.defaultdaily', [
             'driver' => 'daily',
             'name' => 'dd',
-            'path' => storage_path('logs/laravel.log'),
+            'path' => ws_storage_path('logs/laravel.log'),
             'replace_placeholders' => true,
         ]);
 
@@ -369,7 +369,7 @@ class LogManagerTest extends TestCase
         $config->set('logging.channels.formatteddaily', [
             'driver' => 'daily',
             'name' => 'fd',
-            'path' => storage_path('logs/laravel.log'),
+            'path' => ws_storage_path('logs/laravel.log'),
             'formatter' => HtmlFormatter::class,
             'formatter_with' => [
                 'dateFormat' => 'Y/m/d--test',
@@ -454,7 +454,7 @@ class LogManagerTest extends TestCase
 
         $logger = $manager->build([
             'driver' => 'single',
-            'path' => storage_path('logs/on-demand.log'),
+            'path' => ws_storage_path('logs/on-demand.log'),
         ]);
         $handler = $logger->getLogger()->getHandlers()[0];
 
@@ -462,7 +462,7 @@ class LogManagerTest extends TestCase
 
         $url = new ReflectionProperty(get_class($handler), 'url');
 
-        $this->assertSame(storage_path('logs/on-demand.log'), $url->getValue($handler));
+        $this->assertSame(ws_storage_path('logs/on-demand.log'), $url->getValue($handler));
     }
 
     public function testLogManagerCanUseOnDemandChannelInOnDemandStack()
@@ -478,7 +478,7 @@ class LogManagerTest extends TestCase
             {
                 return new Monolog(
                     'uuid',
-                    [new StreamHandler(storage_path('logs/custom.log'))],
+                    [new StreamHandler(ws_storage_path('logs/custom.log'))],
                     [new UidProcessor()]
                 );
             }
@@ -497,7 +497,7 @@ class LogManagerTest extends TestCase
 
         $url = new ReflectionProperty(get_class($handler), 'url');
 
-        $this->assertSame(storage_path('logs/custom.log'), $url->getValue($handler));
+        $this->assertSame(ws_storage_path('logs/custom.log'), $url->getValue($handler));
     }
 
     public function testWrappingHandlerInFingersCrossedWhenActionLevelIsUsed()

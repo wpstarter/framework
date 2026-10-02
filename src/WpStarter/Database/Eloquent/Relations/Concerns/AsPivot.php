@@ -139,7 +139,7 @@ trait AsPivot
 
         $this->touchOwners();
 
-        return tap($this->getDeleteQuery()->delete(), function () {
+        return ws_tap($this->getDeleteQuery()->delete(), function () {
             $this->exists = false;
 
             $this->fireModelEvent('deleted', false);
@@ -168,7 +168,7 @@ trait AsPivot
     {
         if (! isset($this->table)) {
             $this->setTable(str_replace(
-                '\\', '', Str::snake(Str::singular(class_basename($this)))
+                '\\', '', Str::snake(Str::singular(ws_class_basename($this)))
             ));
         }
 

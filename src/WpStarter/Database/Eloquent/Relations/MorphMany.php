@@ -19,7 +19,7 @@ class MorphMany extends MorphOneOrMany
      */
     public function one()
     {
-        return MorphOne::noConstraints(fn () => tap(
+        return MorphOne::noConstraints(fn () => ws_tap(
             new MorphOne(
                 $this->getQuery(),
                 $this->getParent(),

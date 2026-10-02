@@ -6,7 +6,7 @@ use WpStarter\Http\Request;
 
 use function PHPStan\Testing\assertType;
 
-$container = resolve(Container::class);
+$container = ws_resolve(Container::class);
 
 assertType('stdClass', $container->instance('foo', new stdClass));
 

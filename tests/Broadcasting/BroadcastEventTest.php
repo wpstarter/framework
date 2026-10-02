@@ -127,7 +127,7 @@ class TestBroadcastEvent
 
     public function __construct()
     {
-        $this->collection = collect(['foo' => 'bar']);
+        $this->collection = ws_collect(['foo' => 'bar']);
     }
 
     public function broadcastOn()

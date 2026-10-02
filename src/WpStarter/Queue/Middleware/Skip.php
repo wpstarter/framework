@@ -17,7 +17,7 @@ class Skip
      */
     public static function when(Closure|bool $condition): self
     {
-        return new self(value($condition));
+        return new self(ws_value($condition));
     }
 
     /**
@@ -27,7 +27,7 @@ class Skip
      */
     public static function unless(Closure|bool $condition): self
     {
-        return new self(! value($condition));
+        return new self(! ws_value($condition));
     }
 
     /**

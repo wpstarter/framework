@@ -15,14 +15,14 @@ class FoundationHelpersTest extends TestCase
     {
         $this->assertEquals(
             'rescued!',
-            rescue(function () {
+            ws_rescue(function () {
                 throw new Exception;
             }, 'rescued!')
         );
 
         $this->assertEquals(
             'rescued!',
-            rescue(function () {
+            ws_rescue(function () {
                 throw new Exception;
             }, function () {
                 return 'rescued!';
@@ -31,7 +31,7 @@ class FoundationHelpersTest extends TestCase
 
         $this->assertEquals(
             'no need to rescue',
-            rescue(function () {
+            ws_rescue(function () {
                 return 'no need to rescue';
             }, 'rescued!')
         );
@@ -46,7 +46,7 @@ class FoundationHelpersTest extends TestCase
 
         $this->assertEquals(
             'rescued!',
-            rescue(function () use ($testClass) {
+            ws_rescue(function () use ($testClass) {
                 $testClass->test([]);
             }, 'rescued!')
         );
@@ -58,7 +58,7 @@ class FoundationHelpersTest extends TestCase
         $this->app->instance(ExceptionHandler::class, $handler);
         $manifest = $this->makeManifest();
 
-        mix('missing.js');
+        ws_mix('missing.js');
 
         $this->assertInstanceOf(Exception::class, $handler->reported[0]);
         $this->assertSame('Unable to locate Mix file: /missing.js.', $handler->reported[0]->getMessage());
@@ -71,7 +71,7 @@ class FoundationHelpersTest extends TestCase
     {
         $manifest = $this->makeManifest();
 
-        $path = mix('missing.js');
+        $path = ws_mix('missing.js');
 
         $this->assertSame('/missing.js', $path);
 
@@ -87,7 +87,7 @@ class FoundationHelpersTest extends TestCase
         $manifest = $this->makeManifest();
 
         try {
-            mix('missing.js');
+            ws_mix('missing.js');
         } catch (Exception $e) {
             throw $e;
         } finally { // make sure we can cleanup the file
@@ -104,7 +104,7 @@ class FoundationHelpersTest extends TestCase
         $manifest = $this->makeManifest();
 
         Route::get('test-route', function () {
-            mix('missing.js');
+            ws_mix('missing.js');
         });
 
         $this->get('/test-route');
@@ -116,10 +116,10 @@ class FoundationHelpersTest extends TestCase
 
     public function testFakeReturnsSameInstance()
     {
-        $this->assertSame(fake(), fake());
-        $this->assertSame(fake(), fake('en_US'));
-        $this->assertSame(fake('en_AU'), fake('en_AU'));
-        $this->assertNotSame(fake('en_US'), fake('en_AU'));
+        $this->assertSame(ws_fake(), ws_fake());
+        $this->assertSame(ws_fake(), ws_fake('en_US'));
+        $this->assertSame(ws_fake('en_AU'), ws_fake('en_AU'));
+        $this->assertNotSame(ws_fake('en_US'), ws_fake('en_AU'));
     }
 
     public function testFakeUsesLocale()
@@ -127,28 +127,28 @@ class FoundationHelpersTest extends TestCase
         mt_srand(12345, MT_RAND_PHP);
 
         // Should fallback to en_US
-        $this->assertSame('Arkansas', fake()->state());
-        $this->assertContains(fake('de_DE')->state(), [
+        $this->assertSame('Arkansas', ws_fake()->state());
+        $this->assertContains(ws_fake('de_DE')->state(), [
             'Baden-Württemberg', 'Bayern', 'Berlin', 'Brandenburg', 'Bremen', 'Hamburg', 'Hessen', 'Mecklenburg-Vorpommern', 'Niedersachsen', 'Nordrhein-Westfalen', 'Rheinland-Pfalz', 'Saarland', 'Sachsen', 'Sachsen-Anhalt', 'Schleswig-Holstein', 'Thüringen',
         ]);
-        $this->assertContains(fake('fr_FR')->region(), [
+        $this->assertContains(ws_fake('fr_FR')->region(), [
             'Auvergne-Rhône-Alpes', 'Bourgogne-Franche-Comté', 'Bretagne', 'Centre-Val de Loire', 'Corse', 'Grand Est', 'Hauts-de-France',
             'Île-de-France', 'Normandie', 'Nouvelle-Aquitaine', 'Occitanie', 'Pays de la Loire', "Provence-Alpes-Côte d'Azur",
             'Guadeloupe', 'Martinique', 'Guyane', 'La Réunion', 'Mayotte',
         ]);
 
-        config(['app.faker_locale' => 'en_AU']);
+        ws_config(['app.faker_locale' => 'en_AU']);
         mt_srand(4, MT_RAND_PHP);
 
         // Should fallback to en_US
-        $this->assertSame('Australian Capital Territory', fake()->state());
+        $this->assertSame('Australian Capital Territory', ws_fake()->state());
     }
 
     protected function makeManifest($directory = '')
     {
-        app()->usePublicPath(__DIR__);
+        ws_app()->usePublicPath(__DIR__);
 
-        $path = public_path(Str::finish($directory, '/').'mix-manifest.json');
+        $path = ws_public_path(Str::finish($directory, '/').'mix-manifest.json');
 
         touch($path);
 

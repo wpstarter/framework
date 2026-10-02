@@ -223,7 +223,7 @@ class CliDumperTest extends TestCase
             '/my-work-directory/storage/framework/views',
         );
 
-        $cloner = tap(new VarCloner())->addCasters(ReflectionCaster::UNSET_CLOSURE_FILE_INFO);
+        $cloner = ws_tap(new VarCloner())->addCasters(ReflectionCaster::UNSET_CLOSURE_FILE_INFO);
 
         $dumper->dumpWithSource($cloner->cloneVar($value));
 

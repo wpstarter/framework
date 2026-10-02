@@ -15,7 +15,7 @@ class QueueDelayTest extends TestCase
 
         $job = new TestJob;
 
-        dispatch($job);
+        ws_dispatch($job);
 
         $this->assertEquals(60, $job->delay);
     }
@@ -26,7 +26,7 @@ class QueueDelayTest extends TestCase
 
         $job = new TestJob;
 
-        dispatch($job->withoutDelay());
+        ws_dispatch($job->withoutDelay());
 
         $this->assertEquals(0, $job->delay);
     }
@@ -37,7 +37,7 @@ class QueueDelayTest extends TestCase
 
         $job = new TestJob;
 
-        dispatch($job)->withoutDelay();
+        ws_dispatch($job)->withoutDelay();
 
         $this->assertEquals(0, $job->delay);
     }

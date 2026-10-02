@@ -487,7 +487,7 @@ class QueueTest extends TestCase
         $this->fakeEvents();
         // WorkCommand falls back to the connection's top-level "queue" key when
         // --queue is omitted, so workerQueue() must mirror that exact fallback.
-        config(['queue.connections.cloud.queue' => 'emails']);
+        ws_config(['queue.connections.cloud.queue' => 'emails']);
         [$queue, $agent] = $this->fakeQueue();
         $agent->pushJob(['messageId' => 'message-id']);
 
@@ -1834,7 +1834,7 @@ class QueueTest extends TestCase
             {
                 $queue ??= 'default';
 
-                return config('queue.connections.cloud.connection.prefix').'/'.$queue.config('queue.connections.cloud.connection.suffix');
+                return ws_config('queue.connections.cloud.connection.prefix').'/'.$queue.ws_config('queue.connections.cloud.connection.suffix');
             }
 
             public function getContainer()

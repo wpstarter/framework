@@ -70,7 +70,7 @@ class Collection extends BaseCollection implements QueueableCollection
 
         $exception = new ModelNotFoundException;
 
-        if (! $model = head($this->items)) {
+        if (! $model = ws_head($this->items)) {
             throw $exception;
         }
 

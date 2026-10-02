@@ -15,7 +15,7 @@ trait RoutesNotifications
      */
     public function notify($instance)
     {
-        app(Dispatcher::class)->send($this, $instance);
+        ws_app(Dispatcher::class)->send($this, $instance);
     }
 
     /**
@@ -27,7 +27,7 @@ trait RoutesNotifications
      */
     public function notifyNow($instance, ?array $channels = null)
     {
-        app(Dispatcher::class)->sendNow($this, $instance, $channels);
+        ws_app(Dispatcher::class)->sendNow($this, $instance, $channels);
     }
 
     /**

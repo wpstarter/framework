@@ -94,7 +94,7 @@ class ViewServiceProvider extends ServiceProvider
     public function registerBladeCompiler()
     {
         $this->app->singleton('blade.compiler', function ($app) {
-            return tap(new BladeCompiler(
+            return ws_tap(new BladeCompiler(
                 $app['files'],
                 $app['config']['view.compiled'],
                 $app['config']->get('view.relative_hash', false) ? $app->basePath() : '',

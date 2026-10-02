@@ -157,7 +157,7 @@ trait ResolvesDumpSource
     protected function resolveSourceHref($file, $line)
     {
         try {
-            $editor = config('app.editor');
+            $editor = ws_config('app.editor');
         } catch (Throwable) {
             // ..
         }

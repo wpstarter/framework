@@ -103,10 +103,10 @@ trait ConditionallyLoadsAttributes
     protected function when($condition, $value, $default = new MissingValue)
     {
         if ($condition) {
-            return value($value);
+            return ws_value($value);
         }
 
-        return func_num_args() === 3 ? value($default) : $default;
+        return func_num_args() === 3 ? ws_value($default) : $default;
     }
 
     /**
@@ -146,10 +146,10 @@ trait ConditionallyLoadsAttributes
     protected function mergeWhen($condition, $value, $default = new MissingValue)
     {
         if ($condition) {
-            return new MergeValue(value($value));
+            return new MergeValue(ws_value($value));
         }
 
-        return func_num_args() === 3 ? new MergeValue(value($default)) : $default;
+        return func_num_args() === 3 ? new MergeValue(ws_value($default)) : $default;
     }
 
     /**
@@ -191,12 +191,12 @@ trait ConditionallyLoadsAttributes
     public function whenHas($attribute, $value = null, $default = new MissingValue)
     {
         if (! array_key_exists($attribute, $this->resource->getAttributes())) {
-            return value($default);
+            return ws_value($default);
         }
 
         return func_num_args() === 1
             ? $this->resource->{$attribute}
-            : value($value, $this->resource->{$attribute});
+            : ws_value($value, $this->resource->{$attribute});
     }
 
     /**
@@ -238,10 +238,10 @@ trait ConditionallyLoadsAttributes
     protected function whenAppended($attribute, $value = null, $default = new MissingValue)
     {
         if ($this->resource->hasAppended($attribute)) {
-            return func_num_args() >= 2 ? value($value) : $this->resource->$attribute;
+            return func_num_args() >= 2 ? ws_value($value) : $this->resource->$attribute;
         }
 
-        return func_num_args() === 3 ? value($default) : $default;
+        return func_num_args() === 3 ? ws_value($default) : $default;
     }
 
     /**
@@ -255,7 +255,7 @@ trait ConditionallyLoadsAttributes
     protected function whenLoaded($relationship, $value = null, $default = new MissingValue)
     {
         if (! $this->resource->relationLoaded($relationship)) {
-            return value($default);
+            return ws_value($default);
         }
 
         $loadedValue = $this->resource->{$relationship};
@@ -269,10 +269,10 @@ trait ConditionallyLoadsAttributes
         }
 
         if ($value === null) {
-            $value = value(...);
+            $value = ws_value(...);
         }
 
-        return value($value, $loadedValue);
+        return ws_value($value, $loadedValue);
     }
 
     /**
@@ -288,7 +288,7 @@ trait ConditionallyLoadsAttributes
         $attribute = (new Stringable($relationship))->snake()->finish('_count')->value();
 
         if (! array_key_exists($attribute, $this->resource->getAttributes())) {
-            return value($default);
+            return ws_value($default);
         }
 
         if (func_num_args() === 1) {
@@ -300,10 +300,10 @@ trait ConditionallyLoadsAttributes
         }
 
         if ($value === null) {
-            $value = value(...);
+            $value = ws_value(...);
         }
 
-        return value($value, $this->resource->{$attribute});
+        return ws_value($value, $this->resource->{$attribute});
     }
 
     /**
@@ -321,7 +321,7 @@ trait ConditionallyLoadsAttributes
         $attribute = (new Stringable($relationship))->snake()->append('_')->append($aggregate)->append('_')->finish($column)->value();
 
         if (! array_key_exists($attribute, $this->resource->getAttributes())) {
-            return value($default);
+            return ws_value($default);
         }
 
         if (func_num_args() === 3) {
@@ -333,10 +333,10 @@ trait ConditionallyLoadsAttributes
         }
 
         if ($value === null) {
-            $value = value(...);
+            $value = ws_value(...);
         }
 
-        return value($value, $this->resource->{$attribute});
+        return ws_value($value, $this->resource->{$attribute});
     }
 
     /**
@@ -352,7 +352,7 @@ trait ConditionallyLoadsAttributes
         $attribute = (new Stringable($relationship))->snake()->finish('_exists')->value();
 
         if (! array_key_exists($attribute, $this->resource->getAttributes())) {
-            return value($default);
+            return ws_value($default);
         }
 
         if (func_num_args() === 1) {
@@ -363,7 +363,7 @@ trait ConditionallyLoadsAttributes
             return;
         }
 
-        return value($value, $this->resource->{$attribute});
+        return ws_value($value, $this->resource->{$attribute});
     }
 
     /**
@@ -432,7 +432,7 @@ trait ConditionallyLoadsAttributes
      */
     protected function transform($value, callable $callback, $default = new MissingValue)
     {
-        return transform(
+        return ws_transform(
             $value, $callback, $default
         );
     }

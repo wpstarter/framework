@@ -72,8 +72,8 @@ class Livewire
             'page_name'          => 'page',
             'show_all'           => false,
             'prev_next'          => true,
-            'prev_text'          => __( '&laquo; Previous' ),
-            'next_text'          => __( 'Next &raquo;' ),
+            'prev_text'          => ws___( '&laquo; Previous' ),
+            'next_text'          => ws___( 'Next &raquo;' ),
             'end_size'           => 1,
             'mid_size'           => 2,
             'type'               => 'plain',
@@ -172,7 +172,7 @@ class Livewire
 
                     $dots = true;
                 elseif ( $dots && ! $args['show_all'] ) :
-                    $page_links[] = '<span class="page-numbers dots">' . __( '&hellip;' ) . '</span>';
+                    $page_links[] = '<span class="page-numbers dots">' . ws___( '&hellip;' ) . '</span>';
 
                     $dots = false;
                 endif;

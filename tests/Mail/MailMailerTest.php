@@ -54,7 +54,7 @@ class MailMailerTest extends TestCase
                 ->from('hello@laravel.com');
         });
 
-        $recipients = collect($sentMessage->getEnvelope()->getRecipients())->map(function ($recipient) {
+        $recipients = ws_collect($sentMessage->getEnvelope()->getRecipients())->map(function ($recipient) {
             return $recipient->getAddress();
         });
 
@@ -289,7 +289,7 @@ class MailMailerTest extends TestCase
             $message->bcc('james@laravel.com');
         });
 
-        $recipients = collect($sentMessage->getEnvelope()->getRecipients())->map(function ($recipient) {
+        $recipients = ws_collect($sentMessage->getEnvelope()->getRecipients())->map(function ($recipient) {
             return $recipient->getAddress();
         });
 

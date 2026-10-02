@@ -97,14 +97,14 @@ class ServeCommand extends Command
     #[\Override]
     protected function initialize(InputInterface $input, OutputInterface $output)
     {
-        $this->phpServerWorkers = transform((int) env('PHP_CLI_SERVER_WORKERS', 1), function (int $workers) {
+        $this->phpServerWorkers = ws_transform((int) ws_env('PHP_CLI_SERVER_WORKERS', 1), function (int $workers) {
             if ($workers < 2) {
                 return false;
             }
 
             if ($workers > 1 &&
                 ! $this->option('no-reload') &&
-                ! (int) env('LARAVEL_SAIL', 0)) {
+                ! (int) ws_env('LARAVEL_SAIL', 0)) {
                 $this->components->warn('Unable to respect the `PHP_CLI_SERVER_WORKERS` environment variable without the `--no-reload` flag. Only creating a single server.');
 
                 return false;
@@ -126,14 +126,14 @@ class ServeCommand extends Command
     public function handle()
     {
         $environmentFile = $this->option('env')
-            ? base_path('.env').'.'.$this->option('env')
-            : base_path('.env');
+            ? ws_base_path('.env').'.'.$this->option('env')
+            : ws_base_path('.env');
 
         $hasEnvironment = file_exists($environmentFile);
 
         $environmentLastModified = $hasEnvironment
             ? filemtime($environmentFile)
-            : now()->addDays(30)->getTimestamp();
+            : ws_now()->addDays(30)->getTimestamp();
 
         $process = $this->startProcess($hasEnvironment);
 
@@ -180,7 +180,7 @@ class ServeCommand extends Command
      */
     protected function startProcess($hasEnvironment)
     {
-        $process = new Process($this->serverCommand(), public_path(), (new Collection($_ENV))->mapWithKeys(function ($value, $key) use ($hasEnvironment) {
+        $process = new Process($this->serverCommand(), ws_public_path(), (new Collection($_ENV))->mapWithKeys(function ($value, $key) use ($hasEnvironment) {
             if ($this->option('no-reload') || ! $hasEnvironment) {
                 return [$key => $value];
             }
@@ -208,8 +208,8 @@ class ServeCommand extends Command
      */
     protected function serverCommand()
     {
-        $server = file_exists(base_path('server.php'))
-            ? base_path('server.php')
+        $server = file_exists(ws_base_path('server.php'))
+            ? ws_base_path('server.php')
             : __DIR__.'/../resources/server.php';
 
         return [
@@ -392,7 +392,7 @@ class ServeCommand extends Command
      */
     protected function getDateFromLine($line)
     {
-        $regex = ! windows_os() && is_int($this->phpServerWorkers)
+        $regex = ! ws_windows_os() && is_int($this->phpServerWorkers)
             ? '/^\[\d+]\s\[([a-zA-Z0-9: ]+)\]/'
             : '/^\[([^\]]+)\]/';
 

@@ -47,7 +47,7 @@ class ConfigMakeCommand extends GeneratorCommand
      */
     protected function getPath($name): string
     {
-        return config_path(Str::finish($this->argument('name'), '.php'));
+        return ws_config_path(Str::finish($this->argument('name'), '.php'));
     }
 
     /**

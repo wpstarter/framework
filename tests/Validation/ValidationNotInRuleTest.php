@@ -20,15 +20,15 @@ class ValidationNotInRuleTest extends TestCase
 
         $this->assertSame('not_in:"Laravel","Framework","PHP"', (string) $rule);
 
-        $rule = new NotIn(collect(['Taylor', 'Michael', 'Tim']));
+        $rule = new NotIn(ws_collect(['Taylor', 'Michael', 'Tim']));
 
         $this->assertSame('not_in:"Taylor","Michael","Tim"', (string) $rule);
 
-        $rule = Rule::notIn(collect([1, 2, 3, 4]));
+        $rule = Rule::notIn(ws_collect([1, 2, 3, 4]));
 
         $this->assertSame('not_in:"1","2","3","4"', (string) $rule);
 
-        $rule = Rule::notIn(collect([1, 2, 3, 4]));
+        $rule = Rule::notIn(ws_collect([1, 2, 3, 4]));
 
         $this->assertSame('not_in:"1","2","3","4"', (string) $rule);
 
@@ -36,7 +36,7 @@ class ValidationNotInRuleTest extends TestCase
 
         $this->assertSame('not_in:"1","2","3","4"', (string) $rule);
 
-        $rule = Rule::notIn(collect([1, 2, 3, 4]));
+        $rule = Rule::notIn(ws_collect([1, 2, 3, 4]));
 
         $this->assertSame('not_in:"1","2","3","4"', (string) $rule);
 

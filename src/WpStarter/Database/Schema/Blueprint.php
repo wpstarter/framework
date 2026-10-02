@@ -1060,7 +1060,7 @@ class Blueprint
                 ->referencesModelColumn($model->getKeyName());
         }
 
-        $modelTraits = class_uses_recursive($model);
+        $modelTraits = ws_class_uses_recursive($model);
 
         if (in_array(HasUlids::class, $modelTraits, true)) {
             return $this->foreignUlid($column, 26)

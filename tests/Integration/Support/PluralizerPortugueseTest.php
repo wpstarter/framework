@@ -79,9 +79,9 @@ class PluralizerPortugueseTest extends TestCase
 
     public function testPluralSupportsCollections()
     {
-        $this->assertSame('usuários', Str::plural('usuário', collect()));
-        $this->assertSame('usuário', Str::plural('usuário', collect(['um'])));
-        $this->assertSame('usuários', Str::plural('usuário', collect(['um', 'dois'])));
+        $this->assertSame('usuários', Str::plural('usuário', ws_collect()));
+        $this->assertSame('usuário', Str::plural('usuário', ws_collect(['um'])));
+        $this->assertSame('usuários', Str::plural('usuário', ws_collect(['um', 'dois'])));
     }
 
     public function testPluralStudlySupportsArrays()
@@ -93,9 +93,9 @@ class PluralizerPortugueseTest extends TestCase
 
     public function testPluralStudlySupportsCollections()
     {
-        $this->assertPluralStudly('AlgumUsuários', 'AlgumUsuário', collect());
-        $this->assertPluralStudly('AlgumUsuário', 'AlgumUsuário', collect(['um']));
-        $this->assertPluralStudly('AlgumUsuários', 'AlgumUsuário', collect(['um', 'dois']));
+        $this->assertPluralStudly('AlgumUsuários', 'AlgumUsuário', ws_collect());
+        $this->assertPluralStudly('AlgumUsuário', 'AlgumUsuário', ws_collect(['um']));
+        $this->assertPluralStudly('AlgumUsuários', 'AlgumUsuário', ws_collect(['um', 'dois']));
     }
 
     private function assertPluralStudly($expected, $value, $count = 2)

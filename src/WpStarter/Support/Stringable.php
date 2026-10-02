@@ -139,7 +139,7 @@ class Stringable implements JsonSerializable, ArrayAccess, BaseStringable
      */
     public function classBasename()
     {
-        return new static(class_basename($this->value));
+        return new static(ws_class_basename($this->value));
     }
 
     /**
@@ -1439,7 +1439,7 @@ class Stringable implements JsonSerializable, ArrayAccess, BaseStringable
      */
     public function encrypt(bool $serialize = false)
     {
-        return new static(encrypt($this->value, $serialize));
+        return new static(ws_encrypt($this->value, $serialize));
     }
 
     /**
@@ -1450,7 +1450,7 @@ class Stringable implements JsonSerializable, ArrayAccess, BaseStringable
      */
     public function decrypt(bool $serialize = false)
     {
-        return new static(decrypt($this->value, $serialize));
+        return new static(ws_decrypt($this->value, $serialize));
     }
 
     /**

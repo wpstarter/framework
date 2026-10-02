@@ -52,7 +52,7 @@ class Factory
     {
         $component = '\WpStarter\Console\View\Components\\'.ucfirst($method);
 
-        throw_unless(class_exists($component), new InvalidArgumentException(sprintf(
+        ws_throw_unless(class_exists($component), new InvalidArgumentException(sprintf(
             'Console component [%s] not found.', $method
         )));
 

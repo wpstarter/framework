@@ -111,7 +111,7 @@ class ValidationImageFileRuleTest extends TestCase
 
         foreach ($values as $value) {
             $v = new Validator(
-                resolve('translator'),
+                ws_resolve('translator'),
                 ['my_file' => $value],
                 ['my_file' => is_object($rule) ? clone $rule : $rule]
             );

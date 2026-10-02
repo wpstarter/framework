@@ -24,7 +24,7 @@ class ExceptionsFacadeTest extends TestCase
         Exceptions::fake();
 
         Exceptions::report($thrownException = new RuntimeException('test 1'));
-        report(new RuntimeException('test 2'));
+        ws_report(new RuntimeException('test 2'));
 
         Exceptions::assertReported(RuntimeException::class);
         Exceptions::assertReported(fn (RuntimeException $e) => $e->getMessage() === 'test 1');
@@ -41,7 +41,7 @@ class ExceptionsFacadeTest extends TestCase
         Exceptions::fake();
 
         Exceptions::report(new RuntimeException('test 1'));
-        report(new RuntimeException('test 2'));
+        ws_report(new RuntimeException('test 2'));
 
         Exceptions::assertReportedCount(2);
     }
@@ -51,7 +51,7 @@ class ExceptionsFacadeTest extends TestCase
         Exceptions::fake();
 
         Exceptions::report(new RuntimeException('test 1'));
-        report(new RuntimeException('test 2'));
+        ws_report(new RuntimeException('test 2'));
 
         $this->expectException(ExpectationFailedException::class);
         $this->expectExceptionMessage('The total number of exceptions reported was 2 instead of 1.');
@@ -66,8 +66,8 @@ class ExceptionsFacadeTest extends TestCase
         ]);
 
         Exceptions::report(new RuntimeException('test 1'));
-        report(new RuntimeException('test 2'));
-        report(new InvalidArgumentException('test 3'));
+        ws_report(new RuntimeException('test 2'));
+        ws_report(new InvalidArgumentException('test 3'));
 
         Exceptions::assertReported(RuntimeException::class);
         Exceptions::assertReported(fn (RuntimeException $e) => $e->getMessage() === 'test 1');
@@ -111,7 +111,7 @@ class ExceptionsFacadeTest extends TestCase
         Exceptions::fake(InvalidArgumentException::class);
 
         Exceptions::report(new InvalidArgumentException('test 1'));
-        report(new RuntimeException('test 2'));
+        ws_report(new RuntimeException('test 2'));
 
         Exceptions::assertReported(InvalidArgumentException::class);
         Exceptions::assertReported(RuntimeException::class);
@@ -122,7 +122,7 @@ class ExceptionsFacadeTest extends TestCase
         Exceptions::fake();
 
         Exceptions::report(new RuntimeException('test 1'));
-        report(new RuntimeException('test 2'));
+        ws_report(new RuntimeException('test 2'));
 
         Exceptions::assertNotReported(InvalidArgumentException::class);
         Exceptions::assertNotReported(fn (InvalidArgumentException $e) => $e->getMessage() === 'test 1');
@@ -139,7 +139,7 @@ class ExceptionsFacadeTest extends TestCase
             InvalidArgumentException::class,
         ]);
 
-        report(new RuntimeException('test 2'));
+        ws_report(new RuntimeException('test 2'));
 
         Exceptions::assertNotReported(InvalidArgumentException::class);
         Exceptions::assertNotReported(RuntimeException::class);
@@ -190,7 +190,7 @@ class ExceptionsFacadeTest extends TestCase
             InvalidArgumentException::class,
         ]);
 
-        report(new RuntimeException('test 1'));
+        ws_report(new RuntimeException('test 1'));
 
         Exceptions::assertNothingReported();
     }
@@ -203,8 +203,8 @@ class ExceptionsFacadeTest extends TestCase
         Exceptions::fake();
 
         Exceptions::report(new RuntimeException('test 1'));
-        report(new RuntimeException('test 2'));
-        report(new InvalidArgumentException('test 3'));
+        ws_report(new RuntimeException('test 2'));
+        ws_report(new InvalidArgumentException('test 3'));
 
         Exceptions::assertNothingReported();
     }
@@ -222,7 +222,7 @@ class ExceptionsFacadeTest extends TestCase
 
     public function testReportedExceptionsAreNotThrownByDefault()
     {
-        report(new Exception('Test exception'));
+        ws_report(new Exception('Test exception'));
 
         $this->assertTrue(true);
     }
@@ -230,7 +230,7 @@ class ExceptionsFacadeTest extends TestCase
     public function testReportedExceptionsAreNotThrownByDefaultWithExceptionHandling()
     {
         Route::get('/', function () {
-            report(new Exception('Test exception'));
+            ws_report(new Exception('Test exception'));
         });
 
         $this->get('/')->assertStatus(200);
@@ -241,7 +241,7 @@ class ExceptionsFacadeTest extends TestCase
         $this->withoutExceptionHandling();
 
         Route::get('/', function () {
-            report(new Exception('Test exception'));
+            ws_report(new Exception('Test exception'));
         });
 
         $this->get('/')->assertStatus(200);
@@ -254,7 +254,7 @@ class ExceptionsFacadeTest extends TestCase
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('Test exception');
 
-        report(new Exception('Test exception'));
+        ws_report(new Exception('Test exception'));
     }
 
     public function testThrowOnReportDoesNotThrowExceptionsThatShouldNotBeReported()
@@ -283,7 +283,7 @@ class ExceptionsFacadeTest extends TestCase
         Exceptions::fake()->throwOnReport();
 
         Route::get('/', function () {
-            report(new Exception('Test exception'));
+            ws_report(new Exception('Test exception'));
         });
 
         $this->expectException(Exception::class);
@@ -299,7 +299,7 @@ class ExceptionsFacadeTest extends TestCase
         $this->withoutExceptionHandling();
 
         Route::get('/', function () {
-            report(new Exception('Test exception'));
+            ws_report(new Exception('Test exception'));
         });
 
         $this->expectException(Exception::class);
@@ -318,7 +318,7 @@ class ExceptionsFacadeTest extends TestCase
             ->withoutExceptionHandling();
 
         Route::get('/', function () {
-            rescue(fn () => throw new Exception('Test exception'));
+            ws_rescue(fn () => throw new Exception('Test exception'));
         });
 
         $this->expectException(Exception::class);
@@ -337,7 +337,7 @@ class ExceptionsFacadeTest extends TestCase
             ->withExceptionHandling();
 
         Route::get('/', function () {
-            rescue(fn () => throw new Exception('Test exception'));
+            ws_rescue(fn () => throw new Exception('Test exception'));
         });
 
         $this->expectException(Exception::class);
@@ -352,9 +352,9 @@ class ExceptionsFacadeTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
 
-        report(new Exception('Test exception'));
-        report(new RuntimeException('Test exception'));
-        report(new InvalidArgumentException('Test exception'));
+        ws_report(new Exception('Test exception'));
+        ws_report(new RuntimeException('Test exception'));
+        ws_report(new InvalidArgumentException('Test exception'));
     }
 
     public function testThrowOnReportWithFakedExceptionsFromFacade()
@@ -363,16 +363,16 @@ class ExceptionsFacadeTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
 
-        report(new Exception('Test exception'));
-        report(new RuntimeException('Test exception'));
+        ws_report(new Exception('Test exception'));
+        ws_report(new RuntimeException('Test exception'));
         Exceptions::assertReportedCount(0);
 
-        report(new InvalidArgumentException('Test exception'));
+        ws_report(new InvalidArgumentException('Test exception'));
     }
 
     public function testThrowOnReporEvenWhenAppReportablesReturnFalse()
     {
-        app(ExceptionHandler::class)->reportable(function (Throwable $e) {
+        ws_app(ExceptionHandler::class)->reportable(function (Throwable $e) {
             return false;
         });
 
@@ -381,25 +381,25 @@ class ExceptionsFacadeTest extends TestCase
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('Test exception');
 
-        report(new Exception('Test exception'));
+        ws_report(new Exception('Test exception'));
     }
 
     public function testAppReportablesAreNotCalledIfExceptionIsNotFaked()
     {
-        app(ExceptionHandler::class)->reportable(function (Throwable $e) {
+        ws_app(ExceptionHandler::class)->reportable(function (Throwable $e) {
             throw new InvalidArgumentException($e->getMessage());
         });
 
         Exceptions::fake([RuntimeException::class, Exception::class]);
 
-        report(new Exception('My exception message'));
+        ws_report(new Exception('My exception message'));
 
         Exceptions::assertReported(Exception::class);
     }
 
     public function testThrowOnReportLeaveAppReportablesUntouched()
     {
-        app(ExceptionHandler::class)->reportable(function (Throwable $e) {
+        ws_app(ExceptionHandler::class)->reportable(function (Throwable $e) {
             throw new InvalidArgumentException($e->getMessage());
         });
 
@@ -408,7 +408,7 @@ class ExceptionsFacadeTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('My exception message');
 
-        report(new Exception('My exception message'));
+        ws_report(new Exception('My exception message'));
     }
 
     public function testThrowReportedExceptions()
@@ -418,7 +418,7 @@ class ExceptionsFacadeTest extends TestCase
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('Test exception');
 
-        report(new Exception('Test exception'));
+        ws_report(new Exception('Test exception'));
 
         Exceptions::throwFirstReported();
     }
@@ -430,8 +430,8 @@ class ExceptionsFacadeTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Test exception');
 
-        report(new RuntimeException('Test exception'));
-        report(new InvalidArgumentException('Test exception'));
+        ws_report(new RuntimeException('Test exception'));
+        ws_report(new InvalidArgumentException('Test exception'));
 
         Exceptions::throwFirstReported();
     }
@@ -444,7 +444,7 @@ class ExceptionsFacadeTest extends TestCase
 
         Exceptions::fake([InvalidArgumentException::class]);
 
-        report(new RuntimeException('Test exception'));
+        ws_report(new RuntimeException('Test exception'));
 
         Exceptions::throwFirstReported();
 
@@ -467,7 +467,7 @@ class ExceptionsFacadeTest extends TestCase
 
         $this->get('/404')->assertStatus(404);
 
-        report(new ModelNotFoundException());
+        ws_report(new ModelNotFoundException());
 
         Exceptions::assertNothingReported();
     }
@@ -479,18 +479,18 @@ class ExceptionsFacadeTest extends TestCase
         $this->withoutExceptionHandling();
 
         Route::get('/validation', function () {
-            rescue(fn () => Validator::validate(['name' => ''], ['name' => 'required']));
+            ws_rescue(fn () => Validator::validate(['name' => ''], ['name' => 'required']));
         });
 
         $this->get('/validation')->assertStatus(200);
 
         Route::get('/model', function () {
-            rescue(fn () => throw new ModelNotFoundException());
+            ws_rescue(fn () => throw new ModelNotFoundException());
         });
 
         $this->get('/model')->assertStatus(200);
 
-        rescue(fn () => throw new ModelNotFoundException());
+        ws_rescue(fn () => throw new ModelNotFoundException());
 
         Exceptions::assertReportedCount(3);
     }
@@ -499,7 +499,7 @@ class ExceptionsFacadeTest extends TestCase
     {
         Exceptions::fake();
 
-        rescue(fn () => throw new Exception('Test exception'));
+        ws_rescue(fn () => throw new Exception('Test exception'));
 
         Exceptions::assertReported(Exception::class);
     }
@@ -508,37 +508,37 @@ class ExceptionsFacadeTest extends TestCase
     {
         Exceptions::fake();
 
-        rescue(fn () => throw new Exception('Test exception'), null, false);
+        ws_rescue(fn () => throw new Exception('Test exception'), null, false);
 
         Exceptions::assertNothingReported();
     }
 
     public function testFlowBetweenFakeAndTestExceptionHandling()
     {
-        $this->assertInstanceOf(Handler::class, app(ExceptionHandler::class));
+        $this->assertInstanceOf(Handler::class, ws_app(ExceptionHandler::class));
 
         Exceptions::fake();
-        $this->assertInstanceOf(ExceptionHandlerFake::class, app(ExceptionHandler::class));
+        $this->assertInstanceOf(ExceptionHandlerFake::class, ws_app(ExceptionHandler::class));
         $this->assertInstanceOf(Handler::class, Exceptions::fake()->handler());
         $this->assertFalse((new \ReflectionClass(Exceptions::fake()->handler()))->isAnonymous());
 
         Exceptions::fake();
-        $this->assertInstanceOf(ExceptionHandlerFake::class, app(ExceptionHandler::class));
+        $this->assertInstanceOf(ExceptionHandlerFake::class, ws_app(ExceptionHandler::class));
         $this->assertInstanceOf(Handler::class, Exceptions::fake()->handler());
         $this->assertFalse((new \ReflectionClass(Exceptions::fake()->handler()))->isAnonymous());
 
         $this->withoutExceptionHandling();
-        $this->assertInstanceOf(ExceptionHandlerFake::class, app(ExceptionHandler::class));
+        $this->assertInstanceOf(ExceptionHandlerFake::class, ws_app(ExceptionHandler::class));
         $this->assertInstanceOf(ExceptionHandler::class, Exceptions::fake()->handler());
         $this->assertTrue((new \ReflectionClass(Exceptions::fake()->handler()))->isAnonymous());
 
         $this->withExceptionHandling();
-        $this->assertInstanceOf(ExceptionHandlerFake::class, app(ExceptionHandler::class));
+        $this->assertInstanceOf(ExceptionHandlerFake::class, ws_app(ExceptionHandler::class));
         $this->assertInstanceOf(ExceptionHandler::class, Exceptions::fake()->handler());
         $this->assertFalse((new \ReflectionClass(Exceptions::fake()->handler()))->isAnonymous());
 
         Exceptions::fake();
-        $this->assertInstanceOf(ExceptionHandlerFake::class, app(ExceptionHandler::class));
+        $this->assertInstanceOf(ExceptionHandlerFake::class, ws_app(ExceptionHandler::class));
         $this->assertInstanceOf(Handler::class, Exceptions::fake()->handler());
         $this->assertFalse((new \ReflectionClass(Exceptions::fake()->handler()))->isAnonymous());
     }
@@ -546,20 +546,20 @@ class ExceptionsFacadeTest extends TestCase
     public function testFlowBetweenTestExceptionHandlingAndFake()
     {
         $this->withoutExceptionHandling();
-        $this->assertTrue((new \ReflectionClass(app(ExceptionHandler::class)))->isAnonymous());
+        $this->assertTrue((new \ReflectionClass(ws_app(ExceptionHandler::class)))->isAnonymous());
 
         Exceptions::fake();
-        $this->assertInstanceOf(ExceptionHandlerFake::class, app(ExceptionHandler::class));
+        $this->assertInstanceOf(ExceptionHandlerFake::class, ws_app(ExceptionHandler::class));
         $this->assertInstanceOf(ExceptionHandler::class, Exceptions::fake()->handler());
         $this->assertTrue((new \ReflectionClass(Exceptions::fake()->handler()))->isAnonymous());
 
         Exceptions::fake();
-        $this->assertInstanceOf(ExceptionHandlerFake::class, app(ExceptionHandler::class));
+        $this->assertInstanceOf(ExceptionHandlerFake::class, ws_app(ExceptionHandler::class));
         $this->assertInstanceOf(ExceptionHandler::class, Exceptions::fake()->handler());
         $this->assertTrue((new \ReflectionClass(Exceptions::fake()->handler()))->isAnonymous());
 
         $this->withExceptionHandling();
-        $this->assertInstanceOf(ExceptionHandlerFake::class, app(ExceptionHandler::class));
+        $this->assertInstanceOf(ExceptionHandlerFake::class, ws_app(ExceptionHandler::class));
         $this->assertInstanceOf(Handler::class, Exceptions::fake()->handler());
         $this->assertFalse((new \ReflectionClass(Exceptions::fake()->handler()))->isAnonymous());
     }

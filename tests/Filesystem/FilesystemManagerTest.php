@@ -177,7 +177,7 @@ class FilesystemManagerTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Disk [local] does not have a configured driver.');
 
-        $filesystem = new FilesystemManager(tap(new Application, function ($app) {
+        $filesystem = new FilesystemManager(ws_tap(new Application, function ($app) {
             $app['config'] = ['filesystems.disks.local' => null];
         }));
 
@@ -236,7 +236,7 @@ class FilesystemManagerTest extends TestCase
     public function testCanBuildScopedDisks()
     {
         try {
-            $filesystem = new FilesystemManager(tap(new Application, function ($app) {
+            $filesystem = new FilesystemManager(ws_tap(new Application, function ($app) {
                 $app['config'] = [
                     'filesystems.disks.local' => [
                         'driver' => 'local',
@@ -263,7 +263,7 @@ class FilesystemManagerTest extends TestCase
     public function testCanBuildScopedDiskFromScopedDisk()
     {
         try {
-            $filesystem = new FilesystemManager(tap(new Application, function ($app) {
+            $filesystem = new FilesystemManager(ws_tap(new Application, function ($app) {
                 $app['config'] = [
                     'filesystems.disks.local' => [
                         'driver' => 'local',
@@ -296,7 +296,7 @@ class FilesystemManagerTest extends TestCase
     public function testCanBuildScopedDisksWithVisibility()
     {
         try {
-            $filesystem = new FilesystemManager(tap(new Application, function ($app) {
+            $filesystem = new FilesystemManager(ws_tap(new Application, function ($app) {
                 $app['config'] = [
                     'filesystems.disks.local' => [
                         'driver' => 'local',
@@ -327,7 +327,7 @@ class FilesystemManagerTest extends TestCase
     public function testCanBuildScopedDisksWithThrow()
     {
         try {
-            $filesystem = new FilesystemManager(tap(new Application, function ($app) {
+            $filesystem = new FilesystemManager(ws_tap(new Application, function ($app) {
                 $app['config'] = [
                     'filesystems.disks.local' => [
                         'driver' => 'local',

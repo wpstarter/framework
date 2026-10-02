@@ -229,7 +229,7 @@ class RouteListCommand extends Command
         $reflection = new ReflectionFunction($route->action['uses']);
 
         return str_replace(
-            '\\', '/', ltrim(Str::after($reflection->getFileName(), base_path()), DIRECTORY_SEPARATOR)
+            '\\', '/', ltrim(Str::after($reflection->getFileName(), ws_base_path()), DIRECTORY_SEPARATOR)
         ).':'.$reflection->getStartLine();
     }
 
@@ -258,7 +258,7 @@ class RouteListCommand extends Command
             return false;
         }
 
-        return str_starts_with($path, base_path('vendor'));
+        return str_starts_with($path, ws_base_path('vendor'));
     }
 
     /**
@@ -464,7 +464,7 @@ class RouteListCommand extends Command
 
         $actionClass = explode('@', $action)[0];
 
-        if (class_exists($actionClass) && str_starts_with((new ReflectionClass($actionClass))->getFilename(), base_path('vendor'))) {
+        if (class_exists($actionClass) && str_starts_with((new ReflectionClass($actionClass))->getFilename(), ws_base_path('vendor'))) {
             $actionCollection = new Collection(explode('\\', $action));
 
             return $name.$actionCollection->take(2)->implode('\\').'   '.$actionCollection->last();

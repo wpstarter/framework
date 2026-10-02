@@ -367,7 +367,7 @@ abstract class Queue
                 function () use ($queue, $job, $payload, $delay, $callback) {
                     $this->raiseJobQueueingEvent($queue, $job, $payload, $delay);
 
-                    return tap($callback($payload, $queue, $delay), function ($jobId) use ($queue, $job, $payload, $delay) {
+                    return ws_tap($callback($payload, $queue, $delay), function ($jobId) use ($queue, $job, $payload, $delay) {
                         $this->raiseJobQueuedEvent($queue, $jobId, $job, $payload, $delay);
                     });
                 }
@@ -376,7 +376,7 @@ abstract class Queue
 
         $this->raiseJobQueueingEvent($queue, $job, $payload, $delay);
 
-        return tap($callback($payload, $queue, $delay), function ($jobId) use ($queue, $job, $payload, $delay) {
+        return ws_tap($callback($payload, $queue, $delay), function ($jobId) use ($queue, $job, $payload, $delay) {
             $this->raiseJobQueuedEvent($queue, $jobId, $job, $payload, $delay);
         });
     }

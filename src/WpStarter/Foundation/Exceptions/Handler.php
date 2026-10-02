@@ -222,7 +222,7 @@ class Handler implements ExceptionHandlerContract
             $reportUsing = Closure::fromCallable($reportUsing);
         }
 
-        return tap(new ReportableHandler($reportUsing), function ($callback) {
+        return ws_tap(new ReportableHandler($reportUsing), function ($callback) {
             $this->reportCallbacks[] = $callback;
         });
     }
@@ -442,7 +442,7 @@ class Handler implements ExceptionHandlerContract
             }
         }
 
-        return rescue(fn () => with($this->throttle($e), function ($throttle) use ($e) {
+        return ws_rescue(fn () => ws_with($this->throttle($e), function ($throttle) use ($e) {
             if ($throttle instanceof Unlimited || $throttle === null) {
                 return false;
             }
@@ -452,7 +452,7 @@ class Handler implements ExceptionHandlerContract
             }
 
             return ! $this->container->make(RateLimiter::class)->attempt(
-                with($throttle->key ?: 'wpstarter:foundation:exceptions:'.$e::class, fn ($key) => $this->hashThrottleKeys ? hash('xxh128', $key) : $key),
+                ws_with($throttle->key ?: 'wpstarter:foundation:exceptions:'.$e::class, fn ($key) => $this->hashThrottleKeys ? hash('xxh128', $key) : $key),
                 $throttle->maxAttempts,
                 fn () => true,
                 $throttle->decaySeconds
@@ -748,8 +748,8 @@ class Handler implements ExceptionHandlerContract
     protected function unauthenticated($request, AuthenticationException $exception)
     {
         return $this->shouldReturnJson($request, $exception)
-            ? response()->json(['message' => $exception->getMessage()], 401)
-            : redirect()->guest($exception->redirectTo($request) ?? route('login'));
+            ? ws_response()->json(['message' => $exception->getMessage()], 401)
+            : ws_redirect()->guest($exception->redirectTo($request) ?? ws_route('login'));
     }
 
     /**
@@ -779,7 +779,7 @@ class Handler implements ExceptionHandlerContract
      */
     protected function invalid($request, ValidationException $exception)
     {
-        return redirect($exception->redirectTo ?? url()->previous())
+        return ws_redirect($exception->redirectTo ?? ws_url()->previous())
             ->withInput(Arr::except($request->input(), $this->dontFlash))
             ->withErrors($exception->errors(), $request->input('_error_bag', $exception->errorBag));
     }
@@ -793,7 +793,7 @@ class Handler implements ExceptionHandlerContract
      */
     protected function invalidJson($request, ValidationException $exception)
     {
-        return response()->json([
+        return ws_response()->json([
             'message' => $exception->getMessage(),
             'errors' => $exception->errors(),
         ], $exception->status);
@@ -835,7 +835,7 @@ class Handler implements ExceptionHandlerContract
      */
     protected function prepareResponse($request, Throwable $e)
     {
-        if (! $this->isHttpException($e) && config('app.debug')) {
+        if (! $this->isHttpException($e) && ws_config('app.debug')) {
             return $this->toIlluminateResponse($this->convertExceptionToResponse($e), $e)->prepare($request);
         }
 
@@ -872,17 +872,17 @@ class Handler implements ExceptionHandlerContract
     protected function renderExceptionContent(Throwable $e)
     {
         try {
-            if (config('app.debug')) {
+            if (ws_config('app.debug')) {
                 if (app()->has(ExceptionRenderer::class)) {
                     return $this->renderExceptionWithCustomRenderer($e);
                 } elseif ($this->container->bound(Renderer::class)) {
-                    return $this->container->make(Renderer::class)->render(request(), $e);
+                    return $this->container->make(Renderer::class)->render(ws_request(), $e);
                 }
             }
 
-            return $this->renderExceptionWithSymfony($e, config('app.debug'));
+            return $this->renderExceptionWithSymfony($e, ws_config('app.debug'));
         } catch (Throwable $e) {
-            return $this->renderExceptionWithSymfony($e, config('app.debug'));
+            return $this->renderExceptionWithSymfony($e, ws_config('app.debug'));
         }
     }
 
@@ -923,12 +923,12 @@ class Handler implements ExceptionHandlerContract
 
         if ($view = $this->getHttpExceptionView($e)) {
             try {
-                return response()->view($view, [
+                return ws_response()->view($view, [
                     'errors' => new ViewErrorBag,
                     'exception' => $e,
                 ], $e->getStatusCode(), $e->getHeaders());
             } catch (Throwable $t) {
-                config('app.debug') && throw $t;
+                ws_config('app.debug') && throw $t;
 
                 $this->report($t);
             }
@@ -957,13 +957,13 @@ class Handler implements ExceptionHandlerContract
     {
         $view = 'errors::'.$e->getStatusCode();
 
-        if (view()->exists($view)) {
+        if (ws_view()->exists($view)) {
             return $view;
         }
 
         $view = substr($view, 0, -2).'xx';
 
-        if (view()->exists($view)) {
+        if (ws_view()->exists($view)) {
             return $view;
         }
 
@@ -984,7 +984,7 @@ class Handler implements ExceptionHandlerContract
                 $response->getTargetUrl(), $response->getStatusCode(), $response->headers->all()
             );
         } else {
-            $response = response(
+            $response = ws_response(
                 $response->getContent(), $response->getStatusCode(), $response->headers->all()
             );
         }
@@ -1001,7 +1001,7 @@ class Handler implements ExceptionHandlerContract
      */
     protected function prepareJsonResponse($request, Throwable $e)
     {
-        return response()->json(
+        return ws_response()->json(
             $this->convertExceptionToArray($e),
             $this->isHttpException($e) ? $e->getStatusCode() : 500,
             $this->isHttpException($e) ? $e->getHeaders() : [],
@@ -1017,7 +1017,7 @@ class Handler implements ExceptionHandlerContract
      */
     protected function convertExceptionToArray(Throwable $e)
     {
-        return config('app.debug') ? [
+        return ws_config('app.debug') ? [
             'message' => $e->getMessage(),
             'exception' => get_class($e),
             'file' => $e->getFile(),

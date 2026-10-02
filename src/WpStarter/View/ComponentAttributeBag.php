@@ -62,7 +62,7 @@ class ComponentAttributeBag implements Arrayable, ArrayAccess, IteratorAggregate
      */
     public function first($default = null)
     {
-        return $this->getIterator()->current() ?? value($default);
+        return $this->getIterator()->current() ?? ws_value($default);
     }
 
     /**
@@ -74,7 +74,7 @@ class ComponentAttributeBag implements Arrayable, ArrayAccess, IteratorAggregate
      */
     public function get($key, $default = null)
     {
-        return $this->attributes[$key] ?? value($default);
+        return $this->attributes[$key] ?? ws_value($default);
     }
 
     /**
@@ -238,7 +238,7 @@ class ComponentAttributeBag implements Arrayable, ArrayAccess, IteratorAggregate
     {
         $attributeDefaults = array_map(function ($value) use ($escape) {
             return $this->shouldEscapeAttributeValue($escape, $value)
-                ? e($value)
+                ? ws_e($value)
                 : $value;
         }, $attributeDefaults);
 
@@ -309,7 +309,7 @@ class ComponentAttributeBag implements Arrayable, ArrayAccess, IteratorAggregate
     protected function resolveAppendableAttributeDefault($attributeDefaults, $key, $escape)
     {
         if ($this->shouldEscapeAttributeValue($escape, $value = $attributeDefaults[$key]->value)) {
-            $value = e($value);
+            $value = ws_e($value);
         }
 
         return $value;

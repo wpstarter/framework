@@ -94,7 +94,7 @@ class VendorPublishCommand extends Command
      */
     public function handle()
     {
-        $this->publishedAt = now();
+        $this->publishedAt = ws_now();
 
         $this->determineWhatShouldBePublished();
 
@@ -132,7 +132,7 @@ class VendorPublishCommand extends Command
     {
         $choices = $this->publishableChoices();
 
-        $choice = windows_os()
+        $choice = ws_windows_os()
             ? select(
                 "Which provider or tag's files would you like to publish?",
                 $choices,
@@ -269,12 +269,12 @@ class VendorPublishCommand extends Command
             if ($this->option('existing')) {
                 $this->components->twoColumnDetail(sprintf(
                     'File [%s] does not exist',
-                    str_replace(base_path().'/', '', $to),
+                    str_replace(ws_base_path().'/', '', $to),
                 ), '<fg=yellow;options=bold>SKIPPED</>');
             } else {
                 $this->components->twoColumnDetail(sprintf(
                     'File [%s] already exists',
-                    str_replace(base_path().'/', '', realpath($to)),
+                    str_replace(ws_base_path().'/', '', realpath($to)),
                 ), '<fg=yellow;options=bold>SKIPPED</>');
             }
         }
@@ -380,9 +380,9 @@ class VendorPublishCommand extends Command
      */
     protected function status($from, $to, $type)
     {
-        $from = str_replace(base_path().'/', '', realpath($from));
+        $from = str_replace(ws_base_path().'/', '', realpath($from));
 
-        $to = str_replace(base_path().'/', '', realpath($to));
+        $to = str_replace(ws_base_path().'/', '', realpath($to));
 
         $this->components->task(sprintf(
             'Copying %s [%s] to [%s]',

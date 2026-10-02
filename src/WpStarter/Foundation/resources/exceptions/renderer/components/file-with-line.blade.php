@@ -6,13 +6,14 @@
 @endphp
 
 <div
-    {{ $attributes->merge(['class' => 'truncate font-mono text-xs text-neutral-500 dark:text-neutral-400']) }}
-    dir="{{ $direction }}"
+        {{ $attributes->merge(['class' => 'truncate font-mono text-xs text-neutral-500 dark:text-neutral-400']) }}
+        dir="{{ $direction }}"
 >
     <span data-tippy-content="{{ $file }}:{{ $line }}">
-        @if (config('app.editor'))
+        @if (ws_config('app.editor'))
             <a href="{{ $frame->editorHref() }}" @click.stop>
-                <span class="hover:underline decoration-neutral-400">{{ $file }}</span><span class="text-neutral-500">:{{ $line }}</span>
+                <span class="hover:underline decoration-neutral-400">{{ $file }}</span><span
+                        class="text-neutral-500">:{{ $line }}</span>
             </a>
         @else
             {{ $file }}<span class="text-neutral-500">:{{ $line }}</span>

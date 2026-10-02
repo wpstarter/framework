@@ -16,7 +16,7 @@ class FilesystemTest extends TestCase
     protected function setUp(): void
     {
         $this->afterApplicationCreated(function () {
-            File::put($file = storage_path('app/public/StardewTaylor.png'), File::get(__DIR__.'/Fixtures/StardewTaylor.png'));
+            File::put($file = ws_storage_path('app/public/StardewTaylor.png'), File::get(__DIR__.'/Fixtures/StardewTaylor.png'));
             $this->stubFile = $file;
         });
 
@@ -73,15 +73,15 @@ class FilesystemTest extends TestCase
 
     public function testItCanDeleteDirectoryViaFilesystem()
     {
-        if (! File::exists(storage_path('app/public/testdir'))) {
-            File::makeDirectory(storage_path('app/public/testdir'));
+        if (! File::exists(ws_storage_path('app/public/testdir'))) {
+            File::makeDirectory(ws_storage_path('app/public/testdir'));
         }
 
-        $this->assertTrue(File::exists(storage_path('app/public/testdir')));
+        $this->assertTrue(File::exists(ws_storage_path('app/public/testdir')));
 
-        File::deleteDirectory(storage_path('app/public/testdir'));
+        File::deleteDirectory(ws_storage_path('app/public/testdir'));
 
-        $this->assertFalse(File::exists(storage_path('app/public/testdir')));
+        $this->assertFalse(File::exists(ws_storage_path('app/public/testdir')));
     }
 
     public function testSharedGetReadsEntireStreamEvenWhenReadIsPartial(): void

@@ -3,7 +3,7 @@
 use WpStarter\Support\Arr;
 use WpStarter\Support\Collection;
 
-if (! function_exists('collect')) {
+if (! function_exists('ws_collect')) {
     /**
      * Create a collection from the given value.
      *
@@ -13,13 +13,13 @@ if (! function_exists('collect')) {
      * @param  \WpStarter\Contracts\Support\Arrayable<TKey, TValue>|iterable<TKey, TValue>|null  $value
      * @return \WpStarter\Support\Collection<TKey, TValue>
      */
-    function collect($value = []): Collection
+    function ws_collect($value = []): Collection
     {
         return new Collection($value);
     }
 }
 
-if (! function_exists('data_fill')) {
+if (! function_exists('ws_data_fill')) {
     /**
      * Fill in data where it's missing.
      *
@@ -28,13 +28,13 @@ if (! function_exists('data_fill')) {
      * @param  mixed  $value
      * @return mixed
      */
-    function data_fill(&$target, $key, $value)
+    function ws_data_fill(&$target, $key, $value)
     {
-        return data_set($target, $key, $value, false);
+        return ws_data_set($target, $key, $value, false);
     }
 }
 
-if (! function_exists('data_has')) {
+if (! function_exists('ws_data_has')) {
     /**
      * Determine if a key / property exists on an array or object using "dot" notation.
      *
@@ -42,7 +42,7 @@ if (! function_exists('data_has')) {
      * @param  string|array|int|null  $key
      * @return bool
      */
-    function data_has($target, $key): bool
+    function ws_data_has($target, $key): bool
     {
         if (is_null($key) || $key === []) {
             return false;
@@ -64,7 +64,7 @@ if (! function_exists('data_has')) {
     }
 }
 
-if (! function_exists('data_get')) {
+if (! function_exists('ws_data_get')) {
     /**
      * Get an item from an array or object using "dot" notation.
      *
@@ -73,7 +73,7 @@ if (! function_exists('data_get')) {
      * @param  mixed  $default
      * @return mixed
      */
-    function data_get($target, $key, $default = null)
+    function ws_data_get($target, $key, $default = null)
     {
         if (is_null($key)) {
             return $target;
@@ -92,13 +92,13 @@ if (! function_exists('data_get')) {
                 if ($target instanceof Collection) {
                     $target = $target->all();
                 } elseif (! is_iterable($target)) {
-                    return value($default);
+                    return ws_value($default);
                 }
 
                 $result = [];
 
                 foreach ($target as $item) {
-                    $result[] = data_get($item, $key);
+                    $result[] = ws_data_get($item, $key);
                 }
 
                 return in_array('*', $key) ? Arr::collapse($result) : $result;
@@ -118,7 +118,7 @@ if (! function_exists('data_get')) {
             } elseif (is_object($target) && isset($target->{$segment})) {
                 $target = $target->{$segment};
             } else {
-                return value($default);
+                return ws_value($default);
             }
         }
 
@@ -126,7 +126,7 @@ if (! function_exists('data_get')) {
     }
 }
 
-if (! function_exists('data_set')) {
+if (! function_exists('ws_data_set')) {
     /**
      * Set an item on an array or object using dot notation.
      *
@@ -136,7 +136,7 @@ if (! function_exists('data_set')) {
      * @param  bool  $overwrite
      * @return mixed
      */
-    function data_set(&$target, $key, $value, $overwrite = true)
+    function ws_data_set(&$target, $key, $value, $overwrite = true)
     {
         $segments = is_array($key) ? $key : explode('.', $key);
 
@@ -147,7 +147,7 @@ if (! function_exists('data_set')) {
 
             if ($segments) {
                 foreach ($target as &$inner) {
-                    data_set($inner, $segments, $value, $overwrite);
+                    ws_data_set($inner, $segments, $value, $overwrite);
                 }
             } elseif ($overwrite) {
                 foreach ($target as &$inner) {
@@ -160,7 +160,7 @@ if (! function_exists('data_set')) {
                     $target[$segment] = [];
                 }
 
-                data_set($target[$segment], $segments, $value, $overwrite);
+                ws_data_set($target[$segment], $segments, $value, $overwrite);
             } elseif ($overwrite || ! Arr::exists($target, $segment)) {
                 $target[$segment] = $value;
             }
@@ -170,7 +170,7 @@ if (! function_exists('data_set')) {
                     $target->{$segment} = [];
                 }
 
-                data_set($target->{$segment}, $segments, $value, $overwrite);
+                ws_data_set($target->{$segment}, $segments, $value, $overwrite);
             } elseif ($overwrite || ! isset($target->{$segment})) {
                 $target->{$segment} = $value;
             }
@@ -178,7 +178,7 @@ if (! function_exists('data_set')) {
             $target = [];
 
             if ($segments) {
-                data_set($target[$segment], $segments, $value, $overwrite);
+                ws_data_set($target[$segment], $segments, $value, $overwrite);
             } elseif ($overwrite) {
                 $target[$segment] = $value;
             }
@@ -188,7 +188,7 @@ if (! function_exists('data_set')) {
     }
 }
 
-if (! function_exists('data_forget')) {
+if (! function_exists('ws_data_forget')) {
     /**
      * Remove / unset an item from an array or object using "dot" notation.
      *
@@ -196,25 +196,25 @@ if (! function_exists('data_forget')) {
      * @param  string|array|int|null  $key
      * @return mixed
      */
-    function data_forget(&$target, $key)
+    function ws_data_forget(&$target, $key)
     {
         $segments = is_array($key) ? $key : explode('.', $key);
 
         if (($segment = array_shift($segments)) === '*' && Arr::accessible($target)) {
             if ($segments) {
                 foreach ($target as &$inner) {
-                    data_forget($inner, $segments);
+                    ws_data_forget($inner, $segments);
                 }
             }
         } elseif (Arr::accessible($target)) {
             if ($segments && Arr::exists($target, $segment)) {
-                data_forget($target[$segment], $segments);
+                ws_data_forget($target[$segment], $segments);
             } else {
                 Arr::forget($target, $segment);
             }
         } elseif (is_object($target)) {
             if ($segments && isset($target->{$segment})) {
-                data_forget($target->{$segment}, $segments);
+                ws_data_forget($target->{$segment}, $segments);
             } elseif (isset($target->{$segment})) {
                 unset($target->{$segment});
             }
@@ -224,33 +224,33 @@ if (! function_exists('data_forget')) {
     }
 }
 
-if (! function_exists('head')) {
+if (! function_exists('ws_head')) {
     /**
      * Get the first element of an array. Useful for method chaining.
      *
      * @param  array  $array
      * @return mixed
      */
-    function head($array)
+    function ws_head($array)
     {
         return empty($array) ? false : array_first($array);
     }
 }
 
-if (! function_exists('last')) {
+if (! function_exists('ws_last')) {
     /**
      * Get the last element from an array.
      *
      * @param  array  $array
      * @return mixed
      */
-    function last($array)
+    function ws_last($array)
     {
         return empty($array) ? false : array_last($array);
     }
 }
 
-if (! function_exists('value')) {
+if (! function_exists('ws_value')) {
     /**
      * Return the default value of the given value.
      *
@@ -261,13 +261,13 @@ if (! function_exists('value')) {
      * @param  TArgs  ...$args
      * @return TValue
      */
-    function value($value, ...$args)
+    function ws_value($value, ...$args)
     {
         return $value instanceof Closure ? $value(...$args) : $value;
     }
 }
 
-if (! function_exists('when')) {
+if (! function_exists('ws_when')) {
     /**
      * Return a value if the given condition is true.
      *
@@ -280,14 +280,14 @@ if (! function_exists('when')) {
      * @param  TDefault|\Closure(): TDefault  $default
      * @return ($condition is true|positive-int|non-falsy-string|non-empty-array ? TValue : ($condition is callable ? TValue|TDefault : TDefault))
      */
-    function when($condition, $value, $default = null)
+    function ws_when($condition, $value, $default = null)
     {
         $condition = $condition instanceof Closure ? $condition() : $condition;
 
         if ($condition) {
-            return value($value, $condition);
+            return ws_value($value, $condition);
         }
 
-        return value($default, $condition);
+        return ws_value($default, $condition);
     }
 }

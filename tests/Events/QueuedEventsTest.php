@@ -642,7 +642,7 @@ class TestDispatcherOptions implements ShouldQueue
 
     public function retryUntil()
     {
-        return now()->addHour(1);
+        return ws_now()->addHour(1);
     }
 
     public function tries()

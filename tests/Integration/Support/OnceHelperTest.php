@@ -68,17 +68,17 @@ class User extends Authenticatable
 {
     public static function verified(): Collection
     {
-        return once(fn () => self::whereNotNull('email_verified_at')->get());
+        return ws_once(fn () => self::whereNotNull('email_verified_at')->get());
     }
 
     public static function unverified(): Collection
     {
-        return once(fn () => self::whereNull('email_verified_at')->get());
+        return ws_once(fn () => self::whereNull('email_verified_at')->get());
     }
 
     public static function getByType(string $type): Collection
     {
-        return once(function () use ($type) {
+        return ws_once(function () use ($type) {
             return match ($type) {
                 'verified' => self::whereNotNull('email_verified_at')->get(),
                 'unverified' => self::whereNull('email_verified_at')->get()

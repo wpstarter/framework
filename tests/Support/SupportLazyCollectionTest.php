@@ -191,7 +191,7 @@ class SupportLazyCollectionTest extends TestCase
         $results = $mock
             ->times(10)
             ->tap(function ($collection) use ($mock, $timeout) {
-                tap($collection)
+                ws_tap($collection)
                     ->mockery_init($mock->mockery_getContainer())
                     ->shouldAllowMockingProtectedMethods()
                     ->shouldReceive('now')
@@ -253,7 +253,7 @@ class SupportLazyCollectionTest extends TestCase
     public function testThrottleAccountsForTimePassed()
     {
         Sleep::fake();
-        Carbon::setTestNow(now());
+        Carbon::setTestNow(ws_now());
 
         $data = LazyCollection::times(3)
             ->throttle(3)

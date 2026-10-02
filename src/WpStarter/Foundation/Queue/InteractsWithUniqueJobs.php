@@ -50,6 +50,6 @@ trait InteractsWithUniqueJobs
     {
         return method_exists($job, 'uniqueVia')
             ? $job->uniqueVia()->getName()
-            : config('cache.default');
+            : ws_config('cache.default');
     }
 }

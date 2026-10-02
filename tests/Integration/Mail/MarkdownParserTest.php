@@ -23,7 +23,7 @@ class MarkdownParserTest extends TestCase
     #[DataProvider('markdownDataProvider')]
     public function testItCanParseMarkdownString($given, $expected)
     {
-        tap(Markdown::parse($given), function ($html) use ($expected) {
+        ws_tap(Markdown::parse($given), function ($html) use ($expected) {
             $this->assertInstanceOf(HtmlString::class, $html);
 
             $this->assertStringEqualsStringIgnoringLineEndings($expected.PHP_EOL, (string) $html);
@@ -34,7 +34,7 @@ class MarkdownParserTest extends TestCase
     #[DataProvider('markdownEncodedDataProvider')]
     public function testItCanParseMarkdownEncodedString($given, $expected)
     {
-        tap(Markdown::parse($given, encoded: true), function ($html) use ($expected) {
+        ws_tap(Markdown::parse($given, encoded: true), function ($html) use ($expected) {
             $this->assertInstanceOf(HtmlString::class, $html);
 
             $this->assertStringEqualsStringIgnoringLineEndings($expected.PHP_EOL, (string) $html);
@@ -93,7 +93,7 @@ class MarkdownParserTest extends TestCase
             \League\CommonMark\Extension\Strikethrough\StrikethroughExtension::class,
         ]);
 
-        tap(Markdown::parse('~~strikethrough text~~'), function ($html) {
+        ws_tap(Markdown::parse('~~strikethrough text~~'), function ($html) {
             $this->assertInstanceOf(HtmlString::class, $html);
 
             $expected = '<p><del>strikethrough text</del></p>';
@@ -107,7 +107,7 @@ class MarkdownParserTest extends TestCase
     {
         $this->configureMarkdownExtensions([]);
 
-        tap(Markdown::parse('~~strikethrough text~~'), function ($html) {
+        ws_tap(Markdown::parse('~~strikethrough text~~'), function ($html) {
             $this->assertInstanceOf(HtmlString::class, $html);
 
             $expected = '<p>~~strikethrough text~~</p>';
@@ -124,7 +124,7 @@ class MarkdownParserTest extends TestCase
             \League\CommonMark\Extension\TaskList\TaskListExtension::class,
         ]);
 
-        tap(Markdown::parse('~~strikethrough~~'), function ($html) {
+        ws_tap(Markdown::parse('~~strikethrough~~'), function ($html) {
             $this->assertInstanceOf(HtmlString::class, $html);
 
             $expected = '<p><del>strikethrough</del></p>';
@@ -133,7 +133,7 @@ class MarkdownParserTest extends TestCase
             $this->assertSame((string) $html, (string) $html->toHtml());
         });
 
-        tap(Markdown::parse('- [ ] Task item'), function ($html) {
+        ws_tap(Markdown::parse('- [ ] Task item'), function ($html) {
             $this->assertInstanceOf(HtmlString::class, $html);
 
             $expected = "<ul>\n<li><input disabled=\"\" type=\"checkbox\"> Task item</li>\n</ul>";
@@ -149,7 +149,7 @@ class MarkdownParserTest extends TestCase
             \League\CommonMark\Extension\Strikethrough\StrikethroughExtension::class,
         ]);
 
-        tap(Markdown::parse(new EncodedHtmlString('~~strikethrough text~~'), encoded: true), function ($html) {
+        ws_tap(Markdown::parse(new EncodedHtmlString('~~strikethrough text~~'), encoded: true), function ($html) {
             $this->assertInstanceOf(HtmlString::class, $html);
 
             $expected = '<p><del>strikethrough text</del></p>';

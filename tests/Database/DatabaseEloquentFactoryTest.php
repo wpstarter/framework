@@ -990,7 +990,7 @@ class DatabaseEloquentFactoryTest extends TestCase
     public function test_factory_global_model_resolver()
     {
         Factory::guessModelNamesUsing(function ($factory) {
-            return __NAMESPACE__.'\\'.Str::replaceLast('Factory', '', class_basename($factory::class));
+            return __NAMESPACE__.'\\'.Str::replaceLast('Factory', '', ws_class_basename($factory::class));
         });
 
         $this->assertEquals(FactoryTestGuessModel::factory()->modelName(), FactoryTestGuessModel::class);
@@ -1062,7 +1062,7 @@ class DatabaseEloquentFactoryTest extends TestCase
             ->count(5)
             ->recycle([
                 (new FactoryTestUserFactory())->create(['name' => Name::Taylor]),
-                (new FactoryTestUserFactory())->create(['name' => Name::Shad, 'created_at' => now()]),
+                (new FactoryTestUserFactory())->create(['name' => Name::Shad, 'created_at' => ws_now()]),
             ])
             ->state(['title' => 'hello'])
             ->insert();

@@ -27,7 +27,7 @@ class EloquentMorphToGlobalScopesTest extends DatabaseTestCase
         $post = Post::create();
         (new Comment)->commentable()->associate($post)->save();
 
-        $post = tap(Post::create())->delete();
+        $post = ws_tap(Post::create())->delete();
         (new Comment)->commentable()->associate($post)->save();
     }
 

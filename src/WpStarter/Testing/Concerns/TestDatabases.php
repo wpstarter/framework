@@ -44,7 +44,7 @@ trait TestDatabases
         });
 
         ParallelTesting::setUpTestCase(function ($testCase) {
-            $uses = array_flip(class_uses_recursive(get_class($testCase)));
+            $uses = array_flip(ws_class_uses_recursive(get_class($testCase)));
 
             $databaseTraits = [
                 Testing\DatabaseMigrations::class,
@@ -173,17 +173,17 @@ trait TestDatabases
     {
         DB::purge();
 
-        $default = config('database.default');
+        $default = ws_config('database.default');
 
-        $url = config("database.connections.{$default}.url");
+        $url = ws_config("database.connections.{$default}.url");
 
         if ($url) {
-            config()->set(
+            ws_config()->set(
                 "database.connections.{$default}.url",
                 preg_replace('/^(.*)(\/[\w-]*)(\??.*)$/', "$1/{$database}$3", $url),
             );
         } else {
-            config()->set(
+            ws_config()->set(
                 "database.connections.{$default}.database",
                 $database,
             );

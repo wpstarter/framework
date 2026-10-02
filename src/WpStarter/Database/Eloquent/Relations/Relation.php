@@ -422,7 +422,7 @@ abstract class Relation implements BuilderContract
      */
     protected function whereInMethod(Model $model, $key)
     {
-        return $model->getKeyName() === last(explode('.', $key))
+        return $model->getKeyName() === ws_last(explode('.', $key))
             && in_array($model->getKeyType(), ['int', 'integer'])
                 ? 'whereIntegerInRaw'
                 : 'whereIn';

@@ -11,7 +11,7 @@ breeze
 @else
 boom
 @endenv";
-        $expected = "<?php if(app()->environment('staging')): ?>
+        $expected = "<?php if(ws_app()->environment('staging')): ?>
 breeze
 <?php else: ?>
 boom
@@ -26,7 +26,7 @@ breeze
 @else
 boom
 @endenv";
-        $expected = "<?php if(app()->environment('staging', 'production')): ?>
+        $expected = "<?php if(ws_app()->environment('staging', 'production')): ?>
 breeze
 <?php else: ?>
 boom
@@ -41,7 +41,7 @@ breeze
 @else
 boom
 @endenv";
-        $expected = "<?php if(app()->environment(['staging', 'production'])): ?>
+        $expected = "<?php if(ws_app()->environment(['staging', 'production'])): ?>
 breeze
 <?php else: ?>
 boom
@@ -56,7 +56,7 @@ breeze
 @else
 boom
 @endproduction';
-        $expected = "<?php if(app()->environment('production')): ?>
+        $expected = "<?php if(ws_app()->environment('production')): ?>
 breeze
 <?php else: ?>
 boom

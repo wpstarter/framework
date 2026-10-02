@@ -80,7 +80,7 @@ class DatabaseEloquentWithCastsTest extends TestCase
 
     public function testThrowsExceptionIfCastableAttributeWasNotRetrievedAndPreventMissingAttributesIsEnabled()
     {
-        Time::create(['time' => now()]);
+        Time::create(['time' => ws_now()]);
         $originalMode = Model::preventsAccessingMissingAttributes();
         Model::preventAccessingMissingAttributes();
 

@@ -323,7 +323,7 @@ trait Queueable
     public function dispatchNextJobInChain()
     {
         if (is_array($this->chained) && ! empty($this->chained)) {
-            dispatch(tap(unserialize(array_shift($this->chained)), function ($next) {
+            ws_dispatch(ws_tap(unserialize(array_shift($this->chained)), function ($next) {
                 $next->chained = $this->chained;
 
                 $next->onConnection($next->connection ?: $this->chainConnection);

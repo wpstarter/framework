@@ -84,7 +84,7 @@ class VerifyCsrfToken
             $this->inExceptArray($request) ||
             $this->tokensMatch($request)
         ) {
-            return tap($next($request), function ($response) use ($request) {
+            return ws_tap($next($request), function ($response) use ($request) {
                 if ($this->shouldAddXsrfTokenCookie()) {
                     $this->addCookieToResponse($request, $response);
                 }
@@ -180,7 +180,7 @@ class VerifyCsrfToken
      */
     protected function addCookieToResponse($request, $response)
     {
-        $config = config('session');
+        $config = ws_config('session');
 
         if ($response instanceof Responsable) {
             $response = $response->toResponse($request);

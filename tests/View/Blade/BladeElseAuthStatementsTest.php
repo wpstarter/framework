@@ -11,9 +11,9 @@ breeze
 @elseauth("standard")
 wheeze
 @endauth';
-        $expected = '<?php if(auth()->guard("api")->check()): ?>
+        $expected = '<?php if(ws_auth()->guard("api")->check()): ?>
 breeze
-<?php elseif(auth()->guard("standard")->check()): ?>
+<?php elseif(ws_auth()->guard("standard")->check()): ?>
 wheeze
 <?php endif; ?>';
         $this->assertEquals($expected, $this->compiler->compileString($string));
@@ -26,9 +26,9 @@ breeze
 @elseauth
 wheeze
 @endauth';
-        $expected = '<?php if(auth()->guard("api")->check()): ?>
+        $expected = '<?php if(ws_auth()->guard("api")->check()): ?>
 breeze
-<?php elseif(auth()->guard()->check()): ?>
+<?php elseif(ws_auth()->guard()->check()): ?>
 wheeze
 <?php endif; ?>';
         $this->assertEquals($expected, $this->compiler->compileString($string));

@@ -142,7 +142,7 @@ class File implements Rule, DataAwareRule, ValidatorAwareRule
      */
     public static function types($mimetypes)
     {
-        return tap(new static(), fn ($file) => $file->allowedMimetypes = (array) $mimetypes);
+        return ws_tap(new static(), fn ($file) => $file->allowedMimetypes = (array) $mimetypes);
     }
 
     /**

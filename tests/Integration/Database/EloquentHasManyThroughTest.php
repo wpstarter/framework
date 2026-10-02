@@ -389,8 +389,8 @@ class EloquentHasManyThroughTest extends DatabaseTestCase
 
         $user = User::create(['team_id' => $team->id, 'name' => Str::random()]);
 
-        Article::create(['user_id' => $user->id, 'title' => Str::random(), 'created_at' => now()->subDay()]);
-        $latestArticle = Article::create(['user_id' => $user->id, 'title' => Str::random(), 'created_at' => now()]);
+        Article::create(['user_id' => $user->id, 'title' => Str::random(), 'created_at' => ws_now()->subDay()]);
+        $latestArticle = Article::create(['user_id' => $user->id, 'title' => Str::random(), 'created_at' => ws_now()]);
 
         $this->assertEquals($latestArticle->id, $team->latestArticle->id);
     }

@@ -67,7 +67,7 @@ class AuthenticateSession implements AuthenticatesSessions
             $this->logout($request);
         }
 
-        return tap($next($request), function () use ($request) {
+        return ws_tap($next($request), function () use ($request) {
             if (! is_null($this->guard()->user())) {
                 $this->storePasswordHashInSession($request);
             }

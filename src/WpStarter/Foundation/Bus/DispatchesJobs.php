@@ -12,7 +12,7 @@ trait DispatchesJobs
      */
     protected function dispatch($job)
     {
-        return dispatch($job);
+        return ws_dispatch($job);
     }
 
     /**
@@ -25,6 +25,6 @@ trait DispatchesJobs
      */
     public function dispatchSync($job)
     {
-        return dispatch_sync($job);
+        return ws_dispatch_sync($job);
     }
 }

@@ -5,7 +5,7 @@ use WpStarter\Contracts\Foundation\Application;
 
 use function PHPStan\Testing\assertType;
 
-$app = resolve(Application::class);
+$app = ws_resolve(Application::class);
 
 assertType('stdClass', $app->instance('foo', new stdClass));
 

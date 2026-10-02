@@ -249,14 +249,14 @@ class PendingProcess
 
         try {
             if ($fake = $this->fakeFor($command = $process->getCommandline())) {
-                return tap($this->resolveSynchronousFake($command, $fake), function ($result) {
+                return ws_tap($this->resolveSynchronousFake($command, $fake), function ($result) {
                     $this->factory->recordIfRecording($this, $result);
                 });
             } elseif ($this->factory->isRecording() && $this->factory->preventingStrayProcesses()) {
                 throw new RuntimeException('Attempted process ['.$command.'] without a matching fake.');
             }
 
-            return new ProcessResult(tap($process)->run($output));
+            return new ProcessResult(ws_tap($process)->run($output));
         } catch (SymfonyTimeoutException $e) {
             throw new ProcessTimedOutException($e, new ProcessResult($process));
         }
@@ -278,14 +278,14 @@ class PendingProcess
         $process = $this->toSymfonyProcess($command);
 
         if ($fake = $this->fakeFor($command = $process->getCommandline())) {
-            return tap($this->resolveAsynchronousFake($command, $output, $fake), function (FakeInvokedProcess $process) {
+            return ws_tap($this->resolveAsynchronousFake($command, $output, $fake), function (FakeInvokedProcess $process) {
                 $this->factory->recordIfRecording($this, $process->predictProcessResult());
             });
         } elseif ($this->factory->isRecording() && $this->factory->preventingStrayProcesses()) {
             throw new RuntimeException('Attempted process ['.$command.'] without a matching fake.');
         }
 
-        return new InvokedProcess(tap($process)->start($output));
+        return new InvokedProcess(ws_tap($process)->start($output));
     }
 
     /**

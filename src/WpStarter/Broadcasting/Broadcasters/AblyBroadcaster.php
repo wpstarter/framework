@@ -146,10 +146,10 @@ class AblyBroadcaster extends Broadcaster
      */
     protected function buildAblyMessage($event, array $payload = [])
     {
-        return tap(new AblyMessage, function ($message) use ($event, $payload) {
+        return ws_tap(new AblyMessage, function ($message) use ($event, $payload) {
             $message->name = $event;
             $message->data = $payload;
-            $message->connectionKey = data_get($payload, 'socket');
+            $message->connectionKey = ws_data_get($payload, 'socket');
         });
     }
 

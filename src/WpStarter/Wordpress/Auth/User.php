@@ -29,4 +29,9 @@ class User extends Model implements
         $user->init($wp_user->data, $wp_user->get_site_id());
         return $user;
     }
+
+    public function getAuthPasswordName()
+    {
+        // TODO: Implement getAuthPasswordName() method.
+    }
 }

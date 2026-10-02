@@ -85,9 +85,9 @@ trait EloquentTransactionWithAfterCommitTests
         User::observe($observer = EloquentTransactionWithAfterCommitTestsUserObserver::resetting());
 
         $user1 = DB::transaction(function () use ($observer) {
-            return tap(DB::transaction(function () use ($observer) {
-                return tap(DB::transaction(function () use ($observer) {
-                    return tap(User::createOrFirst(UserFactory::new()->raw()), function () use ($observer) {
+            return ws_tap(DB::transaction(function () use ($observer) {
+                return ws_tap(DB::transaction(function () use ($observer) {
+                    return ws_tap(User::createOrFirst(UserFactory::new()->raw()), function () use ($observer) {
                         $this->assertEquals(0, $observer::$calledTimes, 'Should not have been called');
                     });
                 }), function () use ($observer) {
@@ -206,7 +206,7 @@ class EloquentTransactionWithAfterCommitTestsUserObserverUsingDispatchSync exten
 {
     public function created($user)
     {
-        dispatch_sync(new EloquentTransactionWithAfterCommitTestsJob($user->email));
+        ws_dispatch_sync(new EloquentTransactionWithAfterCommitTestsJob($user->email));
 
         parent::created($user);
     }
@@ -225,7 +225,7 @@ class EloquentTransactionWithAfterCommitTestsJob implements ShouldQueue
     {
         DB::transaction(function () {
             DB::table('password_reset_tokens')->insert([
-                ['email' => $this->email, 'token' => sha1($this->email), 'created_at' => now()],
+                ['email' => $this->email, 'token' => sha1($this->email), 'created_at' => ws_now()],
             ]);
         });
     }

@@ -17,8 +17,8 @@ class PrunableTestModelWithPrunableRecords extends Model
 
     public function pruneAll()
     {
-        event(new ModelsPruned(static::class, 10));
-        event(new ModelsPruned(static::class, 20));
+        ws_event(new ModelsPruned(static::class, 10));
+        ws_event(new ModelsPruned(static::class, 20));
 
         return 20;
     }

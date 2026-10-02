@@ -22,7 +22,7 @@ trait AuthorizesRequests
     {
         [$ability, $arguments] = $this->parseAbilityAndArguments($ability, $arguments);
 
-        return app(Gate::class)->authorize($ability, $arguments);
+        return ws_app(Gate::class)->authorize($ability, $arguments);
     }
 
     /**
@@ -39,7 +39,7 @@ trait AuthorizesRequests
     {
         [$ability, $arguments] = $this->parseAbilityAndArguments($ability, $arguments);
 
-        return app(Gate::class)->forUser($user)->authorize($ability, $arguments);
+        return ws_app(Gate::class)->forUser($user)->authorize($ability, $arguments);
     }
 
     /**
@@ -90,7 +90,7 @@ trait AuthorizesRequests
 
         $parameter = is_array($parameter) ? implode(',', $parameter) : $parameter;
 
-        $parameter = $parameter ?: Str::snake(class_basename($model));
+        $parameter = $parameter ?: Str::snake(ws_class_basename($model));
 
         $middleware = [];
 

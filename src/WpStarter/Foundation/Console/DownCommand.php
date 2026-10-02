@@ -52,7 +52,7 @@ class DownCommand extends Command
             $this->laravel->maintenanceMode()->activate($downFilePayload);
 
             file_put_contents(
-                storage_path('framework/maintenance.php'),
+                ws_storage_path('framework/maintenance.php'),
                 file_get_contents(__DIR__.'/stubs/maintenance-mode.stub')
             );
 
@@ -64,7 +64,7 @@ class DownCommand extends Command
             );
 
             if ($downFilePayload['secret'] !== null) {
-                $this->components->info('You may bypass maintenance mode via ['.config('app.url')."/{$downFilePayload['secret']}].");
+                $this->components->info('You may bypass maintenance mode via ['.ws_config('app.url')."/{$downFilePayload['secret']}].");
             }
         } catch (Exception $e) {
             $this->components->error(sprintf(
@@ -135,7 +135,7 @@ class DownCommand extends Command
     {
         (new RegisterErrorViewPaths)();
 
-        return view($this->option('render'), [
+        return ws_view($this->option('render'), [
             'retryAfter' => $this->option('retry'),
         ])->render();
     }

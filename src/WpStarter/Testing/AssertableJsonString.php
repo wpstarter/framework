@@ -58,7 +58,7 @@ class AssertableJsonString implements ArrayAccess, Countable
      */
     public function json($key = null)
     {
-        return data_get($this->decoded, $key);
+        return ws_data_get($this->decoded, $key);
     }
 
     /**
@@ -72,7 +72,7 @@ class AssertableJsonString implements ArrayAccess, Countable
     {
         if (! is_null($key)) {
             PHPUnit::assertCount(
-                $count, data_get($this->decoded, $key),
+                $count, ws_data_get($this->decoded, $key),
                 "Failed to assert that the response count matched the expected {$count}"
             );
 

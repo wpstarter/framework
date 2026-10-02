@@ -29,7 +29,7 @@ class HandleExceptionsTest extends TestCase
 
     protected function handleExceptions()
     {
-        return tap(new HandleExceptions(), function ($instance) {
+        return ws_tap(new HandleExceptions(), function ($instance) {
             (new ReflectionClass($instance))->getProperty('app')->setValue($instance, $this->app);
         });
     }
@@ -414,7 +414,7 @@ class HandleExceptionsTest extends TestCase
 
         $this->assertSame($this->app, $appResolver());
 
-        $instance->bootstrap($newApp = tap(m::mock(Application::class), function ($app) {
+        $instance->bootstrap($newApp = ws_tap(m::mock(Application::class), function ($app) {
             $app->expects('environment')->andReturn(true);
         }));
 

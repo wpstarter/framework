@@ -9,7 +9,7 @@ class BladeIfGuestStatementsTest extends AbstractBladeTestCase
         $string = '@guest("api")
 breeze
 @endguest';
-        $expected = '<?php if(auth()->guard("api")->guest()): ?>
+        $expected = '<?php if(ws_auth()->guard("api")->guest()): ?>
 breeze
 <?php endif; ?>';
         $this->assertEquals($expected, $this->compiler->compileString($string));

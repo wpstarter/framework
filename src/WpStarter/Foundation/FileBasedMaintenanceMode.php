@@ -59,6 +59,6 @@ class FileBasedMaintenanceMode implements MaintenanceModeContract
      */
     protected function path(): string
     {
-        return storage_path('framework/down');
+        return ws_storage_path('framework/down');
     }
 }

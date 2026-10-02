@@ -159,12 +159,12 @@ class ControllerMakeCommand extends GeneratorCommand
             'ParentDummyFullModelClass' => $parentModelClass,
             '{{ namespacedParentModel }}' => $parentModelClass,
             '{{namespacedParentModel}}' => $parentModelClass,
-            'ParentDummyModelClass' => class_basename($parentModelClass),
-            '{{ parentModel }}' => class_basename($parentModelClass),
-            '{{parentModel}}' => class_basename($parentModelClass),
-            'ParentDummyModelVariable' => lcfirst(class_basename($parentModelClass)),
-            '{{ parentModelVariable }}' => lcfirst(class_basename($parentModelClass)),
-            '{{parentModelVariable}}' => lcfirst(class_basename($parentModelClass)),
+            'ParentDummyModelClass' => ws_class_basename($parentModelClass),
+            '{{ parentModel }}' => ws_class_basename($parentModelClass),
+            '{{parentModel}}' => ws_class_basename($parentModelClass),
+            'ParentDummyModelVariable' => lcfirst(ws_class_basename($parentModelClass)),
+            '{{ parentModelVariable }}' => lcfirst(ws_class_basename($parentModelClass)),
+            '{{parentModelVariable}}' => lcfirst(ws_class_basename($parentModelClass)),
         ];
     }
 
@@ -188,12 +188,12 @@ class ControllerMakeCommand extends GeneratorCommand
             'DummyFullModelClass' => $modelClass,
             '{{ namespacedModel }}' => $modelClass,
             '{{namespacedModel}}' => $modelClass,
-            'DummyModelClass' => class_basename($modelClass),
-            '{{ model }}' => class_basename($modelClass),
-            '{{model}}' => class_basename($modelClass),
-            'DummyModelVariable' => lcfirst(class_basename($modelClass)),
-            '{{ modelVariable }}' => lcfirst(class_basename($modelClass)),
-            '{{modelVariable}}' => lcfirst(class_basename($modelClass)),
+            'DummyModelClass' => ws_class_basename($modelClass),
+            '{{ model }}' => ws_class_basename($modelClass),
+            '{{model}}' => ws_class_basename($modelClass),
+            'DummyModelVariable' => lcfirst(ws_class_basename($modelClass)),
+            '{{ modelVariable }}' => lcfirst(ws_class_basename($modelClass)),
+            '{{modelVariable}}' => lcfirst(ws_class_basename($modelClass)),
         ]);
     }
 
@@ -265,13 +265,13 @@ class ControllerMakeCommand extends GeneratorCommand
      */
     protected function generateFormRequests($modelClass, $storeRequestClass, $updateRequestClass)
     {
-        $storeRequestClass = 'Store'.class_basename($modelClass).'Request';
+        $storeRequestClass = 'Store'.ws_class_basename($modelClass).'Request';
 
         $this->call('make:request', [
             'name' => $storeRequestClass,
         ]);
 
-        $updateRequestClass = 'Update'.class_basename($modelClass).'Request';
+        $updateRequestClass = 'Update'.ws_class_basename($modelClass).'Request';
 
         $this->call('make:request', [
             'name' => $updateRequestClass,

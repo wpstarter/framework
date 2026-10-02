@@ -127,7 +127,7 @@ class JobChainingTest extends QueueTestCase
 
     public function testJobsCanBeChainedOnSuccessUsingHelper()
     {
-        dispatch(new JobChainingTestFirstJob)->chain([
+        ws_dispatch(new JobChainingTestFirstJob)->chain([
             new JobChainingTestSecondJob,
         ]);
 
@@ -891,7 +891,7 @@ class JobChainAddingExistingJob implements ShouldQueue
 
     public function handle()
     {
-        static::$ranAt = now();
+        static::$ranAt = ws_now();
     }
 }
 
@@ -904,7 +904,7 @@ class JobChainAddingAddedJob implements ShouldQueue
 
     public function handle()
     {
-        static::$ranAt = now();
+        static::$ranAt = ws_now();
     }
 }
 

@@ -27,7 +27,7 @@ class EloquentMassPrunableTest extends DatabaseTestCase
 
     protected function afterRefreshingDatabase()
     {
-        collect([
+        ws_collect([
             'mass_prunable_test_models',
             'mass_prunable_soft_delete_test_models',
             'mass_prunable_test_model_missing_prunable_methods',
@@ -54,12 +54,12 @@ class EloquentMassPrunableTest extends DatabaseTestCase
 
     public function testPrunesRecords()
     {
-        app('events')
+        ws_app('events')
             ->shouldReceive('dispatch')
             ->times(2)
             ->with(m::type(ModelsPruned::class));
 
-        collect(range(1, 5000))->map(function ($id) {
+        ws_collect(range(1, 5000))->map(function ($id) {
             return ['name' => 'foo'];
         })->chunk(200)->each(function ($chunk) {
             MassPrunableTestModel::insert($chunk->all());
@@ -73,13 +73,13 @@ class EloquentMassPrunableTest extends DatabaseTestCase
 
     public function testPrunesSoftDeletedRecords()
     {
-        app('events')
+        ws_app('events')
             ->shouldReceive('dispatch')
             ->times(3)
             ->with(m::type(ModelsPruned::class));
 
-        collect(range(1, 5000))->map(function ($id) {
-            return ['deleted_at' => now()];
+        ws_collect(range(1, 5000))->map(function ($id) {
+            return ['deleted_at' => ws_now()];
         })->chunk(200)->each(function ($chunk) {
             MassPrunableSoftDeleteTestModel::insert($chunk->all());
         });

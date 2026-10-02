@@ -113,7 +113,7 @@ class ModelMakeCommand extends GeneratorCommand
      */
     protected function createMigration()
     {
-        $table = Str::snake(Str::pluralStudly(class_basename($this->argument('name'))));
+        $table = Str::snake(Str::pluralStudly(ws_class_basename($this->argument('name'))));
 
         if ($this->option('pivot')) {
             $table = Str::singular($table);
@@ -132,7 +132,7 @@ class ModelMakeCommand extends GeneratorCommand
      */
     protected function createSeeder()
     {
-        $seeder = Str::studly(class_basename($this->argument('name')));
+        $seeder = Str::studly(ws_class_basename($this->argument('name')));
 
         $this->call('make:seeder', [
             'name' => "{$seeder}Seeder",
@@ -146,7 +146,7 @@ class ModelMakeCommand extends GeneratorCommand
      */
     protected function createController()
     {
-        $controller = Str::studly(class_basename($this->argument('name')));
+        $controller = Str::studly(ws_class_basename($this->argument('name')));
 
         $modelName = $this->qualifyClass($this->getNameInput());
 
@@ -167,7 +167,7 @@ class ModelMakeCommand extends GeneratorCommand
      */
     protected function createFormRequests()
     {
-        $request = Str::studly(class_basename($this->argument('name')));
+        $request = Str::studly(ws_class_basename($this->argument('name')));
 
         $this->call('make:request', [
             'name' => "Store{$request}Request",
@@ -185,7 +185,7 @@ class ModelMakeCommand extends GeneratorCommand
      */
     protected function createPolicy()
     {
-        $policy = Str::studly(class_basename($this->argument('name')));
+        $policy = Str::studly(ws_class_basename($this->argument('name')));
 
         $this->call('make:policy', [
             'name' => "{$policy}Policy",

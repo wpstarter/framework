@@ -59,7 +59,7 @@ class UriQueryString implements Arrayable, Stringable
      */
     public function get(?string $key = null, mixed $default = null): mixed
     {
-        return data_get($this->toArray(), $key, $default);
+        return ws_data_get($this->toArray(), $key, $default);
     }
 
     /**

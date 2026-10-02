@@ -152,7 +152,7 @@ class PruneCommand extends Command
     {
         if (! empty($path = $this->option('path'))) {
             return (new Collection($path))
-                ->map(fn ($path) => base_path($path))
+                ->map(fn ($path) => ws_base_path($path))
                 ->all();
         }
 

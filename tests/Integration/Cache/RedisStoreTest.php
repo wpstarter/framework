@@ -98,7 +98,7 @@ class RedisStoreTest extends TestCase
     #[TestWith(['laravel-cache-'])]
     public function testTagsCanBeAccessed(string $cachePrefix)
     {
-        config(['cache.prefix' => $cachePrefix]);
+        ws_config(['cache.prefix' => $cachePrefix]);
 
         Cache::store('redis')->clear();
 

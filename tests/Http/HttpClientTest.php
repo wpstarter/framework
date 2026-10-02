@@ -454,10 +454,10 @@ class HttpClientTest extends TestCase
         $response = $this->factory->get('http://foo.com/api');
 
         $this->assertInstanceOf(Collection::class, $response->collect());
-        $this->assertEquals(collect(['result' => ['foo' => 'bar']]), $response->collect());
-        $this->assertEquals(collect(['foo' => 'bar']), $response->collect('result'));
-        $this->assertEquals(collect(['bar']), $response->collect('result.foo'));
-        $this->assertEquals(collect(), $response->collect('missing_key'));
+        $this->assertEquals(ws_collect(['result' => ['foo' => 'bar']]), $response->collect());
+        $this->assertEquals(ws_collect(['foo' => 'bar']), $response->collect('result'));
+        $this->assertEquals(ws_collect(['bar']), $response->collect('result.foo'));
+        $this->assertEquals(ws_collect(), $response->collect('missing_key'));
     }
 
     public function testResponseCanBeReturnedAsFluent()
@@ -1379,7 +1379,7 @@ class HttpClientTest extends TestCase
 
         $response = new Psr7Response(403, [], json_encode($error));
 
-        throw tap(new RequestException(new Response($response)), fn ($exception) => $exception->report());
+        throw ws_tap(new RequestException(new Response($response)), fn ($exception) => $exception->report());
     }
 
     public function testRequestExceptionTruncatedSummary()
@@ -1395,7 +1395,7 @@ class HttpClientTest extends TestCase
         ];
         $response = new Psr7Response(403, [], json_encode($error));
 
-        throw tap(new RequestException(new Response($response)), fn ($exception) => $exception->report());
+        throw ws_tap(new RequestException(new Response($response)), fn ($exception) => $exception->report());
     }
 
     public function testRequestExceptionWithoutTruncatedSummary()
@@ -1413,7 +1413,7 @@ class HttpClientTest extends TestCase
         ];
         $response = new Psr7Response(403, [], json_encode($error));
 
-        throw tap(new RequestException(new Response($response)), fn ($exception) => $exception->report());
+        throw ws_tap(new RequestException(new Response($response)), fn ($exception) => $exception->report());
     }
 
     public function testRequestExceptionWithCustomTruncatedSummary()
@@ -1431,7 +1431,7 @@ class HttpClientTest extends TestCase
         ];
         $response = new Psr7Response(403, [], json_encode($error));
 
-        throw tap(new RequestException(new Response($response)), fn ($exception) => $exception->report());
+        throw ws_tap(new RequestException(new Response($response)), fn ($exception) => $exception->report());
     }
 
     public function testRequestLevelTruncationLevelOnRequestException()
@@ -2089,9 +2089,9 @@ class HttpClientTest extends TestCase
 
         $this->assertCount(1, $history);
 
-        $this->assertSame('Fake', tap($history[0]['response']->getBody())->rewind()->getContents());
+        $this->assertSame('Fake', ws_tap($history[0]['response']->getBody())->rewind()->getContents());
 
-        $this->assertSame(['hyped-for' => 'laravel-movie'], json_decode(tap($history[0]['request']->getBody())->rewind()->getContents(), true));
+        $this->assertSame(['hyped-for' => 'laravel-movie'], json_decode(ws_tap($history[0]['request']->getBody())->rewind()->getContents(), true));
     }
 
     public function testPoolConcurrency()
@@ -2548,7 +2548,7 @@ class HttpClientTest extends TestCase
             '*' => $this->factory->response(['error'], 500),
         ]);
 
-        $whenAttempts = collect();
+        $whenAttempts = ws_collect();
 
         [$exception] = $this->factory->pool(fn ($pool) => [
             $pool->retry(2, 1000, function ($exception) use ($whenAttempts) {
@@ -2589,7 +2589,7 @@ class HttpClientTest extends TestCase
             '*' => $this->factory->response(['error'], 500),
         ]);
 
-        $whenAttempts = collect();
+        $whenAttempts = ws_collect();
 
         [$response] = $this->factory->pool(fn ($pool) => [
             $pool->retry(2, 1000, function ($exception) use ($whenAttempts) {
@@ -2826,9 +2826,9 @@ class HttpClientTest extends TestCase
 
         $this->assertCount(1, $history);
 
-        $this->assertSame('Fake', tap($history[0]['response']->getBody())->rewind()->getContents());
+        $this->assertSame('Fake', ws_tap($history[0]['response']->getBody())->rewind()->getContents());
 
-        $this->assertSame(['hyped-for' => 'laravel-movie'], json_decode(tap($history[0]['request']->getBody())->rewind()->getContents(), true));
+        $this->assertSame(['hyped-for' => 'laravel-movie'], json_decode(ws_tap($history[0]['request']->getBody())->rewind()->getContents(), true));
     }
 
     public function testMiddlewareRunsAndCanChangeRequestOnAssertSent()
@@ -3232,7 +3232,7 @@ class HttpClientTest extends TestCase
             '*' => $this->factory->response(['error'], 403),
         ]);
 
-        $hitThrowCallback = collect();
+        $hitThrowCallback = ws_collect();
 
         [$exception] = $this->factory->pool(fn ($pool) => [
             $pool->throwIf(function ($response) {
@@ -3261,7 +3261,7 @@ class HttpClientTest extends TestCase
             '*' => $this->factory->response(['error'], 403),
         ]);
 
-        $hitThrowCallback = collect();
+        $hitThrowCallback = ws_collect();
 
         [$response] = $this->factory->pool(fn ($pool) => [
             $pool->throwIf(function ($response) {
@@ -3284,7 +3284,7 @@ class HttpClientTest extends TestCase
             '*' => $this->factory->response(['error'], 403),
         ]);
 
-        $flag = collect();
+        $flag = ws_collect();
 
         [$exception] = $this->factory->pool(fn ($pool) => [
             $pool->throw(function ($exception) use (&$flag) {
@@ -3888,13 +3888,13 @@ class HttpClientTest extends TestCase
 
     public function testItCanAddGlobalMiddleware()
     {
-        Carbon::setTestNow(now()->startOfDay());
+        Carbon::setTestNow(ws_now()->startOfDay());
         $requests = [];
         $responses = [];
         $this->factory->fake(function ($r) use (&$requests) {
             $requests[] = $r;
 
-            Carbon::setTestNow(now()->addSeconds(6 * count($requests)));
+            Carbon::setTestNow(ws_now()->addSeconds(6 * count($requests)));
 
             return $this->factory::response('expected content');
         });
@@ -3911,10 +3911,10 @@ class HttpClientTest extends TestCase
         }))->globalMiddleware(function ($handler) {
             // Test wrapping request in timing function...
             return function ($request, $options) use ($handler) {
-                $startedAt = now();
+                $startedAt = ws_now();
 
                 return $handler($request, $options)->then(function (ResponseInterface $response) use ($startedAt) {
-                    return $response->withHeader('X-Duration', "{$startedAt->diffInSeconds(now())} seconds");
+                    return $response->withHeader('X-Duration', "{$startedAt->diffInSeconds(ws_now())} seconds");
                 });
             };
         });

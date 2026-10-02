@@ -22,7 +22,7 @@ class SubMinuteSchedulingTest extends TestCase
 
     public function test_it_doesnt_wait_for_sub_minute_events_when_nothing_is_scheduled()
     {
-        Carbon::setTestNow(now()->startOfMinute());
+        Carbon::setTestNow(ws_now()->startOfMinute());
         Sleep::fake();
 
         $this->artisan('schedule:run')
@@ -37,7 +37,7 @@ class SubMinuteSchedulingTest extends TestCase
             ->call(fn () => true)
             ->everyMinute();
 
-        Carbon::setTestNow(now()->startOfMinute());
+        Carbon::setTestNow(ws_now()->startOfMinute());
         Sleep::fake();
 
         $this->artisan('schedule:run')
@@ -54,9 +54,9 @@ class SubMinuteSchedulingTest extends TestCase
             $runs++;
         })->{$frequency}();
 
-        Carbon::setTestNow(now()->startOfMinute());
+        Carbon::setTestNow(ws_now()->startOfMinute());
         Sleep::fake();
-        Sleep::whenFakingSleep(fn ($duration) => Carbon::setTestNow(now()->add($duration)));
+        Sleep::whenFakingSleep(fn ($duration) => Carbon::setTestNow(ws_now()->add($duration)));
 
         $this->artisan('schedule:run')
             ->expectsOutputToContain('Running [Callback]');
@@ -77,9 +77,9 @@ class SubMinuteSchedulingTest extends TestCase
             $everyThirtySecondsRuns++;
         })->everyThirtySeconds();
 
-        Carbon::setTestNow(now()->startOfMinute());
+        Carbon::setTestNow(ws_now()->startOfMinute());
         Sleep::fake();
-        Sleep::whenFakingSleep(fn ($duration) => Carbon::setTestNow(now()->add($duration)));
+        Sleep::whenFakingSleep(fn ($duration) => Carbon::setTestNow(ws_now()->add($duration)));
 
         $this->artisan('schedule:run')
             ->expectsOutputToContain('Running [Callback]');
@@ -96,11 +96,11 @@ class SubMinuteSchedulingTest extends TestCase
             $runs++;
         })->everySecond();
 
-        Carbon::setTestNow(now()->startOfMinute());
-        $startedAt = now();
+        Carbon::setTestNow(ws_now()->startOfMinute());
+        $startedAt = ws_now();
         Sleep::fake();
         Sleep::whenFakingSleep(function ($duration) use ($startedAt) {
-            Carbon::setTestNow(now()->add($duration));
+            Carbon::setTestNow(ws_now()->add($duration));
 
             if ($startedAt->diffInSeconds() >= 30) {
                 $this->artisan('schedule:interrupt')
@@ -113,7 +113,7 @@ class SubMinuteSchedulingTest extends TestCase
 
         Sleep::assertSleptTimes(300);
         $this->assertEquals(30, $runs);
-        $this->assertEquals(30, $startedAt->diffInSeconds(now()));
+        $this->assertEquals(30, $startedAt->diffInSeconds(ws_now()));
     }
 
     public function test_sub_minute_events_stop_for_the_rest_of_the_minute_once_maintenance_mode_is_enabled()
@@ -125,11 +125,11 @@ class SubMinuteSchedulingTest extends TestCase
 
         Config::set('app.maintenance.driver', 'cache');
         Config::set('app.maintenance.store', 'array');
-        Carbon::setTestNow(now()->startOfMinute());
-        $startedAt = now();
+        Carbon::setTestNow(ws_now()->startOfMinute());
+        $startedAt = ws_now();
         Sleep::fake();
         Sleep::whenFakingSleep(function ($duration) use ($startedAt) {
-            Carbon::setTestNow(now()->add($duration));
+            Carbon::setTestNow(ws_now()->add($duration));
 
             if ($startedAt->diffInSeconds() >= 30 && ! $this->app->isDownForMaintenance()) {
                 $this->artisan('down');
@@ -156,13 +156,13 @@ class SubMinuteSchedulingTest extends TestCase
 
         Config::set('app.maintenance.driver', 'cache');
         Config::set('app.maintenance.store', 'array');
-        Carbon::setTestNow(now()->startOfMinute());
-        $startedAt = now();
+        Carbon::setTestNow(ws_now()->startOfMinute());
+        $startedAt = ws_now();
         Sleep::fake();
         Sleep::whenFakingSleep(function ($duration) use ($startedAt) {
-            Carbon::setTestNow(now()->add($duration));
+            Carbon::setTestNow(ws_now()->add($duration));
 
-            if (now()->diffInSeconds($startedAt) >= 30 && ! $this->app->isDownForMaintenance()) {
+            if (ws_now()->diffInSeconds($startedAt) >= 30 && ! $this->app->isDownForMaintenance()) {
                 $this->artisan('down');
             }
         });
@@ -179,11 +179,11 @@ class SubMinuteSchedulingTest extends TestCase
         $runs = 0;
         $this->schedule->call(function () use (&$runs) {
             $runs++;
-        })->everySecond()->when(fn () => now()->second % 2 === 0);
+        })->everySecond()->when(fn () => ws_now()->second % 2 === 0);
 
-        Carbon::setTestNow(now()->startOfMinute());
+        Carbon::setTestNow(ws_now()->startOfMinute());
         Sleep::fake();
-        Sleep::whenFakingSleep(fn ($duration) => Carbon::setTestNow(now()->add($duration)));
+        Sleep::whenFakingSleep(fn ($duration) => Carbon::setTestNow(ws_now()->add($duration)));
 
         $this->artisan('schedule:run')
             ->expectsOutputToContain('Running [Callback]');
@@ -199,10 +199,10 @@ class SubMinuteSchedulingTest extends TestCase
             $runs++;
         })->everySecond()->name('test')->onOneServer();
 
-        $startedAt = now()->startOfMinute();
+        $startedAt = ws_now()->startOfMinute();
         Carbon::setTestNow($startedAt);
         Sleep::fake();
-        Sleep::whenFakingSleep(fn ($duration) => Carbon::setTestNow(now()->add($duration)));
+        Sleep::whenFakingSleep(fn ($duration) => Carbon::setTestNow(ws_now()->add($duration)));
 
         $this->app->instance(Schedule::class, clone $this->schedule);
         $this->artisan('schedule:run')

@@ -117,9 +117,9 @@ class PolicyMakeCommand extends GeneratorCommand
             $namespacedModel = $this->qualifyModel($model);
         }
 
-        $model = class_basename(trim($model, '\\'));
+        $model = ws_class_basename(trim($model, '\\'));
 
-        $dummyUser = class_basename($this->userProviderModel());
+        $dummyUser = ws_class_basename($this->userProviderModel());
 
         $dummyModel = Str::camel($model) === 'user' ? 'model' : $model;
 

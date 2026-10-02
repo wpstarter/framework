@@ -14,7 +14,7 @@ class Precognition
     {
         return function ($validator) use ($request) {
             if ($validator->messages()->isEmpty() && $request->headers->has('Precognition-Validate-Only')) {
-                abort(204, headers: ['Precognition-Success' => 'true']);
+                ws_abort(204, headers: ['Precognition-Success' => 'true']);
             }
         };
     }

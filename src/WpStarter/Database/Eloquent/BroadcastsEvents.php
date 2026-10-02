@@ -116,7 +116,7 @@ trait BroadcastsEvents
         }
 
         if (! empty($this->broadcastOn($event)) || ! empty($channels)) {
-            return broadcast($instance->onChannels(Arr::wrap($channels)));
+            return ws_broadcast($instance->onChannels(Arr::wrap($channels)));
         }
     }
 
@@ -128,7 +128,7 @@ trait BroadcastsEvents
      */
     public function newBroadcastableModelEvent($event)
     {
-        return tap($this->newBroadcastableEvent($event), function ($event) {
+        return ws_tap($this->newBroadcastableEvent($event), function ($event) {
             $event->connection = property_exists($this, 'broadcastConnection')
                 ? $this->broadcastConnection
                 : $this->broadcastConnection();

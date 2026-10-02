@@ -221,7 +221,7 @@ class PendingChain
      */
     public function dispatchIf($boolean)
     {
-        return value($boolean) ? $this->dispatch() : null;
+        return ws_value($boolean) ? $this->dispatch() : null;
     }
 
     /**
@@ -232,6 +232,6 @@ class PendingChain
      */
     public function dispatchUnless($boolean)
     {
-        return ! value($boolean) ? $this->dispatch() : null;
+        return ! ws_value($boolean) ? $this->dispatch() : null;
     }
 }

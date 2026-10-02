@@ -1083,6 +1083,6 @@ class ProcessTest extends TestCase
 
     protected function ls()
     {
-        return windows_os() ? 'dir' : 'ls';
+        return ws_windows_os() ? 'dir' : 'ls';
     }
 }

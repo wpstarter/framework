@@ -86,12 +86,12 @@ class PreventRequestsDuringMaintenance
                     : trim($data['redirect'], '/');
 
                 if ($request->path() !== $path) {
-                    return redirect($path);
+                    return ws_redirect($path);
                 }
             }
 
             if (isset($data['template'])) {
-                return response(
+                return ws_response(
                     $data['template'],
                     $data['status'] ?? 503,
                     $this->getHeaders($data)
@@ -134,7 +134,7 @@ class PreventRequestsDuringMaintenance
      */
     protected function bypassResponse(string $secret)
     {
-        return redirect()->intended('/')->withCookie(
+        return ws_redirect()->intended('/')->withCookie(
             MaintenanceModeBypassCookie::create($secret)
         );
     }

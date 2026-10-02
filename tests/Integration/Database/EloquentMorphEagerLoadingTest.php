@@ -40,9 +40,9 @@ class EloquentMorphEagerLoadingTest extends DatabaseTestCase
         });
 
         $user = User::create();
-        $user2 = User::forceCreate(['deleted_at' => now()]);
+        $user2 = User::forceCreate(['deleted_at' => ws_now()]);
 
-        $post = tap((new Post)->user()->associate($user))->save();
+        $post = ws_tap((new Post)->user()->associate($user))->save();
 
         $video = Video::create();
 
@@ -98,7 +98,7 @@ class EloquentMorphEagerLoadingTest extends DatabaseTestCase
 
     public function testMorphWithTrashedRelationLazyLoading()
     {
-        $deletedUser = User::forceCreate(['deleted_at' => now()]);
+        $deletedUser = User::forceCreate(['deleted_at' => ws_now()]);
 
         $action = new Action;
         $action->target()->associate($deletedUser)->save();

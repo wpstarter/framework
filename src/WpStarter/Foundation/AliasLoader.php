@@ -99,7 +99,7 @@ class AliasLoader
      */
     protected function ensureFacadeExists($alias)
     {
-        if (is_file($path = storage_path('framework/cache/facade-'.sha1($alias).'.php'))) {
+        if (is_file($path = ws_storage_path('framework/cache/facade-'.sha1($alias).'.php'))) {
             return $path;
         }
 
@@ -131,7 +131,7 @@ class AliasLoader
     {
         $replacements = [
             str_replace('/', '\\', dirname(str_replace('\\', '/', $alias))),
-            class_basename($alias),
+            ws_class_basename($alias),
             substr($alias, strlen(static::$facadeNamespace)),
         ];
 
