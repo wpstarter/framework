@@ -2,6 +2,7 @@
 
 namespace WpStarter\Database\Eloquent\Relations;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use Closure;
 use WpStarter\Contracts\Support\Arrayable;
 use WpStarter\Database\Eloquent\Builder;
@@ -19,8 +20,8 @@ use WpStarter\Support\Str;
 use InvalidArgumentException;
 
 /**
- * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
- * @template TDeclaringModel of \WpStarter\Database\Eloquent\Model
+ * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
+ * @template TDeclaringModel of \WpStarter\Database\Eloquent\Contracts\Model
  * @template TPivotModel of \WpStarter\Database\Eloquent\Relations\Pivot = \WpStarter\Database\Eloquent\Relations\Pivot
  * @template TAccessor of string = 'pivot'
  *
@@ -158,7 +159,7 @@ class BelongsToMany extends Relation
      */
     public function __construct(
         Builder $query,
-        Model $parent,
+        ModelContract $parent,
         $table,
         $foreignPivotKey,
         $relatedPivotKey,
@@ -190,7 +191,7 @@ class BelongsToMany extends Relation
 
         $model = new $table;
 
-        if (! $model instanceof Model) {
+        if (! $model instanceof ModelContract) {
             return $table;
         }
 
@@ -728,7 +729,7 @@ class BelongsToMany extends Relation
      */
     public function find($id, $columns = ['*'])
     {
-        if (! $id instanceof Model && (is_array($id) || $id instanceof Arrayable)) {
+        if (! $id instanceof ModelContract && (is_array($id) || $id instanceof Arrayable)) {
             return $this->findMany($id, $columns);
         }
 
@@ -1249,7 +1250,7 @@ class BelongsToMany extends Relation
      * @param  TRelatedModel  $model
      * @return array
      */
-    protected function migratePivotAttributes(Model $model)
+    protected function migratePivotAttributes(ModelContract $model)
     {
         $values = [];
 
@@ -1346,7 +1347,7 @@ class BelongsToMany extends Relation
      * @param  bool  $touch
      * @return TRelatedModel&object{pivot: TPivotModel}
      */
-    public function save(Model $model, array $pivotAttributes = [], $touch = true)
+    public function save(ModelContract $model, array $pivotAttributes = [], $touch = true)
     {
         $model->save(['touch' => false]);
 
@@ -1363,7 +1364,7 @@ class BelongsToMany extends Relation
      * @param  bool  $touch
      * @return TRelatedModel&object{pivot: TPivotModel}
      */
-    public function saveQuietly(Model $model, array $pivotAttributes = [], $touch = true)
+    public function saveQuietly(ModelContract $model, array $pivotAttributes = [], $touch = true)
     {
         return Model::withoutEvents(function () use ($model, $pivotAttributes, $touch) {
             return $this->save($model, $pivotAttributes, $touch);

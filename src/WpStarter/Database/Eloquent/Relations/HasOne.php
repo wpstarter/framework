@@ -2,18 +2,18 @@
 
 namespace WpStarter\Database\Eloquent\Relations;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use WpStarter\Contracts\Database\Eloquent\SupportsPartialRelations;
 use WpStarter\Database\Eloquent\Builder;
 use WpStarter\Database\Eloquent\Collection as EloquentCollection;
-use WpStarter\Database\Eloquent\Model;
 use WpStarter\Database\Eloquent\Relations\Concerns\CanBeOneOfMany;
 use WpStarter\Database\Eloquent\Relations\Concerns\ComparesRelatedModels;
 use WpStarter\Database\Eloquent\Relations\Concerns\SupportsDefaultModels;
 use WpStarter\Database\Query\JoinClause;
 
 /**
- * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
- * @template TDeclaringModel of \WpStarter\Database\Eloquent\Model
+ * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
+ * @template TDeclaringModel of \WpStarter\Database\Eloquent\Contracts\Model
  *
  * @extends \WpStarter\Database\Eloquent\Relations\HasOneOrMany<TRelatedModel, TDeclaringModel, ?TRelatedModel>
  */
@@ -97,7 +97,7 @@ class HasOne extends HasOneOrMany implements SupportsPartialRelations
      * @param  TDeclaringModel  $parent
      * @return TRelatedModel
      */
-    public function newRelatedInstanceFor(Model $parent)
+    public function newRelatedInstanceFor(ModelContract $parent)
     {
         return ws_tap($this->related->newInstance(), function ($instance) use ($parent) {
             $instance->setAttribute($this->getForeignKeyName(), $parent->{$this->localKey});
@@ -111,7 +111,7 @@ class HasOne extends HasOneOrMany implements SupportsPartialRelations
      * @param  TRelatedModel  $model
      * @return int|string
      */
-    protected function getRelatedKeyFrom(Model $model)
+    protected function getRelatedKeyFrom(ModelContract $model)
     {
         return $model->getAttribute($this->getForeignKeyName());
     }

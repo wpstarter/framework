@@ -519,7 +519,7 @@ class Blueprint
     /**
      * Indicate that the given foreign key should be dropped.
      *
-     * @param  \WpStarter\Database\Eloquent\Model|string  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|string  $model
      * @param  string|null  $column
      * @return \WpStarter\Support\Fluent
      */
@@ -535,7 +535,7 @@ class Blueprint
     /**
      * Indicate that the given foreign key should be dropped.
      *
-     * @param  \WpStarter\Database\Eloquent\Model|string  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|string  $model
      * @param  string|null  $column
      * @return \WpStarter\Support\Fluent
      */
@@ -1042,7 +1042,7 @@ class Blueprint
     /**
      * Create a foreign ID column for the given model.
      *
-     * @param  \WpStarter\Database\Eloquent\Model|string  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|string  $model
      * @param  string|null  $column
      * @return \WpStarter\Database\Schema\ForeignIdColumnDefinition
      */

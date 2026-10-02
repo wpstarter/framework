@@ -2,6 +2,8 @@
 
 namespace WpStarter\Database\Eloquent;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
+
 class SoftDeletingScope implements Scope
 {
     /**
@@ -14,13 +16,13 @@ class SoftDeletingScope implements Scope
     /**
      * Apply the scope to a given Eloquent query builder.
      *
-     * @template TModel of \WpStarter\Database\Eloquent\Model
+     * @template TModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Builder<TModel>  $builder
      * @param  TModel  $model
      * @return void
      */
-    public function apply(Builder $builder, Model $model)
+    public function apply(Builder $builder, ModelContract $model)
     {
         $builder->whereNull($model->getQualifiedDeletedAtColumn());
     }

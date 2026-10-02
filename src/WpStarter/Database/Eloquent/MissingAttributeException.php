@@ -9,7 +9,7 @@ class MissingAttributeException extends OutOfBoundsException
     /**
      * Create a new missing attribute exception instance.
      *
-     * @param  \WpStarter\Database\Eloquent\Model  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $model
      * @param  string  $key
      */
     public function __construct($model, $key)

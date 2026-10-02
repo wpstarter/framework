@@ -3,7 +3,7 @@
 use Carbon\CarbonInterval;
 use WpStarter\Contracts\Support\DeferringDisplayableValue;
 use WpStarter\Contracts\Support\Htmlable;
-use WpStarter\Database\Eloquent\Model;
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use WpStarter\Support\Arr;
 use WpStarter\Support\Env;
 use WpStarter\Support\Fluent;
@@ -61,7 +61,7 @@ if (! function_exists('ws_blank')) {
             return false;
         }
 
-        if ($value instanceof Model) {
+        if ($value instanceof ModelContract) {
             return false;
         }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace WpStarter\Tests\Database;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use Closure;
 use Exception;
 use WpStarter\Database\Connection;
@@ -289,7 +290,7 @@ class DatabaseEloquentBelongsToManyCreateOrFirstTest extends TestCase
     {
         $source = new class() extends BelongsToManyCreateOrFirstTestSourceModel
         {
-            protected function newBelongsToMany(Builder $query, Model $parent, $table, $foreignPivotKey, $relatedPivotKey, $parentKey, $relatedKey, $relationName = null): BelongsToMany
+            protected function newBelongsToMany(Builder $query, ModelContract $parent, $table, $foreignPivotKey, $relatedPivotKey, $parentKey, $relatedKey, $relationName = null): BelongsToMany
             {
                 $relation = m::mock(BelongsToMany::class)->makePartial();
                 $relation->__construct(...func_get_args());
@@ -360,7 +361,7 @@ class DatabaseEloquentBelongsToManyCreateOrFirstTest extends TestCase
     {
         $source = new class() extends BelongsToManyCreateOrFirstTestSourceModel
         {
-            protected function newBelongsToMany(Builder $query, Model $parent, $table, $foreignPivotKey, $relatedPivotKey, $parentKey, $relatedKey, $relationName = null): BelongsToMany
+            protected function newBelongsToMany(Builder $query, ModelContract $parent, $table, $foreignPivotKey, $relatedPivotKey, $parentKey, $relatedKey, $relationName = null): BelongsToMany
             {
                 $relation = m::mock(BelongsToMany::class)->makePartial();
                 $relation->__construct(...func_get_args());
@@ -402,7 +403,7 @@ class DatabaseEloquentBelongsToManyCreateOrFirstTest extends TestCase
     {
         $source = new class() extends BelongsToManyCreateOrFirstTestSourceModel
         {
-            protected function newBelongsToMany(Builder $query, Model $parent, $table, $foreignPivotKey, $relatedPivotKey, $parentKey, $relatedKey, $relationName = null): BelongsToMany
+            protected function newBelongsToMany(Builder $query, ModelContract $parent, $table, $foreignPivotKey, $relatedPivotKey, $parentKey, $relatedKey, $relationName = null): BelongsToMany
             {
                 $relation = m::mock(BelongsToMany::class)->makePartial();
                 $relation->__construct(...func_get_args());

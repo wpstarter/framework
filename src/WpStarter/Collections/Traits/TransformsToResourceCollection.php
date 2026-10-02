@@ -4,7 +4,7 @@ namespace WpStarter\Support\Traits;
 
 use WpStarter\Database\Eloquent\Attributes\UseResource;
 use WpStarter\Database\Eloquent\Attributes\UseResourceCollection;
-use WpStarter\Database\Eloquent\Model;
+use WpStarter\Database\Eloquent\Contracts\Model;
 use WpStarter\Http\Resources\Json\ResourceCollection;
 use LogicException;
 use ReflectionClass;

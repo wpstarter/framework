@@ -2,8 +2,8 @@
 
 namespace WpStarter\Tests\Database\stubs;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use WpStarter\Contracts\Database\Eloquent\CastsAttributes;
-use WpStarter\Database\Eloquent\Model;
 
 class TestCast implements CastsAttributes
 {
@@ -14,7 +14,7 @@ class TestCast implements CastsAttributes
      * @param  array  $attributes
      * @return TestValueObject|null
      */
-    public function get(Model $model, string $key, mixed $value, array $attributes)
+    public function get(ModelContract $model, string $key, mixed $value, array $attributes)
     {
         if (! json_validate($value)) {
             return null;
@@ -34,7 +34,7 @@ class TestCast implements CastsAttributes
      * @param  array  $attributes
      * @return array
      */
-    public function set(Model $model, string $key, mixed $value, array $attributes)
+    public function set(ModelContract $model, string $key, mixed $value, array $attributes)
     {
         if (! $value instanceof TestValueObject) {
             return [

@@ -52,7 +52,7 @@ class Sequence implements Countable
      * Get the next value in the sequence.
      *
      * @param  array<string, mixed>  $attributes
-     * @param  \WpStarter\Database\Eloquent\Model|null  $parent
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|null  $parent
      * @return mixed
      */
     public function __invoke($attributes = [], $parent = null)

@@ -7,9 +7,9 @@ use WpStarter\Database\Eloquent\Collection as EloquentCollection;
 use WpStarter\Database\Eloquent\Relations\Concerns\InteractsWithDictionary;
 
 /**
- * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
- * @template TIntermediateModel of \WpStarter\Database\Eloquent\Model
- * @template TDeclaringModel of \WpStarter\Database\Eloquent\Model
+ * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
+ * @template TIntermediateModel of \WpStarter\Database\Eloquent\Contracts\Model
+ * @template TDeclaringModel of \WpStarter\Database\Eloquent\Contracts\Model
  *
  * @extends \WpStarter\Database\Eloquent\Relations\HasOneOrManyThrough<TRelatedModel, TIntermediateModel, TDeclaringModel, \WpStarter\Database\Eloquent\Collection<int, TRelatedModel>>
  */

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace WpStarter\Tests\Database;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use Closure;
 use Exception;
 use WpStarter\Database\Connection;
@@ -380,7 +381,7 @@ class DatabaseEloquentHasManyThroughCreateOrFirstTest extends TestCase
         ];
     }
 
-    protected function mockConnectionForModel(Model $model, string $database, array $lastInsertIds = []): void
+    protected function mockConnectionForModel(ModelContract $model, string $database, array $lastInsertIds = []): void
     {
         $grammarClass = 'WpStarter\Database\Query\Grammars\\'.$database.'Grammar';
         $processorClass = 'WpStarter\Database\Query\Processors\\'.$database.'Processor';

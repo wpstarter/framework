@@ -2,9 +2,9 @@
 
 namespace WpStarter\Database\Eloquent\Relations\Concerns;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use BackedEnum;
 use WpStarter\Database\Eloquent\Collection as EloquentCollection;
-use WpStarter\Database\Eloquent\Model;
 use WpStarter\Database\Eloquent\Relations\Pivot;
 use WpStarter\Support\Collection as BaseCollection;
 
@@ -80,7 +80,7 @@ trait InteractsWithPivotTable
     /**
      * Sync the intermediate tables with a list of IDs without detaching.
      *
-     * @param  \WpStarter\Support\Collection|\WpStarter\Database\Eloquent\Model|array|int|string  $ids
+     * @param  \WpStarter\Support\Collection|\WpStarter\Database\Eloquent\Contracts\Model|array|int|string  $ids
      * @return array{attached: array, detached: array, updated: array}
      */
     public function syncWithoutDetaching($ids)
@@ -91,7 +91,7 @@ trait InteractsWithPivotTable
     /**
      * Sync the intermediate tables with a list of IDs or collection of models.
      *
-     * @param  \WpStarter\Support\Collection|\WpStarter\Database\Eloquent\Model|array|int|string  $ids
+     * @param  \WpStarter\Support\Collection|\WpStarter\Database\Eloquent\Contracts\Model|array|int|string  $ids
      * @param  bool  $detaching
      * @return array{attached: array, detached: array, updated: array}
      */
@@ -148,7 +148,7 @@ trait InteractsWithPivotTable
     /**
      * Sync the intermediate tables with a list of IDs or collection of models within a transaction.
      *
-     * @param  \WpStarter\Support\Collection|\WpStarter\Database\Eloquent\Model|array  $ids
+     * @param  \WpStarter\Support\Collection|\WpStarter\Database\Eloquent\Contracts\Model|array  $ids
      * @param  bool  $detaching
      * @return array{attached: array, detached: array, updated: array}
      *
@@ -162,7 +162,7 @@ trait InteractsWithPivotTable
     /**
      * Sync the intermediate tables with a list of IDs without detaching within a transaction.
      *
-     * @param  \WpStarter\Support\Collection|\WpStarter\Database\Eloquent\Model|array  $ids
+     * @param  \WpStarter\Support\Collection|\WpStarter\Database\Eloquent\Contracts\Model|array  $ids
      * @return array{attached: array, detached: array, updated: array}
      *
      * @throws \Throwable
@@ -175,7 +175,7 @@ trait InteractsWithPivotTable
     /**
      * Sync the intermediate tables with a list of IDs or collection of models with the given pivot values.
      *
-     * @param  \WpStarter\Support\Collection|\WpStarter\Database\Eloquent\Model|array|int|string  $ids
+     * @param  \WpStarter\Support\Collection|\WpStarter\Database\Eloquent\Contracts\Model|array|int|string  $ids
      * @param  array  $values
      * @param  bool  $detaching
      * @return array{attached: array, detached: array, updated: array}
@@ -190,7 +190,7 @@ trait InteractsWithPivotTable
     /**
      * Sync the intermediate tables with a list of IDs with the given pivot values within a transaction.
      *
-     * @param  \WpStarter\Support\Collection|\WpStarter\Database\Eloquent\Model|array|int|string  $ids
+     * @param  \WpStarter\Support\Collection|\WpStarter\Database\Eloquent\Contracts\Model|array|int|string  $ids
      * @param  array  $values
      * @param  bool  $detaching
      * @return array{attached: array, detached: array, updated: array}
@@ -716,7 +716,7 @@ trait InteractsWithPivotTable
      */
     protected function parseIds($value)
     {
-        if ($value instanceof Model) {
+        if ($value instanceof ModelContract) {
             return [$value->{$this->relatedKey}];
         }
 
@@ -726,7 +726,7 @@ trait InteractsWithPivotTable
 
         if ($value instanceof BaseCollection || is_array($value)) {
             return (new BaseCollection($value))
-                ->map(fn ($item) => $item instanceof Model ? $item->{$this->relatedKey} : $item)
+                ->map(fn ($item) => $item instanceof ModelContract ? $item->{$this->relatedKey} : $item)
                 ->all();
         }
 
@@ -741,7 +741,7 @@ trait InteractsWithPivotTable
      */
     protected function parseId($value)
     {
-        return $value instanceof Model ? $value->{$this->relatedKey} : $value;
+        return $value instanceof ModelContract ? $value->{$this->relatedKey} : $value;
     }
 
     /**

@@ -2,10 +2,10 @@
 
 namespace WpStarter\Database\Eloquent\Relations;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use WpStarter\Contracts\Database\Eloquent\SupportsPartialRelations;
 use WpStarter\Database\Eloquent\Builder;
 use WpStarter\Database\Eloquent\Collection as EloquentCollection;
-use WpStarter\Database\Eloquent\Model;
 use WpStarter\Database\Eloquent\Relations\Concerns\CanBeOneOfMany;
 use WpStarter\Database\Eloquent\Relations\Concerns\ComparesRelatedModels;
 use WpStarter\Database\Eloquent\Relations\Concerns\InteractsWithDictionary;
@@ -13,9 +13,9 @@ use WpStarter\Database\Eloquent\Relations\Concerns\SupportsDefaultModels;
 use WpStarter\Database\Query\JoinClause;
 
 /**
- * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
- * @template TIntermediateModel of \WpStarter\Database\Eloquent\Model
- * @template TDeclaringModel of \WpStarter\Database\Eloquent\Model
+ * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
+ * @template TIntermediateModel of \WpStarter\Database\Eloquent\Contracts\Model
+ * @template TDeclaringModel of \WpStarter\Database\Eloquent\Contracts\Model
  *
  * @extends \WpStarter\Database\Eloquent\Relations\HasOneOrManyThrough<TRelatedModel, TIntermediateModel, TDeclaringModel, ?TRelatedModel>
  */
@@ -105,13 +105,13 @@ class HasOneThrough extends HasOneOrManyThrough implements SupportsPartialRelati
      * @param  TDeclaringModel  $parent
      * @return TRelatedModel
      */
-    public function newRelatedInstanceFor(Model $parent)
+    public function newRelatedInstanceFor(ModelContract $parent)
     {
         return $this->related->newInstance();
     }
 
     /** @inheritDoc */
-    protected function getRelatedKeyFrom(Model $model)
+    protected function getRelatedKeyFrom(ModelContract $model)
     {
         return $model->getAttribute($this->getForeignKeyName());
     }

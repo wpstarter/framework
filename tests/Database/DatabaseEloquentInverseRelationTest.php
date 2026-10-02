@@ -2,6 +2,7 @@
 
 namespace WpStarter\Tests\Database;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use WpStarter\Database\Eloquent\Builder;
 use WpStarter\Database\Eloquent\Collection;
 use WpStarter\Database\Eloquent\Model;
@@ -330,7 +331,7 @@ class HasInverseRelationStub extends Relation
 
     public function __construct(
         Builder $query,
-        Model $parent,
+        ModelContract $parent,
         protected ?string $foreignKey = null,
     ) {
         parent::__construct($query, $parent);
@@ -379,7 +380,7 @@ class HasInverseRelationStub extends Relation
         return $this->guessInverseRelation();
     }
 
-    public function exposeApplyInverseRelationToCollection($models, ?Model $parent = null)
+    public function exposeApplyInverseRelationToCollection($models, ?ModelContract $parent = null)
     {
         return $this->applyInverseRelationToCollection($models, $parent);
     }

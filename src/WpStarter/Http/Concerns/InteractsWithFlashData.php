@@ -2,7 +2,8 @@
 
 namespace WpStarter\Http\Concerns;
 
-use WpStarter\Database\Eloquent\Model;
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
+
 
 trait InteractsWithFlashData
 {
@@ -10,12 +11,12 @@ trait InteractsWithFlashData
      * Retrieve an old input item.
      *
      * @param  string|null  $key
-     * @param  \WpStarter\Database\Eloquent\Model|string|array|null  $default
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|string|array|null  $default
      * @return string|array|null
      */
     public function old($key = null, $default = null)
     {
-        $default = $default instanceof Model ? $default->getAttribute($key) : $default;
+        $default = $default instanceof ModelContract ? $default->getAttribute($key) : $default;
 
         return $this->hasSession() ? $this->session()->getOldInput($key, $default) : $default;
     }

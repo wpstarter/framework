@@ -2,6 +2,7 @@
 
 namespace WpStarter\Database\Eloquent;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use BadMethodCallException;
 use Closure;
 use Exception;
@@ -24,7 +25,7 @@ use ReflectionClass;
 use ReflectionMethod;
 
 /**
- * @template TModel of \WpStarter\Database\Eloquent\Model
+ * @template TModel of \WpStarter\Database\Eloquent\Contracts\Model
  *
  * @property-read HigherOrderBuilderProxy|$this $orWhere
  * @property-read HigherOrderBuilderProxy|$this $whereNot
@@ -275,7 +276,7 @@ class Builder implements BuilderContract
      */
     public function whereKey($id)
     {
-        if ($id instanceof Model) {
+        if ($id instanceof ModelContract) {
             $id = $id->getKey();
         }
 
@@ -304,7 +305,7 @@ class Builder implements BuilderContract
      */
     public function whereKeyNot($id)
     {
-        if ($id instanceof Model) {
+        if ($id instanceof ModelContract) {
             $id = $id->getKey();
         }
 
@@ -334,7 +335,7 @@ class Builder implements BuilderContract
     public function except($models)
     {
         return $this->whereKeyNot(
-            $models instanceof Model
+            $models instanceof ModelContract
                 ? $models->getKey()
                 : Collection::wrap($models)->modelKeys()
         );
@@ -955,7 +956,7 @@ class Builder implements BuilderContract
      * Get the relation instance for the given relation name.
      *
      * @param  string  $name
-     * @return \WpStarter\Database\Eloquent\Relations\Relation<\WpStarter\Database\Eloquent\Model, TModel, *>
+     * @return \WpStarter\Database\Eloquent\Relations\Relation<\WpStarter\Database\Eloquent\Contracts\Model, TModel, *>
      */
     public function getRelation($name)
     {
@@ -2095,12 +2096,12 @@ class Builder implements BuilderContract
     /**
      * Set a model instance for the model being queried.
      *
-     * @template TModelNew of \WpStarter\Database\Eloquent\Model
+     * @template TModelNew of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  TModelNew  $model
      * @return static<TModelNew>
      */
-    public function setModel(Model $model)
+    public function setModel(ModelContract $model)
     {
         $this->model = $model;
 

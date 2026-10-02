@@ -2,6 +2,7 @@
 
 namespace WpStarter\Tests\Database;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use WpStarter\Database\Capsule\Manager as DB;
 use WpStarter\Database\Eloquent\Attributes\ScopedBy;
 use WpStarter\Database\Eloquent\Builder;
@@ -270,7 +271,7 @@ class EloquentGlobalScopeInAttributeTestModel extends Model
 
 class ActiveScope implements Scope
 {
-    public function apply(Builder $builder, Model $model)
+    public function apply(Builder $builder, ModelContract $model)
     {
         return $builder->where('active', 1);
     }

@@ -2,11 +2,11 @@
 
 namespace WpStarter\Database\Eloquent\Relations;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use Closure;
 use WpStarter\Contracts\Database\Eloquent\Builder as BuilderContract;
 use WpStarter\Database\Eloquent\Builder;
 use WpStarter\Database\Eloquent\Collection as EloquentCollection;
-use WpStarter\Database\Eloquent\Model;
 use WpStarter\Database\Eloquent\ModelNotFoundException;
 use WpStarter\Database\MultipleRecordsFoundException;
 use WpStarter\Database\Query\Expression;
@@ -15,8 +15,8 @@ use WpStarter\Support\Traits\ForwardsCalls;
 use WpStarter\Support\Traits\Macroable;
 
 /**
- * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
- * @template TDeclaringModel of \WpStarter\Database\Eloquent\Model
+ * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
+ * @template TDeclaringModel of \WpStarter\Database\Eloquent\Contracts\Model
  * @template TResult
  *
  * @mixin \WpStarter\Database\Eloquent\Builder<TRelatedModel>
@@ -65,7 +65,7 @@ abstract class Relation implements BuilderContract
     /**
      * An array to map morph names to their class names in the database.
      *
-     * @var array<string, class-string<\WpStarter\Database\Eloquent\Model>>
+     * @var array<string, class-string<\WpStarter\Database\Eloquent\Contracts\Model>>
      */
     public static $morphMap = [];
 
@@ -89,7 +89,7 @@ abstract class Relation implements BuilderContract
      * @param  \WpStarter\Database\Eloquent\Builder<TRelatedModel>  $query
      * @param  TDeclaringModel  $parent
      */
-    public function __construct(Builder $query, Model $parent)
+    public function __construct(Builder $query, ModelContract $parent)
     {
         $this->query = $query;
         $this->parent = $parent;
@@ -416,11 +416,11 @@ abstract class Relation implements BuilderContract
     /**
      * Get the name of the "where in" method for eager loading.
      *
-     * @param  \WpStarter\Database\Eloquent\Model  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $model
      * @param  string  $key
      * @return string
      */
-    protected function whereInMethod(Model $model, $key)
+    protected function whereInMethod(ModelContract $model, $key)
     {
         return $model->getKeyName() === ws_last(explode('.', $key))
             && in_array($model->getKeyType(), ['int', 'integer'])
@@ -452,7 +452,7 @@ abstract class Relation implements BuilderContract
     /**
      * Define the morph map for polymorphic relations and require all morphed models to be explicitly mapped.
      *
-     * @param  array<array-key, class-string<\WpStarter\Database\Eloquent\Model>>  $map
+     * @param  array<array-key, class-string<\WpStarter\Database\Eloquent\Contracts\Model>>  $map
      * @param  bool  $merge
      * @return array
      */
@@ -466,9 +466,9 @@ abstract class Relation implements BuilderContract
     /**
      * Set or get the morph map for polymorphic relations.
      *
-     * @param  array<array-key, class-string<\WpStarter\Database\Eloquent\Model>>|null  $map
+     * @param  array<array-key, class-string<\WpStarter\Database\Eloquent\Contracts\Model>>|null  $map
      * @param  bool  $merge
-     * @return array<string, class-string<\WpStarter\Database\Eloquent\Model>>
+     * @return array<string, class-string<\WpStarter\Database\Eloquent\Contracts\Model>>
      */
     public static function morphMap(?array $map = null, $merge = true)
     {
@@ -486,8 +486,8 @@ abstract class Relation implements BuilderContract
     /**
      * Builds a table-keyed array from model class names.
      *
-     * @param  array<array-key, class-string<\WpStarter\Database\Eloquent\Model>>|null  $models
-     * @return array<string, class-string<\WpStarter\Database\Eloquent\Model>>|null
+     * @param  array<array-key, class-string<\WpStarter\Database\Eloquent\Contracts\Model>>|null  $models
+     * @return array<string, class-string<\WpStarter\Database\Eloquent\Contracts\Model>>|null
      */
     protected static function buildMorphMapFromModels(?array $models = null)
     {
@@ -504,7 +504,7 @@ abstract class Relation implements BuilderContract
      * Get the model associated with a custom polymorphic type.
      *
      * @param  string  $alias
-     * @return class-string<\WpStarter\Database\Eloquent\Model>|null
+     * @return class-string<\WpStarter\Database\Eloquent\Contracts\Model>|null
      */
     public static function getMorphedModel($alias)
     {
@@ -514,7 +514,7 @@ abstract class Relation implements BuilderContract
     /**
      * Get the alias associated with a custom polymorphic class.
      *
-     * @param  class-string<\WpStarter\Database\Eloquent\Model>  $className
+     * @param  class-string<\WpStarter\Database\Eloquent\Contracts\Model>  $className
      * @return int|string
      */
     public static function getMorphAlias(string $className)

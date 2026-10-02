@@ -44,7 +44,7 @@ trait HasUniqueStringIds
     /**
      * Retrieve the model for a bound value.
      *
-     * @param  \WpStarter\Database\Eloquent\Model|\WpStarter\Database\Eloquent\Relations\Relation<*, *, *>  $query
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|\WpStarter\Database\Eloquent\Relations\Relation<*, *, *>  $query
      * @param  mixed  $value
      * @param  string|null  $field
      * @return \WpStarter\Contracts\Database\Eloquent\Builder

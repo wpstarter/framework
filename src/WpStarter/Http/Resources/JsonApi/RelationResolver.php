@@ -14,7 +14,7 @@ class RelationResolver
     /**
      * The relation resolver.
      *
-     * @var \Closure(mixed):(\WpStarter\Database\Eloquent\Collection|\WpStarter\Database\Eloquent\Model|null)
+     * @var \Closure(mixed):(\WpStarter\Database\Eloquent\Collection|\WpStarter\Database\Eloquent\Contracts\Model|null)
      */
     public Closure $relationResolver;
 
@@ -28,7 +28,7 @@ class RelationResolver
     /**
      * Construct a new resource relationship resolver.
      *
-     * @param  \Closure(mixed):(\WpStarter\Database\Eloquent\Collection|\WpStarter\Database\Eloquent\Model|null)|class-string<\WpStarter\Http\Resources\JsonApi\JsonApiResource>|null  $resolver
+     * @param  \Closure(mixed):(\WpStarter\Database\Eloquent\Collection|\WpStarter\Database\Eloquent\Contracts\Model|null)|class-string<\WpStarter\Http\Resources\JsonApi\JsonApiResource>|null  $resolver
      */
     public function __construct(public string $relationName, Closure|string|null $resolver = null)
     {

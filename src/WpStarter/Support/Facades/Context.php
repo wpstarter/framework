@@ -45,7 +45,7 @@ namespace WpStarter\Support\Facades;
  * @method static void mixin(object $mixin, bool $replace = true)
  * @method static bool hasMacro(string $name)
  * @method static void flushMacros()
- * @method static \WpStarter\Database\Eloquent\Model restoreModel(\WpStarter\Contracts\Database\ModelIdentifier $value)
+ * @method static \WpStarter\Database\Eloquent\Contracts\Model restoreModel(\WpStarter\Contracts\Database\ModelIdentifier $value)
  *
  * @see \WpStarter\Log\Context\Repository
  */

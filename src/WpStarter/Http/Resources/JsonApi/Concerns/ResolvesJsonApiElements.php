@@ -2,9 +2,9 @@
 
 namespace WpStarter\Http\Resources\JsonApi\Concerns;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use Generator;
 use WpStarter\Contracts\Support\Arrayable;
-use WpStarter\Database\Eloquent\Model;
 use WpStarter\Database\Eloquent\Relations\BelongsToMany;
 use WpStarter\Database\Eloquent\Relations\Concerns\AsPivot;
 use WpStarter\Database\Eloquent\Relations\Pivot;
@@ -98,7 +98,7 @@ trait ResolvesJsonApiElements
             return $resourceId;
         }
 
-        if (! ($this->resource instanceof Model || method_exists($this->resource, 'getKey'))) {
+        if (! ($this->resource instanceof ModelContract || method_exists($this->resource, 'getKey'))) {
             throw ResourceIdentificationException::attemptingToDetermineIdFor($this);
         }
 
@@ -121,7 +121,7 @@ trait ResolvesJsonApiElements
             return Str::of(static::class)->classBasename()->basename('Resource')->snake()->pluralStudly();
         }
 
-        if (! $this->resource instanceof Model) {
+        if (! $this->resource instanceof ModelContract) {
             throw ResourceIdentificationException::attemptingToDetermineTypeFor($this);
         }
 
@@ -173,7 +173,7 @@ trait ResolvesJsonApiElements
      */
     protected function resolveResourceRelationshipIdentifiers(JsonApiRequest $request): array
     {
-        if (! $this->resource instanceof Model) {
+        if (! $this->resource instanceof ModelContract) {
             return [];
         }
 
@@ -230,7 +230,7 @@ trait ResolvesJsonApiElements
         JsonApiRequest $request,
         mixed $resource,
         RelationResolver $relationResolver,
-        Collection|Model|null $relatedModels
+        Collection|ModelContract|null $relatedModels
     ): Generator {
         $relationName = $relationResolver->relationName;
         $resourceClass = $relationResolver->resourceClass();
@@ -346,7 +346,7 @@ trait ResolvesJsonApiElements
      */
     public function resolveIncludedResourceObjects(JsonApiRequest $request): Collection
     {
-        if (! $this->resource instanceof Model) {
+        if (! $this->resource instanceof ModelContract) {
             return new Collection;
         }
 

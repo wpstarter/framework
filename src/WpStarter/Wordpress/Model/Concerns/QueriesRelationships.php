@@ -421,7 +421,7 @@ trait QueriesRelationships
      * Add a morph-to relationship condition to the query.
      *
      * @param \WpStarter\Database\Eloquent\Relations\MorphTo|string $relation
-     * @param \WpStarter\Database\Eloquent\Model|string $model
+     * @param \WpStarter\Database\Eloquent\Contracts\Model|string $model
      * @return \WpStarter\Database\Eloquent\Builder|static
      */
     public function whereMorphedTo($relation, $model, $boolean = 'and')
@@ -450,7 +450,7 @@ trait QueriesRelationships
      * Add a morph-to relationship condition to the query with an "or where" clause.
      *
      * @param \WpStarter\Database\Eloquent\Relations\MorphTo|string $relation
-     * @param \WpStarter\Database\Eloquent\Model|string $model
+     * @param \WpStarter\Database\Eloquent\Contracts\Model|string $model
      * @return \WpStarter\Database\Eloquent\Builder|static
      */
     public function orWhereMorphedTo($relation, $model)
@@ -461,7 +461,7 @@ trait QueriesRelationships
     /**
      * Add a "belongs to" relationship where clause to the query.
      *
-     * @param \WpStarter\Database\Eloquent\Model $related
+     * @param \WpStarter\Database\Eloquent\Contracts\Model $related
      * @param string $relationship
      * @param string $boolean
      * @return $this
@@ -497,7 +497,7 @@ trait QueriesRelationships
     /**
      * Add an "BelongsTo" relationship with an "or where" clause to the query.
      *
-     * @param \WpStarter\Database\Eloquent\Model $related
+     * @param \WpStarter\Database\Eloquent\Contracts\Model $related
      * @param string $relationship
      * @return $this
      *

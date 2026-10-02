@@ -2,7 +2,8 @@
 
 namespace WpStarter\Database\Eloquent\Relations\Concerns;
 
-use WpStarter\Database\Eloquent\Model;
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
+
 
 trait SupportsDefaultModels
 {
@@ -18,10 +19,10 @@ trait SupportsDefaultModels
     /**
      * Make a new related instance for the given model.
      *
-     * @param  \WpStarter\Database\Eloquent\Model  $parent
-     * @return \WpStarter\Database\Eloquent\Model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $parent
+     * @return \WpStarter\Database\Eloquent\Contracts\Model
      */
-    abstract protected function newRelatedInstanceFor(Model $parent);
+    abstract protected function newRelatedInstanceFor(ModelContract $parent);
 
     /**
      * Return a new model instance in case the relationship does not exist.
@@ -39,10 +40,10 @@ trait SupportsDefaultModels
     /**
      * Get the default value for this relation.
      *
-     * @param  \WpStarter\Database\Eloquent\Model  $parent
-     * @return \WpStarter\Database\Eloquent\Model|null
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $parent
+     * @return \WpStarter\Database\Eloquent\Contracts\Model|null
      */
-    protected function getDefaultFor(Model $parent)
+    protected function getDefaultFor(ModelContract $parent)
     {
         if (! $this->withDefault) {
             return;

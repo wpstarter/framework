@@ -47,9 +47,9 @@ class ModelInspector
     /**
      * Extract model details for the given model.
      *
-     * @param  class-string<\WpStarter\Database\Eloquent\Model>|string  $model
+     * @param  class-string<\WpStarter\Database\Eloquent\Contracts\Model>|string  $model
      * @param  string|null  $connection
-     * @return array{"class": class-string<\WpStarter\Database\Eloquent\Model>, database: string, table: string, policy: class-string|null, attributes: \WpStarter\Support\Collection, relations: \WpStarter\Support\Collection, events: \WpStarter\Support\Collection, observers: \WpStarter\Support\Collection, collection: class-string<\WpStarter\Database\Eloquent\Collection<\WpStarter\Database\Eloquent\Model>>, builder: class-string<\WpStarter\Database\Eloquent\Builder<\WpStarter\Database\Eloquent\Model>>, "resource": class-string<\WpStarter\Http\Resources\Json\JsonResource>|null}
+     * @return array{"class": class-string<\WpStarter\Database\Eloquent\Contracts\Model>, database: string, table: string, policy: class-string|null, attributes: \WpStarter\Support\Collection, relations: \WpStarter\Support\Collection, events: \WpStarter\Support\Collection, observers: \WpStarter\Support\Collection, collection: class-string<\WpStarter\Database\Eloquent\Collection<\WpStarter\Database\Eloquent\Contracts\Model>>, builder: class-string<\WpStarter\Database\Eloquent\Builder<\WpStarter\Database\Eloquent\Contracts\Model>>, "resource": class-string<\WpStarter\Http\Resources\Json\JsonResource>|null}
      *
      * @throws \WpStarter\Contracts\Container\BindingResolutionException
      */
@@ -57,7 +57,7 @@ class ModelInspector
     {
         $class = $this->qualifyModel($model);
 
-        /** @var \WpStarter\Database\Eloquent\Model $model */
+        /** @var \WpStarter\Database\Eloquent\Contracts\Model $model */
         $model = $this->app->make($class);
 
         if ($connection !== null) {
@@ -82,7 +82,7 @@ class ModelInspector
     /**
      * Get the column attributes for the given model.
      *
-     * @param  \WpStarter\Database\Eloquent\Model  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $model
      * @return \WpStarter\Support\Collection<int, array<string, mixed>>
      */
     protected function getAttributes($model)
@@ -112,7 +112,7 @@ class ModelInspector
     /**
      * Get the virtual (non-column) attributes for the given model.
      *
-     * @param  \WpStarter\Database\Eloquent\Model  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $model
      * @param  array  $columns
      * @return \WpStarter\Support\Collection
      */
@@ -154,7 +154,7 @@ class ModelInspector
     /**
      * Get the relations from the given model.
      *
-     * @param  \WpStarter\Database\Eloquent\Model  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $model
      * @return \WpStarter\Support\Collection
      */
     protected function getRelations($model)
@@ -204,7 +204,7 @@ class ModelInspector
     /**
      * Get the first policy associated with this model.
      *
-     * @param  \WpStarter\Database\Eloquent\Model  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $model
      * @return string|null
      */
     protected function getPolicy($model)
@@ -217,7 +217,7 @@ class ModelInspector
     /**
      * Get the events that the model dispatches.
      *
-     * @param  \WpStarter\Database\Eloquent\Model  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $model
      * @return \WpStarter\Support\Collection
      */
     protected function getEvents($model)
@@ -232,7 +232,7 @@ class ModelInspector
     /**
      * Get the observers watching this model.
      *
-     * @param  \WpStarter\Database\Eloquent\Model  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $model
      * @return \WpStarter\Support\Collection
      *
      * @throws \WpStarter\Contracts\Container\BindingResolutionException
@@ -268,7 +268,7 @@ class ModelInspector
     /**
      * Get the collection class being used by the model.
      *
-     * @param  \WpStarter\Database\Eloquent\Model  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $model
      * @return class-string<\WpStarter\Database\Eloquent\Collection>
      */
     protected function getCollectedBy($model)
@@ -279,7 +279,7 @@ class ModelInspector
     /**
      * Get the builder class being used by the model.
      *
-     * @template TModel of \WpStarter\Database\Eloquent\Model
+     * @template TModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  TModel  $model
      * @return class-string<\WpStarter\Database\Eloquent\Builder<TModel>>
@@ -292,7 +292,7 @@ class ModelInspector
     /**
      * Get the class used for JSON response transforming.
      *
-     * @param  \WpStarter\Database\Eloquent\Model  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $model
      * @return \WpStarter\Http\Resources\Json\JsonResource|null
      */
     protected function getResource($model)
@@ -304,7 +304,7 @@ class ModelInspector
      * Qualify the given model class base name.
      *
      * @param  string  $model
-     * @return class-string<\WpStarter\Database\Eloquent\Model>
+     * @return class-string<\WpStarter\Database\Eloquent\Contracts\Model>
      *
      * @see \WpStarter\Console\GeneratorCommand
      */
@@ -333,7 +333,7 @@ class ModelInspector
      * Get the cast type for the given column.
      *
      * @param  string  $column
-     * @param  \WpStarter\Database\Eloquent\Model  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $model
      * @return string|null
      */
     protected function getCastType($column, $model)
@@ -352,7 +352,7 @@ class ModelInspector
     /**
      * Get the model casts, including any date casts.
      *
-     * @param  \WpStarter\Database\Eloquent\Model  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $model
      * @return \WpStarter\Support\Collection
      */
     protected function getCastsWithDates($model)
@@ -368,7 +368,7 @@ class ModelInspector
      * Determine if the given attribute is hidden.
      *
      * @param  string  $attribute
-     * @param  \WpStarter\Database\Eloquent\Model  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $model
      * @return bool
      */
     protected function attributeIsHidden($attribute, $model)
@@ -388,7 +388,7 @@ class ModelInspector
      * Get the default value for the given column.
      *
      * @param  array<string, mixed>  $column
-     * @param  \WpStarter\Database\Eloquent\Model  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $model
      * @return mixed
      */
     protected function getColumnDefault($column, $model)

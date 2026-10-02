@@ -2,12 +2,12 @@
 
 namespace WpStarter\Notifications;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use WpStarter\Bus\Queueable;
 use WpStarter\Contracts\Queue\ShouldBeEncrypted;
 use WpStarter\Contracts\Queue\ShouldQueue;
 use WpStarter\Contracts\Queue\ShouldQueueAfterCommit;
 use WpStarter\Database\Eloquent\Collection as EloquentCollection;
-use WpStarter\Database\Eloquent\Model;
 use WpStarter\Queue\InteractsWithQueue;
 use WpStarter\Queue\SerializesModels;
 use WpStarter\Support\Collection;
@@ -100,7 +100,7 @@ class SendQueuedNotifications implements ShouldQueue
     {
         if ($notifiables instanceof Collection) {
             return $notifiables;
-        } elseif ($notifiables instanceof Model) {
+        } elseif ($notifiables instanceof ModelContract) {
             return EloquentCollection::wrap($notifiables);
         }
 

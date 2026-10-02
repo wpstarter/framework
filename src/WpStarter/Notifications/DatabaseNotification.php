@@ -57,7 +57,7 @@ class DatabaseNotification extends Model
     /**
      * Get the notifiable entity that the notification belongs to.
      *
-     * @return \WpStarter\Database\Eloquent\Relations\MorphTo<\WpStarter\Database\Eloquent\Model, $this>
+     * @return \WpStarter\Database\Eloquent\Relations\MorphTo<\WpStarter\Database\Eloquent\Contracts\Model, $this>
      */
     public function notifiable()
     {

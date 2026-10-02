@@ -2,9 +2,9 @@
 
 namespace WpStarter\Database\Eloquent\Relations;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use WpStarter\Database\Eloquent\Builder;
 use WpStarter\Database\Eloquent\Collection as EloquentCollection;
-use WpStarter\Database\Eloquent\Model;
 use WpStarter\Database\Eloquent\Relations\Concerns\ComparesRelatedModels;
 use WpStarter\Database\Eloquent\Relations\Concerns\InteractsWithDictionary;
 use WpStarter\Database\Eloquent\Relations\Concerns\SupportsDefaultModels;
@@ -12,8 +12,8 @@ use WpStarter\Database\Eloquent\Relations\Concerns\SupportsDefaultModels;
 use function WpStarter\Support\enum_value;
 
 /**
- * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
- * @template TDeclaringModel of \WpStarter\Database\Eloquent\Model
+ * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
+ * @template TDeclaringModel of \WpStarter\Database\Eloquent\Contracts\Model
  *
  * @extends \WpStarter\Database\Eloquent\Relations\Relation<TRelatedModel, TDeclaringModel, ?TRelatedModel>
  */
@@ -60,7 +60,7 @@ class BelongsTo extends Relation
      * @param  string  $ownerKey
      * @param  string  $relationName
      */
-    public function __construct(Builder $query, Model $child, $foreignKey, $ownerKey, $relationName)
+    public function __construct(Builder $query, ModelContract $child, $foreignKey, $ownerKey, $relationName)
     {
         $this->ownerKey = $ownerKey;
         $this->relationName = $relationName;
@@ -186,11 +186,11 @@ class BelongsTo extends Relation
      */
     public function associate($model)
     {
-        $ownerKey = $model instanceof Model ? $model->getAttribute($this->ownerKey) : $model;
+        $ownerKey = $model instanceof ModelContract ? $model->getAttribute($this->ownerKey) : $model;
 
         $this->child->setAttribute($this->foreignKey, $ownerKey);
 
-        if ($model instanceof Model) {
+        if ($model instanceof ModelContract) {
             $this->child->setRelation($this->relationName, $model);
         } else {
             $this->child->unsetRelation($this->relationName);
@@ -283,7 +283,7 @@ class BelongsTo extends Relation
      * @param  TDeclaringModel  $parent
      * @return TRelatedModel
      */
-    protected function newRelatedInstanceFor(Model $parent)
+    protected function newRelatedInstanceFor(ModelContract $parent)
     {
         return $this->related->newInstance();
     }
@@ -354,7 +354,7 @@ class BelongsTo extends Relation
      * @param  TRelatedModel  $model
      * @return int|string
      */
-    protected function getRelatedKeyFrom(Model $model)
+    protected function getRelatedKeyFrom(ModelContract $model)
     {
         return $model->{$this->ownerKey};
     }
@@ -365,7 +365,7 @@ class BelongsTo extends Relation
      * @param  TDeclaringModel  $model
      * @return mixed
      */
-    protected function getForeignKeyFrom(Model $model)
+    protected function getForeignKeyFrom(ModelContract $model)
     {
         $foreignKey = $model->{$this->foreignKey};
 

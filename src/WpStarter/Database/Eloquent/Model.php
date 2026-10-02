@@ -2,6 +2,7 @@
 
 namespace WpStarter\Database\Eloquent;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use ArrayAccess;
 use Closure;
 use WpStarter\Contracts\Broadcasting\HasBroadcastChannel;
@@ -35,7 +36,7 @@ use Stringable;
 
 use function WpStarter\Support\enum_value;
 
-abstract class Model implements Arrayable, ArrayAccess, CanBeEscapedWhenCastToString, HasBroadcastChannel, Jsonable, JsonSerializable, QueueableEntity, Stringable, UrlRoutable
+abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEscapedWhenCastToString, HasBroadcastChannel, Jsonable, JsonSerializable, QueueableEntity, Stringable, UrlRoutable
 {
     use Concerns\HasAttributes,
         Concerns\HasEvents,
@@ -1716,14 +1717,14 @@ abstract class Model implements Arrayable, ArrayAccess, CanBeEscapedWhenCastToSt
     /**
      * Create a new pivot model instance.
      *
-     * @param  \WpStarter\Database\Eloquent\Model  $parent
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $parent
      * @param  array<string, mixed>  $attributes
      * @param  string  $table
      * @param  bool  $exists
      * @param  string|null  $using
      * @return \WpStarter\Database\Eloquent\Relations\Pivot
      */
-    public function newPivot(self $parent, array $attributes, $table, $exists, $using = null)
+    public function newPivot(ModelContract $parent, array $attributes, $table, $exists, $using = null)
     {
         return $using ? $using::fromRawAttributes($parent, $attributes, $table, $exists)
             : Pivot::fromAttributes($parent, $attributes, $table, $exists);
@@ -1918,7 +1919,7 @@ abstract class Model implements Arrayable, ArrayAccess, CanBeEscapedWhenCastToSt
     /**
      * Determine if two models have the same ID and belong to the same table.
      *
-     * @param  \WpStarter\Database\Eloquent\Model|null  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|null  $model
      * @return bool
      */
     public function is($model)
@@ -1932,7 +1933,7 @@ abstract class Model implements Arrayable, ArrayAccess, CanBeEscapedWhenCastToSt
     /**
      * Determine if two models are not the same.
      *
-     * @param  \WpStarter\Database\Eloquent\Model|null  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|null  $model
      * @return bool
      */
     public function isNot($model)
@@ -2206,7 +2207,7 @@ abstract class Model implements Arrayable, ArrayAccess, CanBeEscapedWhenCastToSt
      *
      * @param  mixed  $value
      * @param  string|null  $field
-     * @return \WpStarter\Database\Eloquent\Model|null
+     * @return \WpStarter\Database\Eloquent\Contracts\Model|null
      */
     public function resolveRouteBinding($value, $field = null)
     {
@@ -2218,7 +2219,7 @@ abstract class Model implements Arrayable, ArrayAccess, CanBeEscapedWhenCastToSt
      *
      * @param  mixed  $value
      * @param  string|null  $field
-     * @return \WpStarter\Database\Eloquent\Model|null
+     * @return \WpStarter\Database\Eloquent\Contracts\Model|null
      */
     public function resolveSoftDeletableRouteBinding($value, $field = null)
     {
@@ -2231,7 +2232,7 @@ abstract class Model implements Arrayable, ArrayAccess, CanBeEscapedWhenCastToSt
      * @param  string  $childType
      * @param  mixed  $value
      * @param  string|null  $field
-     * @return \WpStarter\Database\Eloquent\Model|null
+     * @return \WpStarter\Database\Eloquent\Contracts\Model|null
      */
     public function resolveChildRouteBinding($childType, $value, $field)
     {
@@ -2244,7 +2245,7 @@ abstract class Model implements Arrayable, ArrayAccess, CanBeEscapedWhenCastToSt
      * @param  string  $childType
      * @param  mixed  $value
      * @param  string|null  $field
-     * @return \WpStarter\Database\Eloquent\Model|null
+     * @return \WpStarter\Database\Eloquent\Contracts\Model|null
      */
     public function resolveSoftDeletableChildRouteBinding($childType, $value, $field)
     {
@@ -2257,7 +2258,7 @@ abstract class Model implements Arrayable, ArrayAccess, CanBeEscapedWhenCastToSt
      * @param  string  $childType
      * @param  mixed  $value
      * @param  string|null  $field
-     * @return \WpStarter\Database\Eloquent\Relations\Relation<\WpStarter\Database\Eloquent\Model, $this, *>
+     * @return \WpStarter\Database\Eloquent\Relations\Relation<\WpStarter\Database\Eloquent\Contracts\Model, $this, *>
      */
     protected function resolveChildRouteBindingQuery($childType, $value, $field)
     {
@@ -2270,7 +2271,7 @@ abstract class Model implements Arrayable, ArrayAccess, CanBeEscapedWhenCastToSt
             $field = $relationship->getRelated()->qualifyColumn($field);
         }
 
-        return $relationship instanceof Model
+        return $relationship instanceof ModelContract
             ? $relationship->resolveRouteBindingQuery($relationship, $value, $field)
             : $relationship->getRelated()->resolveRouteBindingQuery($relationship, $value, $field);
     }
@@ -2289,7 +2290,7 @@ abstract class Model implements Arrayable, ArrayAccess, CanBeEscapedWhenCastToSt
     /**
      * Retrieve the model for a bound value.
      *
-     * @param  \WpStarter\Database\Eloquent\Model|\WpStarter\Contracts\Database\Eloquent\Builder|\WpStarter\Database\Eloquent\Relations\Relation  $query
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|\WpStarter\Contracts\Database\Eloquent\Builder|\WpStarter\Database\Eloquent\Relations\Relation  $query
      * @param  mixed  $value
      * @param  string|null  $field
      * @return \WpStarter\Contracts\Database\Eloquent\Builder

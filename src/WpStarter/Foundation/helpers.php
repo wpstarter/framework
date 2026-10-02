@@ -629,7 +629,7 @@ if (! function_exists('ws_old')) {
      * Retrieve an old input item.
      *
      * @param  string|null  $key
-     * @param  \WpStarter\Database\Eloquent\Model|string|array|null  $default
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|string|array|null  $default
      * @return string|array|null
      */
     function ws_old($key = null, $default = null)

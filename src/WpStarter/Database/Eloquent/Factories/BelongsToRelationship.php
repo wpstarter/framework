@@ -2,7 +2,7 @@
 
 namespace WpStarter\Database\Eloquent\Factories;
 
-use WpStarter\Database\Eloquent\Model;
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use WpStarter\Database\Eloquent\Relations\MorphTo;
 
 class BelongsToRelationship
@@ -10,7 +10,7 @@ class BelongsToRelationship
     /**
      * The related factory instance.
      *
-     * @var \WpStarter\Database\Eloquent\Factories\Factory|\WpStarter\Database\Eloquent\Model
+     * @var \WpStarter\Database\Eloquent\Factories\Factory|\WpStarter\Database\Eloquent\Contracts\Model
      */
     protected $factory;
 
@@ -31,7 +31,7 @@ class BelongsToRelationship
     /**
      * Create a new "belongs to" relationship definition.
      *
-     * @param  \WpStarter\Database\Eloquent\Factories\Factory|\WpStarter\Database\Eloquent\Model  $factory
+     * @param  \WpStarter\Database\Eloquent\Factories\Factory|\WpStarter\Database\Eloquent\Contracts\Model  $factory
      * @param  string  $relationship
      */
     public function __construct($factory, $relationship)
@@ -43,10 +43,10 @@ class BelongsToRelationship
     /**
      * Get the parent model attributes and resolvers for the given child model.
      *
-     * @param  \WpStarter\Database\Eloquent\Model  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $model
      * @return array
      */
-    public function attributesFor(Model $model)
+    public function attributesFor(ModelContract $model)
     {
         $relationship = $model->{$this->relationship}();
 

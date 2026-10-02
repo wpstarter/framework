@@ -4,7 +4,7 @@ namespace WpStarter\Validation\Rules;
 
 use Closure;
 use WpStarter\Contracts\Support\Arrayable;
-use WpStarter\Database\Eloquent\Model;
+use WpStarter\Database\Eloquent\Contracts\Model;
 use WpStarter\Support\Collection;
 
 use function WpStarter\Support\enum_value;

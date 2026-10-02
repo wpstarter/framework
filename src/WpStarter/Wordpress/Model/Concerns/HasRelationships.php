@@ -91,7 +91,7 @@ trait HasRelationships
      * Instantiate a new HasOne relationship.
      *
      * @param \WpStarter\Database\Eloquent\Builder $query
-     * @param \WpStarter\Database\Eloquent\Model $parent
+     * @param \WpStarter\Database\Eloquent\Contracts\Model $parent
      * @param string $foreignKey
      * @param string $localKey
      * @return \WpStarter\Database\Eloquent\Relations\HasOne
@@ -131,8 +131,8 @@ trait HasRelationships
      * Instantiate a new HasOneThrough relationship.
      *
      * @param \WpStarter\Database\Eloquent\Builder $query
-     * @param \WpStarter\Database\Eloquent\Model $farParent
-     * @param \WpStarter\Database\Eloquent\Model $throughParent
+     * @param \WpStarter\Database\Eloquent\Contracts\Model $farParent
+     * @param \WpStarter\Database\Eloquent\Contracts\Model $throughParent
      * @param string $firstKey
      * @param string $secondKey
      * @param string $localKey
@@ -171,7 +171,7 @@ trait HasRelationships
      * Instantiate a new MorphOne relationship.
      *
      * @param \WpStarter\Database\Eloquent\Builder $query
-     * @param \WpStarter\Database\Eloquent\Model $parent
+     * @param \WpStarter\Database\Eloquent\Contracts\Model $parent
      * @param string $type
      * @param string $id
      * @param string $localKey
@@ -223,7 +223,7 @@ trait HasRelationships
      * Instantiate a new BelongsTo relationship.
      *
      * @param \WpStarter\Database\Eloquent\Builder $query
-     * @param \WpStarter\Database\Eloquent\Model $child
+     * @param \WpStarter\Database\Eloquent\Contracts\Model $child
      * @param string $foreignKey
      * @param string $ownerKey
      * @param string $relation
@@ -303,7 +303,7 @@ trait HasRelationships
      * Instantiate a new MorphTo relationship.
      *
      * @param \WpStarter\Database\Eloquent\Builder $query
-     * @param \WpStarter\Database\Eloquent\Model $parent
+     * @param \WpStarter\Database\Eloquent\Contracts\Model $parent
      * @param string $foreignKey
      * @param string $ownerKey
      * @param string $type
@@ -363,7 +363,7 @@ trait HasRelationships
      * Instantiate a new HasMany relationship.
      *
      * @param \WpStarter\Database\Eloquent\Builder $query
-     * @param \WpStarter\Database\Eloquent\Model $parent
+     * @param \WpStarter\Database\Eloquent\Contracts\Model $parent
      * @param string $foreignKey
      * @param string $localKey
      * @return \WpStarter\Database\Eloquent\Relations\HasMany
@@ -407,8 +407,8 @@ trait HasRelationships
      * Instantiate a new HasManyThrough relationship.
      *
      * @param \WpStarter\Database\Eloquent\Builder $query
-     * @param \WpStarter\Database\Eloquent\Model $farParent
-     * @param \WpStarter\Database\Eloquent\Model $throughParent
+     * @param \WpStarter\Database\Eloquent\Contracts\Model $farParent
+     * @param \WpStarter\Database\Eloquent\Contracts\Model $throughParent
      * @param string $firstKey
      * @param string $secondKey
      * @param string $localKey
@@ -450,7 +450,7 @@ trait HasRelationships
      * Instantiate a new MorphMany relationship.
      *
      * @param \WpStarter\Database\Eloquent\Builder $query
-     * @param \WpStarter\Database\Eloquent\Model $parent
+     * @param \WpStarter\Database\Eloquent\Contracts\Model $parent
      * @param string $type
      * @param string $id
      * @param string $localKey
@@ -510,7 +510,7 @@ trait HasRelationships
      * Instantiate a new BelongsToMany relationship.
      *
      * @param \WpStarter\Database\Eloquent\Builder $query
-     * @param \WpStarter\Database\Eloquent\Model $parent
+     * @param \WpStarter\Database\Eloquent\Contracts\Model $parent
      * @param string $table
      * @param string $foreignPivotKey
      * @param string $relatedPivotKey
@@ -575,7 +575,7 @@ trait HasRelationships
      * Instantiate a new MorphToMany relationship.
      *
      * @param \WpStarter\Database\Eloquent\Builder $query
-     * @param \WpStarter\Database\Eloquent\Model $parent
+     * @param \WpStarter\Database\Eloquent\Contracts\Model $parent
      * @param string $name
      * @param string $table
      * @param string $foreignPivotKey
@@ -643,7 +643,7 @@ trait HasRelationships
      * Get the joining table name for a many-to-many relation.
      *
      * @param string $related
-     * @param \WpStarter\Database\Eloquent\Model|null $instance
+     * @param \WpStarter\Database\Eloquent\Contracts\Model|null $instance
      * @return string
      */
     public function joiningTable($related, $instance = null)

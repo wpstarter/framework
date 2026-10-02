@@ -2,6 +2,7 @@
 
 namespace WpStarter\Tests\Container;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use Attribute;
 use WpStarter\Auth\AuthManager;
 use WpStarter\Cache\CacheManager;
@@ -523,7 +524,7 @@ final class LogTest
 
 final class RouteParameterTest
 {
-    public function __construct(#[RouteParameter('foo')] Model $foo, #[RouteParameter('bar')] string $bar)
+    public function __construct(#[RouteParameter('foo')] ModelContract $foo, #[RouteParameter('bar')] string $bar)
     {
     }
 }

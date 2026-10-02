@@ -2,8 +2,8 @@
 
 namespace WpStarter\Foundation\Testing\Concerns;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use WpStarter\Contracts\Support\Jsonable;
-use WpStarter\Database\Eloquent\Model;
 use WpStarter\Database\Events\QueryExecuted;
 use WpStarter\Support\Arr;
 use WpStarter\Support\Facades\DB;
@@ -18,7 +18,7 @@ trait InteractsWithDatabase
     /**
      * Assert that a given where condition exists in the database.
      *
-     * @param  iterable<\WpStarter\Database\Eloquent\Model>|\WpStarter\Database\Eloquent\Model|class-string<\WpStarter\Database\Eloquent\Model>|string  $table
+     * @param  iterable<\WpStarter\Database\Eloquent\Contracts\Model>|\WpStarter\Database\Eloquent\Contracts\Model|class-string<\WpStarter\Database\Eloquent\Contracts\Model>|string  $table
      * @param  array<string, mixed>  $data
      * @param  string|null  $connection
      * @return $this
@@ -33,7 +33,7 @@ trait InteractsWithDatabase
             return $this;
         }
 
-        if ($table instanceof Model) {
+        if ($table instanceof ModelContract) {
             $data = [
                 $table->getKeyName() => $table->getKey(),
                 ...$data,
@@ -50,7 +50,7 @@ trait InteractsWithDatabase
     /**
      * Assert that a given where condition does not exist in the database.
      *
-     * @param  iterable<\WpStarter\Database\Eloquent\Model>|\WpStarter\Database\Eloquent\Model|class-string<\WpStarter\Database\Eloquent\Model>|string  $table
+     * @param  iterable<\WpStarter\Database\Eloquent\Contracts\Model>|\WpStarter\Database\Eloquent\Contracts\Model|class-string<\WpStarter\Database\Eloquent\Contracts\Model>|string  $table
      * @param  array<string, mixed>  $data
      * @param  string|null  $connection
      * @return $this
@@ -65,7 +65,7 @@ trait InteractsWithDatabase
             return $this;
         }
 
-        if ($table instanceof Model) {
+        if ($table instanceof ModelContract) {
             $data = [
                 $table->getKeyName() => $table->getKey(),
                 ...$data,
@@ -84,7 +84,7 @@ trait InteractsWithDatabase
     /**
      * Assert the count of table entries.
      *
-     * @param  \WpStarter\Database\Eloquent\Model|class-string<\WpStarter\Database\Eloquent\Model>|string  $table
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|class-string<\WpStarter\Database\Eloquent\Contracts\Model>|string  $table
      * @param  int  $count
      * @param  string|null  $connection
      * @return $this
@@ -101,7 +101,7 @@ trait InteractsWithDatabase
     /**
      * Assert that the given table has no entries.
      *
-     * @param  \WpStarter\Database\Eloquent\Model|class-string<\WpStarter\Database\Eloquent\Model>|string  $table
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|class-string<\WpStarter\Database\Eloquent\Contracts\Model>|string  $table
      * @param  string|null  $connection
      * @return $this
      */
@@ -117,7 +117,7 @@ trait InteractsWithDatabase
     /**
      * Assert the given record has been "soft deleted".
      *
-     * @param  iterable<\WpStarter\Database\Eloquent\Model>|\WpStarter\Database\Eloquent\Model|class-string<\WpStarter\Database\Eloquent\Model>|string  $table
+     * @param  iterable<\WpStarter\Database\Eloquent\Contracts\Model>|\WpStarter\Database\Eloquent\Contracts\Model|class-string<\WpStarter\Database\Eloquent\Contracts\Model>|string  $table
      * @param  array<string, mixed>  $data
      * @param  string|null  $connection
      * @param  string|null  $deletedAtColumn
@@ -157,7 +157,7 @@ trait InteractsWithDatabase
     /**
      * Assert the given record has not been "soft deleted".
      *
-     * @param  iterable<\WpStarter\Database\Eloquent\Model>|\WpStarter\Database\Eloquent\Model|class-string<\WpStarter\Database\Eloquent\Model>|string  $table
+     * @param  iterable<\WpStarter\Database\Eloquent\Contracts\Model>|\WpStarter\Database\Eloquent\Contracts\Model|class-string<\WpStarter\Database\Eloquent\Contracts\Model>|string  $table
      * @param  array<string, mixed>  $data
      * @param  string|null  $connection
      * @param  string|null  $deletedAtColumn
@@ -197,7 +197,7 @@ trait InteractsWithDatabase
     /**
      * Assert the given model exists in the database.
      *
-     * @param  iterable<\WpStarter\Database\Eloquent\Model>|\WpStarter\Database\Eloquent\Model|class-string<\WpStarter\Database\Eloquent\Model>|string  $model
+     * @param  iterable<\WpStarter\Database\Eloquent\Contracts\Model>|\WpStarter\Database\Eloquent\Contracts\Model|class-string<\WpStarter\Database\Eloquent\Contracts\Model>|string  $model
      * @return $this
      */
     protected function assertModelExists($model)
@@ -208,7 +208,7 @@ trait InteractsWithDatabase
     /**
      * Assert the given model does not exist in the database.
      *
-     * @param  iterable<\WpStarter\Database\Eloquent\Model>|\WpStarter\Database\Eloquent\Model|class-string<\WpStarter\Database\Eloquent\Model>|string  $model
+     * @param  iterable<\WpStarter\Database\Eloquent\Contracts\Model>|\WpStarter\Database\Eloquent\Contracts\Model|class-string<\WpStarter\Database\Eloquent\Contracts\Model>|string  $model
      * @return $this
      */
     protected function assertModelMissing($model)
@@ -254,7 +254,7 @@ trait InteractsWithDatabase
      */
     protected function isSoftDeletableModel($model)
     {
-        return $model instanceof Model && $model::isSoftDeletable();
+        return $model instanceof ModelContract && $model::isSoftDeletable();
     }
 
     /**
@@ -285,7 +285,7 @@ trait InteractsWithDatabase
      * Get the database connection.
      *
      * @param  string|null  $connection
-     * @param  \WpStarter\Database\Eloquent\Model|class-string<\WpStarter\Database\Eloquent\Model>|string|null  $table
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|class-string<\WpStarter\Database\Eloquent\Contracts\Model>|string|null  $table
      * @return \WpStarter\Database\Connection
      */
     protected function getConnection($connection = null, $table = null)
@@ -300,12 +300,12 @@ trait InteractsWithDatabase
     /**
      * Get the table name from the given model or string.
      *
-     * @param  \WpStarter\Database\Eloquent\Model|class-string<\WpStarter\Database\Eloquent\Model>|string  $table
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|class-string<\WpStarter\Database\Eloquent\Contracts\Model>|string  $table
      * @return string
      */
     protected function getTable($table)
     {
-        if ($table instanceof Model) {
+        if ($table instanceof ModelContract) {
             return $table->getTable();
         }
 
@@ -315,12 +315,12 @@ trait InteractsWithDatabase
     /**
      * Get the table connection specified in the given model.
      *
-     * @param  \WpStarter\Database\Eloquent\Model|class-string<\WpStarter\Database\Eloquent\Model>|string  $table
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|class-string<\WpStarter\Database\Eloquent\Contracts\Model>|string  $table
      * @return string|null
      */
     protected function getTableConnection($table)
     {
-        if ($table instanceof Model) {
+        if ($table instanceof ModelContract) {
             return $table->getConnectionName();
         }
 
@@ -330,7 +330,7 @@ trait InteractsWithDatabase
     /**
      * Get the table column name used for soft deletes.
      *
-     * @param  \WpStarter\Database\Eloquent\Model|class-string<\WpStarter\Database\Eloquent\Model>|string  $table
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|class-string<\WpStarter\Database\Eloquent\Contracts\Model>|string  $table
      * @param  string  $defaultColumnName
      * @return string
      */
@@ -342,12 +342,12 @@ trait InteractsWithDatabase
     /**
      * Get the model entity from the given model or string.
      *
-     * @param  \WpStarter\Database\Eloquent\Model|class-string<\WpStarter\Database\Eloquent\Model>|string  $table
-     * @return \WpStarter\Database\Eloquent\Model|null
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|class-string<\WpStarter\Database\Eloquent\Contracts\Model>|string  $table
+     * @return \WpStarter\Database\Eloquent\Contracts\Model|null
      */
     protected function newModelFor($table)
     {
-        return is_subclass_of($table, Model::class) ? (new $table) : null;
+        return is_subclass_of($table, ModelContract::class) ? (new $table) : null;
     }
 
     /**

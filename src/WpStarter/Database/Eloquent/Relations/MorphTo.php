@@ -2,6 +2,7 @@
 
 namespace WpStarter\Database\Eloquent\Relations;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use BadMethodCallException;
 use WpStarter\Database\Eloquent\Builder;
 use WpStarter\Database\Eloquent\Collection as EloquentCollection;
@@ -10,8 +11,8 @@ use WpStarter\Database\Eloquent\Relations\Concerns\InteractsWithDictionary;
 use WpStarter\Support\Arr;
 
 /**
- * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
- * @template TDeclaringModel of \WpStarter\Database\Eloquent\Model
+ * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
+ * @template TDeclaringModel of \WpStarter\Database\Eloquent\Contracts\Model
  *
  * @extends \WpStarter\Database\Eloquent\Relations\BelongsTo<TRelatedModel, TDeclaringModel>
  */
@@ -85,7 +86,7 @@ class MorphTo extends BelongsTo
      * @param  string  $type
      * @param  string  $relation
      */
-    public function __construct(Builder $query, Model $parent, $foreignKey, $ownerKey, $type, $relation)
+    public function __construct(Builder $query, ModelContract $parent, $foreignKey, $ownerKey, $type, $relation)
     {
         $this->morphType = $type;
 
@@ -245,18 +246,18 @@ class MorphTo extends BelongsTo
     #[\Override]
     public function associate($model)
     {
-        if ($model instanceof Model) {
+        if ($model instanceof ModelContract) {
             $foreignKey = $this->ownerKey && $model->{$this->ownerKey}
                 ? $this->ownerKey
                 : $model->getKeyName();
         }
 
         $this->parent->setAttribute(
-            $this->foreignKey, $model instanceof Model ? $model->{$foreignKey} : null
+            $this->foreignKey, $model instanceof ModelContract ? $model->{$foreignKey} : null
         );
 
         $this->parent->setAttribute(
-            $this->morphType, $model instanceof Model ? $model->getMorphClass() : null
+            $this->morphType, $model instanceof ModelContract ? $model->getMorphClass() : null
         );
 
         return $this->parent->setRelation($this->relationName, $model);
@@ -288,7 +289,7 @@ class MorphTo extends BelongsTo
 
     /** @inheritDoc */
     #[\Override]
-    protected function newRelatedInstanceFor(Model $parent)
+    protected function newRelatedInstanceFor(ModelContract $parent)
     {
         return $parent->{$this->getRelationName()}()->getRelated()->newInstance();
     }

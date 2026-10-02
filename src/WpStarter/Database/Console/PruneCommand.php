@@ -4,7 +4,7 @@ namespace WpStarter\Database\Console;
 
 use WpStarter\Console\Command;
 use WpStarter\Contracts\Events\Dispatcher;
-use WpStarter\Database\Eloquent\Model;
+use WpStarter\Database\Eloquent\Contracts\Model;
 use WpStarter\Database\Events\ModelPruningFinished;
 use WpStarter\Database\Events\ModelPruningStarting;
 use WpStarter\Database\Events\ModelsPruned;

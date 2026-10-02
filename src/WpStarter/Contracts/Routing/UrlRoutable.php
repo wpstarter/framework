@@ -23,7 +23,7 @@ interface UrlRoutable
      *
      * @param  mixed  $value
      * @param  string|null  $field
-     * @return \WpStarter\Database\Eloquent\Model|null
+     * @return \WpStarter\Database\Eloquent\Contracts\Model|null
      */
     public function resolveRouteBinding($value, $field = null);
 
@@ -33,7 +33,7 @@ interface UrlRoutable
      * @param  string  $childType
      * @param  mixed  $value
      * @param  string|null  $field
-     * @return \WpStarter\Database\Eloquent\Model|null
+     * @return \WpStarter\Database\Eloquent\Contracts\Model|null
      */
     public function resolveChildRouteBinding($childType, $value, $field);
 }

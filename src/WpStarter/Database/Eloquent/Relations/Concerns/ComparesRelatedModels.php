@@ -2,15 +2,15 @@
 
 namespace WpStarter\Database\Eloquent\Relations\Concerns;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use WpStarter\Contracts\Database\Eloquent\SupportsPartialRelations;
-use WpStarter\Database\Eloquent\Model;
 
 trait ComparesRelatedModels
 {
     /**
      * Determine if the model is the related instance of the relationship.
      *
-     * @param  \WpStarter\Database\Eloquent\Model|null  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|null  $model
      * @return bool
      */
     public function is($model)
@@ -32,7 +32,7 @@ trait ComparesRelatedModels
     /**
      * Determine if the model is not the related instance of the relationship.
      *
-     * @param  \WpStarter\Database\Eloquent\Model|null  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|null  $model
      * @return bool
      */
     public function isNot($model)
@@ -50,10 +50,10 @@ trait ComparesRelatedModels
     /**
      * Get the value of the model's related key.
      *
-     * @param  \WpStarter\Database\Eloquent\Model  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $model
      * @return mixed
      */
-    abstract protected function getRelatedKeyFrom(Model $model);
+    abstract protected function getRelatedKeyFrom(ModelContract $model);
 
     /**
      * Compare the parent key with the related key.

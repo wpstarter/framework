@@ -20,7 +20,7 @@ trait HasCollection
     /**
      * Create a new Eloquent Collection instance.
      *
-     * @param  array<array-key, \WpStarter\Database\Eloquent\Model>  $models
+     * @param  array<array-key, \WpStarter\Database\Eloquent\Contracts\Model>  $models
      * @return TCollection
      */
     public function newCollection(array $models = [])

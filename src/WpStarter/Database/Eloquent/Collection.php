@@ -2,6 +2,7 @@
 
 namespace WpStarter\Database\Eloquent;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use WpStarter\Contracts\Queue\QueueableCollection;
 use WpStarter\Contracts\Queue\QueueableEntity;
 use WpStarter\Contracts\Support\Arrayable;
@@ -12,7 +13,7 @@ use LogicException;
 
 /**
  * @template TKey of array-key
- * @template TModel of \WpStarter\Database\Eloquent\Model
+ * @template TModel of \WpStarter\Database\Eloquent\Contracts\Model
  *
  * @extends \WpStarter\Support\Collection<TKey, TModel>
  */
@@ -31,7 +32,7 @@ class Collection extends BaseCollection implements QueueableCollection
      */
     public function find($key, $default = null)
     {
-        if ($key instanceof Model) {
+        if ($key instanceof ModelContract) {
             $key = $key->getKey();
         }
 
@@ -357,7 +358,7 @@ class Collection extends BaseCollection implements QueueableCollection
             return parent::contains(...func_get_args());
         }
 
-        if ($key instanceof Model) {
+        if ($key instanceof ModelContract) {
             return parent::contains(fn ($model) => $model->is($key));
         }
 
@@ -420,7 +421,7 @@ class Collection extends BaseCollection implements QueueableCollection
     {
         $result = parent::map($callback);
 
-        return $result->contains(fn ($item) => ! $item instanceof Model) ? $result->toBase() : $result;
+        return $result->contains(fn ($item) => ! $item instanceof ModelContract) ? $result->toBase() : $result;
     }
 
     /**
@@ -438,7 +439,7 @@ class Collection extends BaseCollection implements QueueableCollection
     {
         $result = parent::mapWithKeys($callback);
 
-        return $result->contains(fn ($item) => ! $item instanceof Model) ? $result->toBase() : $result;
+        return $result->contains(fn ($item) => ! $item instanceof ModelContract) ? $result->toBase() : $result;
     }
 
     /**
@@ -848,7 +849,7 @@ class Collection extends BaseCollection implements QueueableCollection
     /**
      * Get the queueable class name for the given model.
      *
-     * @param  \WpStarter\Database\Eloquent\Model  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $model
      * @return string
      */
     protected function getQueueableModelClass($model)

@@ -25,7 +25,7 @@ trait QueriesRelationships
     /**
      * Add a relationship count / exists condition to the query.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Relations\Relation<TRelatedModel, *, *>|string  $relation
      * @param  string  $operator
@@ -133,7 +133,7 @@ trait QueriesRelationships
     /**
      * Add a relationship count / exists condition to the query.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Relations\Relation<TRelatedModel, *, *>|string  $relation
      * @param  string  $boolean
@@ -159,7 +159,7 @@ trait QueriesRelationships
     /**
      * Add a relationship count / exists condition to the query with where clauses.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Relations\Relation<TRelatedModel, *, *>|string  $relation
      * @param  (\Closure(\WpStarter\Database\Eloquent\Builder<TRelatedModel>): mixed)|null  $callback
@@ -192,7 +192,7 @@ trait QueriesRelationships
     /**
      * Add a relationship count / exists condition to the query with where clauses and an "or".
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Relations\Relation<TRelatedModel, *, *>|string  $relation
      * @param  (\Closure(\WpStarter\Database\Eloquent\Builder<TRelatedModel>): mixed)|null  $callback
@@ -208,7 +208,7 @@ trait QueriesRelationships
     /**
      * Add a relationship count / exists condition to the query with where clauses.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Relations\Relation<TRelatedModel, *, *>|string  $relation
      * @param  (\Closure(\WpStarter\Database\Eloquent\Builder<TRelatedModel>): mixed)|null  $callback
@@ -222,7 +222,7 @@ trait QueriesRelationships
     /**
      * Add a relationship count / exists condition to the query with where clauses and an "or".
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Relations\Relation<TRelatedModel, *, *>|string  $relation
      * @param  (\Closure(\WpStarter\Database\Eloquent\Builder<TRelatedModel>): mixed)|null  $callback
@@ -236,7 +236,7 @@ trait QueriesRelationships
     /**
      * Add a polymorphic relationship count / exists condition to the query.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Relations\MorphTo<TRelatedModel, *>|string  $relation
      * @param  string|array<int, string>  $types
@@ -298,8 +298,8 @@ trait QueriesRelationships
     /**
      * Get the BelongsTo relationship for a single polymorphic type.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
-     * @template TDeclaringModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
+     * @template TDeclaringModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Relations\MorphTo<*, TDeclaringModel>  $relation
      * @param  class-string<TRelatedModel>  $type
@@ -337,7 +337,7 @@ trait QueriesRelationships
     /**
      * Add a polymorphic relationship count / exists condition to the query.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Relations\MorphTo<TRelatedModel, *>|string  $relation
      * @param  string|array<int, string>  $types
@@ -365,7 +365,7 @@ trait QueriesRelationships
     /**
      * Add a polymorphic relationship count / exists condition to the query with where clauses.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Relations\MorphTo<TRelatedModel, *>|string  $relation
      * @param  string|array<int, string>  $types
@@ -382,7 +382,7 @@ trait QueriesRelationships
     /**
      * Add a polymorphic relationship count / exists condition to the query with where clauses and an "or".
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Relations\MorphTo<TRelatedModel, *>|string  $relation
      * @param  string|array<int, string>  $types
@@ -399,7 +399,7 @@ trait QueriesRelationships
     /**
      * Add a polymorphic relationship count / exists condition to the query with where clauses.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Relations\MorphTo<TRelatedModel, *>|string  $relation
      * @param  string|array<int, string>  $types
@@ -414,7 +414,7 @@ trait QueriesRelationships
     /**
      * Add a polymorphic relationship count / exists condition to the query with where clauses and an "or".
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Relations\MorphTo<TRelatedModel, *>|string  $relation
      * @param  string|array<int, string>  $types
@@ -429,7 +429,7 @@ trait QueriesRelationships
     /**
      * Add a basic where clause to a relationship query.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Relations\Relation<TRelatedModel, *, *>|string  $relation
      * @param  (\Closure(\WpStarter\Database\Eloquent\Builder<TRelatedModel>): mixed)|string|array|\WpStarter\Contracts\Database\Query\Expression  $column
@@ -470,7 +470,7 @@ trait QueriesRelationships
     /**
      * Add an "or where" clause to a relationship query.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Relations\Relation<TRelatedModel, *, *>|string  $relation
      * @param  (\Closure(\WpStarter\Database\Eloquent\Builder<TRelatedModel>): mixed)|string|array|\WpStarter\Contracts\Database\Query\Expression  $column
@@ -492,7 +492,7 @@ trait QueriesRelationships
     /**
      * Add a basic count / exists condition to a relationship query.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Relations\Relation<TRelatedModel, *, *>|string  $relation
      * @param  (\Closure(\WpStarter\Database\Eloquent\Builder<TRelatedModel>): mixed)|string|array|\WpStarter\Contracts\Database\Query\Expression  $column
@@ -514,7 +514,7 @@ trait QueriesRelationships
     /**
      * Add an "or where" clause to a relationship query.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Relations\Relation<TRelatedModel, *, *>|string  $relation
      * @param  (\Closure(\WpStarter\Database\Eloquent\Builder<TRelatedModel>): mixed)|string|array|\WpStarter\Contracts\Database\Query\Expression  $column
@@ -536,7 +536,7 @@ trait QueriesRelationships
     /**
      * Add a polymorphic relationship condition to the query with a where clause.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Relations\MorphTo<TRelatedModel, *>|string  $relation
      * @param  string|array<int, string>  $types
@@ -555,7 +555,7 @@ trait QueriesRelationships
     /**
      * Add a polymorphic relationship condition to the query with an "or where" clause.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Relations\MorphTo<TRelatedModel, *>|string  $relation
      * @param  string|array<int, string>  $types
@@ -574,7 +574,7 @@ trait QueriesRelationships
     /**
      * Add a polymorphic relationship condition to the query with a doesn't have clause.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Relations\MorphTo<TRelatedModel, *>|string  $relation
      * @param  string|array<int, string>  $types
@@ -593,7 +593,7 @@ trait QueriesRelationships
     /**
      * Add a polymorphic relationship condition to the query with an "or doesn't have" clause.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Relations\MorphTo<TRelatedModel, *>|string  $relation
      * @param  string|array<int, string>  $types
@@ -613,7 +613,7 @@ trait QueriesRelationships
      * Add a morph-to relationship condition to the query.
      *
      * @param  \WpStarter\Database\Eloquent\Relations\MorphTo<*, *>|string  $relation
-     * @param  \WpStarter\Database\Eloquent\Model|iterable<int, \WpStarter\Database\Eloquent\Model>|string|null  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|iterable<int, \WpStarter\Database\Eloquent\Contracts\Model>|string|null  $model
      * @return $this
      *
      * @throws \InvalidArgumentException
@@ -658,7 +658,7 @@ trait QueriesRelationships
      * Add a not morph-to relationship condition to the query.
      *
      * @param  \WpStarter\Database\Eloquent\Relations\MorphTo<*, *>|string  $relation
-     * @param  \WpStarter\Database\Eloquent\Model|iterable<int, \WpStarter\Database\Eloquent\Model>|string  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|iterable<int, \WpStarter\Database\Eloquent\Contracts\Model>|string  $model
      * @return $this
      *
      * @throws \InvalidArgumentException
@@ -701,7 +701,7 @@ trait QueriesRelationships
      * Add a morph-to relationship condition to the query with an "or where" clause.
      *
      * @param  \WpStarter\Database\Eloquent\Relations\MorphTo<*, *>|string  $relation
-     * @param  \WpStarter\Database\Eloquent\Model|iterable<int, \WpStarter\Database\Eloquent\Model>|string|null  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|iterable<int, \WpStarter\Database\Eloquent\Contracts\Model>|string|null  $model
      * @return $this
      */
     public function orWhereMorphedTo($relation, $model)
@@ -713,7 +713,7 @@ trait QueriesRelationships
      * Add a not morph-to relationship condition to the query with an "or where" clause.
      *
      * @param  \WpStarter\Database\Eloquent\Relations\MorphTo<*, *>|string  $relation
-     * @param  \WpStarter\Database\Eloquent\Model|iterable<int, \WpStarter\Database\Eloquent\Model>|string  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|iterable<int, \WpStarter\Database\Eloquent\Contracts\Model>|string  $model
      * @return $this
      */
     public function orWhereNotMorphedTo($relation, $model)
@@ -724,7 +724,7 @@ trait QueriesRelationships
     /**
      * Add a "belongs to" relationship where clause to the query.
      *
-     * @param  \WpStarter\Database\Eloquent\Model|\WpStarter\Database\Eloquent\Collection<int, \WpStarter\Database\Eloquent\Model>  $related
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|\WpStarter\Database\Eloquent\Collection<int, \WpStarter\Database\Eloquent\Contracts\Model>  $related
      * @param  string|null  $relationshipName
      * @param  string  $boolean
      * @return $this
@@ -771,7 +771,7 @@ trait QueriesRelationships
     /**
      * Add a "BelongsTo" relationship with an "or where" clause to the query.
      *
-     * @param  \WpStarter\Database\Eloquent\Model  $related
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $related
      * @param  string|null  $relationshipName
      * @return $this
      *
@@ -785,7 +785,7 @@ trait QueriesRelationships
     /**
      * Add a "belongs to many" relationship where clause to the query.
      *
-     * @param  \WpStarter\Database\Eloquent\Model|\WpStarter\Database\Eloquent\Collection<int, \WpStarter\Database\Eloquent\Model>  $related
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|\WpStarter\Database\Eloquent\Collection<int, \WpStarter\Database\Eloquent\Contracts\Model>  $related
      * @param  string|null  $relationshipName
      * @param  string  $boolean
      * @return $this
@@ -828,7 +828,7 @@ trait QueriesRelationships
     /**
      * Add a "belongs to many" relationship with an "or where" clause to the query.
      *
-     * @param  \WpStarter\Database\Eloquent\Model  $related
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $related
      * @param  string|null  $relationshipName
      * @return $this
      *

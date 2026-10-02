@@ -14,7 +14,7 @@ class ModelIdentifier
     /**
      * The class name of the model.
      *
-     * @var class-string<\WpStarter\Database\Eloquent\Model>|string|null
+     * @var class-string<\WpStarter\Database\Eloquent\Contracts\Model>|string|null
      */
     public $class;
 
@@ -51,7 +51,7 @@ class ModelIdentifier
     /**
      * Create a new model identifier.
      *
-     * @param  class-string<\WpStarter\Database\Eloquent\Model>|null  $class
+     * @param  class-string<\WpStarter\Database\Eloquent\Contracts\Model>|null  $class
      * @param  mixed  $id
      * @param  array  $relations
      * @param  mixed  $connection
@@ -84,7 +84,7 @@ class ModelIdentifier
     /**
      * Get the fully-qualified class name of the Model.
      *
-     * @return class-string<\WpStarter\Database\Eloquent\Model>|null
+     * @return class-string<\WpStarter\Database\Eloquent\Contracts\Model>|null
      */
     public function getClass(): ?string
     {

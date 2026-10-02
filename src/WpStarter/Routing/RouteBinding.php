@@ -53,7 +53,7 @@ class RouteBinding
      * @param  \Closure|null  $callback
      * @return \Closure
      *
-     * @throws \WpStarter\Database\Eloquent\ModelNotFoundException<\WpStarter\Database\Eloquent\Model>
+     * @throws \WpStarter\Database\Eloquent\ModelNotFoundException<\WpStarter\Database\Eloquent\Contracts\Model>
      */
     public static function forModel($container, $class, $callback = null)
     {

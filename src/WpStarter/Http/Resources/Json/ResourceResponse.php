@@ -2,8 +2,8 @@
 
 namespace WpStarter\Http\Resources\Json;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use WpStarter\Contracts\Support\Responsable;
-use WpStarter\Database\Eloquent\Model;
 use WpStarter\Support\Collection;
 
 class ResourceResponse implements Responsable
@@ -119,7 +119,7 @@ class ResourceResponse implements Responsable
      */
     protected function calculateStatus()
     {
-        return $this->resource->resource instanceof Model &&
+        return $this->resource->resource instanceof ModelContract &&
                $this->resource->resource->wasRecentlyCreated ? 201 : 200;
     }
 }

@@ -103,7 +103,7 @@ trait SerializesAndRestoresModelIdentifiers
      * Restore the model from the model identifier instance.
      *
      * @param  \WpStarter\Contracts\Database\ModelIdentifier  $value
-     * @return \WpStarter\Database\Eloquent\Model
+     * @return \WpStarter\Database\Eloquent\Contracts\Model
      */
     public function restoreModel($value)
     {
@@ -115,7 +115,7 @@ trait SerializesAndRestoresModelIdentifiers
     /**
      * Get the query for model restoration.
      *
-     * @template TModel of \WpStarter\Database\Eloquent\Model
+     * @template TModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  TModel  $model
      * @param  array|int  $ids

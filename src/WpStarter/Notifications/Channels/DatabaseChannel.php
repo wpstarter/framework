@@ -12,7 +12,7 @@ class DatabaseChannel
      *
      * @param  mixed  $notifiable
      * @param  \WpStarter\Notifications\Notification  $notification
-     * @return \WpStarter\Database\Eloquent\Model
+     * @return \WpStarter\Database\Eloquent\Contracts\Model
      */
     public function send($notifiable, Notification $notification)
     {

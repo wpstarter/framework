@@ -2,13 +2,13 @@
 
 namespace WpStarter\Database\Eloquent\Relations;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use WpStarter\Database\Eloquent\Builder;
-use WpStarter\Database\Eloquent\Model;
 use WpStarter\Support\Str;
 
 /**
- * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
- * @template TDeclaringModel of \WpStarter\Database\Eloquent\Model
+ * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
+ * @template TDeclaringModel of \WpStarter\Database\Eloquent\Contracts\Model
  * @template TResult
  *
  * @extends \WpStarter\Database\Eloquent\Relations\HasOneOrMany<TRelatedModel, TDeclaringModel, TResult>
@@ -38,7 +38,7 @@ abstract class MorphOneOrMany extends HasOneOrMany
      * @param  string  $id
      * @param  string  $localKey
      */
-    public function __construct(Builder $query, Model $parent, $type, $id, $localKey)
+    public function __construct(Builder $query, ModelContract $parent, $type, $id, $localKey)
     {
         $this->morphType = $type;
 
@@ -89,7 +89,7 @@ abstract class MorphOneOrMany extends HasOneOrMany
      * @param  TRelatedModel  $model
      * @return void
      */
-    protected function setForeignAttributesForCreate(Model $model)
+    protected function setForeignAttributesForCreate(ModelContract $model)
     {
         $model->{$this->getForeignKeyName()} = $this->getParentKey();
 

@@ -2,7 +2,7 @@
 
 namespace WpStarter\Database\Eloquent\Relations\Concerns;
 
-use WpStarter\Database\Eloquent\Model;
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use WpStarter\Support\Str;
 
 trait AsPivot
@@ -10,14 +10,14 @@ trait AsPivot
     /**
      * The parent model of the relationship.
      *
-     * @var \WpStarter\Database\Eloquent\Model
+     * @var \WpStarter\Database\Eloquent\Contracts\Model
      */
     public $pivotParent;
 
     /**
      * The related model of the relationship.
      *
-     * @var \WpStarter\Database\Eloquent\Model
+     * @var \WpStarter\Database\Eloquent\Contracts\Model
      */
     public $pivotRelated;
 
@@ -38,13 +38,13 @@ trait AsPivot
     /**
      * Create a new pivot model instance.
      *
-     * @param  \WpStarter\Database\Eloquent\Model  $parent
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $parent
      * @param  array  $attributes
      * @param  string  $table
      * @param  bool  $exists
      * @return static
      */
-    public static function fromAttributes(Model $parent, $attributes, $table, $exists = false)
+    public static function fromAttributes(ModelContract $parent, $attributes, $table, $exists = false)
     {
         $instance = new static;
 
@@ -71,13 +71,13 @@ trait AsPivot
     /**
      * Create a new pivot model from raw values returned from a query.
      *
-     * @param  \WpStarter\Database\Eloquent\Model  $parent
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $parent
      * @param  array  $attributes
      * @param  string  $table
      * @param  bool  $exists
      * @return static
      */
-    public static function fromRawAttributes(Model $parent, $attributes, $table, $exists = false)
+    public static function fromRawAttributes(ModelContract $parent, $attributes, $table, $exists = false)
     {
         $instance = static::fromAttributes($parent, [], $table, $exists);
 
@@ -224,10 +224,10 @@ trait AsPivot
     /**
      * Set the related model of the relationship.
      *
-     * @param  \WpStarter\Database\Eloquent\Model|null  $related
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|null  $related
      * @return $this
      */
-    public function setRelatedModel(?Model $related = null)
+    public function setRelatedModel(?ModelContract $related = null)
     {
         $this->pivotRelated = $related;
 

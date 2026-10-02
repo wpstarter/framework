@@ -9,8 +9,8 @@ use WpStarter\Support\Str;
 use WpStarter\Support\Stringable;
 
 /**
- * @template TIntermediateModel of \WpStarter\Database\Eloquent\Model
- * @template TDeclaringModel of \WpStarter\Database\Eloquent\Model
+ * @template TIntermediateModel of \WpStarter\Database\Eloquent\Contracts\Model
+ * @template TDeclaringModel of \WpStarter\Database\Eloquent\Contracts\Model
  * @template TLocalRelationship of \WpStarter\Database\Eloquent\Relations\HasOneOrMany<TIntermediateModel, TDeclaringModel>
  */
 class PendingHasThroughRelationship
@@ -45,12 +45,12 @@ class PendingHasThroughRelationship
     /**
      * Define the distant relationship that this model has.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  string|(callable(TIntermediateModel): (\WpStarter\Database\Eloquent\Relations\HasOne<TRelatedModel, TIntermediateModel>|\WpStarter\Database\Eloquent\Relations\HasMany<TRelatedModel, TIntermediateModel>|\WpStarter\Database\Eloquent\Relations\MorphOneOrMany<TRelatedModel, TIntermediateModel>))  $callback
      * @return (
      *     $callback is string
-     *     ? \WpStarter\Database\Eloquent\Relations\HasManyThrough<\WpStarter\Database\Eloquent\Model, TIntermediateModel, TDeclaringModel>|\WpStarter\Database\Eloquent\Relations\HasOneThrough<\WpStarter\Database\Eloquent\Model, TIntermediateModel, TDeclaringModel>
+     *     ? \WpStarter\Database\Eloquent\Relations\HasManyThrough<\WpStarter\Database\Eloquent\Contracts\Model, TIntermediateModel, TDeclaringModel>|\WpStarter\Database\Eloquent\Relations\HasOneThrough<\WpStarter\Database\Eloquent\Contracts\Model, TIntermediateModel, TDeclaringModel>
      *     : (
      *         TLocalRelationship is \WpStarter\Database\Eloquent\Relations\HasMany<TIntermediateModel, TDeclaringModel>
      *         ? \WpStarter\Database\Eloquent\Relations\HasManyThrough<TRelatedModel, TIntermediateModel, TDeclaringModel>

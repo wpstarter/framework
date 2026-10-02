@@ -2,7 +2,7 @@
 
 namespace WpStarter\Database\Eloquent\Relations\Concerns;
 
-use WpStarter\Database\Eloquent\Model;
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use WpStarter\Database\Eloquent\RelationNotFoundException;
 use WpStarter\Support\Arr;
 use WpStarter\Support\Str;
@@ -89,15 +89,15 @@ trait SupportsInverseRelations
      * Set the inverse relation on all models in a collection.
      *
      * @param  \WpStarter\Database\Eloquent\Collection  $models
-     * @param  \WpStarter\Database\Eloquent\Model|null  $parent
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|null  $parent
      * @return \WpStarter\Database\Eloquent\Collection
      */
-    protected function applyInverseRelationToCollection($models, ?Model $parent = null)
+    protected function applyInverseRelationToCollection($models, ?ModelContract $parent = null)
     {
         $parent ??= $this->getParent();
 
         foreach ($models as $model) {
-            $model instanceof Model && $this->applyInverseRelationToModel($model, $parent);
+            $model instanceof ModelContract && $this->applyInverseRelationToModel($model, $parent);
         }
 
         return $models;
@@ -106,11 +106,11 @@ trait SupportsInverseRelations
     /**
      * Set the inverse relation on a model.
      *
-     * @param  \WpStarter\Database\Eloquent\Model  $model
-     * @param  \WpStarter\Database\Eloquent\Model|null  $parent
-     * @return \WpStarter\Database\Eloquent\Model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|null  $parent
+     * @return \WpStarter\Database\Eloquent\Contracts\Model
      */
-    protected function applyInverseRelationToModel(Model $model, ?Model $parent = null)
+    protected function applyInverseRelationToModel(ModelContract $model, ?ModelContract $parent = null)
     {
         if ($inverse = $this->getInverseRelationship()) {
             $parent ??= $this->getParent();

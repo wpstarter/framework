@@ -8,7 +8,7 @@ use WpStarter\Support\Arr;
 use function WpStarter\Support\enum_value;
 
 /**
- * @template TModel of \WpStarter\Database\Eloquent\Model
+ * @template TModel of \WpStarter\Database\Eloquent\Contracts\Model
  */
 class ModelNotFoundException extends RecordsNotFoundException
 {

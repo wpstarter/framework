@@ -7,7 +7,7 @@ interface DeviatesCastableAttributes
     /**
      * Increment the attribute.
      *
-     * @param  \WpStarter\Database\Eloquent\Model  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $model
      * @param  string  $key
      * @param  mixed  $value
      * @param  array  $attributes
@@ -18,7 +18,7 @@ interface DeviatesCastableAttributes
     /**
      * Decrement the attribute.
      *
-     * @param  \WpStarter\Database\Eloquent\Model  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $model
      * @param  string  $key
      * @param  mixed  $value
      * @param  array  $attributes

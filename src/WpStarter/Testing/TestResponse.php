@@ -2,13 +2,13 @@
 
 namespace WpStarter\Testing;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use ArrayAccess;
 use Closure;
 use WpStarter\Contracts\Support\MessageBag;
 use WpStarter\Contracts\View\View;
 use WpStarter\Cookie\CookieValuePrefix;
 use WpStarter\Database\Eloquent\Collection as EloquentCollection;
-use WpStarter\Database\Eloquent\Model;
 use WpStarter\Http\Request;
 use WpStarter\Support\Arr;
 use WpStarter\Support\Carbon;
@@ -1306,7 +1306,7 @@ class TestResponse implements ArrayAccess
             PHPUnit::withResponse($this)->assertTrue(Arr::has($this->original->gatherData(), $key), "Failed asserting that the data contains the key [{$key}].");
         } elseif ($value instanceof Closure) {
             PHPUnit::withResponse($this)->assertTrue($value($actual), "Failed asserting that the value at [{$key}] fulfills the expectations defined by the closure.");
-        } elseif ($value instanceof Model) {
+        } elseif ($value instanceof ModelContract) {
             PHPUnit::withResponse($this)->assertTrue($value->is($actual), "Failed asserting that the model at [{$key}] matches the given model.");
         } elseif ($value instanceof EloquentCollection) {
             PHPUnit::withResponse($this)->assertInstanceOf(EloquentCollection::class, $actual);

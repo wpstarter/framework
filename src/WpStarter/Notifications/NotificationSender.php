@@ -2,10 +2,10 @@
 
 namespace WpStarter\Notifications;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use WpStarter\Contracts\Queue\ShouldQueue;
 use WpStarter\Contracts\Translation\HasLocalePreference;
 use WpStarter\Database\Eloquent\Collection as EloquentCollection;
-use WpStarter\Database\Eloquent\Model;
 use WpStarter\Notifications\Events\NotificationFailed;
 use WpStarter\Notifications\Events\NotificationSending;
 use WpStarter\Notifications\Events\NotificationSent;
@@ -296,7 +296,7 @@ class NotificationSender
     protected function formatNotifiables($notifiables)
     {
         if (! $notifiables instanceof Collection && ! is_array($notifiables)) {
-            return $notifiables instanceof Model
+            return $notifiables instanceof ModelContract
                 ? new EloquentCollection([$notifiables])
                 : [$notifiables];
         }

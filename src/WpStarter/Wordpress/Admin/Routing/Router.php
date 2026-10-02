@@ -2,13 +2,13 @@
 
 namespace WpStarter\Wordpress\Admin\Routing;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use WpStarter\Container\Container;
 use WpStarter\Contracts\Events\Dispatcher;
 use WpStarter\Contracts\Support\Arrayable;
 use WpStarter\Contracts\Support\Jsonable;
 use WpStarter\Contracts\Support\Responsable;
-use WpStarter\Database\Eloquent\Model;
 use WpStarter\Http\JsonResponse;
 use WpStarter\Http\Request;
 use WpStarter\Routing\Route;
@@ -129,7 +129,7 @@ class Router extends \WpStarter\Routing\Router
 
         if ($response instanceof PsrResponseInterface) {
             $response = (new HttpFoundationFactory)->createResponse($response);
-        } elseif ($response instanceof Model && $response->wasRecentlyCreated) {
+        } elseif ($response instanceof ModelContract && $response->wasRecentlyCreated) {
             $response = new JsonResponse($response, 201);
         } elseif ($response instanceof Stringable) {
             $response = new Response($response->__toString(), 200, ['Content-Type' => 'text/html']);

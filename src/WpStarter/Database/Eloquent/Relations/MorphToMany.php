@@ -2,14 +2,14 @@
 
 namespace WpStarter\Database\Eloquent\Relations;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use WpStarter\Database\Eloquent\Builder;
-use WpStarter\Database\Eloquent\Model;
 use WpStarter\Support\Arr;
 use WpStarter\Support\Collection;
 
 /**
- * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
- * @template TDeclaringModel of \WpStarter\Database\Eloquent\Model
+ * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
+ * @template TDeclaringModel of \WpStarter\Database\Eloquent\Contracts\Model
  * @template TPivotModel of \WpStarter\Database\Eloquent\Relations\Pivot = \WpStarter\Database\Eloquent\Relations\MorphPivot
  * @template TAccessor of string = 'pivot'
  *
@@ -56,7 +56,7 @@ class MorphToMany extends BelongsToMany
      */
     public function __construct(
         Builder $query,
-        Model $parent,
+        ModelContract $parent,
         $name,
         $table,
         $foreignPivotKey,

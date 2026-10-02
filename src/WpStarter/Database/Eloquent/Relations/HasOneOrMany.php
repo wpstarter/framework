@@ -2,6 +2,7 @@
 
 namespace WpStarter\Database\Eloquent\Relations;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use Closure;
 use WpStarter\Database\Eloquent\Builder;
 use WpStarter\Database\Eloquent\Collection as EloquentCollection;
@@ -12,8 +13,8 @@ use WpStarter\Database\UniqueConstraintViolationException;
 use WpStarter\Support\Arr;
 
 /**
- * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
- * @template TDeclaringModel of \WpStarter\Database\Eloquent\Model
+ * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
+ * @template TDeclaringModel of \WpStarter\Database\Eloquent\Contracts\Model
  * @template TResult
  *
  * @extends \WpStarter\Database\Eloquent\Relations\Relation<TRelatedModel, TDeclaringModel, TResult>
@@ -44,7 +45,7 @@ abstract class HasOneOrMany extends Relation
      * @param  string  $foreignKey
      * @param  string  $localKey
      */
-    public function __construct(Builder $query, Model $parent, $foreignKey, $localKey)
+    public function __construct(Builder $query, ModelContract $parent, $foreignKey, $localKey)
     {
         $this->localKey = $localKey;
         $this->foreignKey = $foreignKey;
@@ -329,7 +330,7 @@ abstract class HasOneOrMany extends Relation
      * @param  TRelatedModel  $model
      * @return TRelatedModel|false
      */
-    public function save(Model $model)
+    public function save(ModelContract $model)
     {
         $this->setForeignAttributesForCreate($model);
 
@@ -342,7 +343,7 @@ abstract class HasOneOrMany extends Relation
      * @param  TRelatedModel  $model
      * @return TRelatedModel|false
      */
-    public function saveQuietly(Model $model)
+    public function saveQuietly(ModelContract $model)
     {
         return Model::withoutEvents(function () use ($model) {
             return $this->save($model);
@@ -491,7 +492,7 @@ abstract class HasOneOrMany extends Relation
      * @param  TRelatedModel  $model
      * @return void
      */
-    protected function setForeignAttributesForCreate(Model $model)
+    protected function setForeignAttributesForCreate(ModelContract $model)
     {
         $model->setAttribute($this->getForeignKeyName(), $this->getParentKey());
 

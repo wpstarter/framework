@@ -75,7 +75,7 @@ class ShowModelCommand extends DatabaseInspectionCommand implements PromptsForMi
     /**
      * Render the model information.
      *
-     * @param  class-string<\WpStarter\Database\Eloquent\Model>  $class
+     * @param  class-string<\WpStarter\Database\Eloquent\Contracts\Model>  $class
      * @param  string  $database
      * @param  string  $table
      * @param  class-string|null  $policy
@@ -95,7 +95,7 @@ class ShowModelCommand extends DatabaseInspectionCommand implements PromptsForMi
     /**
      * Render the model information as JSON.
      *
-     * @param  class-string<\WpStarter\Database\Eloquent\Model>  $class
+     * @param  class-string<\WpStarter\Database\Eloquent\Contracts\Model>  $class
      * @param  string  $database
      * @param  string  $table
      * @param  class-string|null  $policy
@@ -124,7 +124,7 @@ class ShowModelCommand extends DatabaseInspectionCommand implements PromptsForMi
     /**
      * Render the model information for the CLI.
      *
-     * @param  class-string<\WpStarter\Database\Eloquent\Model>  $class
+     * @param  class-string<\WpStarter\Database\Eloquent\Contracts\Model>  $class
      * @param  string  $database
      * @param  string  $table
      * @param  class-string|null  $policy

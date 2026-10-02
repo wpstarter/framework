@@ -2,7 +2,7 @@
 
 namespace {{ namespace }};
 
-use WpStarter\Database\Eloquent\Model;
+use WpStarter\Database\Eloquent\Contracts\Model;
 use WpStarter\Contracts\Database\Eloquent\CastsInboundAttributes;
 
 class {{ class }} implements CastsInboundAttributes

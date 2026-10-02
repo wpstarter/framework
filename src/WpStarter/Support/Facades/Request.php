@@ -135,7 +135,7 @@ namespace WpStarter\Support\Facades;
  * @method static bool acceptsHtml()
  * @method static bool matchesType(string $actual, string $type)
  * @method static string format(string $default = 'html')
- * @method static string|array|null old(string|null $key = null, \WpStarter\Database\Eloquent\Model|string|array|null $default = null)
+ * @method static string|array|null old(string|null $key = null, \WpStarter\Database\Eloquent\Contracts\Model|string|array|null $default = null)
  * @method static void flash()
  * @method static void flashOnly(mixed $keys)
  * @method static void flashExcept(mixed $keys)

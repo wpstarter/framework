@@ -2,9 +2,9 @@
 
 namespace WpStarter\Auth\Middleware;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use Closure;
 use WpStarter\Contracts\Auth\Access\Gate;
-use WpStarter\Database\Eloquent\Model;
 use WpStarter\Support\Collection;
 
 use function WpStarter\Support\enum_value;
@@ -73,7 +73,7 @@ class Authorize
         }
 
         return (new Collection($models))
-            ->map(fn ($model) => $model instanceof Model ? $model : $this->getModel($request, $model))
+            ->map(fn ($model) => $model instanceof ModelContract ? $model : $this->getModel($request, $model))
             ->all();
     }
 
@@ -82,7 +82,7 @@ class Authorize
      *
      * @param  \WpStarter\Http\Request  $request
      * @param  string  $model
-     * @return \WpStarter\Database\Eloquent\Model|string
+     * @return \WpStarter\Database\Eloquent\Contracts\Model|string
      */
     protected function getModel($request, $model)
     {

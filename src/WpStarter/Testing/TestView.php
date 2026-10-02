@@ -2,9 +2,9 @@
 
 namespace WpStarter\Testing;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use Closure;
 use WpStarter\Database\Eloquent\Collection as EloquentCollection;
-use WpStarter\Database\Eloquent\Model;
 use WpStarter\Support\Arr;
 use WpStarter\Support\Traits\Macroable;
 use WpStarter\Testing\Assert as PHPUnit;
@@ -58,7 +58,7 @@ class TestView implements Stringable
             PHPUnit::assertTrue(Arr::has($this->view->gatherData(), $key));
         } elseif ($value instanceof Closure) {
             PHPUnit::assertTrue($value(Arr::get($this->view->gatherData(), $key)));
-        } elseif ($value instanceof Model) {
+        } elseif ($value instanceof ModelContract) {
             PHPUnit::assertTrue($value->is(Arr::get($this->view->gatherData(), $key)));
         } elseif ($value instanceof EloquentCollection) {
             $actual = Arr::get($this->view->gatherData(), $key);

@@ -2,11 +2,11 @@
 
 namespace WpStarter\Database\Eloquent\Relations;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use Closure;
 use WpStarter\Contracts\Support\Arrayable;
 use WpStarter\Database\Eloquent\Builder;
 use WpStarter\Database\Eloquent\Collection as EloquentCollection;
-use WpStarter\Database\Eloquent\Model;
 use WpStarter\Database\Eloquent\ModelNotFoundException;
 use WpStarter\Database\Eloquent\Relations\Concerns\InteractsWithDictionary;
 use WpStarter\Database\Query\Grammars\MySqlGrammar;
@@ -14,9 +14,9 @@ use WpStarter\Database\UniqueConstraintViolationException;
 use WpStarter\Support\Arr;
 
 /**
- * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
- * @template TIntermediateModel of \WpStarter\Database\Eloquent\Model
- * @template TDeclaringModel of \WpStarter\Database\Eloquent\Model
+ * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
+ * @template TIntermediateModel of \WpStarter\Database\Eloquent\Contracts\Model
+ * @template TDeclaringModel of \WpStarter\Database\Eloquent\Contracts\Model
  * @template TResult
  *
  * @extends \WpStarter\Database\Eloquent\Relations\Relation<TRelatedModel, TIntermediateModel, TResult>
@@ -78,7 +78,7 @@ abstract class HasOneOrManyThrough extends Relation
      * @param  string  $localKey
      * @param  string  $secondLocalKey
      */
-    public function __construct(Builder $query, Model $farParent, Model $throughParent, $firstKey, $secondKey, $localKey, $secondLocalKey)
+    public function __construct(Builder $query, ModelContract $farParent, ModelContract $throughParent, $firstKey, $secondKey, $localKey, $secondLocalKey)
     {
         $this->localKey = $localKey;
         $this->firstKey = $firstKey;

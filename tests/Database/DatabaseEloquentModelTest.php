@@ -2,6 +2,7 @@
 
 namespace WpStarter\Tests\Database;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
@@ -4289,7 +4290,7 @@ class Address implements Castable
     {
         return new class implements CastsAttributes
         {
-            public function get(Model $model, string $key, mixed $value, array $attributes): Address
+            public function get(ModelContract $model, string $key, mixed $value, array $attributes): Address
             {
                 return new Address(
                     $attributes['address_line_one'],
@@ -4297,7 +4298,7 @@ class Address implements Castable
                 );
             }
 
-            public function set(Model $model, string $key, mixed $value, array $attributes): array
+            public function set(ModelContract $model, string $key, mixed $value, array $attributes): array
             {
                 return [
                     'address_line_one' => $value->lineOne ?? null,

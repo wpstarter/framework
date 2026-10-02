@@ -2,11 +2,11 @@
 
 namespace WpStarter\Pagination;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use ArrayAccess;
 use Closure;
 use Exception;
 use WpStarter\Contracts\Support\Htmlable;
-use WpStarter\Database\Eloquent\Model;
 use WpStarter\Database\Eloquent\Relations\Pivot;
 use WpStarter\Http\Resources\Json\JsonResource;
 use WpStarter\Support\Arr;
@@ -218,7 +218,7 @@ abstract class AbstractCursorPaginator implements Htmlable, Stringable
                     $item = $item->resource;
                 }
 
-                if ($item instanceof Model &&
+                if ($item instanceof ModelContract &&
                     ! is_null($parameter = $this->getPivotParameterForItem($item, $parameterName))) {
                     return $parameter;
                 } elseif ($item instanceof ArrayAccess || is_array($item)) {

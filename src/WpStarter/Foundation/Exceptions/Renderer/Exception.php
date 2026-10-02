@@ -2,9 +2,9 @@
 
 namespace WpStarter\Foundation\Exceptions\Renderer;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use Closure;
 use Composer\Autoload\ClassLoader;
-use WpStarter\Database\Eloquent\Model;
 use WpStarter\Foundation\Bootstrap\HandleExceptions;
 use WpStarter\Http\Request;
 use WpStarter\Support\Collection;
@@ -249,7 +249,7 @@ class Exception
         $parameters = $this->request()->route()?->parameters();
 
         return $parameters ? json_encode(array_map(
-            fn ($value) => $value instanceof Model ? $value->withoutRelations() : $value,
+            fn ($value) => $value instanceof ModelContract ? $value->withoutRelations() : $value,
             $parameters
         ), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) : null;
     }

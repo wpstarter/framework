@@ -20,7 +20,7 @@ class EloquentUserProvider implements UserProvider
     /**
      * The Eloquent user model.
      *
-     * @var class-string<\WpStarter\Contracts\Auth\Authenticatable&\WpStarter\Database\Eloquent\Model>
+     * @var class-string<\WpStarter\Contracts\Auth\Authenticatable&\WpStarter\Database\Eloquent\Contracts\Model>
      */
     protected $model;
 
@@ -47,7 +47,7 @@ class EloquentUserProvider implements UserProvider
      * Retrieve a user by their unique identifier.
      *
      * @param  mixed  $identifier
-     * @return (\WpStarter\Contracts\Auth\Authenticatable&\WpStarter\Database\Eloquent\Model)|null
+     * @return (\WpStarter\Contracts\Auth\Authenticatable&\WpStarter\Database\Eloquent\Contracts\Model)|null
      */
     public function retrieveById($identifier)
     {
@@ -63,7 +63,7 @@ class EloquentUserProvider implements UserProvider
      *
      * @param  mixed  $identifier
      * @param  string  $token
-     * @return (\WpStarter\Contracts\Auth\Authenticatable&\WpStarter\Database\Eloquent\Model)|null
+     * @return (\WpStarter\Contracts\Auth\Authenticatable&\WpStarter\Database\Eloquent\Contracts\Model)|null
      */
     public function retrieveByToken($identifier, #[\SensitiveParameter] $token)
     {
@@ -85,7 +85,7 @@ class EloquentUserProvider implements UserProvider
     /**
      * Update the "remember me" token for the given user in storage.
      *
-     * @param  \WpStarter\Contracts\Auth\Authenticatable&\WpStarter\Database\Eloquent\Model  $user
+     * @param  \WpStarter\Contracts\Auth\Authenticatable&\WpStarter\Database\Eloquent\Contracts\Model  $user
      * @param  string  $token
      * @return void
      */
@@ -106,7 +106,7 @@ class EloquentUserProvider implements UserProvider
      * Retrieve a user by the given credentials.
      *
      * @param  array  $credentials
-     * @return (\WpStarter\Contracts\Auth\Authenticatable&\WpStarter\Database\Eloquent\Model)|null
+     * @return (\WpStarter\Contracts\Auth\Authenticatable&\WpStarter\Database\Eloquent\Contracts\Model)|null
      */
     public function retrieveByCredentials(#[\SensitiveParameter] array $credentials)
     {
@@ -161,7 +161,7 @@ class EloquentUserProvider implements UserProvider
     /**
      * Rehash the user's password if required and supported.
      *
-     * @param  \WpStarter\Contracts\Auth\Authenticatable&\WpStarter\Database\Eloquent\Model  $user
+     * @param  \WpStarter\Contracts\Auth\Authenticatable&\WpStarter\Database\Eloquent\Contracts\Model  $user
      * @param  array  $credentials
      * @param  bool  $force
      * @return void
@@ -180,7 +180,7 @@ class EloquentUserProvider implements UserProvider
     /**
      * Get a new query builder for the model instance.
      *
-     * @template TModel of \WpStarter\Database\Eloquent\Model
+     * @template TModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  TModel|null  $model
      * @return \WpStarter\Database\Eloquent\Builder<TModel>
@@ -199,7 +199,7 @@ class EloquentUserProvider implements UserProvider
     /**
      * Create a new instance of the model.
      *
-     * @return \WpStarter\Contracts\Auth\Authenticatable&\WpStarter\Database\Eloquent\Model
+     * @return \WpStarter\Contracts\Auth\Authenticatable&\WpStarter\Database\Eloquent\Contracts\Model
      */
     public function createModel()
     {
@@ -234,7 +234,7 @@ class EloquentUserProvider implements UserProvider
     /**
      * Gets the name of the Eloquent user model.
      *
-     * @return class-string<\WpStarter\Contracts\Auth\Authenticatable&\WpStarter\Database\Eloquent\Model>
+     * @return class-string<\WpStarter\Contracts\Auth\Authenticatable&\WpStarter\Database\Eloquent\Contracts\Model>
      */
     public function getModel()
     {
@@ -244,7 +244,7 @@ class EloquentUserProvider implements UserProvider
     /**
      * Sets the name of the Eloquent user model.
      *
-     * @param  class-string<\WpStarter\Contracts\Auth\Authenticatable&\WpStarter\Database\Eloquent\Model>  $model
+     * @param  class-string<\WpStarter\Contracts\Auth\Authenticatable&\WpStarter\Database\Eloquent\Contracts\Model>  $model
      * @return $this
      */
     public function setModel($model)

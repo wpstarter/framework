@@ -2,7 +2,7 @@
 
 namespace WpStarter\Validation\Rules;
 
-use WpStarter\Database\Eloquent\Model;
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use WpStarter\Support\Traits\Conditionable;
 use Stringable;
 
@@ -33,7 +33,7 @@ class Unique implements Stringable
      */
     public function ignore($id, $idColumn = null)
     {
-        if ($id instanceof Model) {
+        if ($id instanceof ModelContract) {
             return $this->ignoreModel($id, $idColumn);
         }
 
@@ -46,7 +46,7 @@ class Unique implements Stringable
     /**
      * Ignore the given model during the unique check.
      *
-     * @param  \WpStarter\Database\Eloquent\Model  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $model
      * @param  string|null  $idColumn
      * @return $this
      */

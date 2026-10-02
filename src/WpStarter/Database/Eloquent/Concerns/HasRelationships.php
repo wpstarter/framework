@@ -2,11 +2,11 @@
 
 namespace WpStarter\Database\Eloquent\Concerns;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use Closure;
 use WpStarter\Database\ClassMorphViolationException;
 use WpStarter\Database\Eloquent\Builder;
 use WpStarter\Database\Eloquent\Collection as EloquentCollection;
-use WpStarter\Database\Eloquent\Model;
 use WpStarter\Database\Eloquent\PendingHasThroughRelationship;
 use WpStarter\Database\Eloquent\Relations\BelongsTo;
 use WpStarter\Database\Eloquent\Relations\BelongsToMany;
@@ -72,7 +72,7 @@ trait HasRelationships
     /**
      * Get the dynamic relation resolver if defined or inherited, or return null.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  class-string<TRelatedModel>  $class
      * @param  string  $key
@@ -184,7 +184,7 @@ trait HasRelationships
             return;
         }
 
-        if ($models instanceof Model) {
+        if ($models instanceof ModelContract) {
             $models = [$models];
         }
 
@@ -202,7 +202,7 @@ trait HasRelationships
     /**
      * Define a one-to-one relationship.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  class-string<TRelatedModel>  $related
      * @param  string|null  $foreignKey
@@ -223,8 +223,8 @@ trait HasRelationships
     /**
      * Instantiate a new HasOne relationship.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
-     * @template TDeclaringModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
+     * @template TDeclaringModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Builder<TRelatedModel>  $query
      * @param  TDeclaringModel  $parent
@@ -232,7 +232,7 @@ trait HasRelationships
      * @param  string  $localKey
      * @return \WpStarter\Database\Eloquent\Relations\HasOne<TRelatedModel, TDeclaringModel>
      */
-    protected function newHasOne(Builder $query, Model $parent, $foreignKey, $localKey)
+    protected function newHasOne(Builder $query, ModelContract $parent, $foreignKey, $localKey)
     {
         return new HasOne($query, $parent, $foreignKey, $localKey);
     }
@@ -240,8 +240,8 @@ trait HasRelationships
     /**
      * Define a has-one-through relationship.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
-     * @template TIntermediateModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
+     * @template TIntermediateModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  class-string<TRelatedModel>  $related
      * @param  class-string<TIntermediateModel>  $through
@@ -273,9 +273,9 @@ trait HasRelationships
     /**
      * Instantiate a new HasOneThrough relationship.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
-     * @template TIntermediateModel of \WpStarter\Database\Eloquent\Model
-     * @template TDeclaringModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
+     * @template TIntermediateModel of \WpStarter\Database\Eloquent\Contracts\Model
+     * @template TDeclaringModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Builder<TRelatedModel>  $query
      * @param  TDeclaringModel  $farParent
@@ -286,7 +286,7 @@ trait HasRelationships
      * @param  string  $secondLocalKey
      * @return \WpStarter\Database\Eloquent\Relations\HasOneThrough<TRelatedModel, TIntermediateModel, TDeclaringModel>
      */
-    protected function newHasOneThrough(Builder $query, Model $farParent, Model $throughParent, $firstKey, $secondKey, $localKey, $secondLocalKey)
+    protected function newHasOneThrough(Builder $query, ModelContract $farParent, ModelContract $throughParent, $firstKey, $secondKey, $localKey, $secondLocalKey)
     {
         return new HasOneThrough($query, $farParent, $throughParent, $firstKey, $secondKey, $localKey, $secondLocalKey);
     }
@@ -294,7 +294,7 @@ trait HasRelationships
     /**
      * Define a polymorphic one-to-one relationship.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  class-string<TRelatedModel>  $related
      * @param  string  $name
@@ -317,8 +317,8 @@ trait HasRelationships
     /**
      * Instantiate a new MorphOne relationship.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
-     * @template TDeclaringModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
+     * @template TDeclaringModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Builder<TRelatedModel>  $query
      * @param  TDeclaringModel  $parent
@@ -327,7 +327,7 @@ trait HasRelationships
      * @param  string  $localKey
      * @return \WpStarter\Database\Eloquent\Relations\MorphOne<TRelatedModel, TDeclaringModel>
      */
-    protected function newMorphOne(Builder $query, Model $parent, $type, $id, $localKey)
+    protected function newMorphOne(Builder $query, ModelContract $parent, $type, $id, $localKey)
     {
         return new MorphOne($query, $parent, $type, $id, $localKey);
     }
@@ -335,7 +335,7 @@ trait HasRelationships
     /**
      * Define an inverse one-to-one or many relationship.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  class-string<TRelatedModel>  $related
      * @param  string|null  $foreignKey
@@ -374,8 +374,8 @@ trait HasRelationships
     /**
      * Instantiate a new BelongsTo relationship.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
-     * @template TDeclaringModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
+     * @template TDeclaringModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Builder<TRelatedModel>  $query
      * @param  TDeclaringModel  $child
@@ -384,7 +384,7 @@ trait HasRelationships
      * @param  string  $relation
      * @return \WpStarter\Database\Eloquent\Relations\BelongsTo<TRelatedModel, TDeclaringModel>
      */
-    protected function newBelongsTo(Builder $query, Model $child, $foreignKey, $ownerKey, $relation)
+    protected function newBelongsTo(Builder $query, ModelContract $child, $foreignKey, $ownerKey, $relation)
     {
         return new BelongsTo($query, $child, $foreignKey, $ownerKey, $relation);
     }
@@ -396,7 +396,7 @@ trait HasRelationships
      * @param  string|null  $type
      * @param  string|null  $id
      * @param  string|null  $ownerKey
-     * @return \WpStarter\Database\Eloquent\Relations\MorphTo<\WpStarter\Database\Eloquent\Model, $this>
+     * @return \WpStarter\Database\Eloquent\Relations\MorphTo<\WpStarter\Database\Eloquent\Contracts\Model, $this>
      */
     public function morphTo($name = null, $type = null, $id = null, $ownerKey = null)
     {
@@ -424,7 +424,7 @@ trait HasRelationships
      * @param  string  $type
      * @param  string  $id
      * @param  string|null  $ownerKey
-     * @return \WpStarter\Database\Eloquent\Relations\MorphTo<\WpStarter\Database\Eloquent\Model, $this>
+     * @return \WpStarter\Database\Eloquent\Relations\MorphTo<\WpStarter\Database\Eloquent\Contracts\Model, $this>
      */
     protected function morphEagerTo($name, $type, $id, $ownerKey)
     {
@@ -441,7 +441,7 @@ trait HasRelationships
      * @param  string  $type
      * @param  string  $id
      * @param  string|null  $ownerKey
-     * @return \WpStarter\Database\Eloquent\Relations\MorphTo<\WpStarter\Database\Eloquent\Model, $this>
+     * @return \WpStarter\Database\Eloquent\Relations\MorphTo<\WpStarter\Database\Eloquent\Contracts\Model, $this>
      */
     protected function morphInstanceTo($target, $name, $type, $id, $ownerKey)
     {
@@ -457,8 +457,8 @@ trait HasRelationships
     /**
      * Instantiate a new MorphTo relationship.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
-     * @template TDeclaringModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
+     * @template TDeclaringModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Builder<TRelatedModel>  $query
      * @param  TDeclaringModel  $parent
@@ -468,7 +468,7 @@ trait HasRelationships
      * @param  string  $relation
      * @return \WpStarter\Database\Eloquent\Relations\MorphTo<TRelatedModel, TDeclaringModel>
      */
-    protected function newMorphTo(Builder $query, Model $parent, $foreignKey, $ownerKey, $type, $relation)
+    protected function newMorphTo(Builder $query, ModelContract $parent, $foreignKey, $ownerKey, $type, $relation)
     {
         return new MorphTo($query, $parent, $foreignKey, $ownerKey, $type, $relation);
     }
@@ -499,12 +499,12 @@ trait HasRelationships
     /**
      * Create a pending has-many-through or has-one-through relationship.
      *
-     * @template TIntermediateModel of \WpStarter\Database\Eloquent\Model
+     * @template TIntermediateModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  string|\WpStarter\Database\Eloquent\Relations\HasMany<TIntermediateModel, covariant $this>|\WpStarter\Database\Eloquent\Relations\HasOne<TIntermediateModel, covariant $this>  $relationship
      * @return (
      *     $relationship is string
-     *     ? \WpStarter\Database\Eloquent\PendingHasThroughRelationship<\WpStarter\Database\Eloquent\Model, $this>
+     *     ? \WpStarter\Database\Eloquent\PendingHasThroughRelationship<\WpStarter\Database\Eloquent\Contracts\Model, $this>
      *     : (
      *          $relationship is \WpStarter\Database\Eloquent\Relations\HasMany<TIntermediateModel, $this>
      *          ? \WpStarter\Database\Eloquent\PendingHasThroughRelationship<TIntermediateModel, $this, \WpStarter\Database\Eloquent\Relations\HasMany<TIntermediateModel, $this>>
@@ -524,7 +524,7 @@ trait HasRelationships
     /**
      * Define a one-to-many relationship.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  class-string<TRelatedModel>  $related
      * @param  string|null  $foreignKey
@@ -547,8 +547,8 @@ trait HasRelationships
     /**
      * Instantiate a new HasMany relationship.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
-     * @template TDeclaringModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
+     * @template TDeclaringModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Builder<TRelatedModel>  $query
      * @param  TDeclaringModel  $parent
@@ -556,7 +556,7 @@ trait HasRelationships
      * @param  string  $localKey
      * @return \WpStarter\Database\Eloquent\Relations\HasMany<TRelatedModel, TDeclaringModel>
      */
-    protected function newHasMany(Builder $query, Model $parent, $foreignKey, $localKey)
+    protected function newHasMany(Builder $query, ModelContract $parent, $foreignKey, $localKey)
     {
         return new HasMany($query, $parent, $foreignKey, $localKey);
     }
@@ -564,8 +564,8 @@ trait HasRelationships
     /**
      * Define a has-many-through relationship.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
-     * @template TIntermediateModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
+     * @template TIntermediateModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  class-string<TRelatedModel>  $related
      * @param  class-string<TIntermediateModel>  $through
@@ -597,9 +597,9 @@ trait HasRelationships
     /**
      * Instantiate a new HasManyThrough relationship.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
-     * @template TIntermediateModel of \WpStarter\Database\Eloquent\Model
-     * @template TDeclaringModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
+     * @template TIntermediateModel of \WpStarter\Database\Eloquent\Contracts\Model
+     * @template TDeclaringModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Builder<TRelatedModel>  $query
      * @param  TDeclaringModel  $farParent
@@ -610,7 +610,7 @@ trait HasRelationships
      * @param  string  $secondLocalKey
      * @return \WpStarter\Database\Eloquent\Relations\HasManyThrough<TRelatedModel, TIntermediateModel, TDeclaringModel>
      */
-    protected function newHasManyThrough(Builder $query, Model $farParent, Model $throughParent, $firstKey, $secondKey, $localKey, $secondLocalKey)
+    protected function newHasManyThrough(Builder $query, ModelContract $farParent, ModelContract $throughParent, $firstKey, $secondKey, $localKey, $secondLocalKey)
     {
         return new HasManyThrough($query, $farParent, $throughParent, $firstKey, $secondKey, $localKey, $secondLocalKey);
     }
@@ -618,7 +618,7 @@ trait HasRelationships
     /**
      * Define a polymorphic one-to-many relationship.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  class-string<TRelatedModel>  $related
      * @param  string  $name
@@ -644,8 +644,8 @@ trait HasRelationships
     /**
      * Instantiate a new MorphMany relationship.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
-     * @template TDeclaringModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
+     * @template TDeclaringModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Builder<TRelatedModel>  $query
      * @param  TDeclaringModel  $parent
@@ -654,7 +654,7 @@ trait HasRelationships
      * @param  string  $localKey
      * @return \WpStarter\Database\Eloquent\Relations\MorphMany<TRelatedModel, TDeclaringModel>
      */
-    protected function newMorphMany(Builder $query, Model $parent, $type, $id, $localKey)
+    protected function newMorphMany(Builder $query, ModelContract $parent, $type, $id, $localKey)
     {
         return new MorphMany($query, $parent, $type, $id, $localKey);
     }
@@ -662,10 +662,10 @@ trait HasRelationships
     /**
      * Define a many-to-many relationship.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  class-string<TRelatedModel>  $related
-     * @param  string|class-string<\WpStarter\Database\Eloquent\Model>|null  $table
+     * @param  string|class-string<\WpStarter\Database\Eloquent\Contracts\Model>|null  $table
      * @param  string|null  $foreignPivotKey
      * @param  string|null  $relatedPivotKey
      * @param  string|null  $parentKey
@@ -720,12 +720,12 @@ trait HasRelationships
     /**
      * Instantiate a new BelongsToMany relationship.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
-     * @template TDeclaringModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
+     * @template TDeclaringModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Builder<TRelatedModel>  $query
      * @param  TDeclaringModel  $parent
-     * @param  string|class-string<\WpStarter\Database\Eloquent\Model>  $table
+     * @param  string|class-string<\WpStarter\Database\Eloquent\Contracts\Model>  $table
      * @param  string  $foreignPivotKey
      * @param  string  $relatedPivotKey
      * @param  string  $parentKey
@@ -735,7 +735,7 @@ trait HasRelationships
      */
     protected function newBelongsToMany(
         Builder $query,
-        Model $parent,
+        ModelContract $parent,
         $table,
         $foreignPivotKey,
         $relatedPivotKey,
@@ -749,7 +749,7 @@ trait HasRelationships
     /**
      * Define a polymorphic many-to-many relationship.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  class-string<TRelatedModel>  $related
      * @param  string  $name
@@ -812,8 +812,8 @@ trait HasRelationships
     /**
      * Instantiate a new MorphToMany relationship.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
-     * @template TDeclaringModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
+     * @template TDeclaringModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  \WpStarter\Database\Eloquent\Builder<TRelatedModel>  $query
      * @param  TDeclaringModel  $parent
@@ -829,7 +829,7 @@ trait HasRelationships
      */
     protected function newMorphToMany(
         Builder $query,
-        Model $parent,
+        ModelContract $parent,
         $name,
         $table,
         $foreignPivotKey,
@@ -856,7 +856,7 @@ trait HasRelationships
     /**
      * Define a polymorphic, inverse many-to-many relationship.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  class-string<TRelatedModel>  $related
      * @param  string  $name
@@ -919,7 +919,7 @@ trait HasRelationships
      * Get the joining table name for a many-to-many relation.
      *
      * @param  string  $related
-     * @param  \WpStarter\Database\Eloquent\Model|null  $instance
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model|null  $instance
      * @return string
      */
     public function joiningTable($related, $instance = null)
@@ -1025,7 +1025,7 @@ trait HasRelationships
     /**
      * Create a new model instance for a related model.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  class-string<TRelatedModel>  $class
      * @return TRelatedModel
@@ -1042,7 +1042,7 @@ trait HasRelationships
     /**
      * Create a new model instance for a related "through" model.
      *
-     * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+     * @template TRelatedModel of \WpStarter\Database\Eloquent\Contracts\Model
      *
      * @param  class-string<TRelatedModel>  $class
      * @return TRelatedModel

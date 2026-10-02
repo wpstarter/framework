@@ -2,7 +2,7 @@
 
 namespace WpStarter\Database\Eloquent\Factories;
 
-use WpStarter\Database\Eloquent\Model;
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use WpStarter\Database\Eloquent\Relations\BelongsToMany;
 use WpStarter\Database\Eloquent\Relations\HasOneOrMany;
 use WpStarter\Database\Eloquent\Relations\MorphOneOrMany;
@@ -38,10 +38,10 @@ class Relationship
     /**
      * Create the child relationship for the given parent model.
      *
-     * @param  \WpStarter\Database\Eloquent\Model  $parent
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $parent
      * @return void
      */
-    public function createFor(Model $parent)
+    public function createFor(ModelContract $parent)
     {
         $relationship = $parent->{$this->relationship}();
 

@@ -2,6 +2,7 @@
 
 namespace WpStarter\Tests\Support;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use WpStarter\Contracts\Mail\Mailable;
 use WpStarter\Database\Eloquent\Model;
 use WpStarter\Support\Reflector;
@@ -36,9 +37,16 @@ class SupportReflectorTest extends TestCase
 
     public function testSelfClassName()
     {
+        $method = (new ReflectionClass(A::class))->getMethod('acceptSelf');
+
+        $this->assertSame(A::class, Reflector::getParameterClassName($method->getParameters()[0]));
+    }
+
+    public function testModelParentUsesTheContract()
+    {
         $method = (new ReflectionClass(Model::class))->getMethod('newPivot');
 
-        $this->assertSame(Model::class, Reflector::getParameterClassName($method->getParameters()[0]));
+        $this->assertSame(ModelContract::class, Reflector::getParameterClassName($method->getParameters()[0]));
     }
 
     public function testParentClassName()
@@ -136,6 +144,10 @@ class SupportReflectorTest extends TestCase
 
 class A
 {
+    public function acceptSelf(self $model)
+    {
+        //
+    }
 }
 
 class B extends A
@@ -148,7 +160,7 @@ class B extends A
 
 class C
 {
-    public function f(A|Model $x)
+    public function f(A|ModelContract $x)
     {
         //
     }

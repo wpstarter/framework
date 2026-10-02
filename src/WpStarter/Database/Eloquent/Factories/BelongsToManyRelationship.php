@@ -2,7 +2,7 @@
 
 namespace WpStarter\Database\Eloquent\Factories;
 
-use WpStarter\Database\Eloquent\Model;
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use WpStarter\Support\Collection;
 
 class BelongsToManyRelationship
@@ -10,7 +10,7 @@ class BelongsToManyRelationship
     /**
      * The related factory instance.
      *
-     * @var \WpStarter\Database\Eloquent\Factories\Factory|\WpStarter\Support\Collection|\WpStarter\Database\Eloquent\Model|array
+     * @var \WpStarter\Database\Eloquent\Factories\Factory|\WpStarter\Support\Collection|\WpStarter\Database\Eloquent\Contracts\Model|array
      */
     protected $factory;
 
@@ -31,7 +31,7 @@ class BelongsToManyRelationship
     /**
      * Create a new attached relationship definition.
      *
-     * @param  \WpStarter\Database\Eloquent\Factories\Factory|\WpStarter\Support\Collection|\WpStarter\Database\Eloquent\Model|array  $factory
+     * @param  \WpStarter\Database\Eloquent\Factories\Factory|\WpStarter\Support\Collection|\WpStarter\Database\Eloquent\Contracts\Model|array  $factory
      * @param  callable|array  $pivot
      * @param  string  $relationship
      */
@@ -45,10 +45,10 @@ class BelongsToManyRelationship
     /**
      * Create the attached relationship for the given model.
      *
-     * @param  \WpStarter\Database\Eloquent\Model  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $model
      * @return void
      */
-    public function createFor(Model $model)
+    public function createFor(ModelContract $model)
     {
         $factoryInstance = $this->factory instanceof Factory;
 

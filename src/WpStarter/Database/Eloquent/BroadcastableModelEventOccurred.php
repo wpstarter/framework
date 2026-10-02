@@ -2,6 +2,7 @@
 
 namespace WpStarter\Database\Eloquent;
 
+use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
 use WpStarter\Broadcasting\InteractsWithSockets;
 use WpStarter\Broadcasting\PrivateChannel;
 use WpStarter\Contracts\Broadcasting\ShouldBroadcast;
@@ -15,7 +16,7 @@ class BroadcastableModelEventOccurred implements ShouldBroadcast
     /**
      * The model instance corresponding to the event.
      *
-     * @var \WpStarter\Database\Eloquent\Model
+     * @var \WpStarter\Database\Eloquent\Contracts\Model
      */
     public $model;
 
@@ -57,7 +58,7 @@ class BroadcastableModelEventOccurred implements ShouldBroadcast
     /**
      * Create a new event instance.
      *
-     * @param  \WpStarter\Database\Eloquent\Model  $model
+     * @param  \WpStarter\Database\Eloquent\Contracts\Model  $model
      * @param  string  $event
      */
     public function __construct($model, $event)
@@ -78,7 +79,7 @@ class BroadcastableModelEventOccurred implements ShouldBroadcast
             : $this->channels;
 
         return (new BaseCollection($channels))
-            ->map(fn ($channel) => $channel instanceof Model ? new PrivateChannel($channel) : $channel)
+            ->map(fn ($channel) => $channel instanceof ModelContract ? new PrivateChannel($channel) : $channel)
             ->all();
     }
 

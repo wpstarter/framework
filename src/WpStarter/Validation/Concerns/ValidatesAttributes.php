@@ -16,7 +16,7 @@ use Egulias\EmailValidator\Validation\NoRFCWarningsValidation;
 use Egulias\EmailValidator\Validation\RFCValidation;
 use Exception;
 use WpStarter\Container\Container;
-use WpStarter\Database\Eloquent\Model;
+use WpStarter\Database\Eloquent\Contracts\Model;
 use WpStarter\Support\Arr;
 use WpStarter\Support\Collection;
 use WpStarter\Support\Exceptions\MathException;
