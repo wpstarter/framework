@@ -1027,8 +1027,8 @@ class Route
 
         return is_string($missing) &&
             Str::startsWith($missing, [
-                'O:47:"Laravel\\SerializableClosure\\SerializableClosure',
-                'O:55:"Laravel\\SerializableClosure\\UnsignedSerializableClosure',
+                'O:49:"WpStarter\\SerializableClosure\\SerializableClosure',
+                'O:57:"WpStarter\\SerializableClosure\\UnsignedSerializableClosure',
             ]) ? unserialize($missing) : $missing;
     }
 
