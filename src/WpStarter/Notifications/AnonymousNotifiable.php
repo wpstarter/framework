@@ -42,7 +42,7 @@ class AnonymousNotifiable
      */
     public function notify($notification)
     {
-        app(Dispatcher::class)->send($this, $notification);
+        ws_app(Dispatcher::class)->send($this, $notification);
     }
 
     /**
@@ -53,7 +53,7 @@ class AnonymousNotifiable
      */
     public function notifyNow($notification)
     {
-        app(Dispatcher::class)->sendNow($this, $notification);
+        ws_app(Dispatcher::class)->sendNow($this, $notification);
     }
 
     /**

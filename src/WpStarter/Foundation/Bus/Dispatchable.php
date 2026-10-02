@@ -73,7 +73,7 @@ trait Dispatchable
      */
     public static function dispatchSync(...$arguments)
     {
-        return app(Dispatcher::class)->dispatchSync(new static(...$arguments));
+        return ws_app(Dispatcher::class)->dispatchSync(new static(...$arguments));
     }
 
     /**

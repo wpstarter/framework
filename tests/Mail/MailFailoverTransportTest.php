@@ -30,7 +30,7 @@ class MailFailoverTransportTest extends TestCase
             ],
         ]);
 
-        $transport = app('mailer')->getSymfonyTransport();
+        $transport = ws_app('mailer')->getSymfonyTransport();
         $this->assertInstanceOf(FailoverTransport::class, $transport);
     }
 
@@ -45,7 +45,7 @@ class MailFailoverTransportTest extends TestCase
 
         $this->app['config']->set('mail.sendmail', '/usr/sbin/sendmail -bs');
 
-        $transport = app('mailer')->getSymfonyTransport();
+        $transport = ws_app('mailer')->getSymfonyTransport();
         $this->assertInstanceOf(FailoverTransport::class, $transport);
     }
 }

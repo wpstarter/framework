@@ -3,13 +3,13 @@
 {!! $exception->message() !!}
 
 PHP {{ PHP_VERSION }}
-Laravel {{ app()->version() }}
+Laravel {{ ws_app()->version() }}
 {{ $exception->request()->httpHost() }}
 
 ## Stack Trace
 
 @foreach($exception->frames() as $index => $frame)
-{{ $index }} - {{ $frame->file() }}:{{ $frame->line() }}
+    {{ $index }} - {{ $frame->file() }}:{{ $frame->line() }}
 @endforeach
 
 ## Request
@@ -19,31 +19,31 @@ Laravel {{ app()->version() }}
 ## Headers
 
 @forelse ($exception->requestHeaders() as $key => $value)
-* **{{ $key }}**: {!! $value !!}
+    * **{{ $key }}**: {!! $value !!}
 @empty
-No header data available.
+    No header data available.
 @endforelse
 
 ## Route Context
 
 @forelse($exception->applicationRouteContext() as $name => $value)
-{{ $name }}: {!! $value !!}
+    {{ $name }}: {!! $value !!}
 @empty
-No routing data available.
+    No routing data available.
 @endforelse
 
 ## Route Parameters
 
 @if ($routeParametersContext = $exception->applicationRouteParametersContext())
-{!! $routeParametersContext !!}
+    {!! $routeParametersContext !!}
 @else
-No route parameter data available.
+    No route parameter data available.
 @endif
 
 ## Database Queries
 
 @forelse ($exception->applicationQueries() as ['connectionName' => $connectionName, 'sql' => $sql, 'time' => $time])
-* {{ $connectionName }} - {!! $sql !!} ({{ $time }} ms)
+    * {{ $connectionName }} - {!! $sql !!} ({{ $time }} ms)
 @empty
-No database queries detected.
+    No database queries detected.
 @endforelse

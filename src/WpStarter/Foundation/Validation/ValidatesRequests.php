@@ -95,6 +95,6 @@ trait ValidatesRequests
      */
     protected function getValidationFactory()
     {
-        return app(Factory::class);
+        return ws_app(Factory::class);
     }
 }

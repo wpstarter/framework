@@ -586,7 +586,7 @@ abstract class ServiceProvider
      */
     public static function addProviderToBootstrapFile(string $provider, ?string $path = null)
     {
-        $path ??= app()->getBootstrapProvidersPath();
+        $path ??= ws_app()->getBootstrapProvidersPath();
 
         if (! file_exists($path)) {
             return false;
@@ -625,7 +625,7 @@ return [
      */
     public static function removeProviderFromBootstrapFile(string|array $providersToRemove, ?string $path = null, bool $strict = false)
     {
-        $path ??= app()->getBootstrapProvidersPath();
+        $path ??= ws_app()->getBootstrapProvidersPath();
 
         if (! file_exists($path)) {
             return false;

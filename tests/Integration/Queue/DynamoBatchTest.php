@@ -23,11 +23,11 @@ class DynamoBatchTest extends TestCase
     {
         $this->afterApplicationCreated(function () {
             BatchRunRecorder::reset();
-            app(DynamoBatchRepository::class)->createAwsDynamoTable();
+            ws_app(DynamoBatchRepository::class)->createAwsDynamoTable();
         });
 
         $this->beforeApplicationDestroyed(function () {
-            app(DynamoBatchRepository::class)->deleteAwsDynamoTable();
+            ws_app(DynamoBatchRepository::class)->deleteAwsDynamoTable();
         });
 
         parent::setUp();
@@ -62,7 +62,7 @@ class DynamoBatchTest extends TestCase
         ])->dispatch();
 
         /** @var DynamoBatchRepository */
-        $repo = app(DynamoBatchRepository::class);
+        $repo = ws_app(DynamoBatchRepository::class);
         $retrieved = $repo->find($batch->id);
         $this->assertEquals(2, $retrieved->totalJobs);
         $this->assertEquals(0, $retrieved->failedJobs);
@@ -72,7 +72,7 @@ class DynamoBatchTest extends TestCase
     public function test_retrieve_non_existent_batch()
     {
         /** @var DynamoBatchRepository */
-        $repo = app(DynamoBatchRepository::class);
+        $repo = ws_app(DynamoBatchRepository::class);
         $retrieved = $repo->find(Str::orderedUuid());
         $this->assertNull($retrieved);
     }
@@ -84,7 +84,7 @@ class DynamoBatchTest extends TestCase
         ])->dispatch();
 
         /** @var DynamoBatchRepository */
-        $repo = app(DynamoBatchRepository::class);
+        $repo = ws_app(DynamoBatchRepository::class);
         $retrieved = $repo->find($batch->id);
         $this->assertNotNull($retrieved);
         $repo->delete($retrieved->id);
@@ -95,7 +95,7 @@ class DynamoBatchTest extends TestCase
     public function test_delete_non_existent_batch()
     {
         /** @var DynamoBatchRepository */
-        $repo = app(DynamoBatchRepository::class);
+        $repo = ws_app(DynamoBatchRepository::class);
         $repo->delete(Str::orderedUuid());
         // Ensure we didn't throw an exception
         $this->assertTrue(true);
@@ -109,7 +109,7 @@ class DynamoBatchTest extends TestCase
         ])->dispatch();
 
         /** @var DynamoBatchRepository */
-        $repo = app(DynamoBatchRepository::class);
+        $repo = ws_app(DynamoBatchRepository::class);
         $retrieved = $repo->find($batch->id);
         $this->assertEquals(2, $retrieved->totalJobs);
         $this->assertEquals(1, $retrieved->failedJobs);
@@ -133,7 +133,7 @@ class DynamoBatchTest extends TestCase
         ];
 
         /** @var DynamoBatchRepository */
-        $repo = app(DynamoBatchRepository::class);
+        $repo = ws_app(DynamoBatchRepository::class);
         $this->assertCount(10, $repo->get());
         $this->assertCount(6, $repo->get(6));
         $this->assertCount(6, $repo->get(100, $batches[6]->id));

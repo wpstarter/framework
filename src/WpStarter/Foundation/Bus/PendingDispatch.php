@@ -247,9 +247,9 @@ class PendingDispatch
 
             return;
         } elseif ($this->afterResponse) {
-            app(Dispatcher::class)->dispatchAfterResponse($this->job);
+            ws_app(Dispatcher::class)->dispatchAfterResponse($this->job);
         } else {
-            app(Dispatcher::class)->dispatch($this->job);
+            ws_app(Dispatcher::class)->dispatch($this->job);
         }
 
         $this->removeUniqueJobInformationFromContext($this->job);

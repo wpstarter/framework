@@ -210,7 +210,7 @@ class PendingChain
         $firstJob->chain($this->chain);
         $firstJob->chainCatchCallbacks = $this->catchCallbacks();
 
-        return app(Dispatcher::class)->dispatch($firstJob);
+        return ws_app(Dispatcher::class)->dispatch($firstJob);
     }
 
     /**

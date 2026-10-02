@@ -873,7 +873,7 @@ class Handler implements ExceptionHandlerContract
     {
         try {
             if (ws_config('app.debug')) {
-                if (app()->has(ExceptionRenderer::class)) {
+                if (ws_app()->has(ExceptionRenderer::class)) {
                     return $this->renderExceptionWithCustomRenderer($e);
                 } elseif ($this->container->bound(Renderer::class)) {
                     return $this->container->make(Renderer::class)->render(ws_request(), $e);
@@ -894,7 +894,7 @@ class Handler implements ExceptionHandlerContract
      */
     protected function renderExceptionWithCustomRenderer(Throwable $e)
     {
-        return app(ExceptionRenderer::class)->render($e);
+        return ws_app(ExceptionRenderer::class)->render($e);
     }
 
     /**

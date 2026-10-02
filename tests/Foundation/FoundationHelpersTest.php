@@ -215,7 +215,7 @@ class FoundationHelpersTest extends TestCase
 
     protected function makeHotModuleReloadFile($url, $directory = '')
     {
-        app()->usePublicPath(__DIR__);
+        ws_app()->usePublicPath(__DIR__);
 
         $path = ws_public_path(Str::finish($directory, '/').'hot');
 
@@ -228,7 +228,7 @@ class FoundationHelpersTest extends TestCase
 
     protected function makeManifest($directory = '')
     {
-        app()->usePublicPath(__DIR__);
+        ws_app()->usePublicPath(__DIR__);
 
         $path = ws_public_path(Str::finish($directory, '/').'mix-manifest.json');
 
@@ -267,7 +267,7 @@ class FoundationHelpersTest extends TestCase
 
     public function testAbortReceivesCodeAsResponableImplementation()
     {
-        app()->instance('request', $request = Request::create('/'));
+        ws_app()->instance('request', $request = Request::create('/'));
 
         try {
             ws_abort($code = new class implements Responsable

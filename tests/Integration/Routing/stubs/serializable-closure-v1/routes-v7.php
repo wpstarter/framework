@@ -1,6 +1,6 @@
 <?php
 
-app('router')->setCompiledRoutes(
+ws_app('router')->setCompiledRoutes(
     [
         'compiled' => [
             0 => false,

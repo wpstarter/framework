@@ -29,7 +29,7 @@ trait Prunable
 
                         $total++;
                     } catch (Throwable $e) {
-                        $handler = app(ExceptionHandler::class);
+                        $handler = ws_app(ExceptionHandler::class);
 
                         if ($handler) {
                             $handler->report($e);

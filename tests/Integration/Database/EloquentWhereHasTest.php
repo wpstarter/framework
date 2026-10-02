@@ -132,7 +132,7 @@ class EloquentWhereHasTest extends DatabaseTestCase
             };
 
             $callbackQuery = function (QueryBuilder $builder) use ($value) {
-                $hasMany = app()->make(User::class)->posts();
+                $hasMany = ws_app()->make(User::class)->posts();
 
                 $builder->from('posts')->addSelect(['*'])->whereColumn(
                     $hasMany->getQualifiedParentKeyName(),

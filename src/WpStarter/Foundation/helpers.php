@@ -129,7 +129,7 @@ if (! function_exists('ws_app')) {
      * @param  string|class-string<TClass>|null  $abstract
      * @return ($abstract is class-string<TClass> ? TClass : ($abstract is null ? \WpStarter\Foundation\Application : mixed))
      */
-    function ws_app($abstract = null, array $parameters = [])
+    function app($abstract = null, array $parameters = [])
     {
         if (is_null($abstract)) {
             return Container::getInstance();

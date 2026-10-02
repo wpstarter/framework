@@ -65,6 +65,6 @@ class AolInstantMessengerConfig implements SelfBuilding
             'away_message.body' => ['string', 'min:1'],
         ])->validate();
 
-        return app()->build(static::class);
+        return ws_app()->build(static::class);
     }
 }

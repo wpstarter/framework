@@ -4,9 +4,9 @@ use WpStarter\Config\Repository;
 
 use function PHPStan\Testing\assertType;
 
-assertType('WpStarter\Foundation\Application', app());
-assertType('mixed', app('foo'));
-assertType('WpStarter\Config\Repository', app(Repository::class));
+assertType('WpStarter\Foundation\Application', ws_app());
+assertType('mixed', ws_app('foo'));
+assertType('WpStarter\Config\Repository', ws_app(Repository::class));
 
 assertType('WpStarter\Contracts\Auth\Factory', ws_auth());
 assertType('WpStarter\Contracts\Auth\Guard', ws_auth('foo'));

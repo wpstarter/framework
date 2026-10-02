@@ -1899,7 +1899,7 @@ class TestResponseTest extends TestCase
 
     public function testAssertSessionOnlyValidationErrorsUsingAssertOnlyInvalid(): void
     {
-        app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
+        ws_app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
 
         $store->put('errors', $errorBag = new ViewErrorBag);
 
@@ -1950,7 +1950,7 @@ class TestResponseTest extends TestCase
 
     public function testAssertSessionValidationErrorsUsingAssertInvalid(): void
     {
-        app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
+        ws_app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
 
         $store->put('errors', $errorBag = new ViewErrorBag);
 
@@ -1975,7 +1975,7 @@ class TestResponseTest extends TestCase
 
     public function testAssertSessionValidationErrorsUsingAssertValid(): void
     {
-        app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
+        ws_app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
 
         $store->put('errors', $errorBag = new ViewErrorBag);
 
@@ -1989,7 +1989,7 @@ class TestResponseTest extends TestCase
 
     public function testAssertingKeyIsInvalidErrorMessage(): void
     {
-        app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
+        ws_app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
         $store->put('errors', $errorBag = new ViewErrorBag);
         $testResponse = TestResponse::fromBaseResponse(new Response);
 
@@ -2010,7 +2010,7 @@ class TestResponseTest extends TestCase
 
     public function testInvalidWithListOfErrors(): void
     {
-        app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
+        ws_app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
 
         $store->put('errors', $errorBag = new ViewErrorBag);
 
@@ -2699,7 +2699,7 @@ class TestResponseTest extends TestCase
 
     public function testAssertLocation(): void
     {
-        app()->instance('url', $url = new UrlGenerator(new RouteCollection, new Request));
+        ws_app()->instance('url', $url = new UrlGenerator(new RouteCollection, new Request));
 
         $response = TestResponse::fromBaseResponse(
             new RedirectResponse($url->to('https://foo.com'))
@@ -2760,11 +2760,11 @@ class TestResponseTest extends TestCase
 
     public function testAssertRedirectBack(): void
     {
-        app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
+        ws_app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
 
         $store->setPreviousUrl('https://url.com');
 
-        app('url')->setSessionResolver(fn () => app('session.store'));
+        ws_app('url')->setSessionResolver(fn () => ws_app('session.store'));
 
         $response = TestResponse::fromBaseResponse(
             (new Response('', 302))->withHeaders(['Location' => 'https://url.com'])
@@ -2794,7 +2794,7 @@ class TestResponseTest extends TestCase
 
     public function testAssertSessionHasErrors(): void
     {
-        app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
+        ws_app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
 
         $store->put('errors', $errorBag = new ViewErrorBag);
 
@@ -2811,7 +2811,7 @@ class TestResponseTest extends TestCase
 
     public function testAssertJsonSerializedSessionHasErrors(): void
     {
-        app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1), null, 'json'));
+        ws_app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1), null, 'json'));
 
         $store->put('errors', $errorBag = new ViewErrorBag);
 
@@ -2832,7 +2832,7 @@ class TestResponseTest extends TestCase
     {
         $this->expectException(AssertionFailedError::class);
 
-        app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
+        ws_app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
 
         $store->put('errors', $errorBag = new ViewErrorBag);
 
@@ -2849,7 +2849,7 @@ class TestResponseTest extends TestCase
 
     public function testAssertSessionHasNoErrors(): void
     {
-        app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
+        ws_app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
 
         $store->put('errors', $errorBag = new ViewErrorBag);
 
@@ -2877,7 +2877,7 @@ class TestResponseTest extends TestCase
 
     public function testAssertSessionHas(): void
     {
-        app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
+        ws_app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
 
         $store->put('foo', 'value');
         $store->put('bar', 'value');
@@ -2891,7 +2891,7 @@ class TestResponseTest extends TestCase
 
     public function testAssertSessionHasAllWithValues(): void
     {
-        app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
+        ws_app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
 
         $store->put('foo', 'apple');
         $store->put('bar', 'banana');
@@ -2906,7 +2906,7 @@ class TestResponseTest extends TestCase
 
     public function testAssertSessionHasAllShowsAllMismatches(): void
     {
-        app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
+        ws_app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
 
         $store->put('foo', 'wrong1');
         $store->put('bar', 'wrong2');
@@ -2931,7 +2931,7 @@ class TestResponseTest extends TestCase
 
     public function testAssertSessionHasAllWithMixedKeys(): void
     {
-        app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
+        ws_app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
 
         $store->put('foo', 'apple');
         $store->put('bar', 'banana');
@@ -2948,7 +2948,7 @@ class TestResponseTest extends TestCase
 
     public function testAssertSessionHasAllWithClosures(): void
     {
-        app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
+        ws_app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
 
         $store->put('foo', 'apple');
         $store->put('bar', 'banana');
@@ -2965,7 +2965,7 @@ class TestResponseTest extends TestCase
     {
         $this->expectException(AssertionFailedError::class);
 
-        app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
+        ws_app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
 
         $store->put('foo', 'value');
 
@@ -2979,7 +2979,7 @@ class TestResponseTest extends TestCase
     {
         $this->expectException(AssertionFailedError::class);
 
-        app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
+        ws_app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
 
         $store->put('foo', 'goodvalue');
 
@@ -2991,7 +2991,7 @@ class TestResponseTest extends TestCase
     {
         $this->expectException(AssertionFailedError::class);
 
-        app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
+        ws_app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
 
         $store->put('foo', 'goodvalue');
 
@@ -3008,7 +3008,7 @@ class TestResponseTest extends TestCase
     #[TestWith(['foo', 'badvalue'])]
     public function testAssertSessionMissingValueIsMissing(array|string $key, mixed $value): void
     {
-        app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
+        ws_app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
 
         $store->put('foo', 'goodvalue');
 
@@ -3018,7 +3018,7 @@ class TestResponseTest extends TestCase
 
     public function testAssertSessionMissingValueIsMissingClosure(): void
     {
-        app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
+        ws_app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
 
         $store->put('foo', 'goodvalue');
 
@@ -3034,7 +3034,7 @@ class TestResponseTest extends TestCase
 
     public function testAssertSessionHasInput(): void
     {
-        app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
+        ws_app()->instance('session.store', $store = new Store('test-session', new ArraySessionHandler(1)));
 
         $store->put('_old_input', [
             'foo' => 'value',

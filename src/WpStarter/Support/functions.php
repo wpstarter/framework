@@ -21,12 +21,12 @@ if (! function_exists('WpStarter\Support\defer')) {
     function defer(?callable $callback = null, ?string $name = null, bool $always = false): DeferredCallback|DeferredCallbackCollection
     {
         if ($callback === null) {
-            return app(DeferredCallbackCollection::class);
+            return ws_app(DeferredCallbackCollection::class);
         }
 
         return ws_tap(
             new DeferredCallback($callback, $name, $always),
-            fn ($deferred) => app(DeferredCallbackCollection::class)[] = $deferred
+            fn ($deferred) => ws_app(DeferredCallbackCollection::class)[] = $deferred
         );
     }
 }

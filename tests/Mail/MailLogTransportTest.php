@@ -25,7 +25,7 @@ class MailLogTransportTest extends TestCase
             'path' => 'mail.log',
         ]);
 
-        $transport = app('mailer')->getSymfonyTransport();
+        $transport = ws_app('mailer')->getSymfonyTransport();
         $this->assertInstanceOf(LogTransport::class, $transport);
 
         $logger = $transport->logger();
@@ -92,7 +92,7 @@ class MailLogTransportTest extends TestCase
 
         $logger = $this->app->instance('log', new NullLogger);
 
-        $transportLogger = app('mailer')->getSymfonyTransport()->logger();
+        $transportLogger = ws_app('mailer')->getSymfonyTransport()->logger();
 
         $this->assertEquals($logger, $transportLogger);
     }

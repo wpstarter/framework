@@ -25,7 +25,7 @@ class NotificationSenderTest extends TestCase
     {
         $notifiable = m::mock(Notifiable::class);
         $manager = m::mock(ChannelManager::class);
-        $manager->shouldReceive('getContainer')->andReturn(app());
+        $manager->shouldReceive('getContainer')->andReturn(ws_app());
         $bus = m::mock(BusDispatcher::class);
         $bus->shouldReceive('dispatch');
         $events = m::mock(EventDispatcher::class);
@@ -40,7 +40,7 @@ class NotificationSenderTest extends TestCase
     {
         $notifiable = m::mock(Notifiable::class);
         $manager = m::mock(ChannelManager::class);
-        $manager->shouldReceive('getContainer')->andReturn(app());
+        $manager->shouldReceive('getContainer')->andReturn(ws_app());
         $bus = m::mock(BusDispatcher::class);
         $bus->shouldReceive('dispatch')
             ->once()
@@ -79,7 +79,7 @@ class NotificationSenderTest extends TestCase
     {
         $notifiable = new AnonymousNotifiable;
         $manager = m::mock(ChannelManager::class);
-        $manager->shouldReceive('getContainer')->andReturn(app());
+        $manager->shouldReceive('getContainer')->andReturn(ws_app());
         $bus = m::mock(BusDispatcher::class);
         $bus->shouldNotReceive('dispatch');
         $events = m::mock(EventDispatcher::class);
@@ -101,7 +101,7 @@ class NotificationSenderTest extends TestCase
             });
         $events = m::mock(EventDispatcher::class);
         $events->shouldReceive('listen')->once();
-        $manager->shouldReceive('getContainer')->andReturn(app());
+        $manager->shouldReceive('getContainer')->andReturn(ws_app());
 
         $sender = new NotificationSender($manager, $bus, $events);
 
@@ -112,7 +112,7 @@ class NotificationSenderTest extends TestCase
     {
         $notifiable = m::mock(Notifiable::class);
         $manager = m::mock(ChannelManager::class);
-        $manager->shouldReceive('getContainer')->andReturn(app());
+        $manager->shouldReceive('getContainer')->andReturn(ws_app());
         $bus = m::mock(BusDispatcher::class);
         $bus->shouldReceive('dispatch')
             ->once()
@@ -141,7 +141,7 @@ class NotificationSenderTest extends TestCase
     {
         $notifiable = new AnonymousNotifiable;
         $manager = m::mock(ChannelManager::class);
-        $manager->shouldReceive('getContainer')->andReturn(app());
+        $manager->shouldReceive('getContainer')->andReturn(ws_app());
         $bus = m::mock(BusDispatcher::class);
         $bus->shouldReceive('dispatch')
             ->once()
@@ -166,7 +166,7 @@ class NotificationSenderTest extends TestCase
     {
         $notifiable = new AnonymousNotifiable;
         $manager = m::mock(ChannelManager::class);
-        $manager->shouldReceive('getContainer')->andReturn(app());
+        $manager->shouldReceive('getContainer')->andReturn(ws_app());
         $bus = m::mock(BusDispatcher::class);
         $bus->shouldReceive('dispatch')
             ->once()

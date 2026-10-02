@@ -16,7 +16,7 @@ class FoundationViteTest extends TestCase
     {
         parent::setUp();
 
-        app('config')->set('app.asset_url', 'https://example.com');
+        ws_app('config')->set('app.asset_url', 'https://example.com');
     }
 
     protected function tearDown(): void
@@ -31,7 +31,7 @@ class FoundationViteTest extends TestCase
     {
         $this->makeViteManifest();
 
-        $result = app(Vite::class)('resources/js/app.js');
+        $result = ws_app(Vite::class)('resources/js/app.js');
 
         $this->assertStringEndsWith('<script type="module" src="https://example.com/build/assets/app.versioned.js"></script>', $result->toHtml());
     }
@@ -40,7 +40,7 @@ class FoundationViteTest extends TestCase
     {
         $this->makeViteManifest();
 
-        $result = app(Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
+        $result = ws_app(Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
 
         $this->assertStringEndsWith(
             '<link rel="stylesheet" href="https://example.com/build/assets/app.versioned.css" />'
@@ -53,7 +53,7 @@ class FoundationViteTest extends TestCase
     {
         $this->makeViteManifest();
 
-        $result = app(Vite::class)('resources/js/app-with-css-import.js');
+        $result = ws_app(Vite::class)('resources/js/app-with-css-import.js');
 
         $this->assertStringEndsWith(
             '<link rel="stylesheet" href="https://example.com/build/assets/imported-css.versioned.css" />'
@@ -66,7 +66,7 @@ class FoundationViteTest extends TestCase
     {
         $this->makeViteManifest();
 
-        $result = app(Vite::class)(['resources/js/app-with-shared-css.js']);
+        $result = ws_app(Vite::class)(['resources/js/app-with-shared-css.js']);
 
         $this->assertStringEndsWith(
             '<link rel="stylesheet" href="https://example.com/build/assets/shared-css.versioned.css" />'
@@ -79,7 +79,7 @@ class FoundationViteTest extends TestCase
     {
         $this->makeViteHotFile();
 
-        $result = app(Vite::class)('resources/js/app.js');
+        $result = ws_app(Vite::class)('resources/js/app.js');
 
         $this->assertSame(
             '<script type="module" src="http://localhost:3000/@vite/client"></script>'
@@ -92,7 +92,7 @@ class FoundationViteTest extends TestCase
     {
         $this->makeViteHotFile();
 
-        $result = app(Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
+        $result = ws_app(Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
 
         $this->assertSame(
             '<script type="module" src="http://localhost:3000/@vite/client"></script>'
@@ -108,7 +108,7 @@ class FoundationViteTest extends TestCase
         $this->makeViteHotFile();
 
         $nonce = ViteFacade::useCspNonce();
-        $result = app(Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
+        $result = ws_app(Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
 
         $this->assertSame('random-string-with-length:40', $nonce);
         $this->assertSame('random-string-with-length:40', ViteFacade::cspNonce());
@@ -128,7 +128,7 @@ class FoundationViteTest extends TestCase
         $this->makeViteManifest();
 
         $nonce = ViteFacade::useCspNonce();
-        $result = app(Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
+        $result = ws_app(Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
 
         $this->assertSame('random-string-with-length:40', $nonce);
         $this->assertSame('random-string-with-length:40', ViteFacade::cspNonce());
@@ -146,7 +146,7 @@ class FoundationViteTest extends TestCase
         $this->makeViteHotFile();
 
         $nonce = ViteFacade::useCspNonce('expected-nonce');
-        $result = app(Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
+        $result = ws_app(Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
 
         $this->assertSame('expected-nonce', $nonce);
         $this->assertSame('expected-nonce', ViteFacade::cspNonce());
@@ -163,7 +163,7 @@ class FoundationViteTest extends TestCase
         $this->makeViteManifest();
 
         $nonce = ViteFacade::useCspNonce('expected-nonce');
-        $result = app(Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
+        $result = ws_app(Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
 
         $this->assertSame('expected-nonce', $nonce);
         $this->assertSame('expected-nonce', ViteFacade::cspNonce());
@@ -178,7 +178,7 @@ class FoundationViteTest extends TestCase
     {
         $this->makeViteHotFile();
 
-        $result = app(Vite::class)->reactRefresh();
+        $result = ws_app(Vite::class)->reactRefresh();
 
         $this->assertStringNotContainsString('nonce', $result);
     }
@@ -188,7 +188,7 @@ class FoundationViteTest extends TestCase
         $this->makeViteHotFile();
 
         $nonce = ViteFacade::useCspNonce('expected-nonce');
-        $result = app(Vite::class)->reactRefresh();
+        $result = ws_app(Vite::class)->reactRefresh();
 
         $this->assertStringContainsString(sprintf('nonce="%s"', $nonce), $result);
     }
@@ -209,7 +209,7 @@ class FoundationViteTest extends TestCase
             ],
         ], $buildDir);
 
-        $result = app(Vite::class)(['resources/css/app.css', 'resources/js/app.js'], $buildDir);
+        $result = ws_app(Vite::class)(['resources/css/app.css', 'resources/js/app.js'], $buildDir);
 
         $this->assertStringEndsWith(
             '<link rel="stylesheet" href="https://example.com/'.$buildDir.'/assets/app.versioned.css" integrity="expected-app.css-integrity" />'
@@ -245,7 +245,7 @@ class FoundationViteTest extends TestCase
             ],
         ], $buildDir);
 
-        $result = app(Vite::class)('resources/js/app.js', $buildDir);
+        $result = ws_app(Vite::class)('resources/js/app.js', $buildDir);
 
         $this->assertStringEndsWith(
             '<link rel="stylesheet" href="https://example.com/'.$buildDir.'/assets/direct-css-dependency.aabbcc.css" integrity="expected-imported-css.css-integrity" />'
@@ -281,7 +281,7 @@ class FoundationViteTest extends TestCase
             ],
         ], $buildDir);
 
-        $result = app(Vite::class)('resources/js/app.js', $buildDir);
+        $result = ws_app(Vite::class)('resources/js/app.js', $buildDir);
 
         $this->assertStringEndsWith(
             '<link rel="stylesheet" href="https://example.com/'.$buildDir.'/assets/imported-css.versioned.css" integrity="expected-imported-css.css-integrity" />'
@@ -309,7 +309,7 @@ class FoundationViteTest extends TestCase
         ], $buildDir);
         ViteFacade::useIntegrityKey('different-integrity-key');
 
-        $result = app(Vite::class)(['resources/css/app.css', 'resources/js/app.js'], $buildDir);
+        $result = ws_app(Vite::class)(['resources/css/app.css', 'resources/js/app.js'], $buildDir);
 
         $this->assertStringEndsWith(
             '<link rel="stylesheet" href="https://example.com/'.$buildDir.'/assets/app.versioned.css" integrity="expected-app.css-integrity" />'
@@ -382,7 +382,7 @@ class FoundationViteTest extends TestCase
             ];
         });
 
-        $result = app(Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
+        $result = ws_app(Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
 
         $this->assertStringEndsWith(
             '<link rel="stylesheet" href="https://example.com/build/assets/app.versioned.css" />'
@@ -450,7 +450,7 @@ class FoundationViteTest extends TestCase
             ];
         });
 
-        $result = app(Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
+        $result = ws_app(Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
 
         $this->assertStringEndsWith(
             '<link rel="stylesheet" href="https://example.com/build/assets/app.versioned.css" general="attribute" crossorigin data-persistent-across-pages="YES" keep-me />'
@@ -485,7 +485,7 @@ class FoundationViteTest extends TestCase
             ];
         });
 
-        $result = app(Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
+        $result = ws_app(Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
 
         $this->assertSame(
             '<script type="module" src="http://localhost:3000/@vite/client" general="attribute" crossorigin data-persistent-across-pages="YES" keep-me></script>'

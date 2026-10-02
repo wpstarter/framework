@@ -46,7 +46,7 @@ trait WithCachedRoutes
         $app->instance('routes.cached', true);
 
         RouteServiceProvider::loadCachedRoutesUsing(
-            static fn () => app('router')->setCompiledRoutes(CachedState::$cachedRoutes)
+            static fn () => ws_app('router')->setCompiledRoutes(CachedState::$cachedRoutes)
         );
     }
 }

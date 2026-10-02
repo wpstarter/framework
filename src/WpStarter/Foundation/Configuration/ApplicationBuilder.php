@@ -222,7 +222,7 @@ class ApplicationBuilder
                     try {
                         Event::dispatch(new DiagnosingHealth);
                     } catch (\Throwable $e) {
-                        if (app()->hasDebugModeEnabled()) {
+                        if (ws_app()->hasDebugModeEnabled()) {
                             throw $e;
                         }
 

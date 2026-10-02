@@ -119,7 +119,7 @@ class Renderer
     {
         $viteJsAutoRefresh = '';
 
-        $vite = app(\WpStarter\Foundation\Vite::class);
+        $vite = ws_app(\WpStarter\Foundation\Vite::class);
 
         if (is_file($vite->hotFile())) {
             $viteJsAutoRefresh = $vite->__invoke([]);

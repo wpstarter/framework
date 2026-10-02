@@ -1532,7 +1532,7 @@ class ClassThatBindsOnInstantiation
 {
     public function __construct()
     {
-        app()->instance('ClassWasInstantiated', true);
+        ws_app()->instance('ClassWasInstantiated', true);
     }
 }
 
@@ -1542,8 +1542,8 @@ class PrecognitionInvokingController extends HandlePrecognitiveRequests
     {
         parent::prepareForPrecognition($request);
 
-        app()->bind(CallableDispatcherContract::class, fn ($app) => new CallableDispatcher($app));
-        app()->bind(ControllerDispatcherContract::class, fn ($app) => new ControllerDispatcher($app));
+        ws_app()->bind(CallableDispatcherContract::class, fn ($app) => new CallableDispatcher($app));
+        ws_app()->bind(ControllerDispatcherContract::class, fn ($app) => new ControllerDispatcher($app));
     }
 }
 

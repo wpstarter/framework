@@ -274,7 +274,7 @@ class QueueSqsQueueTest extends TestCase
         $this->sqs->shouldReceive('sendMessage')->once()->with(['QueueUrl' => $this->queueUrl, 'MessageBody' => $this->mockedPayload])->andReturn($this->mockedSendMessageResponseModel);
 
         $dispatcher = new Dispatcher($container, fn () => $queue);
-        app()->instance(DispatcherContract::class, $dispatcher);
+        ws_app()->instance(DispatcherContract::class, $dispatcher);
 
         // Destroy object to trigger dispatch.
         unset($pendingDispatch);
@@ -307,7 +307,7 @@ class QueueSqsQueueTest extends TestCase
         $this->sqs->shouldReceive('sendMessage')->once()->with(['QueueUrl' => $this->queueUrl, 'MessageBody' => $this->mockedPayload, 'MessageGroupId' => $this->mockedMessageGroupId])->andReturn($this->mockedSendMessageResponseModel);
 
         $dispatcher = new Dispatcher($container, fn () => $queue);
-        app()->instance(DispatcherContract::class, $dispatcher);
+        ws_app()->instance(DispatcherContract::class, $dispatcher);
 
         // Destroy object to trigger dispatch.
         unset($pendingDispatch);
@@ -477,7 +477,7 @@ class QueueSqsQueueTest extends TestCase
         ])->andReturn($this->mockedSendMessageResponseModel);
 
         $dispatcher = new Dispatcher($container, fn () => $queue);
-        app()->instance(DispatcherContract::class, $dispatcher);
+        ws_app()->instance(DispatcherContract::class, $dispatcher);
 
         // Destroy object to trigger dispatch.
         unset($pendingDispatch);
@@ -505,7 +505,7 @@ class QueueSqsQueueTest extends TestCase
         ])->andReturn($this->mockedSendMessageResponseModel);
 
         $dispatcher = new Dispatcher($container, fn () => $queue);
-        app()->instance(DispatcherContract::class, $dispatcher);
+        ws_app()->instance(DispatcherContract::class, $dispatcher);
 
         // Destroy object to trigger dispatch.
         unset($pendingDispatch);
@@ -542,7 +542,7 @@ class QueueSqsQueueTest extends TestCase
         ])->andReturn($this->mockedSendMessageResponseModel);
 
         $dispatcher = new Dispatcher($container, fn () => $queue);
-        app()->instance(DispatcherContract::class, $dispatcher);
+        ws_app()->instance(DispatcherContract::class, $dispatcher);
 
         // Destroy object to trigger dispatch.
         unset($pendingDispatch);
@@ -580,7 +580,7 @@ class QueueSqsQueueTest extends TestCase
         })->andReturn($this->mockedSendMessageResponseModel);
 
         $dispatcher = new Dispatcher($container, fn () => $queue);
-        app()->instance(DispatcherContract::class, $dispatcher);
+        ws_app()->instance(DispatcherContract::class, $dispatcher);
 
         // Destroy object to trigger dispatch.
         unset($pendingDispatch);
@@ -652,7 +652,7 @@ class QueueSqsQueueTest extends TestCase
         ])->andReturn($this->mockedSendMessageResponseModel);
 
         $dispatcher = new Dispatcher($container, fn () => $queue);
-        app()->instance(DispatcherContract::class, $dispatcher);
+        ws_app()->instance(DispatcherContract::class, $dispatcher);
 
         // Destroy object to trigger dispatch.
         unset($pendingDispatch);

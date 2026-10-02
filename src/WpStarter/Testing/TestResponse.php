@@ -241,7 +241,7 @@ class TestResponse implements ArrayAccess
             $this->statusMessageWithDetails('201, 301, 302, 303, 307, 308', $this->getStatusCode()),
         );
 
-        $this->assertLocation(app('url')->previous());
+        $this->assertLocation(ws_app('url')->previous());
 
         return $this;
     }
@@ -330,7 +330,7 @@ class TestResponse implements ArrayAccess
             ]), '?');
 
             PHPUnit::withResponse($this)->assertEquals(
-                app('url')->to($uri), $expectedUri
+                ws_app('url')->to($uri), $expectedUri
             );
         }
 
@@ -430,7 +430,7 @@ class TestResponse implements ArrayAccess
     public function assertLocation($uri)
     {
         PHPUnit::withResponse($this)->assertEquals(
-            app('url')->to($uri), app('url')->to($this->headers->get('Location', ''))
+            ws_app('url')->to($uri), ws_app('url')->to($this->headers->get('Location', ''))
         );
 
         return $this;
@@ -607,7 +607,7 @@ class TestResponse implements ArrayAccess
                 }
 
                 $decryptedValue = CookieValuePrefix::remove(
-                    app('encrypter')->decrypt($cookie->getValue(), $unserialize)
+                    ws_app('encrypter')->decrypt($cookie->getValue(), $unserialize)
                 );
 
                 return new Cookie(
@@ -1766,7 +1766,7 @@ class TestResponse implements ArrayAccess
      */
     protected function session()
     {
-        $session = app('session.store');
+        $session = ws_app('session.store');
 
         if (! $session->isStarted()) {
             $session->start();
