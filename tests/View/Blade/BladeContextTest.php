@@ -15,7 +15,7 @@ class BladeContextTest extends AbstractBladeTestCase
 if (context()->has($__contextArgs[0])) :
 if (isset($value)) { $__contextPrevious[] = $value; }
 $value = context()->get($__contextArgs[0]); ?>
-    <span><?php echo e($value); ?></span>
+    <span><?php echo ws_e($value); ?></span>
 <?php unset($value);
 if (isset($__contextPrevious) && !empty($__contextPrevious)) { $value = array_pop($__contextPrevious); }
 if (isset($__contextPrevious) && empty($__contextPrevious)) { unset($__contextPrevious); }

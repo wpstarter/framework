@@ -15,7 +15,7 @@ class BladeSessionTest extends AbstractBladeTestCase
 if (session()->has($__sessionArgs[0])) :
 if (isset($value)) { $__sessionPrevious[] = $value; }
 $value = session()->get($__sessionArgs[0]); ?>
-    <span><?php echo e($value); ?></span>
+    <span><?php echo ws_e($value); ?></span>
 <?php unset($value);
 if (isset($__sessionPrevious) && !empty($__sessionPrevious)) { $value = array_pop($__sessionPrevious); }
 if (isset($__sessionPrevious) && empty($__sessionPrevious)) { unset($__sessionPrevious); }

@@ -240,7 +240,7 @@ class BladeTest extends TestCase
 
         $compiledFiles = Finder::create()->in(Config::get('view.compiled'))->files();
         $found = ws_collect($compiledFiles)
-            ->contains(fn (SplFileInfo $file) => str_contains($file->getContents(), 'echo "<?php echo e($scriptMessage); ?>" > output.log'));
+            ->contains(fn (SplFileInfo $file) => str_contains($file->getContents(), 'echo "<?php echo ws_e($scriptMessage); ?>" > output.log'));
         $this->assertTrue($found);
     }
 

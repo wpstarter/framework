@@ -134,7 +134,7 @@ class BladeComponentTagCompilerTest extends AbstractBladeTestCase
 <?php if (isset(\$attributes) && \$attributes instanceof WpStarter\View\ComponentAttributeBag): ?>
 <?php \$attributes = \$attributes->except(\WpStarter\Tests\View\Blade\TestAlertComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php \$component->withAttributes(['type' => 'foo','limit' => '5','@click' => 'foo','wire:click' => 'changePlan(\''.e(\$plan).'\')','required' => true,'x-intersect.margin.-50%.0px' => 'visibleSection = \'profile\'']); ?>\n".
+<?php \$component->withAttributes(['type' => 'foo','limit' => '5','@click' => 'foo','wire:click' => 'changePlan(\''.ws_e(\$plan).'\')','required' => true,'x-intersect.margin.-50%.0px' => 'visibleSection = \'profile\'']); ?>\n".
 "@endComponentClass##END-COMPONENT-CLASS####BEGIN-COMPONENT-CLASS##@component('WpStarter\Tests\View\Blade\TestAlertComponent', 'alert', [])
 <?php if (isset(\$attributes) && \$attributes instanceof WpStarter\View\ComponentAttributeBag): ?>
 <?php \$attributes = \$attributes->except(\WpStarter\Tests\View\Blade\TestAlertComponent::ignoredParameterNames()); ?>
