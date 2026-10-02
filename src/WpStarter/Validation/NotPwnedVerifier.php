@@ -4,7 +4,7 @@ namespace WpStarter\Validation;
 
 use Exception;
 use WpStarter\Contracts\Validation\UncompromisedVerifier;
-use WpStarter\Support\Str;
+use WpStarter\Support\Stringable;
 
 class NotPwnedVerifier implements UncompromisedVerifier
 {
@@ -27,7 +27,6 @@ class NotPwnedVerifier implements UncompromisedVerifier
      *
      * @param  \WpStarter\Http\Client\Factory  $factory
      * @param  int|null  $timeout
-     * @return void
      */
     public function __construct($factory, $timeout = null)
     {
@@ -90,15 +89,15 @@ class NotPwnedVerifier implements UncompromisedVerifier
                 'https://api.pwnedpasswords.com/range/'.$hashPrefix
             );
         } catch (Exception $e) {
-            ws_report($e);
+            report($e);
         }
 
         $body = (isset($response) && $response->successful())
             ? $response->body()
             : '';
 
-        return Str::of($body)->trim()->explode("\n")->filter(function ($line) {
-            return Str::contains($line, ':');
+        return (new Stringable($body))->trim()->explode("\n")->filter(function ($line) {
+            return str_contains($line, ':');
         });
     }
 }

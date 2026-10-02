@@ -2,6 +2,7 @@
 
 namespace WpStarter\Tests\Integration\Database;
 
+use Exception;
 use WpStarter\Contracts\Database\Eloquent\Castable;
 use WpStarter\Contracts\Database\Eloquent\CastsAttributes;
 use WpStarter\Contracts\Database\Eloquent\CastsInboundAttributes;
@@ -15,7 +16,7 @@ use WpStarter\Support\Facades\Schema;
 
 class DatabaseEloquentModelCustomCastingTest extends DatabaseTestCase
 {
-    protected function defineDatabaseMigrationsAfterDatabaseRefreshed()
+    protected function afterRefreshingDatabase()
     {
         Schema::create('test_eloquent_model_with_custom_casts', function (Blueprint $table) {
             $table->increments('id');
@@ -100,8 +101,17 @@ class DatabaseEloquentModelCustomCastingTest extends DatabaseTestCase
         $this->assertTrue($model->isDirty('options'));
 
         $model = new TestEloquentModelWithCustomCast;
-        $model->birthday_at = ws_now();
+        $model->birthday_at = now();
         $this->assertIsString($model->toArray()['birthday_at']);
+
+        $model = new TestEloquentModelWithCustomCast;
+        $now = now()->toImmutable();
+        $model->anniversary_on_with_object_caching = $now;
+        $model->anniversary_on_without_object_caching = $now;
+        $this->assertSame($now, $model->anniversary_on_with_object_caching);
+        $this->assertSame('UTC', $model->anniversary_on_with_object_caching->format('e'));
+        $this->assertNotSame($now, $model->anniversary_on_without_object_caching);
+        $this->assertNotSame('UTC', $model->anniversary_on_without_object_caching->format('e'));
     }
 
     public function testGetOriginalWithCastValueObjects()
@@ -157,6 +167,14 @@ class DatabaseEloquentModelCustomCastingTest extends DatabaseTestCase
         $model->decrement('price', '333.333');
 
         $this->assertSame((new Decimal('320.988'))->getValue(), $model->price->getValue());
+
+        $model->increment('price', new Decimal('100.001'));
+
+        $this->assertSame((new Decimal('420.989'))->getValue(), $model->price->getValue());
+
+        $model->decrement('price', new Decimal('200.002'));
+
+        $this->assertSame((new Decimal('220.987'))->getValue(), $model->price->getValue());
     }
 
     public function testSerializableCasts()
@@ -216,6 +234,18 @@ class DatabaseEloquentModelCustomCastingTest extends DatabaseTestCase
         $this->assertSame('117 Spencer St.', $model->address->lineOne);
     }
 
+    public function testSettingAttributesUsingArrowClearsTheCastCache()
+    {
+        $model = new TestEloquentModelWithCustomCast;
+        $model->typed_settings = ['foo' => true];
+
+        $this->assertTrue($model->typed_settings->foo);
+
+        $model->setAttribute('typed_settings->foo', false);
+
+        $this->assertFalse($model->typed_settings->foo);
+    }
+
     public function testWithCastableInterface()
     {
         $model = new TestEloquentModelWithCustomCast;
@@ -257,6 +287,27 @@ class DatabaseEloquentModelCustomCastingTest extends DatabaseTestCase
 
         $model->undefined_cast_column = 'Glāžšķūņu rūķīši';
     }
+
+    public function testMutatorCanDependOnAnotherCastedAttribute()
+    {
+        $model = new TestEloquentModelWithCustomCast([
+            'address_line_one' => '110 Kingsbrook St.',
+            'address_line_two' => 'My Childhood House',
+        ]);
+        $model->address->lineOne = 'Changed St.';
+        $this->assertSame('Changed St. (My Childhood House)', $model->address_string);
+    }
+
+    public function testMutatorCanDependOnAnotherCastedCarbonAttribute()
+    {
+        $model = new TestEloquentModelWithCustomCast([
+            'dob' => '2000-11-11',
+            'tob' => '2000-11-11 11:11:00',
+        ]);
+
+        $model->dob->addDay();
+        $this->assertSame('2000-11-12 11:11:00', $model->tob);
+    }
 }
 
 class TestEloquentModelWithCustomCast extends Model
@@ -274,22 +325,87 @@ class TestEloquentModelWithCustomCast extends Model
      * @var array
      */
     protected $casts = [
+        'dob' => DOBCaster::class,
         'address' => AddressCaster::class,
         'price' => DecimalCaster::class,
         'password' => HashCaster::class,
         'other_password' => HashCaster::class.':md5',
         'uppercase' => UppercaseCaster::class,
         'options' => JsonCaster::class,
+        'typed_settings' => JsonSettingsCaster::class,
         'value_object_with_caster' => ValueObject::class,
         'value_object_caster_with_argument' => ValueObject::class.':argument',
         'value_object_caster_with_caster_instance' => ValueObjectWithCasterInstance::class,
         'undefined_cast_column' => UndefinedCast::class,
         'birthday_at' => DateObjectCaster::class,
+        'anniversary_on_with_object_caching' => DateTimezoneCasterWithObjectCaching::class.':America/New_York',
+        'anniversary_on_without_object_caching' => DateTimezoneCasterWithoutObjectCaching::class.':America/New_York',
     ];
+
+    protected function getTobAttribute(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (isset($this->attributes['dob'])) {
+            return Carbon::parse($this->attributes['dob'])->toDateString().' '.
+                Carbon::parse($value)->toTimeString();
+        }
+
+        return Carbon::parse($value)->toDateTimeString();
+    }
+
+    /**
+     * A computed attribute that depends on another casted attribute.
+     *
+     * This simulates a mutator that uses the value of a casted property.
+     */
+    protected function addressString(): \WpStarter\Database\Eloquent\Casts\Attribute
+    {
+        return \WpStarter\Database\Eloquent\Casts\Attribute::get(function () {
+            $address = $this->address;
+
+            // If mergeAttributesFromClassCasts() hasn't prepared casts properly,
+            // this could be an array instead of an Address instance.
+            if (! $address instanceof Address) {
+                throw new \RuntimeException('Address was not cast before mutator access.');
+            }
+
+            return "{$address->lineOne} ({$address->lineTwo})";
+        });
+    }
+}
+
+class DOBCaster implements CastsAttributes
+{
+    public function get($model, $key, $value, $attributes)
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        return Carbon::parse($value);
+    }
+
+    public function set($model, $key, $value, $attributes)
+    {
+        if ($value instanceof Carbon) {
+            return [$key => $value->toDateString()];
+        }
+
+        if ($value === null) {
+            return [$key => null];
+        }
+
+        return [$key => (string) $value];
+    }
 }
 
 class HashCaster implements CastsInboundAttributes
 {
+    protected $algorithm;
+
     public function __construct($algorithm = 'sha256')
     {
         $this->algorithm = $algorithm;
@@ -351,6 +467,41 @@ class JsonCaster implements CastsAttributes
     }
 }
 
+class JsonSettingsCaster implements CastsAttributes
+{
+    public function get($model, string $key, $value, array $attributes): ?Settings
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if ($value instanceof Settings) {
+            return $value;
+        }
+
+        $payload = json_decode($value, true, JSON_THROW_ON_ERROR);
+
+        return Settings::from($payload);
+    }
+
+    public function set($model, string $key, $value, array $attributes): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (is_array($value)) {
+            $value = Settings::from($value);
+        }
+
+        if (! $value instanceof Settings) {
+            throw new Exception("Attribute `{$key}` with JsonSettingsCaster should be a Settings object");
+        }
+
+        return $value->toJson();
+    }
+}
+
 class DecimalCaster implements CastsAttributes, DeviatesCastableAttributes, SerializesCastableAttributes
 {
     public function get($model, $key, $value, $attributes)
@@ -365,12 +516,12 @@ class DecimalCaster implements CastsAttributes, DeviatesCastableAttributes, Seri
 
     public function increment($model, $key, $value, $attributes)
     {
-        return new Decimal($attributes[$key] + $value);
+        return new Decimal($attributes[$key] + ($value instanceof Decimal ? (string) $value : $value));
     }
 
     public function decrement($model, $key, $value, $attributes)
     {
-        return new Decimal($attributes[$key] - $value);
+        return new Decimal($attributes[$key] - ($value instanceof Decimal ? (string) $value : $value));
     }
 
     public function serialize($model, $key, $value, $attributes)
@@ -465,6 +616,31 @@ class Address
     }
 }
 
+class Settings
+{
+    public ?bool $foo;
+    public ?bool $bar;
+
+    public function __construct(?bool $foo, ?bool $bar)
+    {
+        $this->foo = $foo;
+        $this->bar = $bar;
+    }
+
+    public static function from(array $data): Settings
+    {
+        return new self(
+            $data['foo'] ?? null,
+            $data['bar'] ?? null,
+        );
+    }
+
+    public function toJson($options = 0): string
+    {
+        return json_encode(['foo' => $this->foo, 'bar' => $this->bar], $options);
+    }
+}
+
 final class Decimal
 {
     private $value;
@@ -507,4 +683,26 @@ class DateObjectCaster implements CastsAttributes
     {
         return $value->format('Y-m-d');
     }
+}
+
+class DateTimezoneCasterWithObjectCaching implements CastsAttributes
+{
+    public function __construct(private string $timezone = 'UTC')
+    {
+    }
+
+    public function get($model, $key, $value, $attributes)
+    {
+        return Carbon::parse($value, $this->timezone);
+    }
+
+    public function set($model, $key, $value, $attributes)
+    {
+        return $value->timezone($this->timezone)->format('Y-m-d');
+    }
+}
+
+class DateTimezoneCasterWithoutObjectCaching extends DateTimezoneCasterWithObjectCaching
+{
+    public bool $withoutObjectCaching = true;
 }

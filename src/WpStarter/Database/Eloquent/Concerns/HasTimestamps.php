@@ -2,6 +2,7 @@
 
 namespace WpStarter\Database\Eloquent\Concerns;
 
+use WpStarter\Support\Arr;
 use WpStarter\Support\Facades\Date;
 
 trait HasTimestamps
@@ -14,12 +15,30 @@ trait HasTimestamps
     public $timestamps = true;
 
     /**
+     * The list of models classes that have timestamps temporarily disabled.
+     *
+     * @var array
+     */
+    protected static $ignoreTimestampsOn = [];
+
+    /**
      * Update the model's update timestamp.
      *
+     * @param  array|string|null  $attribute
      * @return bool
      */
-    public function touch()
+    public function touch($attribute = null)
     {
+        if ($attribute) {
+            $time = $this->freshTimestamp();
+
+            foreach (Arr::wrap($attribute) as $column) {
+                $this->{$column} = $time;
+            }
+
+            return $this->save();
+        }
+
         if (! $this->usesTimestamps()) {
             return false;
         }
@@ -30,9 +49,20 @@ trait HasTimestamps
     }
 
     /**
+     * Update the model's update timestamp without raising any events.
+     *
+     * @param  array|string|null  $attribute
+     * @return bool
+     */
+    public function touchQuietly($attribute = null)
+    {
+        return static::withoutEvents(fn () => $this->touch($attribute));
+    }
+
+    /**
      * Update the creation and update timestamps.
      *
-     * @return void
+     * @return $this
      */
     public function updateTimestamps()
     {
@@ -49,6 +79,8 @@ trait HasTimestamps
         if (! $this->exists && ! is_null($createdAtColumn) && ! $this->isDirty($createdAtColumn)) {
             $this->setCreatedAt($time);
         }
+
+        return $this;
     }
 
     /**
@@ -104,7 +136,7 @@ trait HasTimestamps
      */
     public function usesTimestamps()
     {
-        return $this->timestamps;
+        return $this->timestamps && ! static::isIgnoringTimestamps($this::class);
     }
 
     /**
@@ -128,22 +160,78 @@ trait HasTimestamps
     }
 
     /**
-     * Get the fully qualified "created at" column.
+     * Get the fully-qualified "created at" column.
      *
      * @return string|null
      */
     public function getQualifiedCreatedAtColumn()
     {
-        return $this->qualifyColumn($this->getCreatedAtColumn());
+        $column = $this->getCreatedAtColumn();
+
+        return $column ? $this->qualifyColumn($column) : null;
     }
 
     /**
-     * Get the fully qualified "updated at" column.
+     * Get the fully-qualified "updated at" column.
      *
      * @return string|null
      */
     public function getQualifiedUpdatedAtColumn()
     {
-        return $this->qualifyColumn($this->getUpdatedAtColumn());
+        $column = $this->getUpdatedAtColumn();
+
+        return $column ? $this->qualifyColumn($column) : null;
+    }
+
+    /**
+     * Disable timestamps for the current class during the given callback scope.
+     *
+     * @param  callable  $callback
+     * @return mixed
+     */
+    public static function withoutTimestamps(callable $callback)
+    {
+        return static::withoutTimestampsOn([static::class], $callback);
+    }
+
+    /**
+     * Disable timestamps for the given model classes during the given callback scope.
+     *
+     * @param  array  $models
+     * @param  callable  $callback
+     * @return mixed
+     */
+    public static function withoutTimestampsOn($models, $callback)
+    {
+        static::$ignoreTimestampsOn = array_values(array_merge(static::$ignoreTimestampsOn, $models));
+
+        try {
+            return $callback();
+        } finally {
+            foreach ($models as $model) {
+                if (($key = array_search($model, static::$ignoreTimestampsOn, true)) !== false) {
+                    unset(static::$ignoreTimestampsOn[$key]);
+                }
+            }
+        }
+    }
+
+    /**
+     * Determine if the given model is ignoring timestamps / touches.
+     *
+     * @param  string|null  $class
+     * @return bool
+     */
+    public static function isIgnoringTimestamps($class = null)
+    {
+        $class ??= static::class;
+
+        foreach (static::$ignoreTimestampsOn as $ignoredClass) {
+            if ($class === $ignoredClass || is_subclass_of($class, $ignoredClass)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

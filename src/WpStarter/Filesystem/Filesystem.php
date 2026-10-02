@@ -6,6 +6,7 @@ use ErrorException;
 use FilesystemIterator;
 use WpStarter\Contracts\Filesystem\FileNotFoundException;
 use WpStarter\Support\LazyCollection;
+use WpStarter\Support\Traits\Conditionable;
 use WpStarter\Support\Traits\Macroable;
 use RuntimeException;
 use SplFileObject;
@@ -15,7 +16,7 @@ use Symfony\Component\Mime\MimeTypes;
 
 class Filesystem
 {
-    use Macroable;
+    use Conditionable, Macroable;
 
     /**
      * Determine if a file or directory exists.
@@ -58,6 +59,21 @@ class Filesystem
     }
 
     /**
+     * Get the contents of a file as decoded JSON.
+     *
+     * @param  string  $path
+     * @param  int  $flags
+     * @param  bool  $lock
+     * @return array
+     *
+     * @throws \WpStarter\Contracts\Filesystem\FileNotFoundException
+     */
+    public function json($path, $flags = 0, $lock = false)
+    {
+        return json_decode($this->get($path, $lock), true, 512, $flags);
+    }
+
+    /**
      * Get contents of a file with shared access.
      *
      * @param  string  $path
@@ -74,7 +90,7 @@ class Filesystem
                 if (flock($handle, LOCK_SH)) {
                     clearstatcache(true, $path);
 
-                    $contents = fread($handle, $this->size($path) ?: 1);
+                    $contents = stream_get_contents($handle);
 
                     flock($handle, LOCK_UN);
                 }
@@ -152,7 +168,7 @@ class Filesystem
             );
         }
 
-        return LazyCollection::make(function () use ($path) {
+        return new LazyCollection(function () use ($path) {
             $file = new SplFileObject($path);
 
             $file->setFlags(SplFileObject::DROP_NEW_LINE);
@@ -164,14 +180,15 @@ class Filesystem
     }
 
     /**
-     * Get the MD5 hash of the file at the given path.
+     * Get the hash of the file at the given path.
      *
      * @param  string  $path
-     * @return string
+     * @param  string  $algorithm
+     * @return string|false
      */
-    public function hash($path)
+    public function hash($path, $algorithm = 'md5')
     {
-        return md5_file($path);
+        return hash_file($algorithm, $path);
     }
 
     /**
@@ -192,9 +209,10 @@ class Filesystem
      *
      * @param  string  $path
      * @param  string  $content
+     * @param  int|null  $mode
      * @return void
      */
-    public function replace($path, $content)
+    public function replace($path, $content, $mode = null)
     {
         // If the path already exists and is a symlink, get the real path...
         clearstatcache(true, $path);
@@ -204,7 +222,11 @@ class Filesystem
         $tempPath = tempnam(dirname($path), basename($path));
 
         // Fix permissions of tempPath because `tempnam()` creates it with permissions set to 0600...
-        chmod($tempPath, 0777 - umask());
+        if (! is_null($mode)) {
+            @chmod($tempPath, $mode);
+        } else {
+            @chmod($tempPath, 0777 - umask());
+        }
 
         file_put_contents($tempPath, $content);
 
@@ -245,11 +267,12 @@ class Filesystem
      *
      * @param  string  $path
      * @param  string  $data
+     * @param  bool  $lock
      * @return int
      */
-    public function append($path, $data)
+    public function append($path, $data, $lock = false)
     {
-        return file_put_contents($path, $data, FILE_APPEND);
+        return file_put_contents($path, $data, FILE_APPEND | ($lock ? LOCK_EX : 0));
     }
 
     /**
@@ -287,7 +310,7 @@ class Filesystem
                 } else {
                     $success = false;
                 }
-            } catch (ErrorException $e) {
+            } catch (ErrorException) {
                 $success = false;
             }
         }
@@ -324,12 +347,16 @@ class Filesystem
      *
      * @param  string  $target
      * @param  string  $link
-     * @return void
+     * @return bool|null
      */
     public function link($target, $link)
     {
-        if (! ws_windows_os()) {
-            return symlink($target, $link);
+        if (! windows_os()) {
+            if (function_exists('symlink')) {
+                return symlink($target, $link);
+            } else {
+                return exec('ln -s '.escapeshellarg($target).' '.escapeshellarg($link)) !== false;
+            }
         }
 
         $mode = $this->isDirectory($target) ? 'J' : 'H';
@@ -356,7 +383,7 @@ class Filesystem
 
         $relativeTarget = (new SymfonyFilesystem)->makePathRelative($target, dirname($link));
 
-        $this->link($relativeTarget, $link);
+        $this->link($this->isFile($target) ? rtrim($relativeTarget, '/') : $relativeTarget, $link);
     }
 
     /**
@@ -404,7 +431,7 @@ class Filesystem
     }
 
     /**
-     * Guess the file extension from the mime-type of a given file.
+     * Guess the file extension from the MIME type of a given file.
      *
      * @param  string  $path
      * @return string|null
@@ -426,7 +453,7 @@ class Filesystem
      * Get the file type of a given file.
      *
      * @param  string  $path
-     * @return string
+     * @return string|false
      */
     public function type($path)
     {
@@ -434,7 +461,7 @@ class Filesystem
     }
 
     /**
-     * Get the mime-type of a given file.
+     * Get the MIME type of a given file.
      *
      * @param  string  $path
      * @return string|false
@@ -478,6 +505,18 @@ class Filesystem
     }
 
     /**
+     * Determine if the given path is a directory that does not contain any other files or directories.
+     *
+     * @param  string  $directory
+     * @param  bool  $ignoreDotFiles
+     * @return bool
+     */
+    public function isEmptyDirectory($directory, $ignoreDotFiles = false)
+    {
+        return ! Finder::create()->ignoreDotFiles($ignoreDotFiles)->in($directory)->depth(0)->hasResults();
+    }
+
+    /**
      * Determine if the given path is readable.
      *
      * @param  string  $path
@@ -497,6 +536,20 @@ class Filesystem
     public function isWritable($path)
     {
         return is_writable($path);
+    }
+
+    /**
+     * Determine if two files are the same by comparing their hashes.
+     *
+     * @param  string  $firstFile
+     * @param  string  $secondFile
+     * @return bool
+     */
+    public function hasSameHash($firstFile, $secondFile)
+    {
+        $hash = @hash_file('xxh128', $firstFile);
+
+        return $hash && hash_equals($hash, (string) @hash_file('xxh128', $secondFile));
     }
 
     /**
@@ -529,10 +582,10 @@ class Filesystem
      * @param  bool  $hidden
      * @return \Symfony\Component\Finder\SplFileInfo[]
      */
-    public function files($directory, $hidden = false)
+    public function files($directory, $hidden = false, array|string|int $depth = 0)
     {
         return iterator_to_array(
-            Finder::create()->files()->ignoreDotFiles(! $hidden)->in($directory)->depth(0)->sortByName(),
+            Finder::create()->files()->ignoreDotFiles(! $hidden)->in($directory)->depth($depth)->sortByName(),
             false
         );
     }
@@ -546,10 +599,7 @@ class Filesystem
      */
     public function allFiles($directory, $hidden = false)
     {
-        return iterator_to_array(
-            Finder::create()->files()->ignoreDotFiles(! $hidden)->in($directory)->sortByName(),
-            false
-        );
+        return $this->files($directory, $hidden, []);
     }
 
     /**
@@ -558,15 +608,25 @@ class Filesystem
      * @param  string  $directory
      * @return array
      */
-    public function directories($directory)
+    public function directories($directory, array|string|int $depth = 0)
     {
         $directories = [];
 
-        foreach (Finder::create()->in($directory)->directories()->depth(0)->sortByName() as $dir) {
+        foreach (Finder::create()->in($directory)->directories()->depth($depth)->sortByName() as $dir) {
             $directories[] = $dir->getPathname();
         }
 
         return $directories;
+    }
+
+    /**
+     * Get all the directories within a given directory (recursive).
+     *
+     * @return array
+     */
+    public function allDirectories(string $directory): array
+    {
+        return $this->directories($directory, []);
     }
 
     /**
@@ -659,10 +719,8 @@ class Filesystem
             // If the current items is just a regular file, we will just copy this to the new
             // location and keep looping. If for some reason the copy fails we'll bail out
             // and return false, so the developer is aware that the copy process failed.
-            else {
-                if (! $this->copy($item->getPathname(), $target)) {
-                    return false;
-                }
+            elseif (! $this->copy($item->getPathname(), $target)) {
+                return false;
             }
         }
 
@@ -701,6 +759,8 @@ class Filesystem
                 $this->delete($item->getPathname());
             }
         }
+
+        unset($items);
 
         if (! $preserve) {
             @rmdir($directory);

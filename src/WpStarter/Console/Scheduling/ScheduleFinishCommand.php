@@ -5,7 +5,10 @@ namespace WpStarter\Console\Scheduling;
 use WpStarter\Console\Command;
 use WpStarter\Console\Events\ScheduledBackgroundTaskFinished;
 use WpStarter\Contracts\Events\Dispatcher;
+use WpStarter\Support\Collection;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'schedule:finish')]
 class ScheduleFinishCommand extends Command
 {
     /**
@@ -37,12 +40,12 @@ class ScheduleFinishCommand extends Command
      */
     public function handle(Schedule $schedule)
     {
-        ws_collect($schedule->events())->filter(function ($value) {
-            return $value->mutexName() == $this->argument('id');
-        })->each(function ($event) {
-            $event->callafterCallbacksWithExitCode($this->laravel, $this->argument('code'));
+        (new Collection($schedule->events()))
+            ->filter(fn ($value) => $value->mutexName() == $this->argument('id'))
+            ->each(function ($event) {
+                $event->finish($this->laravel, $this->argument('code'));
 
-            $this->laravel->make(Dispatcher::class)->dispatch(new ScheduledBackgroundTaskFinished($event));
-        });
+                $this->laravel->make(Dispatcher::class)->dispatch(new ScheduledBackgroundTaskFinished($event));
+            });
     }
 }

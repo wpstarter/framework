@@ -2,6 +2,8 @@
 
 namespace WpStarter\View\Compilers\Concerns;
 
+use WpStarter\Foundation\Vite;
+
 trait CompilesHelpers
 {
     /**
@@ -11,7 +13,7 @@ trait CompilesHelpers
      */
     protected function compileCsrf()
     {
-        return '<?php echo ws_csrf_field(); ?>';
+        return '<?php echo csrf_field(); ?>';
     }
 
     /**
@@ -44,6 +46,33 @@ trait CompilesHelpers
      */
     protected function compileMethod($method)
     {
-        return "<?php echo ws_method_field{$method}; ?>";
+        return "<?php echo method_field{$method}; ?>";
+    }
+
+    /**
+     * Compile the "vite" statements into valid PHP.
+     *
+     * @param  string|null  $arguments
+     * @return string
+     */
+    protected function compileVite($arguments)
+    {
+        $arguments ??= '()';
+
+        $class = Vite::class;
+
+        return "<?php echo app('$class'){$arguments}; ?>";
+    }
+
+    /**
+     * Compile the "viteReactRefresh" statements into valid PHP.
+     *
+     * @return string
+     */
+    protected function compileViteReactRefresh()
+    {
+        $class = Vite::class;
+
+        return "<?php echo app('$class')->reactRefresh(); ?>";
     }
 }

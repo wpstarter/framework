@@ -19,6 +19,13 @@ class DatabaseTransactionRecord
     public $level;
 
     /**
+     * The parent instance of this transaction.
+     *
+     * @var \WpStarter\Database\DatabaseTransactionRecord
+     */
+    public $parent;
+
+    /**
      * The callbacks that should be executed after committing.
      *
      * @var array
@@ -26,16 +33,24 @@ class DatabaseTransactionRecord
     protected $callbacks = [];
 
     /**
+     * The callbacks that should be executed after rollback.
+     *
+     * @var array
+     */
+    protected $callbacksForRollback = [];
+
+    /**
      * Create a new database transaction record instance.
      *
      * @param  string  $connection
      * @param  int  $level
-     * @return void
+     * @param  \WpStarter\Database\DatabaseTransactionRecord|null  $parent
      */
-    public function __construct($connection, $level)
+    public function __construct($connection, $level, ?DatabaseTransactionRecord $parent = null)
     {
         $this->connection = $connection;
         $this->level = $level;
+        $this->parent = $parent;
     }
 
     /**
@@ -50,6 +65,17 @@ class DatabaseTransactionRecord
     }
 
     /**
+     * Register a callback to be executed after rollback.
+     *
+     * @param  callable  $callback
+     * @return void
+     */
+    public function addCallbackForRollback($callback)
+    {
+        $this->callbacksForRollback[] = $callback;
+    }
+
+    /**
      * Execute all of the callbacks.
      *
      * @return void
@@ -57,7 +83,19 @@ class DatabaseTransactionRecord
     public function executeCallbacks()
     {
         foreach ($this->callbacks as $callback) {
-            call_user_func($callback);
+            $callback();
+        }
+    }
+
+    /**
+     * Execute all of the callbacks for rollback.
+     *
+     * @return void
+     */
+    public function executeCallbacksForRollback()
+    {
+        foreach ($this->callbacksForRollback as $callback) {
+            $callback();
         }
     }
 
@@ -69,5 +107,15 @@ class DatabaseTransactionRecord
     public function getCallbacks()
     {
         return $this->callbacks;
+    }
+
+    /**
+     * Get all of the callbacks for rollback.
+     *
+     * @return array
+     */
+    public function getCallbacksForRollback()
+    {
+        return $this->callbacksForRollback;
     }
 }

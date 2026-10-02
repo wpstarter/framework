@@ -7,11 +7,11 @@ trait Tappable
     /**
      * Call the given Closure with this instance then return the instance.
      *
-     * @param  callable|null  $callback
-     * @return $this|\WpStarter\Support\HigherOrderTapProxy
+     * @param  (callable($this): mixed)|null  $callback
+     * @return ($callback is null ? \WpStarter\Support\HigherOrderTapProxy : $this)
      */
     public function tap($callback = null)
     {
-        return ws_tap($this, $callback);
+        return tap($this, $callback);
     }
 }

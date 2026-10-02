@@ -3,12 +3,16 @@
 namespace WpStarter\Mail\Transport;
 
 use WpStarter\Support\Collection;
-use Swift_Mime_SimpleMessage;
+use Stringable;
+use Symfony\Component\Mailer\Envelope;
+use Symfony\Component\Mailer\SentMessage;
+use Symfony\Component\Mailer\Transport\TransportInterface;
+use Symfony\Component\Mime\RawMessage;
 
-class ArrayTransport extends Transport
+class ArrayTransport implements Stringable, TransportInterface
 {
     /**
-     * The collection of Swift Messages.
+     * The collection of Symfony Messages.
      *
      * @var \WpStarter\Support\Collection
      */
@@ -16,8 +20,6 @@ class ArrayTransport extends Transport
 
     /**
      * Create a new array transport instance.
-     *
-     * @return void
      */
     public function __construct()
     {
@@ -26,16 +28,10 @@ class ArrayTransport extends Transport
 
     /**
      * {@inheritdoc}
-     *
-     * @return int
      */
-    public function send(Swift_Mime_SimpleMessage $message, &$failedRecipients = null)
+    public function send(RawMessage $message, ?Envelope $envelope = null): ?SentMessage
     {
-        $this->beforeSendPerformed($message);
-
-        $this->messages[] = $message;
-
-        return $this->numberOfRecipients($message);
+        return $this->messages[] = new SentMessage($message, $envelope ?? Envelope::create($message));
     }
 
     /**
@@ -56,5 +52,15 @@ class ArrayTransport extends Transport
     public function flush()
     {
         return $this->messages = new Collection;
+    }
+
+    /**
+     * Get the string representation of the transport.
+     *
+     * @return string
+     */
+    public function __toString(): string
+    {
+        return 'array';
     }
 }

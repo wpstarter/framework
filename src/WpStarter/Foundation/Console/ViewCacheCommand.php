@@ -4,9 +4,12 @@ namespace WpStarter\Foundation\Console;
 
 use WpStarter\Console\Command;
 use WpStarter\Support\Collection;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
 
+#[AsCommand(name: 'view:cache')]
 class ViewCacheCommand extends Command
 {
     /**
@@ -26,17 +29,23 @@ class ViewCacheCommand extends Command
     /**
      * Execute the console command.
      *
-     * @return mixed
+     * @return void
      */
     public function handle()
     {
-        $this->call('view:clear');
+        $this->callSilent('view:clear');
 
         $this->paths()->each(function ($path) {
+            $prefix = $this->output->isVeryVerbose() ? '<fg=yellow;options=bold>DIR</> ' : '';
+
+            $this->components->task($prefix.$path, null, OutputInterface::VERBOSITY_VERBOSE);
+
             $this->compileViews($this->bladeFilesIn([$path]));
         });
 
-        $this->info('Blade templates cached successfully!');
+        $this->newLine();
+
+        $this->components->info('Blade templates cached successfully.');
     }
 
     /**
@@ -50,8 +59,14 @@ class ViewCacheCommand extends Command
         $compiler = $this->laravel['view']->getEngineResolver()->resolve('blade')->getCompiler();
 
         $views->map(function (SplFileInfo $file) use ($compiler) {
+            $this->components->task('    '.$file->getRelativePathname(), null, OutputInterface::VERBOSITY_VERY_VERBOSE);
+
             $compiler->compile($file->getRealPath());
         });
+
+        if ($this->output->isVeryVerbose()) {
+            $this->newLine();
+        }
     }
 
     /**
@@ -62,11 +77,17 @@ class ViewCacheCommand extends Command
      */
     protected function bladeFilesIn(array $paths)
     {
-        return ws_collect(
+        $extensions = (new Collection($this->laravel['view']->getExtensions()))
+            ->filter(fn ($value) => $value === 'blade')
+            ->keys()
+            ->map(fn ($extension) => "*.{$extension}")
+            ->all();
+
+        return new Collection(
             Finder::create()
                 ->in($paths)
                 ->exclude('vendor')
-                ->name('*.blade.php')
+                ->name($extensions)
                 ->files()
         );
     }
@@ -80,8 +101,12 @@ class ViewCacheCommand extends Command
     {
         $finder = $this->laravel['view']->getFinder();
 
-        return ws_collect($finder->getPaths())->merge(
-            ws_collect($finder->getHints())->flatten()
-        );
+        $paths = (new Collection($finder->getPaths()))->merge(
+            (new Collection($finder->getHints()))->flatten()
+        )->unique();
+
+        return $paths->reject(fn ($path) => $paths->contains(function ($existing) use ($path) {
+            return $existing !== $path && str_starts_with(realpath($path) ?: $path, realpath($existing) ?: $existing);
+        }))->values();
     }
 }

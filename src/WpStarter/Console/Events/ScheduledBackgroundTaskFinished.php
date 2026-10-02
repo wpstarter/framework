@@ -7,20 +7,12 @@ use WpStarter\Console\Scheduling\Event;
 class ScheduledBackgroundTaskFinished
 {
     /**
-     * The scheduled event that ran.
-     *
-     * @var \WpStarter\Console\Scheduling\Event
-     */
-    public $task;
-
-    /**
      * Create a new event instance.
      *
-     * @param  \WpStarter\Console\Scheduling\Event  $task
-     * @return void
+     * @param  \WpStarter\Console\Scheduling\Event  $task  The scheduled event that ran.
      */
-    public function __construct(Event $task)
-    {
-        $this->task = $task;
+    public function __construct(
+        public Event $task,
+    ) {
     }
 }

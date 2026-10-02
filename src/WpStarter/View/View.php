@@ -10,13 +10,15 @@ use WpStarter\Contracts\Support\MessageProvider;
 use WpStarter\Contracts\Support\Renderable;
 use WpStarter\Contracts\View\Engine;
 use WpStarter\Contracts\View\View as ViewContract;
+use WpStarter\Support\Collection;
 use WpStarter\Support\MessageBag;
 use WpStarter\Support\Str;
 use WpStarter\Support\Traits\Macroable;
 use WpStarter\Support\ViewErrorBag;
+use Stringable;
 use Throwable;
 
-class View implements ArrayAccess, Htmlable, ViewContract
+class View implements ArrayAccess, Htmlable, Stringable, ViewContract
 {
     use Macroable {
         __call as macroCall;
@@ -65,7 +67,6 @@ class View implements ArrayAccess, Htmlable, ViewContract
      * @param  string  $view
      * @param  string  $path
      * @param  mixed  $data
-     * @return void
      */
     public function __construct(Factory $factory, Engine $engine, $view, $path, $data = [])
     {
@@ -75,6 +76,74 @@ class View implements ArrayAccess, Htmlable, ViewContract
         $this->factory = $factory;
 
         $this->data = $data instanceof Arrayable ? $data->toArray() : (array) $data;
+    }
+
+    /**
+     * Get the evaluated contents of a given fragment.
+     *
+     * @param  string  $fragment
+     * @return string
+     */
+    public function fragment($fragment)
+    {
+        return $this->render(function () use ($fragment) {
+            return $this->factory->getFragment($fragment);
+        });
+    }
+
+    /**
+     * Get the evaluated contents for a given array of fragments or return all fragments.
+     *
+     * @param  array|null  $fragments
+     * @return string
+     */
+    public function fragments(?array $fragments = null)
+    {
+        return is_null($fragments)
+            ? $this->allFragments()
+            : (new Collection($fragments))->map(fn ($f) => $this->fragment($f))->implode('');
+    }
+
+    /**
+     * Get the evaluated contents of a given fragment if the given condition is true.
+     *
+     * @param  bool  $boolean
+     * @param  string  $fragment
+     * @return string
+     */
+    public function fragmentIf($boolean, $fragment)
+    {
+        if (value($boolean)) {
+            return $this->fragment($fragment);
+        }
+
+        return $this->render();
+    }
+
+    /**
+     * Get the evaluated contents for a given array of fragments if the given condition is true.
+     *
+     * @param  bool  $boolean
+     * @param  array|null  $fragments
+     * @return string
+     */
+    public function fragmentsIf($boolean, ?array $fragments = null)
+    {
+        if (value($boolean)) {
+            return $this->fragments($fragments);
+        }
+
+        return $this->render();
+    }
+
+    /**
+     * Get all fragments as a single string.
+     *
+     * @return string
+     */
+    protected function allFragments()
+    {
+        return (new Collection($this->render(fn () => $this->factory->getFragments())))->implode('');
     }
 
     /**
@@ -112,7 +181,7 @@ class View implements ArrayAccess, Htmlable, ViewContract
      */
     protected function renderContents()
     {
-        // We will keep track of the amount of views being rendered so we can flush
+        // We will keep track of the number of views being rendered so we can flush
         // the section after the complete rendering operation is done. This will
         // clear out the sections for any separate views that may be rendered.
         $this->factory->incrementRender();
@@ -122,7 +191,7 @@ class View implements ArrayAccess, Htmlable, ViewContract
         $contents = $this->getContents();
 
         // Once we've finished rendering the view, we'll decrement the render count
-        // so that each sections get flushed out next time a view is created and
+        // so that each section gets flushed out next time a view is created and
         // no old sections are staying around in the memory of an environment.
         $this->factory->decrementRender();
 
@@ -205,7 +274,7 @@ class View implements ArrayAccess, Htmlable, ViewContract
     /**
      * Add validation errors to the view.
      *
-     * @param  \WpStarter\Contracts\Support\MessageProvider|array  $provider
+     * @param  \WpStarter\Contracts\Support\MessageProvider|array|string  $provider
      * @param  string  $bag
      * @return $this
      */
@@ -225,8 +294,8 @@ class View implements ArrayAccess, Htmlable, ViewContract
     protected function formatErrors($provider)
     {
         return $provider instanceof MessageProvider
-                        ? $provider->getMessageBag()
-                        : new MessageBag((array) $provider);
+            ? $provider->getMessageBag()
+            : new MessageBag((array) $provider);
     }
 
     /**
@@ -306,8 +375,7 @@ class View implements ArrayAccess, Htmlable, ViewContract
      * @param  string  $key
      * @return bool
      */
-    #[\ReturnTypeWillChange]
-    public function offsetExists($key)
+    public function offsetExists($key): bool
     {
         return array_key_exists($key, $this->data);
     }
@@ -318,8 +386,7 @@ class View implements ArrayAccess, Htmlable, ViewContract
      * @param  string  $key
      * @return mixed
      */
-    #[\ReturnTypeWillChange]
-    public function offsetGet($key)
+    public function offsetGet($key): mixed
     {
         return $this->data[$key];
     }
@@ -331,8 +398,7 @@ class View implements ArrayAccess, Htmlable, ViewContract
      * @param  mixed  $value
      * @return void
      */
-    #[\ReturnTypeWillChange]
-    public function offsetSet($key, $value)
+    public function offsetSet($key, $value): void
     {
         $this->with($key, $value);
     }
@@ -343,8 +409,7 @@ class View implements ArrayAccess, Htmlable, ViewContract
      * @param  string  $key
      * @return void
      */
-    #[\ReturnTypeWillChange]
-    public function offsetUnset($key)
+    public function offsetUnset($key): void
     {
         unset($this->data[$key]);
     }
@@ -409,7 +474,7 @@ class View implements ArrayAccess, Htmlable, ViewContract
             return $this->macroCall($method, $parameters);
         }
 
-        if (! Str::startsWith($method, 'with')) {
+        if (! str_starts_with($method, 'with')) {
             throw new BadMethodCallException(sprintf(
                 'Method %s::%s does not exist.', static::class, $method
             ));

@@ -2,6 +2,8 @@
 
 namespace WpStarter\Contracts\Validation;
 
+use WpStarter\Validation\Validator;
+
 interface ValidatorAwareRule
 {
     /**
@@ -10,5 +12,5 @@ interface ValidatorAwareRule
      * @param  \WpStarter\Validation\Validator  $validator
      * @return $this
      */
-    public function setValidator($validator);
+    public function setValidator(Validator $validator);
 }

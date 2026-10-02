@@ -5,7 +5,9 @@ namespace WpStarter\Foundation\Console;
 use WpStarter\Console\Command;
 use WpStarter\Filesystem\Filesystem;
 use RuntimeException;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'view:clear')]
 class ViewClearCommand extends Command
 {
     /**
@@ -33,7 +35,6 @@ class ViewClearCommand extends Command
      * Create a new config clear command instance.
      *
      * @param  \WpStarter\Filesystem\Filesystem  $files
-     * @return void
      */
     public function __construct(Filesystem $files)
     {
@@ -57,10 +58,18 @@ class ViewClearCommand extends Command
             throw new RuntimeException('View path not found.');
         }
 
+        $this->laravel['view.engine.resolver']
+            ->resolve('blade')
+            ->forgetCompiledOrNotExpired();
+
         foreach ($this->files->glob("{$path}/*") as $view) {
-            $this->files->delete($view);
+            if ($this->files->isDirectory($view)) {
+                $this->files->deleteDirectory($view);
+            } else {
+                $this->files->delete($view);
+            }
         }
 
-        $this->info('Compiled views cleared!');
+        $this->components->info('Compiled views cleared successfully.');
     }
 }

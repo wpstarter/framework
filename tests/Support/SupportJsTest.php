@@ -3,8 +3,11 @@
 namespace WpStarter\Tests\Support;
 
 use WpStarter\Contracts\Support\Arrayable;
+use WpStarter\Contracts\Support\Htmlable;
 use WpStarter\Contracts\Support\Jsonable;
 use WpStarter\Support\Js;
+use WpStarter\Tests\Support\Fixtures\IntBackedEnum;
+use WpStarter\Tests\Support\Fixtures\StringBackedEnum;
 use JsonSerializable;
 use PHPUnit\Framework\TestCase;
 
@@ -12,10 +15,14 @@ class SupportJsTest extends TestCase
 {
     public function testScalars()
     {
-        $this->assertEquals('false', (string) Js::from(false));
-        $this->assertEquals('true', (string) Js::from(true));
-        $this->assertEquals('1', (string) Js::from(1));
-        $this->assertEquals('1.1', (string) Js::from(1.1));
+        $this->assertSame('false', (string) Js::from(false));
+        $this->assertSame('true', (string) Js::from(true));
+        $this->assertSame('1', (string) Js::from(1));
+        $this->assertSame('1.1', (string) Js::from(1.1));
+        $this->assertSame('[]', (string) Js::from([]));
+        $this->assertSame('[]', (string) Js::from(collect()));
+        $this->assertSame('null', (string) Js::from(null));
+        $this->assertSame("'Hello world'", (string) Js::from('Hello world'));
         $this->assertEquals(
             "'\\u003Cdiv class=\\u0022foo\\u0022\\u003E\\u0027quoted html\\u0027\\u003C\\/div\\u003E'",
             (string) Js::from('<div class="foo">\'quoted html\'</div>')
@@ -53,7 +60,7 @@ class SupportJsTest extends TestCase
 
             public $bar = 'not world';
 
-            public function jsonSerialize()
+            public function jsonSerialize(): mixed
             {
                 return ['foo' => 'hello', 'bar' => 'world'];
             }
@@ -85,7 +92,7 @@ class SupportJsTest extends TestCase
                 return json_encode(['foo' => 'hello', 'bar' => 'world'], $options);
             }
 
-            public function jsonSerialize()
+            public function jsonSerialize(): mixed
             {
                 return ['foo' => 'not hello', 'bar' => 'not world'];
             }
@@ -120,5 +127,78 @@ class SupportJsTest extends TestCase
             "JSON.parse('{\\u0022foo\\u0022:\\u0022hello\\u0022,\\u0022bar\\u0022:\\u0022world\\u0022}')",
             (string) Js::from($data)
         );
+    }
+
+    public function testHtmlable()
+    {
+        $data = new class implements Htmlable
+        {
+            public function toHtml()
+            {
+                return '<p>Hello, World!</p>';
+            }
+        };
+
+        $this->assertEquals("'\u003Cp\u003EHello, World!\u003C\/p\u003E'", (string) Js::from($data));
+
+        $data = new class implements Htmlable, Arrayable
+        {
+            public function toHtml()
+            {
+                return '<p>Hello, World!</p>';
+            }
+
+            public function toArray()
+            {
+                return ['foo' => 'hello', 'bar' => 'world'];
+            }
+        };
+
+        $this->assertEquals(
+            "JSON.parse('{\\u0022foo\\u0022:\\u0022hello\\u0022,\\u0022bar\\u0022:\\u0022world\\u0022}')",
+            (string) Js::from($data)
+        );
+
+        $data = new class implements Htmlable, Jsonable
+        {
+            public function toHtml()
+            {
+                return '<p>Hello, World!</p>';
+            }
+
+            public function toJson($options = 0)
+            {
+                return json_encode(['foo' => 'hello', 'bar' => 'world'], $options);
+            }
+        };
+
+        $this->assertEquals(
+            "JSON.parse('{\\u0022foo\\u0022:\\u0022hello\\u0022,\\u0022bar\\u0022:\\u0022world\\u0022}')",
+            (string) Js::from($data)
+        );
+
+        $data = new class implements Htmlable, JsonSerializable
+        {
+            public function toHtml()
+            {
+                return '<p>Hello, World!</p>';
+            }
+
+            public function jsonSerialize(): mixed
+            {
+                return ['foo' => 'hello', 'bar' => 'world'];
+            }
+        };
+
+        $this->assertEquals(
+            "JSON.parse('{\\u0022foo\\u0022:\\u0022hello\\u0022,\\u0022bar\\u0022:\\u0022world\\u0022}')",
+            (string) Js::from($data)
+        );
+    }
+
+    public function testBackedEnums()
+    {
+        $this->assertSame('2', (string) Js::from(IntBackedEnum::TWO));
+        $this->assertSame("'Hello world'", (string) Js::from(StringBackedEnum::HELLO_WORLD));
     }
 }

@@ -5,6 +5,9 @@ namespace WpStarter\Auth\Middleware;
 use Closure;
 use WpStarter\Contracts\Auth\Access\Gate;
 use WpStarter\Database\Eloquent\Model;
+use WpStarter\Support\Collection;
+
+use function WpStarter\Support\enum_value;
 
 class Authorize
 {
@@ -19,11 +22,22 @@ class Authorize
      * Create a new middleware instance.
      *
      * @param  \WpStarter\Contracts\Auth\Access\Gate  $gate
-     * @return void
      */
     public function __construct(Gate $gate)
     {
         $this->gate = $gate;
+    }
+
+    /**
+     * Specify the ability and models for the middleware.
+     *
+     * @param  \UnitEnum|string  $ability
+     * @param  string  ...$models
+     * @return string
+     */
+    public static function using($ability, ...$models)
+    {
+        return static::class.':'.implode(',', [enum_value($ability), ...$models]);
     }
 
     /**
@@ -50,7 +64,7 @@ class Authorize
      *
      * @param  \WpStarter\Http\Request  $request
      * @param  array|null  $models
-     * @return \WpStarter\Database\Eloquent\Model|array|string
+     * @return array
      */
     protected function getGateArguments($request, $models)
     {
@@ -58,9 +72,9 @@ class Authorize
             return [];
         }
 
-        return ws_collect($models)->map(function ($model) use ($request) {
-            return $model instanceof Model ? $model : $this->getModel($request, $model);
-        })->all();
+        return (new Collection($models))
+            ->map(fn ($model) => $model instanceof Model ? $model : $this->getModel($request, $model))
+            ->all();
     }
 
     /**
@@ -74,20 +88,20 @@ class Authorize
     {
         if ($this->isClassName($model)) {
             return trim($model);
-        } else {
-            return $request->route($model, null) ?:
-                ((preg_match("/^['\"](.*)['\"]$/", trim($model), $matches)) ? $matches[1] : null);
         }
+
+        return $request->route($model, null) ??
+            ((preg_match("/^['\"](.*)['\"]$/", trim($model), $matches)) ? $matches[1] : null);
     }
 
     /**
-     * Checks if the given string looks like a fully qualified class name.
+     * Checks if the given string looks like a fully-qualified class name.
      *
      * @param  string  $value
      * @return bool
      */
     protected function isClassName($value)
     {
-        return strpos($value, '\\') !== false;
+        return str_contains($value, '\\');
     }
 }

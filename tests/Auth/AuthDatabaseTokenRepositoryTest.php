@@ -13,21 +13,6 @@ use stdClass;
 
 class AuthDatabaseTokenRepositoryTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        Carbon::setTestNow(Carbon::now());
-    }
-
-    protected function tearDown(): void
-    {
-        parent::tearDown();
-
-        m::close();
-        Carbon::setTestNow(null);
-    }
-
     public function testCreateInsertsNewRecordIntoTable()
     {
         $repo = $this->getRepo();
@@ -112,6 +97,8 @@ class AuthDatabaseTokenRepositoryTest extends TestCase
 
     public function testRecentlyCreatedReturnsTrueIfRecordIsRecentlyCreated()
     {
+        Carbon::setTestNow(Carbon::now());
+
         $repo = $this->getRepo();
         $repo->getConnection()->shouldReceive('table')->once()->with('table')->andReturn($query = m::mock(stdClass::class));
         $query->shouldReceive('where')->once()->with('email', 'email')->andReturn($query);
@@ -121,10 +108,14 @@ class AuthDatabaseTokenRepositoryTest extends TestCase
         $user->shouldReceive('getEmailForPasswordReset')->once()->andReturn('email');
 
         $this->assertTrue($repo->recentlyCreatedToken($user));
+
+        Carbon::setTestNow();
     }
 
     public function testRecentlyCreatedReturnsFalseIfValidRecordExists()
     {
+        Carbon::setTestNow(Carbon::now());
+
         $repo = $this->getRepo();
         $repo->getConnection()->shouldReceive('table')->once()->with('table')->andReturn($query = m::mock(stdClass::class));
         $query->shouldReceive('where')->once()->with('email', 'email')->andReturn($query);
@@ -134,6 +125,8 @@ class AuthDatabaseTokenRepositoryTest extends TestCase
         $user->shouldReceive('getEmailForPasswordReset')->once()->andReturn('email');
 
         $this->assertFalse($repo->recentlyCreatedToken($user));
+
+        Carbon::setTestNow();
     }
 
     public function testDeleteMethodDeletesByToken()

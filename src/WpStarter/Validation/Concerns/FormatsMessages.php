@@ -4,7 +4,9 @@ namespace WpStarter\Validation\Concerns;
 
 use Closure;
 use WpStarter\Support\Arr;
+use WpStarter\Support\Number;
 use WpStarter\Support\Str;
+use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 trait FormatsMessages
@@ -35,8 +37,12 @@ trait FormatsMessages
 
         $lowerRule = Str::snake($rule);
 
+        $customKey = "validation.custom.{$attribute}.{$lowerRule}";
+
         $customMessage = $this->getCustomMessageFromTranslator(
-            $customKey = "validation.custom.{$attribute}.{$lowerRule}"
+            in_array($rule, $this->sizeRules)
+                ? [$customKey.".{$this->getAttributeType($attribute)}", $customKey]
+                : $customKey
         );
 
         // First we check for a custom defined validation message for the attribute
@@ -79,8 +85,8 @@ trait FormatsMessages
         $inlineEntry = $this->getFromLocalArray($attribute, Str::snake($rule));
 
         return is_array($inlineEntry) && in_array($rule, $this->sizeRules)
-                    ? $inlineEntry[$this->getAttributeType($attribute)]
-                    : $inlineEntry;
+            ? ($inlineEntry[$this->getAttributeType($attribute)] ?? null)
+            : $inlineEntry;
     }
 
     /**
@@ -95,25 +101,45 @@ trait FormatsMessages
     {
         $source = $source ?: $this->customMessages;
 
-        $keys = ["{$attribute}.{$lowerRule}", $lowerRule];
+        $keys = ["{$attribute}.{$lowerRule}", $lowerRule, $attribute];
+
+        if ($this->getAttributeType($attribute) !== 'file') {
+            $shortRule = "{$attribute}.".Str::snake(class_basename($lowerRule));
+
+            if (! in_array($shortRule, $keys)) {
+                $keys[] = $shortRule;
+            }
+        }
 
         // First we will check for a custom message for an attribute specific rule
         // message for the fields, then we will check for a general custom line
         // that is not attribute specific. If we find either we'll return it.
         foreach ($keys as $key) {
             foreach (array_keys($source) as $sourceKey) {
-                if (strpos($sourceKey, '*') !== false) {
+                if (str_contains($sourceKey, '*')) {
                     $pattern = str_replace('\*', '([^.]*)', preg_quote($sourceKey, '#'));
 
                     if (preg_match('#^'.$pattern.'\z#u', $key) === 1) {
-                        return $source[$sourceKey];
+                        $message = $source[$sourceKey];
+
+                        if (is_array($message)) {
+                            return $message[$lowerRule] ?? null;
+                        }
+
+                        return $message;
                     }
 
                     continue;
                 }
 
                 if (Str::is($sourceKey, $key)) {
-                    return $source[$sourceKey];
+                    $message = $source[$sourceKey];
+
+                    if ($sourceKey === $attribute && is_array($message)) {
+                        return $message[$lowerRule] ?? null;
+                    }
+
+                    return $message;
                 }
             }
         }
@@ -122,25 +148,33 @@ trait FormatsMessages
     /**
      * Get the custom error message from the translator.
      *
-     * @param  string  $key
+     * @param  array|string  $keys
      * @return string
      */
-    protected function getCustomMessageFromTranslator($key)
+    protected function getCustomMessageFromTranslator($keys)
     {
-        if (($message = $this->translator->get($key)) !== $key) {
-            return $message;
+        foreach (Arr::wrap($keys) as $key) {
+            if (($message = $this->translator->get($key)) !== $key) {
+                return $message;
+            }
+
+            // If an exact match was not found for the key, we will collapse all of these
+            // messages and loop through them and try to find a wildcard match for the
+            // given key. Otherwise, we will simply return the key's value back out.
+            $shortKey = preg_replace(
+                '/^validation\.custom\./', '', $key
+            );
+
+            $message = $this->getWildcardCustomMessages(Arr::dot(
+                (array) $this->translator->get('validation.custom')
+            ), $shortKey, $key);
+
+            if ($message !== $key) {
+                return $message;
+            }
         }
 
-        // If an exact match was not found for the key, we will collapse all of these
-        // messages and loop through them and try to find a wildcard match for the
-        // given key. Otherwise, we will simply return the key's value back out.
-        $shortKey = preg_replace(
-            '/^validation\.custom\./', '', $key
-        );
-
-        return $this->getWildcardCustomMessages(Arr::dot(
-            (array) $this->translator->get('validation.custom')
-        ), $shortKey, $key);
+        return Arr::last(Arr::wrap($keys));
     }
 
     /**
@@ -194,15 +228,13 @@ trait FormatsMessages
         // We assume that the attributes present in the file array are files so that
         // means that if the attribute does not have a numeric rule and the files
         // list doesn't have it we'll just consider it a string by elimination.
-        if ($this->hasRule($attribute, $this->numericRules)) {
-            return 'numeric';
-        } elseif ($this->hasRule($attribute, ['Array'])) {
-            return 'array';
-        } elseif ($this->getValue($attribute) instanceof UploadedFile) {
-            return 'file';
-        }
-
-        return 'string';
+        return match (true) {
+            $this->hasRule($attribute, $this->numericRules) => 'numeric',
+            $this->hasRule($attribute, ['Array', 'List']) => 'array',
+            $this->getValue($attribute) instanceof UploadedFile,
+            $this->getValue($attribute) instanceof File => 'file',
+            default => 'string',
+        };
     }
 
     /**
@@ -221,6 +253,9 @@ trait FormatsMessages
         );
 
         $message = $this->replaceInputPlaceholder($message, $attribute);
+        $message = $this->replaceIndexPlaceholder($message, $attribute);
+        $message = $this->replacePositionPlaceholder($message, $attribute);
+        $message = $this->replaceOrdinalPositionPlaceholder($message, $attribute);
 
         if (isset($this->replacers[Str::snake($rule)])) {
             return $this->callReplacer($message, $attribute, Str::snake($rule), $parameters, $this);
@@ -242,21 +277,22 @@ trait FormatsMessages
         $primaryAttribute = $this->getPrimaryAttribute($attribute);
 
         $expectedAttributes = $attribute != $primaryAttribute
-                    ? [$attribute, $primaryAttribute] : [$attribute];
+            ? [$attribute, $primaryAttribute]
+            : [$attribute];
 
         foreach ($expectedAttributes as $name) {
             // The developer may dynamically specify the array of custom attributes on this
             // validator instance. If the attribute exists in this array it is used over
             // the other ways of pulling the attribute name for this given attributes.
-            if (isset($this->customAttributes[$name])) {
-                return $this->customAttributes[$name];
+            if ($inlineAttribute = $this->getAttributeFromLocalArray($name)) {
+                return $inlineAttribute;
             }
 
             // We allow for a developer to specify language lines for any attribute in this
             // application, which allows flexibility for displaying a unique displayable
             // version of the attribute name instead of the name used in an HTTP POST.
-            if ($line = $this->getAttributeFromTranslations($name)) {
-                return $line;
+            if ($translatedAttribute = $this->getAttributeFromTranslations($name)) {
+                return $translatedAttribute;
             }
         }
 
@@ -265,8 +301,8 @@ trait FormatsMessages
         // modify it with any of these replacements before we display the name.
         if (isset($this->implicitAttributes[$primaryAttribute])) {
             return ($formatter = $this->implicitAttributesFormatter)
-                            ? $formatter($attribute)
-                            : $attribute;
+                ? $formatter($attribute)
+                : $attribute;
         }
 
         return str_replace('_', ' ', Str::snake($attribute));
@@ -276,11 +312,41 @@ trait FormatsMessages
      * Get the given attribute from the attribute translations.
      *
      * @param  string  $name
-     * @return string
+     * @return string|null
      */
     protected function getAttributeFromTranslations($name)
     {
-        return Arr::get($this->translator->get('validation.attributes'), $name);
+        if (! is_array($attributes = $this->translator->get('validation.attributes'))) {
+            return null;
+        }
+
+        return $this->getAttributeFromLocalArray($name, Arr::dot($attributes));
+    }
+
+    /**
+     * Get the custom name for an attribute if it exists in the given array.
+     *
+     * @param  string  $attribute
+     * @param  array|null  $source
+     * @return string|null
+     */
+    protected function getAttributeFromLocalArray($attribute, $source = null)
+    {
+        $source = $source ?: $this->customAttributes;
+
+        if (isset($source[$attribute])) {
+            return $source[$attribute];
+        }
+
+        foreach (array_keys($source) as $sourceKey) {
+            if (str_contains($sourceKey, '*')) {
+                $pattern = str_replace('\*', '([^.]*)', preg_quote($sourceKey, '#'));
+
+                if (preg_match('#^'.$pattern.'\z#u', $attribute) === 1) {
+                    return $source[$sourceKey];
+                }
+            }
+        }
     }
 
     /**
@@ -300,6 +366,115 @@ trait FormatsMessages
     }
 
     /**
+     * Replace the :index placeholder in the given message.
+     *
+     * @param  string  $message
+     * @param  string  $attribute
+     * @return string
+     */
+    protected function replaceIndexPlaceholder($message, $attribute)
+    {
+        return $this->replaceIndexOrPositionPlaceholder(
+            $message, $attribute, 'index'
+        );
+    }
+
+    /**
+     * Replace the :position placeholder in the given message.
+     *
+     * @param  string  $message
+     * @param  string  $attribute
+     * @return string
+     */
+    protected function replacePositionPlaceholder($message, $attribute)
+    {
+        return $this->replaceIndexOrPositionPlaceholder(
+            $message, $attribute, 'position', fn ($segment) => $segment + 1
+        );
+    }
+
+    /**
+     * Replace the :ordinal-position placeholder in the given message.
+     *
+     * @param  string  $message
+     * @param  string  $attribute
+     * @return string
+     */
+    protected function replaceOrdinalPositionPlaceholder($message, $attribute)
+    {
+        if (! extension_loaded('intl')) {
+            return $message;
+        }
+
+        return $this->replaceIndexOrPositionPlaceholder(
+            $message, $attribute, 'ordinal-position', fn ($segment) => Number::ordinal($segment + 1)
+        );
+    }
+
+    /**
+     * Replace the :index or :position placeholder in the given message.
+     *
+     * @param  string  $message
+     * @param  string  $attribute
+     * @param  string  $placeholder
+     * @param  \Closure|null  $modifier
+     * @return string
+     */
+    protected function replaceIndexOrPositionPlaceholder($message, $attribute, $placeholder, ?Closure $modifier = null)
+    {
+        if (! str_contains(strtolower($message), ':'.$placeholder) &&
+            ! str_contains(strtolower($message), '-'.$placeholder)) {
+            return $message;
+        }
+
+        $segments = explode('.', $attribute);
+
+        $modifier ??= fn ($value) => $value;
+
+        $numericIndex = 1;
+
+        foreach ($segments as $segment) {
+            if (is_numeric($segment)) {
+                if ($numericIndex === 1) {
+                    $message = str_ireplace(':'.$placeholder, $modifier((int) $segment), $message);
+                }
+
+                $message = str_ireplace(
+                    ':'.$this->numberToIndexOrPositionWord($numericIndex).'-'.$placeholder,
+                    $modifier((int) $segment),
+                    $message
+                );
+
+                $numericIndex++;
+            }
+        }
+
+        return $message;
+    }
+
+    /**
+     * Get the word for a index or position segment.
+     *
+     * @param  int  $value
+     * @return string
+     */
+    protected function numberToIndexOrPositionWord(int $value)
+    {
+        return [
+            1 => 'first',
+            2 => 'second',
+            3 => 'third',
+            4 => 'fourth',
+            5 => 'fifth',
+            6 => 'sixth',
+            7 => 'seventh',
+            8 => 'eighth',
+            9 => 'ninth',
+            10 => 'tenth',
+        ][(int) $value] ?? 'other';
+    }
+
+    /**
      * Replace the :input placeholder in the given message.
      *
      * @param  string  $message
@@ -308,6 +483,10 @@ trait FormatsMessages
      */
     protected function replaceInputPlaceholder($message, $attribute)
     {
+        if (! str_contains($message, ':input')) {
+            return $message;
+        }
+
         $actualValue = $this->getValue($attribute);
 
         if (is_scalar($actualValue) || is_null($actualValue)) {
@@ -328,6 +507,10 @@ trait FormatsMessages
     {
         if (isset($this->customValues[$attribute][$value])) {
             return $this->customValues[$attribute][$value];
+        }
+
+        if (is_array($value)) {
+            return 'array';
         }
 
         $key = "validation.values.{$attribute}.{$value}";

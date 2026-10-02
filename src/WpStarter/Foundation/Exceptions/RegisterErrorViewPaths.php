@@ -2,6 +2,7 @@
 
 namespace WpStarter\Foundation\Exceptions;
 
+use WpStarter\Support\Collection;
 use WpStarter\Support\Facades\View;
 
 class RegisterErrorViewPaths
@@ -13,8 +14,10 @@ class RegisterErrorViewPaths
      */
     public function __invoke()
     {
-        View::replaceNamespace('errors', ws_collect(ws_config('view.paths'))->map(function ($path) {
-            return "{$path}/errors";
-        })->push(__DIR__.'/views')->all());
+        View::replaceNamespace('errors', (new Collection(config('view.paths')))
+            ->map(fn ($path) => "{$path}/errors")
+            ->push(__DIR__.'/views')
+            ->all()
+        );
     }
 }

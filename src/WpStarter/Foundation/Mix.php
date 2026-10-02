@@ -2,7 +2,6 @@
 
 namespace WpStarter\Foundation;
 
-use Exception;
 use WpStarter\Support\HtmlString;
 use WpStarter\Support\Str;
 
@@ -15,24 +14,24 @@ class Mix
      * @param  string  $manifestDirectory
      * @return \WpStarter\Support\HtmlString|string
      *
-     * @throws \Exception
+     * @throws \WpStarter\Foundation\MixManifestNotFoundException|\WpStarter\Foundation\MixFileNotFoundException
      */
     public function __invoke($path, $manifestDirectory = '')
     {
         static $manifests = [];
 
-        if (! Str::startsWith($path, '/')) {
+        if (! str_starts_with($path, '/')) {
             $path = "/{$path}";
         }
 
-        if ($manifestDirectory && ! Str::startsWith($manifestDirectory, '/')) {
+        if ($manifestDirectory && ! str_starts_with($manifestDirectory, '/')) {
             $manifestDirectory = "/{$manifestDirectory}";
         }
 
-        if (is_file(ws_public_path($manifestDirectory.'/hot'))) {
-            $url = rtrim(file_get_contents(ws_public_path($manifestDirectory.'/hot')));
+        if (is_file(public_path($manifestDirectory.'/hot'))) {
+            $url = rtrim(file_get_contents(public_path($manifestDirectory.'/hot')));
 
-            $customUrl = ws_app('config')->get('app.mix_hot_proxy_url');
+            $customUrl = app('config')->get('app.mix_hot_proxy_url');
 
             if (! empty($customUrl)) {
                 return new HtmlString("{$customUrl}{$path}");
@@ -45,11 +44,11 @@ class Mix
             return new HtmlString("//localhost:8080{$path}");
         }
 
-        $manifestPath = ws_public_path($manifestDirectory.'/mix-manifest.json');
+        $manifestPath = public_path($manifestDirectory.'/mix-manifest.json');
 
         if (! isset($manifests[$manifestPath])) {
             if (! is_file($manifestPath)) {
-                throw new Exception('The Mix manifest does not exist.');
+                throw new MixManifestNotFoundException("Mix manifest not found at: {$manifestPath}");
             }
 
             $manifests[$manifestPath] = json_decode(file_get_contents($manifestPath), true);
@@ -58,10 +57,10 @@ class Mix
         $manifest = $manifests[$manifestPath];
 
         if (! isset($manifest[$path])) {
-            $exception = new Exception("Unable to locate Mix file: {$path}.");
+            $exception = new MixFileNotFoundException("Unable to locate Mix file: {$path}.");
 
-            if (! ws_app('config')->get('app.debug')) {
-                ws_report($exception);
+            if (! app('config')->get('app.debug')) {
+                report($exception);
 
                 return $path;
             } else {
@@ -69,6 +68,6 @@ class Mix
             }
         }
 
-        return new HtmlString(ws_app('config')->get('app.mix_url').$manifestDirectory.$manifest[$path]);
+        return new HtmlString(app('config')->get('app.mix_url').$manifestDirectory.$manifest[$path]);
     }
 }

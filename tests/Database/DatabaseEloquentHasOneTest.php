@@ -2,12 +2,12 @@
 
 namespace WpStarter\Tests\Database;
 
+use WpStarter\Contracts\Database\Query\Expression;
 use WpStarter\Database\Eloquent\Builder;
 use WpStarter\Database\Eloquent\Collection;
 use WpStarter\Database\Eloquent\Model;
 use WpStarter\Database\Eloquent\Relations\HasOne;
 use WpStarter\Database\Query\Builder as BaseBuilder;
-use WpStarter\Database\Query\Expression;
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
 
@@ -18,11 +18,6 @@ class DatabaseEloquentHasOneTest extends TestCase
     protected $related;
 
     protected $parent;
-
-    protected function tearDown(): void
-    {
-        m::close();
-    }
 
     public function testHasOneWithDefault()
     {
@@ -197,7 +192,7 @@ class DatabaseEloquentHasOneTest extends TestCase
         $this->assertEquals(1, $models[0]->foo->foreign_key);
         $this->assertEquals(2, $models[1]->foo->foreign_key);
         $this->assertNull($models[2]->foo);
-        $this->assertEquals('4', $models[3]->foo->foreign_key);
+        $this->assertSame('4', (string) $models[3]->foo->foreign_key);
     }
 
     public function testRelationCountQueryCanBeBuilt()

@@ -2,19 +2,31 @@
 
 namespace WpStarter\Tests\Support;
 
+use WpStarter\Config\Repository as Config;
 use WpStarter\Foundation\Application;
 use WpStarter\Support\ServiceProvider;
+use WpStarter\Translation\Translator;
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
 
 class SupportServiceProviderTest extends TestCase
 {
+    protected $app;
+    protected string $tempFile;
+
     protected function setUp(): void
     {
         ServiceProvider::$publishes = [];
         ServiceProvider::$publishGroups = [];
 
-        $app = m::mock(Application::class)->makePartial();
+        $this->app = $app = m::mock(Application::class)->makePartial();
+        $config = m::mock(Config::class)->makePartial();
+
+        $config = new Config();
+
+        $app->instance('config', $config);
+        $config->set('database.migrations.update_date_on_publish', true);
+
         $one = new ServiceProviderForTestingOne($app);
         $one->boot();
         $two = new ServiceProviderForTestingTwo($app);
@@ -23,7 +35,11 @@ class SupportServiceProviderTest extends TestCase
 
     protected function tearDown(): void
     {
-        m::close();
+        if (isset($this->tempFile) && file_exists($this->tempFile)) {
+            @unlink($this->tempFile);
+        }
+
+        parent::tearDown();
     }
 
     public function testPublishableServiceProviders()
@@ -39,7 +55,14 @@ class SupportServiceProviderTest extends TestCase
     public function testPublishableGroups()
     {
         $toPublish = ServiceProvider::publishableGroups();
-        $this->assertEquals(['some_tag', 'tag_one', 'tag_two'], $toPublish, 'Publishable groups do not return expected set of groups.');
+        $this->assertEquals([
+            'some_tag',
+            'tag_one',
+            'tag_two',
+            'tag_three',
+            'tag_four',
+            'tag_five',
+        ], $toPublish, 'Publishable groups do not return expected set of groups.');
     }
 
     public function testSimpleAssetsArePublishedCorrectly()
@@ -47,7 +70,14 @@ class SupportServiceProviderTest extends TestCase
         $toPublish = ServiceProvider::pathsToPublish(ServiceProviderForTestingOne::class);
         $this->assertArrayHasKey('source/unmarked/one', $toPublish, 'Service provider does not return expected published path key.');
         $this->assertArrayHasKey('source/tagged/one', $toPublish, 'Service provider does not return expected published path key.');
-        $this->assertEquals(['source/unmarked/one' => 'destination/unmarked/one', 'source/tagged/one' => 'destination/tagged/one', 'source/tagged/multiple' => 'destination/tagged/multiple'], $toPublish, 'Service provider does not return expected set of published paths.');
+        $this->assertEquals([
+            'source/unmarked/one' => 'destination/unmarked/one',
+            'source/tagged/one' => 'destination/tagged/one',
+            'source/tagged/multiple' => 'destination/tagged/multiple',
+            'source/unmarked/two' => 'destination/unmarked/two',
+            'source/tagged/three' => 'destination/tagged/three',
+            'source/tagged/multiple_two' => 'destination/tagged/multiple_two',
+        ], $toPublish, 'Service provider does not return expected set of published paths.');
     }
 
     public function testMultipleAssetsArePublishedCorrectly()
@@ -105,6 +135,109 @@ class SupportServiceProviderTest extends TestCase
         ];
         $this->assertEquals($expected, $toPublish, 'Service provider does not return expected set of published tagged paths.');
     }
+
+    public function testPublishesMigrations()
+    {
+        $serviceProvider = new ServiceProviderForTestingOne($this->app);
+
+        (fn () => $this->publishesMigrations(['source/tagged/four' => 'destination/tagged/four'], 'tag_four'))
+            ->call($serviceProvider);
+
+        $this->assertContains('source/tagged/four', ServiceProvider::publishableMigrationPaths());
+
+        $this->app->config->set('database.migrations.update_date_on_publish', false);
+
+        (fn () => $this->publishesMigrations(['source/tagged/five' => 'destination/tagged/five'], 'tag_four'))
+            ->call($serviceProvider);
+
+        $this->assertNotContains('source/tagged/five', ServiceProvider::publishableMigrationPaths());
+
+        $this->app->config->set('database.migrations', 'migrations');
+
+        (fn () => $this->publishesMigrations(['source/tagged/five' => 'destination/tagged/five'], 'tag_four'))
+            ->call($serviceProvider);
+
+        $this->assertNotContains('source/tagged/five', ServiceProvider::publishableMigrationPaths());
+
+        $this->app->config->set('database.migrations', null);
+
+        (fn () => $this->publishesMigrations(['source/tagged/five' => 'destination/tagged/five'], 'tag_four'))
+            ->call($serviceProvider);
+
+        $this->assertNotContains('source/tagged/five', ServiceProvider::publishableMigrationPaths());
+    }
+
+    public function testLoadTranslationsFromWithoutNamespace()
+    {
+        $translator = m::mock(Translator::class);
+        $translator->shouldReceive('addPath')->once()->with(__DIR__.'/translations');
+
+        $this->app->shouldReceive('afterResolving')->once()->with('translator', m::on(function ($callback) use ($translator) {
+            $callback($translator);
+
+            return true;
+        }));
+
+        $provider = new ServiceProviderForTestingOne($this->app);
+        $provider->loadTranslationsFrom(__DIR__.'/translations');
+    }
+
+    public function testLoadTranslationsFromWithNamespace()
+    {
+        $translator = m::mock(Translator::class);
+        $translator->shouldReceive('addNamespace')->once()->with('namespace', __DIR__.'/translations');
+
+        $this->app->shouldReceive('afterResolving')->once()->with('translator', m::on(function ($callback) use ($translator) {
+            $callback($translator);
+
+            return true;
+        }));
+
+        $provider = new ServiceProviderForTestingOne($this->app);
+        $provider->loadTranslationsFrom(__DIR__.'/translations', 'namespace');
+    }
+
+    public function test_can_remove_provider()
+    {
+        $this->tempFile = __DIR__.'/providers.php';
+        file_put_contents($this->tempFile, $contents = <<< PHP
+<?php
+
+return [
+    App\Providers\AppServiceProvider::class,
+    App\Providers\TelescopeServiceProvider::class,
+];
+PHP
+        );
+        ServiceProvider::removeProviderFromBootstrapFile('TelescopeServiceProvider', $this->tempFile, true);
+
+        // Should have deleted nothing
+        $this->assertStringEqualsStringIgnoringLineEndings($contents, trim(file_get_contents($this->tempFile)));
+
+        // Should delete the telescope provider
+        ServiceProvider::removeProviderFromBootstrapFile('App\Providers\TelescopeServiceProvider', $this->tempFile, true);
+
+        $this->assertStringEqualsStringIgnoringLineEndings(<<< PHP
+<?php
+
+return [
+    App\Providers\AppServiceProvider::class,
+];
+PHP
+            , trim(file_get_contents($this->tempFile)));
+
+        // Should fuzzily delete the App\Providers\AppServiceProvider class
+        ServiceProvider::removeProviderFromBootstrapFile('AppServiceProvider', $this->tempFile);
+
+        $this->assertStringEqualsStringIgnoringLineEndings(<<< 'PHP'
+<?php
+
+return [
+
+];
+PHP
+            , trim(file_get_contents($this->tempFile)));
+    }
 }
 
 class ServiceProviderForTestingOne extends ServiceProvider
@@ -119,6 +252,17 @@ class ServiceProviderForTestingOne extends ServiceProvider
         $this->publishes(['source/unmarked/one' => 'destination/unmarked/one']);
         $this->publishes(['source/tagged/one' => 'destination/tagged/one'], 'some_tag');
         $this->publishes(['source/tagged/multiple' => 'destination/tagged/multiple'], ['tag_one', 'tag_two']);
+
+        $this->publishesMigrations(['source/unmarked/two' => 'destination/unmarked/two']);
+        $this->publishesMigrations(['source/tagged/three' => 'destination/tagged/three'], 'tag_three');
+        $this->publishesMigrations(['source/tagged/multiple_two' => 'destination/tagged/multiple_two'], ['tag_four', 'tag_five']);
+    }
+
+    public function loadTranslationsFrom($path, $namespace = null)
+    {
+        $this->callAfterResolving('translator', fn ($translator) => is_null($namespace)
+            ? $translator->addPath($path)
+            : $translator->addNamespace($namespace, $path));
     }
 }
 

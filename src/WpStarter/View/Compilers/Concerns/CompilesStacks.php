@@ -1,7 +1,9 @@
 <?php
 
 namespace WpStarter\View\Compilers\Concerns;
+
 use WpStarter\Support\Str;
+
 trait CompilesStacks
 {
     /**

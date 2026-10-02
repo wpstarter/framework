@@ -4,7 +4,9 @@ namespace WpStarter\Routing\Console;
 
 use WpStarter\Console\Concerns\CreatesMatchingTest;
 use WpStarter\Console\GeneratorCommand;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'make:middleware')]
 class MiddlewareMakeCommand extends GeneratorCommand
 {
     use CreatesMatchingTest;
@@ -21,7 +23,7 @@ class MiddlewareMakeCommand extends GeneratorCommand
      *
      * @var string
      */
-    protected $description = 'Create a new middleware class';
+    protected $description = 'Create a new HTTP middleware class';
 
     /**
      * The type of class being generated.

@@ -4,10 +4,21 @@ namespace WpStarter\Foundation\Testing\Concerns;
 
 use Closure;
 use WpStarter\Foundation\Mix;
+use WpStarter\Foundation\Vite;
+use WpStarter\Support\Defer\DeferredCallbackCollection;
+use WpStarter\Support\Facades\Vite as ViteFacade;
+use WpStarter\Support\HtmlString;
 use Mockery;
 
 trait InteractsWithContainer
 {
+    /**
+     * The original Vite handler.
+     *
+     * @var \WpStarter\Foundation\Vite|null
+     */
+    protected $originalVite;
+
     /**
      * The original Laravel Mix handler.
      *
@@ -16,11 +27,20 @@ trait InteractsWithContainer
     protected $originalMix;
 
     /**
+     * The original deferred callbacks collection.
+     *
+     * @var \WpStarter\Support\Defer\DeferredCallbackCollection|null
+     */
+    protected $originalDeferredCallbacksCollection;
+
+    /**
      * Register an instance of an object in the container.
      *
+     * @template TSwap of object
+     *
      * @param  string  $abstract
-     * @param  object  $instance
-     * @return object
+     * @param  TSwap  $instance
+     * @return TSwap
      */
     protected function swap($abstract, $instance)
     {
@@ -30,9 +50,11 @@ trait InteractsWithContainer
     /**
      * Register an instance of an object in the container.
      *
+     * @template TInstance of object
+     *
      * @param  string  $abstract
-     * @param  object  $instance
-     * @return object
+     * @param  TInstance  $instance
+     * @return TInstance
      */
     protected function instance($abstract, $instance)
     {
@@ -44,9 +66,11 @@ trait InteractsWithContainer
     /**
      * Mock an instance of an object in the container.
      *
-     * @param  string  $abstract
+     * @template TInstance of object
+     *
+     * @param  string|class-string<TInstance>  $abstract
      * @param  \Closure|null  $mock
-     * @return \Mockery\MockInterface
+     * @return ($abstract is class-string<TInstance> ? TInstance&\Mockery\MockInterface : \Mockery\MockInterface)
      */
     protected function mock($abstract, ?Closure $mock = null)
     {
@@ -56,9 +80,11 @@ trait InteractsWithContainer
     /**
      * Mock a partial instance of an object in the container.
      *
-     * @param  string  $abstract
+     * @template TInstance of object
+     *
+     * @param  string|class-string<TInstance>  $abstract
      * @param  \Closure|null  $mock
-     * @return \Mockery\MockInterface
+     * @return ($abstract is class-string<TInstance> ? TInstance&\Mockery\MockInterface : \Mockery\MockInterface)
      */
     protected function partialMock($abstract, ?Closure $mock = null)
     {
@@ -68,9 +94,11 @@ trait InteractsWithContainer
     /**
      * Spy an instance of an object in the container.
      *
-     * @param  string  $abstract
+     * @template TInstance of object
+     *
+     * @param  string|class-string<TInstance>  $abstract
      * @param  \Closure|null  $mock
-     * @return \Mockery\MockInterface
+     * @return ($abstract is class-string<TInstance> ? TInstance&\Mockery\MockInterface : \Mockery\MockInterface)
      */
     protected function spy($abstract, ?Closure $mock = null)
     {
@@ -91,19 +119,104 @@ trait InteractsWithContainer
     }
 
     /**
-     * Register an empty handler for Laravel Mix in the container.
+     * Register an empty handler for Vite in the container.
      *
      * @return $this
      */
-    protected function withoutMix()
+    protected function withoutVite()
     {
-        if ($this->originalMix == null) {
-            $this->originalMix = ws_app(Mix::class);
+        if ($this->originalVite == null) {
+            $this->originalVite = app(Vite::class);
         }
 
-        $this->swap(Mix::class, function () {
-            return '';
+        ViteFacade::clearResolvedInstance();
+
+        $this->swap(Vite::class, new class extends Vite
+        {
+            public function __invoke($entrypoints, $buildDirectory = null)
+            {
+                return new HtmlString('');
+            }
+
+            public function __call($method, $parameters)
+            {
+                return '';
+            }
+
+            public function __toString()
+            {
+                return '';
+            }
+
+            public function useIntegrityKey($key)
+            {
+                return $this;
+            }
+
+            public function useBuildDirectory($path)
+            {
+                return $this;
+            }
+
+            public function useHotFile($path)
+            {
+                return $this;
+            }
+
+            public function withEntryPoints($entryPoints)
+            {
+                return $this;
+            }
+
+            public function useScriptTagAttributes($attributes)
+            {
+                return $this;
+            }
+
+            public function useStyleTagAttributes($attributes)
+            {
+                return $this;
+            }
+
+            public function usePreloadTagAttributes($attributes)
+            {
+                return $this;
+            }
+
+            public function preloadedAssets()
+            {
+                return [];
+            }
+
+            public function reactRefresh()
+            {
+                return '';
+            }
+
+            public function content($asset, $buildDirectory = null)
+            {
+                return '';
+            }
+
+            public function asset($asset, $buildDirectory = null)
+            {
+                return '';
+            }
         });
+
+        return $this;
+    }
+
+    /**
+     * Restore Vite in the container.
+     *
+     * @return $this
+     */
+    protected function withVite()
+    {
+        if ($this->originalVite) {
+            $this->app->instance(Vite::class, $this->originalVite);
+        }
 
         return $this;
     }
@@ -113,10 +226,64 @@ trait InteractsWithContainer
      *
      * @return $this
      */
+    protected function withoutMix()
+    {
+        if ($this->originalMix == null) {
+            $this->originalMix = app(Mix::class);
+        }
+
+        $this->swap(Mix::class, function () {
+            return new HtmlString('');
+        });
+
+        return $this;
+    }
+
+    /**
+     * Restore Laravel Mix in the container.
+     *
+     * @return $this
+     */
     protected function withMix()
     {
         if ($this->originalMix) {
             $this->app->instance(Mix::class, $this->originalMix);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Execute deferred functions immediately.
+     *
+     * @return $this
+     */
+    protected function withoutDefer()
+    {
+        if ($this->originalDeferredCallbacksCollection == null) {
+            $this->originalDeferredCallbacksCollection = $this->app->make(DeferredCallbackCollection::class);
+        }
+
+        $this->swap(DeferredCallbackCollection::class, new class extends DeferredCallbackCollection
+        {
+            public function offsetSet(mixed $offset, mixed $value): void
+            {
+                $value();
+            }
+        });
+
+        return $this;
+    }
+
+    /**
+     * Restore deferred functions.
+     *
+     * @return $this
+     */
+    protected function withDefer()
+    {
+        if ($this->originalDeferredCallbacksCollection) {
+            $this->app->instance(DeferredCallbackCollection::class, $this->originalDeferredCallbacksCollection);
         }
 
         return $this;

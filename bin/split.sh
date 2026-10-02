@@ -3,7 +3,7 @@
 set -e
 set -x
 
-CURRENT_BRANCH="8.x"
+CURRENT_BRANCH="12.x"
 
 function split()
 {
@@ -23,6 +23,7 @@ remote broadcasting git@github.com:illuminate/broadcasting.git
 remote bus git@github.com:illuminate/bus.git
 remote cache git@github.com:illuminate/cache.git
 remote collections git@github.com:illuminate/collections.git
+remote conditionable git@github.com:illuminate/conditionable.git
 remote config git@github.com:illuminate/config.git
 remote console git@github.com:illuminate/console.git
 remote container git@github.com:illuminate/container.git
@@ -34,13 +35,16 @@ remote events git@github.com:illuminate/events.git
 remote filesystem git@github.com:illuminate/filesystem.git
 remote hashing git@github.com:illuminate/hashing.git
 remote http git@github.com:illuminate/http.git
+remote json-schema git@github.com:illuminate/json-schema.git
 remote log git@github.com:illuminate/log.git
 remote macroable git@github.com:illuminate/macroable.git
 remote mail git@github.com:illuminate/mail.git
 remote notifications git@github.com:illuminate/notifications.git
 remote pagination git@github.com:illuminate/pagination.git
 remote pipeline git@github.com:illuminate/pipeline.git
+remote process git@github.com:illuminate/process.git
 remote queue git@github.com:illuminate/queue.git
+remote reflection git@github.com:illuminate/reflection.git
 remote redis git@github.com:illuminate/redis.git
 remote routing git@github.com:illuminate/routing.git
 remote session git@github.com:illuminate/session.git
@@ -55,6 +59,7 @@ split 'src/WpStarter/Broadcasting' broadcasting
 split 'src/WpStarter/Bus' bus
 split 'src/WpStarter/Cache' cache
 split 'src/WpStarter/Collections' collections
+split 'src/WpStarter/Conditionable' conditionable
 split 'src/WpStarter/Config' config
 split 'src/WpStarter/Console' console
 split 'src/WpStarter/Container' container
@@ -66,13 +71,16 @@ split 'src/WpStarter/Events' events
 split 'src/WpStarter/Filesystem' filesystem
 split 'src/WpStarter/Hashing' hashing
 split 'src/WpStarter/Http' http
+split 'src/WpStarter/JsonSchema' json-schema
 split 'src/WpStarter/Log' log
 split 'src/WpStarter/Macroable' macroable
 split 'src/WpStarter/Mail' mail
 split 'src/WpStarter/Notifications' notifications
 split 'src/WpStarter/Pagination' pagination
 split 'src/WpStarter/Pipeline' pipeline
+split 'src/WpStarter/Process' process
 split 'src/WpStarter/Queue' queue
+split 'src/WpStarter/Reflection' reflection
 split 'src/WpStarter/Redis' redis
 split 'src/WpStarter/Routing' routing
 split 'src/WpStarter/Session' session

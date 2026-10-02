@@ -28,6 +28,8 @@ interface Broadcaster
      * @param  string  $event
      * @param  array  $payload
      * @return void
+     *
+     * @throws \WpStarter\Broadcasting\BroadcastException
      */
     public function broadcast(array $channels, $event, array $payload = []);
 }

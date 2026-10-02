@@ -33,7 +33,6 @@ class StartSession
      *
      * @param  \WpStarter\Session\SessionManager  $manager
      * @param  callable|null  $cacheFactoryResolver
-     * @return void
      */
     public function __construct(SessionManager $manager, ?callable $cacheFactoryResolver = null)
     {
@@ -79,23 +78,23 @@ class StartSession
         }
 
         $lockFor = $request->route() && $request->route()->locksFor()
-                        ? $request->route()->locksFor()
-                        : 10;
+            ? $request->route()->locksFor()
+            : $this->manager->defaultRouteBlockLockSeconds();
 
         $lock = $this->cache($this->manager->blockDriver())
-                    ->lock('session:'.$session->getId(), $lockFor)
-                    ->betweenBlockedAttemptsSleepFor(50);
+            ->lock('session:'.$session->getId(), $lockFor)
+            ->betweenBlockedAttemptsSleepFor(50);
 
         try {
             $lock->block(
                 ! is_null($request->route()->waitsFor())
-                        ? $request->route()->waitsFor()
-                        : 10
+                    ? $request->route()->waitsFor()
+                    : $this->manager->defaultRouteBlockWaitSeconds()
             );
 
             return $this->handleStatefulRequest($request, $session, $next);
         } finally {
-            ws_optional($lock)->release();
+            $lock?->release();
         }
     }
 
@@ -141,7 +140,7 @@ class StartSession
      */
     protected function startSession(Request $request, $session)
     {
-        return ws_tap($session, function ($session) use ($request) {
+        return tap($session, function ($session) use ($request) {
             $session->setRequestOnHandler($request);
 
             $session->start();
@@ -156,7 +155,7 @@ class StartSession
      */
     public function getSession(Request $request)
     {
-        return ws_tap($this->manager->driver(), function ($session) use ($request) {
+        return tap($this->manager->driver(), function ($session) use ($request) {
             $session->setId($request->cookies->get($session->getName()));
         });
     }
@@ -199,11 +198,16 @@ class StartSession
      */
     protected function storeCurrentUrl(Request $request, $session)
     {
-        if ($request->method() === 'GET' &&
+        if ($request->isMethod('GET') &&
             $request->route() instanceof Route &&
             ! $request->ajax() &&
-            ! $request->prefetch()) {
+            ! $request->prefetch() &&
+            ! $request->isPrecognitive()) {
             $session->setPreviousUrl($request->fullUrl());
+
+            if (method_exists($session, 'setPreviousRoute')) {
+                $session->setPreviousRoute($request->route()->getName());
+            }
         }
     }
 
@@ -218,9 +222,16 @@ class StartSession
     {
         if ($this->sessionIsPersistent($config = $this->manager->getSessionConfig())) {
             $response->headers->setCookie(new Cookie(
-                $session->getName(), $session->getId(), $this->getCookieExpirationDate(),
-                $config['path'], $config['domain'], $config['secure'] ?? false,
-                $config['http_only'] ?? true, false, $config['same_site'] ?? null
+                $session->getName(),
+                $session->getId(),
+                $this->getCookieExpirationDate(),
+                $config['path'],
+                $config['domain'],
+                $config['secure'],
+                $config['http_only'] ?? true,
+                false,
+                $config['same_site'] ?? null,
+                $config['partitioned'] ?? false
             ));
         }
     }
@@ -233,7 +244,9 @@ class StartSession
      */
     protected function saveSession($request)
     {
-        $this->manager->driver()->save();
+        if (! $request->isPrecognitive()) {
+            $this->manager->driver()->save();
+        }
     }
 
     /**
@@ -253,10 +266,10 @@ class StartSession
      */
     protected function getCookieExpirationDate()
     {
-        $config = $this->manager->getSessionConfig();
+        $expiresOnClose = $this->manager->getSessionConfig()['expire_on_close'];
 
-        return $config['expire_on_close'] ? 0 : Date::instance(
-            Carbon::now()->addRealMinutes($config['lifetime'])
+        return $expiresOnClose ? 0 : Date::instance(
+            Carbon::now()->addSeconds($this->getSessionLifetimeInSeconds())
         );
     }
 

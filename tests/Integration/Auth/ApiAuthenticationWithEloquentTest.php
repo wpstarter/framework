@@ -3,21 +3,18 @@
 namespace WpStarter\Tests\Integration\Auth;
 
 use WpStarter\Database\QueryException;
-use WpStarter\Foundation\Auth\User as FoundationUser;
 use WpStarter\Support\Facades\Route;
 use WpStarter\Support\Str;
 use Orchestra\Testbench\TestCase;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 
-/**
- * @requires extension pdo_mysql
- */
+#[RequiresPhpExtension('pdo_mysql')]
 class ApiAuthenticationWithEloquentTest extends TestCase
 {
-    protected function getEnvironmentSetUp($app)
+    protected function defineEnvironment($app)
     {
         // Auth configuration
         $app['config']->set('auth.defaults.guard', 'api');
-        $app['config']->set('auth.providers.users.model', User::class);
 
         $app['config']->set('auth.guards.api', [
             'driver' => 'token',
@@ -30,7 +27,7 @@ class ApiAuthenticationWithEloquentTest extends TestCase
 
         $app['config']->set('database.connections.testbench', [
             'driver' => 'mysql',
-            'host' => ws_env('DB_HOST', '127.0.0.1'),
+            'host' => env('DB_HOST', '127.0.0.1'),
             'username' => 'root',
             'password' => 'invalid-credentials',
             'database' => 'forge',
@@ -58,9 +55,4 @@ class ApiAuthenticationWithEloquentTest extends TestCase
             throw $e;
         }
     }
-}
-
-class User extends FoundationUser
-{
-    //
 }

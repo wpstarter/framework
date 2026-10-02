@@ -17,7 +17,6 @@ class RequestSending
      * Create a new event instance.
      *
      * @param  \WpStarter\Http\Client\Request  $request
-     * @return void
      */
     public function __construct(Request $request)
     {

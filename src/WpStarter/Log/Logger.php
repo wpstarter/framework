@@ -7,11 +7,14 @@ use WpStarter\Contracts\Events\Dispatcher;
 use WpStarter\Contracts\Support\Arrayable;
 use WpStarter\Contracts\Support\Jsonable;
 use WpStarter\Log\Events\MessageLogged;
+use WpStarter\Support\Traits\Conditionable;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 class Logger implements LoggerInterface
 {
+    use Conditionable;
+
     /**
      * The underlying logger implementation.
      *
@@ -38,7 +41,6 @@ class Logger implements LoggerInterface
      *
      * @param  \Psr\Log\LoggerInterface  $logger
      * @param  \WpStarter\Contracts\Events\Dispatcher|null  $dispatcher
-     * @return void
      */
     public function __construct(LoggerInterface $logger, ?Dispatcher $dispatcher = null)
     {
@@ -49,11 +51,11 @@ class Logger implements LoggerInterface
     /**
      * Log an emergency message to the logs.
      *
-     * @param  string  $message
+     * @param  \WpStarter\Contracts\Support\Arrayable|\WpStarter\Contracts\Support\Jsonable|\WpStarter\Support\Stringable|array|string  $message
      * @param  array  $context
      * @return void
      */
-    public function emergency($message, array $context = [])
+    public function emergency($message, array $context = []): void
     {
         $this->writeLog(__FUNCTION__, $message, $context);
     }
@@ -61,11 +63,11 @@ class Logger implements LoggerInterface
     /**
      * Log an alert message to the logs.
      *
-     * @param  string  $message
+     * @param  \WpStarter\Contracts\Support\Arrayable|\WpStarter\Contracts\Support\Jsonable|\WpStarter\Support\Stringable|array|string  $message
      * @param  array  $context
      * @return void
      */
-    public function alert($message, array $context = [])
+    public function alert($message, array $context = []): void
     {
         $this->writeLog(__FUNCTION__, $message, $context);
     }
@@ -73,11 +75,11 @@ class Logger implements LoggerInterface
     /**
      * Log a critical message to the logs.
      *
-     * @param  string  $message
+     * @param  \WpStarter\Contracts\Support\Arrayable|\WpStarter\Contracts\Support\Jsonable|\WpStarter\Support\Stringable|array|string  $message
      * @param  array  $context
      * @return void
      */
-    public function critical($message, array $context = [])
+    public function critical($message, array $context = []): void
     {
         $this->writeLog(__FUNCTION__, $message, $context);
     }
@@ -85,11 +87,11 @@ class Logger implements LoggerInterface
     /**
      * Log an error message to the logs.
      *
-     * @param  string  $message
+     * @param  \WpStarter\Contracts\Support\Arrayable|\WpStarter\Contracts\Support\Jsonable|\WpStarter\Support\Stringable|array|string  $message
      * @param  array  $context
      * @return void
      */
-    public function error($message, array $context = [])
+    public function error($message, array $context = []): void
     {
         $this->writeLog(__FUNCTION__, $message, $context);
     }
@@ -97,11 +99,11 @@ class Logger implements LoggerInterface
     /**
      * Log a warning message to the logs.
      *
-     * @param  string  $message
+     * @param  \WpStarter\Contracts\Support\Arrayable|\WpStarter\Contracts\Support\Jsonable|\WpStarter\Support\Stringable|array|string  $message
      * @param  array  $context
      * @return void
      */
-    public function warning($message, array $context = [])
+    public function warning($message, array $context = []): void
     {
         $this->writeLog(__FUNCTION__, $message, $context);
     }
@@ -109,11 +111,11 @@ class Logger implements LoggerInterface
     /**
      * Log a notice to the logs.
      *
-     * @param  string  $message
+     * @param  \WpStarter\Contracts\Support\Arrayable|\WpStarter\Contracts\Support\Jsonable|\WpStarter\Support\Stringable|array|string  $message
      * @param  array  $context
      * @return void
      */
-    public function notice($message, array $context = [])
+    public function notice($message, array $context = []): void
     {
         $this->writeLog(__FUNCTION__, $message, $context);
     }
@@ -121,11 +123,11 @@ class Logger implements LoggerInterface
     /**
      * Log an informational message to the logs.
      *
-     * @param  string  $message
+     * @param  \WpStarter\Contracts\Support\Arrayable|\WpStarter\Contracts\Support\Jsonable|\WpStarter\Support\Stringable|array|string  $message
      * @param  array  $context
      * @return void
      */
-    public function info($message, array $context = [])
+    public function info($message, array $context = []): void
     {
         $this->writeLog(__FUNCTION__, $message, $context);
     }
@@ -133,11 +135,11 @@ class Logger implements LoggerInterface
     /**
      * Log a debug message to the logs.
      *
-     * @param  string  $message
+     * @param  \WpStarter\Contracts\Support\Arrayable|\WpStarter\Contracts\Support\Jsonable|\WpStarter\Support\Stringable|array|string  $message
      * @param  array  $context
      * @return void
      */
-    public function debug($message, array $context = [])
+    public function debug($message, array $context = []): void
     {
         $this->writeLog(__FUNCTION__, $message, $context);
     }
@@ -146,11 +148,11 @@ class Logger implements LoggerInterface
      * Log a message to the logs.
      *
      * @param  string  $level
-     * @param  string  $message
+     * @param  \WpStarter\Contracts\Support\Arrayable|\WpStarter\Contracts\Support\Jsonable|\WpStarter\Support\Stringable|array|string  $message
      * @param  array  $context
      * @return void
      */
-    public function log($level, $message, array $context = [])
+    public function log($level, $message, array $context = []): void
     {
         $this->writeLog($level, $message, $context);
     }
@@ -159,11 +161,11 @@ class Logger implements LoggerInterface
      * Dynamically pass log calls into the writer.
      *
      * @param  string  $level
-     * @param  string  $message
+     * @param  \WpStarter\Contracts\Support\Arrayable|\WpStarter\Contracts\Support\Jsonable|\WpStarter\Support\Stringable|array|string  $message
      * @param  array  $context
      * @return void
      */
-    public function write($level, $message, array $context = [])
+    public function write($level, $message, array $context = []): void
     {
         $this->writeLog($level, $message, $context);
     }
@@ -172,12 +174,16 @@ class Logger implements LoggerInterface
      * Write a message to the log.
      *
      * @param  string  $level
-     * @param  string  $message
+     * @param  \WpStarter\Contracts\Support\Arrayable|\WpStarter\Contracts\Support\Jsonable|\WpStarter\Support\Stringable|array|string  $message
      * @param  array  $context
      * @return void
      */
-    protected function writeLog($level, $message, $context)
+    protected function writeLog($level, $message, $context): void
     {
+        if (method_exists($this->logger, 'isHandling') && ! $this->logger->isHandling($level)) {
+            return;
+        }
+
         $this->logger->{$level}(
             $message = $this->formatMessage($message),
             $context = array_merge($this->context, $context)
@@ -200,13 +206,18 @@ class Logger implements LoggerInterface
     }
 
     /**
-     * Flush the existing context array.
+     * Flush the log context on all currently resolved channels.
      *
+     * @param  string[]|null  $keys
      * @return $this
      */
-    public function withoutContext()
+    public function withoutContext(?array $keys = null)
     {
-        $this->context = [];
+        if (is_array($keys)) {
+            $this->context = array_diff_key($this->context, array_flip($keys));
+        } else {
+            $this->context = [];
+        }
 
         return $this;
     }
@@ -238,31 +249,32 @@ class Logger implements LoggerInterface
      */
     protected function fireLogEvent($level, $message, array $context = [])
     {
+        // Avoid dispatching the event multiple times if our logger instance is the LogManager...
+        if ($this->logger instanceof LogManager &&
+            $this->logger->getEventDispatcher() !== null) {
+            return;
+        }
+
         // If the event dispatcher is set, we will pass along the parameters to the
         // log listeners. These are useful for building profilers or other tools
         // that aggregate all of the log messages for a given "request" cycle.
-        if (isset($this->dispatcher)) {
-            $this->dispatcher->dispatch(new MessageLogged($level, $message, $context));
-        }
+        $this->dispatcher?->dispatch(new MessageLogged($level, $message, $context));
     }
 
     /**
      * Format the parameters for the logger.
      *
-     * @param  mixed  $message
-     * @return mixed
+     * @param  \WpStarter\Contracts\Support\Arrayable|\WpStarter\Contracts\Support\Jsonable|\WpStarter\Support\Stringable|array|string  $message
+     * @return string
      */
     protected function formatMessage($message)
     {
-        if (is_array($message)) {
-            return var_export($message, true);
-        } elseif ($message instanceof Jsonable) {
-            return $message->toJson();
-        } elseif ($message instanceof Arrayable) {
-            return var_export($message->toArray(), true);
-        }
-
-        return $message;
+        return match (true) {
+            is_array($message) => var_export($message, true),
+            $message instanceof Jsonable => $message->toJson(),
+            $message instanceof Arrayable => var_export($message->toArray(), true),
+            default => (string) $message,
+        };
     }
 
     /**
@@ -278,7 +290,7 @@ class Logger implements LoggerInterface
     /**
      * Get the event dispatcher instance.
      *
-     * @return \WpStarter\Contracts\Events\Dispatcher
+     * @return \WpStarter\Contracts\Events\Dispatcher|null
      */
     public function getEventDispatcher()
     {

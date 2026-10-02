@@ -5,19 +5,14 @@ namespace WpStarter\Tests\Database;
 use WpStarter\Database\Eloquent\Collection;
 use WpStarter\Database\Eloquent\Model;
 use WpStarter\Database\Eloquent\Relations\Pivot;
-use Mockery;
+use Mockery as m;
 use PHPUnit\Framework\TestCase;
 
 class DatabaseEloquentCollectionQueueableTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        Mockery::close();
-    }
-
     public function testSerializesPivotsEntitiesId()
     {
-        $spy = Mockery::spy(Pivot::class);
+        $spy = m::spy(Pivot::class);
 
         $c = new Collection([$spy]);
 
@@ -30,7 +25,7 @@ class DatabaseEloquentCollectionQueueableTest extends TestCase
 
     public function testSerializesModelEntitiesById()
     {
-        $spy = Mockery::spy(Model::class);
+        $spy = m::spy(Model::class);
 
         $c = new Collection([$spy]);
 
@@ -49,7 +44,7 @@ class DatabaseEloquentCollectionQueueableTest extends TestCase
         // When the ID of a Model is binary instead of int or string, the Collection
         // serialization + JSON encoding breaks because of UTF-8 issues. Encoding
         // of a QueueableCollection must favor QueueableEntity::queueableId().
-        $mock = Mockery::mock(Model::class, [
+        $mock = m::mock(Model::class, [
             'getKey' => random_bytes(10),
             'getQueueableId' => 'mocked',
         ]);

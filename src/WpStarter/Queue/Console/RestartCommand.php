@@ -5,7 +5,9 @@ namespace WpStarter\Queue\Console;
 use WpStarter\Console\Command;
 use WpStarter\Contracts\Cache\Repository as Cache;
 use WpStarter\Support\InteractsWithTime;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'queue:restart')]
 class RestartCommand extends Command
 {
     use InteractsWithTime;
@@ -35,7 +37,6 @@ class RestartCommand extends Command
      * Create a new queue restart command.
      *
      * @param  \WpStarter\Contracts\Cache\Repository  $cache
-     * @return void
      */
     public function __construct(Cache $cache)
     {
@@ -53,6 +54,6 @@ class RestartCommand extends Command
     {
         $this->cache->forever('wpstarter:queue:restart', $this->currentTime());
 
-        $this->info('Broadcasting queue restart signal.');
+        $this->components->info('Broadcasting queue restart signal.');
     }
 }

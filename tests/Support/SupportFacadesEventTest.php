@@ -3,7 +3,10 @@
 namespace WpStarter\Tests\Support;
 
 use WpStarter\Cache\CacheManager;
+use WpStarter\Cache\Events\CacheFlushed;
+use WpStarter\Cache\Events\CacheFlushing;
 use WpStarter\Cache\Events\CacheMissed;
+use WpStarter\Cache\Events\RetrievingKey;
 use WpStarter\Config\Repository as ConfigRepository;
 use WpStarter\Container\Container;
 use WpStarter\Contracts\Events\Dispatcher as DispatcherContract;
@@ -37,10 +40,10 @@ class SupportFacadesEventTest extends TestCase
 
     protected function tearDown(): void
     {
-        Event::clearResolvedInstances();
-        Event::setFacadeApplication(null);
+        Facade::clearResolvedInstances();
+        Facade::setFacadeApplication(null);
 
-        m::close();
+        parent::tearDown();
     }
 
     public function testFakeFor()
@@ -75,14 +78,26 @@ class SupportFacadesEventTest extends TestCase
     {
         $arrayRepository = Cache::store('array');
 
-        $this->events->shouldReceive('dispatch')->once();
+        $this->events->shouldReceive('dispatch')->times(2);
         $arrayRepository->get('foo');
 
         Event::fake();
 
         $arrayRepository->get('bar');
 
+        Event::assertDispatched(RetrievingKey::class);
         Event::assertDispatched(CacheMissed::class);
+    }
+
+    public function testCacheFlushDispatchesEvent()
+    {
+        $arrayRepository = Cache::store('array');
+        Event::fake();
+
+        $arrayRepository->clear();
+
+        Event::assertDispatched(CacheFlushing::class);
+        Event::assertDispatched(CacheFlushed::class);
     }
 
     protected function getCacheConfig()

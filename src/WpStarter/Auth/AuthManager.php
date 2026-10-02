@@ -6,6 +6,10 @@ use Closure;
 use WpStarter\Contracts\Auth\Factory as FactoryContract;
 use InvalidArgumentException;
 
+/**
+ * @mixin \WpStarter\Contracts\Auth\Guard
+ * @mixin \WpStarter\Contracts\Auth\StatefulGuard
+ */
 class AuthManager implements FactoryContract
 {
     use CreatesUserProviders;
@@ -44,15 +48,12 @@ class AuthManager implements FactoryContract
      * Create a new Auth manager instance.
      *
      * @param  \WpStarter\Contracts\Foundation\Application  $app
-     * @return void
      */
     public function __construct($app)
     {
         $this->app = $app;
 
-        $this->userResolver = function ($guard = null) {
-            return $this->guard($guard)->user();
-        };
+        $this->userResolver = fn ($guard = null) => $this->guard($guard)->user();
     }
 
     /**
@@ -65,7 +66,7 @@ class AuthManager implements FactoryContract
     {
         $name = $name ?: $this->getDefaultDriver();
 
-        return $this->guards[$name] ?? $this->guards[$name] = $this->resolve($name);
+        return $this->guards[$name] ??= $this->resolve($name);
     }
 
     /**
@@ -120,28 +121,23 @@ class AuthManager implements FactoryContract
      */
     public function createSessionDriver($name, $config)
     {
-        $provider = $this->createUserProvider($config['provider'] ?? null);
-
         $guard = new SessionGuard(
             $name,
-            $provider,
+            $this->createUserProvider($config['provider'] ?? null),
             $this->app['session.store'],
+            rehashOnLogin: $this->app['config']->get('hashing.rehash_on_login', true),
+            timeboxDuration: $this->app['config']->get('auth.timebox_duration', 200000),
+            hashKey: $this->app['config']->get('app.key'),
         );
 
         // When using the remember me functionality of the authentication services we
         // will need to be set the encryption instance of the guard, which allows
         // secure, encrypted cookie values to get generated for those cookies.
-        if (method_exists($guard, 'setCookieJar')) {
-            $guard->setCookieJar($this->app['cookie']);
-        }
+        $guard->setCookieJar($this->app['cookie']);
 
-        if (method_exists($guard, 'setDispatcher')) {
-            $guard->setDispatcher($this->app['events']);
-        }
+        $guard->setDispatcher($this->app['events']);
 
-        if (method_exists($guard, 'setRequest')) {
-            $guard->setRequest($this->app->refresh('request', $guard, 'setRequest'));
-        }
+        $guard->setRequest($this->app->refresh('request', $guard, 'setRequest'));
 
         if (isset($config['remember'])) {
             $guard->setRememberDuration($config['remember']);
@@ -208,9 +204,7 @@ class AuthManager implements FactoryContract
 
         $this->setDefaultDriver($name);
 
-        $this->userResolver = function ($name = null) {
-            return $this->guard($name)->user();
-        };
+        $this->userResolver = fn ($name = null) => $this->guard($name)->user();
     }
 
     /**

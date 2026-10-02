@@ -3,53 +3,20 @@
 namespace WpStarter\Http\Client;
 
 use Closure;
+use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Middleware;
+use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Psr7\Response as Psr7Response;
 use GuzzleHttp\TransferStats;
 use WpStarter\Contracts\Events\Dispatcher;
+use WpStarter\Support\Collection;
 use WpStarter\Support\Str;
 use WpStarter\Support\Traits\Macroable;
 use PHPUnit\Framework\Assert as PHPUnit;
 
 /**
- * @method \WpStarter\Http\Client\PendingRequest accept(string $contentType)
- * @method \WpStarter\Http\Client\PendingRequest acceptJson()
- * @method \WpStarter\Http\Client\PendingRequest asForm()
- * @method \WpStarter\Http\Client\PendingRequest asJson()
- * @method \WpStarter\Http\Client\PendingRequest asMultipart()
- * @method \WpStarter\Http\Client\PendingRequest async()
- * @method \WpStarter\Http\Client\PendingRequest attach(string|array $name, string|resource $contents = '', string|null $filename = null, array $headers = [])
- * @method \WpStarter\Http\Client\PendingRequest baseUrl(string $url)
- * @method \WpStarter\Http\Client\PendingRequest beforeSending(callable $callback)
- * @method \WpStarter\Http\Client\PendingRequest bodyFormat(string $format)
- * @method \WpStarter\Http\Client\PendingRequest contentType(string $contentType)
- * @method \WpStarter\Http\Client\PendingRequest dd()
- * @method \WpStarter\Http\Client\PendingRequest dump()
- * @method \WpStarter\Http\Client\PendingRequest retry(int $times, int $sleep = 0, ?callable $when = null)
- * @method \WpStarter\Http\Client\PendingRequest sink(string|resource $to)
- * @method \WpStarter\Http\Client\PendingRequest stub(callable $callback)
- * @method \WpStarter\Http\Client\PendingRequest timeout(int $seconds)
- * @method \WpStarter\Http\Client\PendingRequest withBasicAuth(string $username, string $password)
- * @method \WpStarter\Http\Client\PendingRequest withBody(resource|string $content, string $contentType)
- * @method \WpStarter\Http\Client\PendingRequest withCookies(array $cookies, string $domain)
- * @method \WpStarter\Http\Client\PendingRequest withDigestAuth(string $username, string $password)
- * @method \WpStarter\Http\Client\PendingRequest withHeaders(array $headers)
- * @method \WpStarter\Http\Client\PendingRequest withMiddleware(callable $middleware)
- * @method \WpStarter\Http\Client\PendingRequest withOptions(array $options)
- * @method \WpStarter\Http\Client\PendingRequest withToken(string $token, string $type = 'Bearer')
- * @method \WpStarter\Http\Client\PendingRequest withUserAgent(string $userAgent)
- * @method \WpStarter\Http\Client\PendingRequest withoutRedirecting()
- * @method \WpStarter\Http\Client\PendingRequest withoutVerifying()
- * @method array pool(callable $callback)
- * @method \WpStarter\Http\Client\Response delete(string $url, array $data = [])
- * @method \WpStarter\Http\Client\Response get(string $url, array|string|null $query = null)
- * @method \WpStarter\Http\Client\Response head(string $url, array|string|null $query = null)
- * @method \WpStarter\Http\Client\Response patch(string $url, array $data = [])
- * @method \WpStarter\Http\Client\Response post(string $url, array $data = [])
- * @method \WpStarter\Http\Client\Response put(string $url, array $data = [])
- * @method \WpStarter\Http\Client\Response send(string $method, string $url, array $options = [])
- *
- * @see \WpStarter\Http\Client\PendingRequest
+ * @mixin \WpStarter\Http\Client\PendingRequest
  */
 class Factory
 {
@@ -63,6 +30,20 @@ class Factory
      * @var \WpStarter\Contracts\Events\Dispatcher|null
      */
     protected $dispatcher;
+
+    /**
+     * The middleware to apply to every request.
+     *
+     * @var array
+     */
+    protected $globalMiddleware = [];
+
+    /**
+     * The options to apply to every request.
+     *
+     * @var \Closure|array
+     */
+    protected $globalOptions = [];
 
     /**
      * The stub callables that will handle requests.
@@ -81,39 +62,140 @@ class Factory
     /**
      * The recorded response array.
      *
-     * @var array
+     * @var list<array{0: \WpStarter\Http\Client\Request, 1: \WpStarter\Http\Client\Response|null}>
      */
     protected $recorded = [];
 
     /**
      * All created response sequences.
      *
-     * @var array
+     * @var list<\WpStarter\Http\Client\ResponseSequence>
      */
     protected $responseSequences = [];
+
+    /**
+     * Indicates that an exception should be thrown if any request is not faked.
+     *
+     * @var bool
+     */
+    protected $preventStrayRequests = false;
+
+    /**
+     * A list of URL patterns that are allowed to bypass the stray request guard.
+     *
+     * @var array<int, string>
+     */
+    protected $allowedStrayRequestUrls = [];
 
     /**
      * Create a new factory instance.
      *
      * @param  \WpStarter\Contracts\Events\Dispatcher|null  $dispatcher
-     * @return void
      */
     public function __construct(?Dispatcher $dispatcher = null)
     {
         $this->dispatcher = $dispatcher;
 
-        $this->stubCallbacks = ws_collect();
+        $this->stubCallbacks = new Collection;
+    }
+
+    /**
+     * Add middleware to apply to every request.
+     *
+     * @param  callable  $middleware
+     * @return $this
+     */
+    public function globalMiddleware($middleware)
+    {
+        $this->globalMiddleware[] = $middleware;
+
+        return $this;
+    }
+
+    /**
+     * Add request middleware to apply to every request.
+     *
+     * @param  callable  $middleware
+     * @return $this
+     */
+    public function globalRequestMiddleware($middleware)
+    {
+        $this->globalMiddleware[] = Middleware::mapRequest($middleware);
+
+        return $this;
+    }
+
+    /**
+     * Add response middleware to apply to every request.
+     *
+     * @param  callable  $middleware
+     * @return $this
+     */
+    public function globalResponseMiddleware($middleware)
+    {
+        $this->globalMiddleware[] = Middleware::mapResponse($middleware);
+
+        return $this;
+    }
+
+    /**
+     * Set the options to apply to every request.
+     *
+     * @param  \Closure|array  $options
+     * @return $this
+     */
+    public function globalOptions($options)
+    {
+        $this->globalOptions = $options;
+
+        return $this;
+    }
+
+    /**
+     * Execute a callback while requests are created without global middleware or global options.
+     *
+     * @template TReturn
+     *
+     * @param  (\Closure(): TReturn)  $callback
+     * @return TReturn
+     */
+    public function withoutGlobalConfiguration(Closure $callback)
+    {
+        [$middleware, $options] = [$this->globalMiddleware, $this->globalOptions];
+
+        [$this->globalMiddleware, $this->globalOptions] = [[], []];
+
+        try {
+            return $callback();
+        } finally {
+            [$this->globalMiddleware, $this->globalOptions] = [$middleware, $options];
+        }
     }
 
     /**
      * Create a new response instance for use during stubbing.
      *
-     * @param  array|string  $body
+     * @param  array|string|null  $body
      * @param  int  $status
      * @param  array  $headers
      * @return \GuzzleHttp\Promise\PromiseInterface
      */
     public static function response($body = null, $status = 200, $headers = [])
+    {
+        return Create::promiseFor(
+            static::psr7Response($body, $status, $headers)
+        );
+    }
+
+    /**
+     * Create a new PSR-7 response instance for use during stubbing.
+     *
+     * @param  array|string|null  $body
+     * @param  int  $status
+     * @param  array<string, mixed>  $headers
+     * @return \GuzzleHttp\Psr7\Response
+     */
+    public static function psr7Response($body = null, $status = 200, $headers = [])
     {
         if (is_array($body)) {
             $body = json_encode($body);
@@ -121,11 +203,36 @@ class Factory
             $headers['Content-Type'] = 'application/json';
         }
 
-        $response = new Psr7Response($status, $headers, $body);
+        return new Psr7Response($status, $headers, $body);
+    }
 
-        return class_exists(\GuzzleHttp\Promise\Create::class)
-            ? \GuzzleHttp\Promise\Create::promiseFor($response)
-            : \GuzzleHttp\Promise\promise_for($response);
+    /**
+     * Create a new RequestException instance for use during stubbing.
+     *
+     * @param  array|string|null  $body
+     * @param  int  $status
+     * @param  array<string, mixed>  $headers
+     * @return \WpStarter\Http\Client\RequestException
+     */
+    public static function failedRequest($body = null, $status = 200, $headers = [])
+    {
+        return new RequestException(new Response(static::psr7Response($body, $status, $headers)));
+    }
+
+    /**
+     * Create a new connection exception for use during stubbing.
+     *
+     * @param  string|null  $message
+     * @return \Closure(\WpStarter\Http\Client\Request): \GuzzleHttp\Promise\PromiseInterface
+     */
+    public static function failedConnection($message = null)
+    {
+        return function ($request) use ($message) {
+            return Create::rejectionFor(new ConnectException(
+                $message ?? "cURL error 6: Could not resolve host: {$request->toPsrRequest()->getUri()->getHost()} (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for {$request->toPsrRequest()->getUri()}.",
+                $request->toPsrRequest(),
+            ));
+        };
     }
 
     /**
@@ -142,7 +249,7 @@ class Factory
     /**
      * Register a stub callable that will intercept requests and be able to return stub responses.
      *
-     * @param  callable|array  $callback
+     * @param  callable|array<string, mixed>|null  $callback
      * @return $this
      */
     public function fake($callback = null)
@@ -165,11 +272,13 @@ class Factory
             return $this;
         }
 
-        $this->stubCallbacks = $this->stubCallbacks->merge(ws_collect([
+        $this->stubCallbacks = $this->stubCallbacks->merge(new Collection([
             function ($request, $options) use ($callback) {
-                $response = $callback instanceof Closure
-                                ? $callback($request, $options)
-                                : $callback;
+                $response = $callback;
+
+                while ($response instanceof Closure) {
+                    $response = $response($request, $options);
+                }
 
                 if ($response instanceof PromiseInterface) {
                     $options['on_stats'](new TransferStats(
@@ -193,7 +302,7 @@ class Factory
      */
     public function fakeSequence($url = '*')
     {
-        return ws_tap($this->sequence(), function ($sequence) use ($url) {
+        return tap($this->sequence(), function ($sequence) use ($url) {
             $this->fake([$url => $sequence]);
         });
     }
@@ -202,7 +311,7 @@ class Factory
      * Stub the given URL using the given callback.
      *
      * @param  string  $url
-     * @param  \WpStarter\Http\Client\Response|\GuzzleHttp\Promise\PromiseInterface|callable  $callback
+     * @param  \WpStarter\Http\Client\Response|\GuzzleHttp\Promise\PromiseInterface|callable|int|string|array|\WpStarter\Http\Client\ResponseSequence  $callback
      * @return $this
      */
     public function stubUrl($url, $callback)
@@ -212,10 +321,62 @@ class Factory
                 return;
             }
 
-            return $callback instanceof Closure || $callback instanceof ResponseSequence
-                        ? $callback($request, $options)
-                        : $callback;
+            if (is_int($callback) && $callback >= 100 && $callback < 600) {
+                return static::response(status: $callback);
+            }
+
+            if (is_int($callback) || is_string($callback)) {
+                return static::response($callback);
+            }
+
+            if ($callback instanceof Closure || $callback instanceof ResponseSequence) {
+                return $callback($request, $options);
+            }
+
+            return $callback;
         });
+    }
+
+    /**
+     * Indicate that an exception should be thrown if any request is not faked.
+     *
+     * @param  bool  $prevent
+     * @return $this
+     */
+    public function preventStrayRequests($prevent = true)
+    {
+        $this->preventStrayRequests = $prevent;
+
+        return $this;
+    }
+
+    /**
+     * Determine if stray requests are being prevented.
+     *
+     * @return bool
+     */
+    public function preventingStrayRequests()
+    {
+        return $this->preventStrayRequests;
+    }
+
+    /**
+     * Allow stray, unfaked requests entirely, or optionally allow only specific URLs.
+     *
+     * @param  array<int, string>|null  $only
+     * @return $this
+     */
+    public function allowStrayRequests(?array $only = null)
+    {
+        if (is_null($only)) {
+            $this->preventStrayRequests(false);
+
+            $this->allowedStrayRequestUrls = [];
+        } else {
+            $this->allowedStrayRequestUrls = array_values($only);
+        }
+
+        return $this;
     }
 
     /**
@@ -223,7 +384,7 @@ class Factory
      *
      * @return $this
      */
-    protected function record()
+    public function record()
     {
         $this->recording = true;
 
@@ -234,7 +395,7 @@ class Factory
      * Record a request response pair.
      *
      * @param  \WpStarter\Http\Client\Request  $request
-     * @param  \WpStarter\Http\Client\Response  $response
+     * @param  \WpStarter\Http\Client\Response|null  $response
      * @return void
      */
     public function recordRequestResponsePair($request, $response)
@@ -247,7 +408,7 @@ class Factory
     /**
      * Assert that a request / response pair was recorded matching a given truth test.
      *
-     * @param  callable  $callback
+     * @param  callable|(\Closure(\WpStarter\Http\Client\Request, \WpStarter\Http\Client\Response|null): bool)  $callback
      * @return void
      */
     public function assertSent($callback)
@@ -261,7 +422,7 @@ class Factory
     /**
      * Assert that the given request was sent in the given order.
      *
-     * @param  array  $callbacks
+     * @param  list<string|(\Closure(\WpStarter\Http\Client\Request, \WpStarter\Http\Client\Response|null): bool)|callable>  $callbacks
      * @return void
      */
     public function assertSentInOrder($callbacks)
@@ -283,7 +444,7 @@ class Factory
     /**
      * Assert that a request / response pair was not recorded matching a given truth test.
      *
-     * @param  callable  $callback
+     * @param  callable|(\Closure(\WpStarter\Http\Client\Request, \WpStarter\Http\Client\Response|null): bool)  $callback
      * @return void
      */
     public function assertNotSent($callback)
@@ -336,22 +497,22 @@ class Factory
     /**
      * Get a collection of the request / response pairs matching the given truth test.
      *
-     * @param  callable  $callback
-     * @return \WpStarter\Support\Collection
+     * @param  (\Closure(\WpStarter\Http\Client\Request, \WpStarter\Http\Client\Response|null): bool)|callable  $callback
+     * @return \WpStarter\Support\Collection<int, array{0: \WpStarter\Http\Client\Request, 1: \WpStarter\Http\Client\Response|null}>
      */
     public function recorded($callback = null)
     {
         if (empty($this->recorded)) {
-            return ws_collect();
+            return new Collection;
         }
 
-        $callback = $callback ?: function () {
-            return true;
-        };
+        $collect = new Collection($this->recorded);
 
-        return ws_collect($this->recorded)->filter(function ($pair) use ($callback) {
-            return $callback($pair[0], $pair[1]);
-        });
+        if ($callback) {
+            return $collect->filter(fn ($pair) => $callback($pair[0], $pair[1]));
+        }
+
+        return $collect;
     }
 
     /**
@@ -359,9 +520,24 @@ class Factory
      *
      * @return \WpStarter\Http\Client\PendingRequest
      */
+    public function createPendingRequest()
+    {
+        return tap($this->newPendingRequest(), function ($request) {
+            $request
+                ->stub($this->stubCallbacks)
+                ->preventStrayRequests($this->preventStrayRequests)
+                ->allowStrayRequests($this->allowedStrayRequestUrls);
+        });
+    }
+
+    /**
+     * Instantiate a new pending request instance for this factory.
+     *
+     * @return \WpStarter\Http\Client\PendingRequest
+     */
     protected function newPendingRequest()
     {
-        return new PendingRequest($this);
+        return (new PendingRequest($this, $this->globalMiddleware))->withOptions(value($this->globalOptions));
     }
 
     /**
@@ -372,6 +548,16 @@ class Factory
     public function getDispatcher()
     {
         return $this->dispatcher;
+    }
+
+    /**
+     * Get the array of global middleware.
+     *
+     * @return array
+     */
+    public function getGlobalMiddleware()
+    {
+        return $this->globalMiddleware;
     }
 
     /**
@@ -387,8 +573,6 @@ class Factory
             return $this->macroCall($method, $parameters);
         }
 
-        return ws_tap($this->newPendingRequest(), function ($request) {
-            $request->stub($this->stubCallbacks);
-        })->{$method}(...$parameters);
+        return $this->createPendingRequest()->{$method}(...$parameters);
     }
 }

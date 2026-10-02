@@ -3,6 +3,8 @@
 namespace WpStarter\Container;
 
 use Closure;
+use WpStarter\Contracts\Container\ContextualAttribute;
+use ReflectionAttribute;
 use ReflectionNamedType;
 
 /**
@@ -33,11 +35,12 @@ class Util
      * From global value() helper in WpStarter\Support.
      *
      * @param  mixed  $value
+     * @param  mixed  ...$args
      * @return mixed
      */
-    public static function unwrapIfClosure($value)
+    public static function unwrapIfClosure($value, ...$args)
     {
-        return $value instanceof Closure ? $value() : $value;
+        return $value instanceof Closure ? $value(...$args) : $value;
     }
 
     /**
@@ -69,5 +72,16 @@ class Util
         }
 
         return $name;
+    }
+
+    /**
+     * Get a contextual attribute from a dependency.
+     *
+     * @param  \ReflectionParameter  $dependency
+     * @return \ReflectionAttribute|null
+     */
+    public static function getContextualAttributeFromDependency($dependency)
+    {
+        return $dependency->getAttributes(ContextualAttribute::class, ReflectionAttribute::IS_INSTANCEOF)[0] ?? null;
     }
 }

@@ -2,6 +2,8 @@
 
 namespace WpStarter\Contracts\Database\Eloquent;
 
+use WpStarter\Database\Eloquent\Model;
+
 interface CastsInboundAttributes
 {
     /**
@@ -10,8 +12,8 @@ interface CastsInboundAttributes
      * @param  \WpStarter\Database\Eloquent\Model  $model
      * @param  string  $key
      * @param  mixed  $value
-     * @param  array  $attributes
+     * @param  array<string, mixed>  $attributes
      * @return mixed
      */
-    public function set($model, string $key, $value, array $attributes);
+    public function set(Model $model, string $key, mixed $value, array $attributes);
 }

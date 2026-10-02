@@ -3,7 +3,10 @@
 namespace WpStarter\Foundation\Console;
 
 use WpStarter\Console\GeneratorCommand;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Input\InputOption;
 
+#[AsCommand(name: 'make:channel')]
 class ChannelMakeCommand extends GeneratorCommand
 {
     /**
@@ -37,7 +40,7 @@ class ChannelMakeCommand extends GeneratorCommand
     {
         return str_replace(
             ['DummyUser', '{{ userModel }}'],
-            ws_class_basename($this->userProviderModel()),
+            class_basename($this->userProviderModel()),
             parent::buildClass($name)
         );
     }
@@ -61,5 +64,17 @@ class ChannelMakeCommand extends GeneratorCommand
     protected function getDefaultNamespace($rootNamespace)
     {
         return $rootNamespace.'\Broadcasting';
+    }
+
+    /**
+     * Get the console command arguments.
+     *
+     * @return array
+     */
+    protected function getOptions()
+    {
+        return [
+            ['force', 'f', InputOption::VALUE_NONE, 'Create the class even if the channel already exists'],
+        ];
     }
 }

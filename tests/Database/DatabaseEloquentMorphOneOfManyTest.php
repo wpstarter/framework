@@ -51,6 +51,8 @@ class DatabaseEloquentMorphOneOfManyTest extends TestCase
     {
         $this->schema()->drop('products');
         $this->schema()->drop('states');
+
+        parent::tearDown();
     }
 
     public function testEagerLoadingAppliesConstraintsToInnerJoinSubQuery()
@@ -124,6 +126,47 @@ class DatabaseEloquentMorphOneOfManyTest extends TestCase
             $q->whereKey($currentState->getKey());
         })->exists();
         $this->assertTrue($exists);
+    }
+
+    public function testWithWhereHas()
+    {
+        $product = MorphOneOfManyTestProduct::create();
+        $previousState = $product->states()->create([
+            'state' => 'draft',
+        ]);
+        $currentState = $product->states()->create([
+            'state' => 'active',
+        ]);
+
+        $exists = MorphOneOfManyTestProduct::withWhereHas('current_state', function ($q) use ($previousState) {
+            $q->whereKey($previousState->getKey());
+        })->exists();
+        $this->assertFalse($exists);
+
+        $exists = MorphOneOfManyTestProduct::withWhereHas('current_state', function ($q) use ($currentState) {
+            $q->whereKey($currentState->getKey());
+        })->get();
+
+        $this->assertCount(1, $exists);
+        $this->assertTrue($exists->first()->relationLoaded('current_state'));
+        $this->assertSame($exists->first()->current_state->state, $currentState->state);
+    }
+
+    public function testWithWhereRelation()
+    {
+        $product = MorphOneOfManyTestProduct::create();
+        $currentState = $product->states()->create([
+            'state' => 'active',
+        ]);
+
+        $exists = MorphOneOfManyTestProduct::withWhereRelation('current_state', 'state', 'active')->exists();
+        $this->assertTrue($exists);
+
+        $exists = MorphOneOfManyTestProduct::withWhereRelation('current_state', 'state', 'active')->get();
+
+        $this->assertCount(1, $exists);
+        $this->assertTrue($exists->first()->relationLoaded('current_state'));
+        $this->assertSame($exists->first()->current_state->state, $currentState->state);
     }
 
     public function testWithExists()

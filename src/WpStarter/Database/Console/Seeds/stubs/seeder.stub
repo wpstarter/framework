@@ -1,17 +1,16 @@
 <?php
 
-namespace Database\Seeders;
+namespace {{ namespace }};
 
+use WpStarter\Database\Console\Seeds\WithoutModelEvents;
 use WpStarter\Database\Seeder;
 
 class {{ class }} extends Seeder
 {
     /**
      * Run the database seeds.
-     *
-     * @return void
      */
-    public function run()
+    public function run(): void
     {
         //
     }

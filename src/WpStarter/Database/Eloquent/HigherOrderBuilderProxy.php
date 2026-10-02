@@ -10,7 +10,7 @@ class HigherOrderBuilderProxy
     /**
      * The collection being operated on.
      *
-     * @var \WpStarter\Database\Eloquent\Builder
+     * @var \WpStarter\Database\Eloquent\Builder<*>
      */
     protected $builder;
 
@@ -24,9 +24,8 @@ class HigherOrderBuilderProxy
     /**
      * Create a new proxy instance.
      *
-     * @param  \WpStarter\Database\Eloquent\Builder  $builder
+     * @param  \WpStarter\Database\Eloquent\Builder<*>  $builder
      * @param  string  $method
-     * @return void
      */
     public function __construct(Builder $builder, $method)
     {

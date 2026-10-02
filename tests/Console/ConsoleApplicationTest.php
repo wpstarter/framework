@@ -2,79 +2,301 @@
 
 namespace WpStarter\Tests\Console;
 
+use Composer\Autoload\ClassLoader;
 use WpStarter\Console\Application;
 use WpStarter\Console\Command;
 use WpStarter\Contracts\Events\Dispatcher;
 use WpStarter\Contracts\Foundation\Application as ApplicationContract;
+use WpStarter\Events\Dispatcher as EventsDispatcher;
+use WpStarter\Filesystem\Filesystem;
+use WpStarter\Foundation\Application as FoundationApplication;
+use WpStarter\Foundation\Console\Kernel;
+use WpStarter\Tests\Console\Fixtures\FakeCommandWithArrayInputPrompting;
+use WpStarter\Tests\Console\Fixtures\FakeCommandWithInputPrompting;
 use Mockery as m;
+use Orchestra\Testbench\Concerns\InteractsWithMockery;
+use Orchestra\Testbench\Foundation\Application as Testbench;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command as SymfonyCommand;
+use Symfony\Component\Console\Exception\CommandNotFoundException;
+use Throwable;
+
+use function WpStarter\Filesystem\join_paths;
+use function Orchestra\Testbench\default_skeleton_path;
 
 class ConsoleApplicationTest extends TestCase
 {
+    use InteractsWithMockery;
+
     protected function tearDown(): void
     {
-        m::close();
+        $this->tearDownTheTestEnvironmentUsingMockery();
+
+        parent::tearDown();
     }
 
     public function testAddSetsLaravelInstance()
     {
-        $app = $this->getMockConsole(['addToParent']);
+        $artisan = $this->getMockConsole(['addToParent']);
         $command = m::mock(Command::class);
         $command->shouldReceive('setLaravel')->once()->with(m::type(ApplicationContract::class));
-        $app->expects($this->once())->method('addToParent')->with($this->equalTo($command))->willReturn($command);
-        $result = $app->add($command);
+        $artisan->expects($this->once())->method('addToParent')->with($this->equalTo($command))->willReturn($command);
+        $result = $artisan->add($command);
 
-        $this->assertEquals($command, $result);
+        $this->assertSame($command, $result);
     }
 
     public function testLaravelNotSetOnSymfonyCommands()
     {
-        $app = $this->getMockConsole(['addToParent']);
+        $artisan = $this->getMockConsole(['addToParent']);
         $command = m::mock(SymfonyCommand::class);
         $command->shouldReceive('setLaravel')->never();
-        $app->expects($this->once())->method('addToParent')->with($this->equalTo($command))->willReturn($command);
-        $result = $app->add($command);
+        $artisan->expects($this->once())->method('addToParent')->with($this->equalTo($command))->willReturn($command);
+        $result = $artisan->add($command);
 
-        $this->assertEquals($command, $result);
+        $this->assertSame($command, $result);
     }
 
     public function testResolveAddsCommandViaApplicationResolution()
     {
-        $app = $this->getMockConsole(['addToParent']);
+        $artisan = $this->getMockConsole(['addToParent']);
         $command = m::mock(SymfonyCommand::class);
-        $app->getLaravel()->shouldReceive('make')->once()->with('foo')->andReturn(m::mock(SymfonyCommand::class));
-        $app->expects($this->once())->method('addToParent')->with($this->equalTo($command))->willReturn($command);
-        $result = $app->resolve('foo');
+        $artisan->getLaravel()->shouldReceive('make')->once()->with('foo')->andReturn(m::mock(SymfonyCommand::class));
+        $artisan->expects($this->once())->method('addToParent')->with($this->equalTo($command))->willReturn($command);
+        $result = $artisan->resolve('foo');
 
-        $this->assertEquals($command, $result);
+        $this->assertSame($command, $result);
+    }
+
+    public function testResolvingCommandsWithAliasViaAttribute()
+    {
+        $container = new FoundationApplication();
+        $artisan = new Application($container, new EventsDispatcher($container), $container->version());
+        $artisan->resolve(CommandWithAliasViaAttribute::class);
+        $artisan->setContainerCommandLoader();
+
+        $this->assertInstanceOf(CommandWithAliasViaAttribute::class, $artisan->get('command-name'));
+        $this->assertInstanceOf(CommandWithAliasViaAttribute::class, $artisan->get('command-alias'));
+        $this->assertArrayHasKey('command-name', $artisan->all());
+        $this->assertArrayHasKey('command-alias', $artisan->all());
+    }
+
+    public function testResolvingCommandsWithAliasViaProperty()
+    {
+        $container = new FoundationApplication();
+        $artisan = new Application($container, new EventsDispatcher($container), $container->version());
+        $artisan->resolve(CommandWithAliasViaProperty::class);
+        $artisan->setContainerCommandLoader();
+
+        $this->assertInstanceOf(CommandWithAliasViaProperty::class, $artisan->get('command-name'));
+        $this->assertInstanceOf(CommandWithAliasViaProperty::class, $artisan->get('command-alias'));
+        $this->assertArrayHasKey('command-name', $artisan->all());
+        $this->assertArrayHasKey('command-alias', $artisan->all());
+    }
+
+    public function testResolvingCommandsWithNoAliasViaAttribute()
+    {
+        $container = new FoundationApplication();
+        $artisan = new Application($container, new EventsDispatcher($container), $container->version());
+        $artisan->resolve(CommandWithNoAliasViaAttribute::class);
+        $artisan->setContainerCommandLoader();
+
+        $this->assertInstanceOf(CommandWithNoAliasViaAttribute::class, $artisan->get('command-name'));
+        try {
+            $artisan->get('command-alias');
+            $this->fail();
+        } catch (Throwable $e) {
+            $this->assertInstanceOf(CommandNotFoundException::class, $e);
+        }
+        $this->assertArrayHasKey('command-name', $artisan->all());
+        $this->assertArrayNotHasKey('command-alias', $artisan->all());
+    }
+
+    public function testResolvingCommandsWithNoAliasViaProperty()
+    {
+        $container = new FoundationApplication();
+        $artisan = new Application($container, new EventsDispatcher($container), $container->version());
+        $artisan->resolve(CommandWithNoAliasViaProperty::class);
+        $artisan->setContainerCommandLoader();
+
+        $this->assertInstanceOf(CommandWithNoAliasViaProperty::class, $artisan->get('command-name'));
+        try {
+            $artisan->get('command-alias');
+            $this->fail();
+        } catch (Throwable $e) {
+            $this->assertInstanceOf(CommandNotFoundException::class, $e);
+        }
+        $this->assertArrayHasKey('command-name', $artisan->all());
+        $this->assertArrayNotHasKey('command-alias', $artisan->all());
     }
 
     public function testCallFullyStringCommandLine()
     {
-        $app = new Application(
-            $app = m::mock(ApplicationContract::class, ['version' => '6.0']),
-            $events = m::mock(Dispatcher::class, ['dispatch' => null, 'fire' => null]),
+        $artisan = new Application(
+            m::mock(ApplicationContract::class, ['version' => '6.0']),
+            m::mock(Dispatcher::class, ['dispatch' => null]),
             'testing'
         );
 
-        $codeOfCallingArrayInput = $app->call('help', [
+        $codeOfCallingArrayInput = $artisan->call('help', [
             '--raw' => true,
             '--format' => 'txt',
             '--no-interaction' => true,
             '--env' => 'testing',
         ]);
 
-        $outputOfCallingArrayInput = $app->output();
+        $outputOfCallingArrayInput = $artisan->output();
 
-        $codeOfCallingStringInput = $app->call(
+        $codeOfCallingStringInput = $artisan->call(
             'help --raw --format=txt --no-interaction --env=testing'
         );
 
-        $outputOfCallingStringInput = $app->output();
+        $outputOfCallingStringInput = $artisan->output();
 
         $this->assertSame($codeOfCallingArrayInput, $codeOfCallingStringInput);
         $this->assertSame($outputOfCallingArrayInput, $outputOfCallingStringInput);
+    }
+
+    public function testCommandInputPromptsWhenRequiredArgumentIsMissing()
+    {
+        $artisan = new Application(
+            $laravel = new FoundationApplication(__DIR__),
+            m::mock(Dispatcher::class, ['dispatch' => null]),
+            'testing'
+        );
+
+        $artisan->addCommands([$command = new FakeCommandWithInputPrompting()]);
+
+        $command->setLaravel($laravel);
+
+        $exitCode = $artisan->call('fake-command-for-testing');
+
+        $this->assertTrue($command->prompted);
+        $this->assertSame('foo', $command->argument('name'));
+        $this->assertSame(0, $exitCode);
+    }
+
+    public function testCommandInputDoesntPromptWhenRequiredArgumentIsPassed()
+    {
+        $artisan = new Application(
+            new FoundationApplication(__DIR__),
+            m::mock(Dispatcher::class, ['dispatch' => null]),
+            'testing'
+        );
+
+        $artisan->addCommands([$command = new FakeCommandWithInputPrompting()]);
+
+        $exitCode = $artisan->call('fake-command-for-testing', [
+            'name' => 'foo',
+        ]);
+
+        $this->assertFalse($command->prompted);
+        $this->assertSame('foo', $command->argument('name'));
+        $this->assertSame(0, $exitCode);
+    }
+
+    public function testCommandInputPromptsWhenRequiredArgumentsAreMissing()
+    {
+        $artisan = new Application(
+            $laravel = new FoundationApplication(__DIR__),
+            m::mock(Dispatcher::class, ['dispatch' => null]),
+            'testing'
+        );
+
+        $artisan->addCommands([$command = new FakeCommandWithArrayInputPrompting()]);
+
+        $command->setLaravel($laravel);
+
+        $exitCode = $artisan->call('fake-command-for-testing-array');
+
+        $this->assertTrue($command->prompted);
+        $this->assertSame(['foo'], $command->argument('names'));
+        $this->assertSame(0, $exitCode);
+    }
+
+    public function testCommandInputDoesntPromptWhenRequiredArgumentsArePassed()
+    {
+        $artisan = new Application(
+            new FoundationApplication(__DIR__),
+            m::mock(Dispatcher::class, ['dispatch' => null]),
+            'testing'
+        );
+
+        $artisan->addCommands([$command = new FakeCommandWithArrayInputPrompting()]);
+
+        $exitCode = $artisan->call('fake-command-for-testing-array', [
+            'names' => ['foo', 'bar', 'baz'],
+        ]);
+
+        $this->assertFalse($command->prompted);
+        $this->assertSame(['foo', 'bar', 'baz'], $command->argument('names'));
+        $this->assertSame(0, $exitCode);
+    }
+
+    public function testCallMethodCanCallArtisanCommandUsingCommandClassObject()
+    {
+        $artisan = new Application(
+            $laravel = new FoundationApplication(__DIR__),
+            m::mock(Dispatcher::class, ['dispatch' => null]),
+            'testing'
+        );
+
+        $artisan->addCommands([$command = new FakeCommandWithInputPrompting()]);
+
+        $command->setLaravel($laravel);
+
+        $exitCode = $artisan->call($command);
+
+        $this->assertTrue($command->prompted);
+        $this->assertSame('foo', $command->argument('name'));
+        $this->assertSame(0, $exitCode);
+    }
+
+    #[RunInSeparateProcess]
+    public function testLoadIgnoresTestFiles()
+    {
+        $files = new Filesystem;
+
+        $files->ensureDirectoryExists(join_paths(default_skeleton_path(), 'app', 'Console', 'Commands'), 0755, true);
+
+        try {
+            $files->put(
+                join_paths(default_skeleton_path(), 'app', 'Console', 'Commands', 'ExampleCommand.php'),
+                '<?php namespace App\Console\Commands; class ExampleCommand extends \WpStarter\Console\Command { protected $signature = "example"; public function handle() {} }'
+            );
+
+            $files->put(
+                join_paths(default_skeleton_path(), 'app', 'Console', 'Commands', 'ExampleCommandTest.php'),
+                '<?php namespace App\Console\Commands; class ExampleCommandTest extends \WpStarter\Console\Command { protected $signature = "example-test"; public function handle() {} }'
+            );
+
+            $files->put(
+                join_paths(default_skeleton_path(), 'app', 'Console', 'Commands', 'ExampleCommandUnitTest.php'),
+                '<?php namespace App\Console\Commands; class ExampleCommandUnitTest extends \PHPUnit\Framework\TestCase { public function test_command() { $this->assertTrue(true); } }'
+            );
+
+            foreach (ClassLoader::getRegisteredLoaders() as $loader) {
+                $loader->addPsr4('App\\', [default_skeleton_path('app')]);
+            }
+
+            $app = Testbench::create(default_skeleton_path());
+            $events = new EventsDispatcher($app);
+            $app->instance('events', $events);
+
+            $kernel = new TestKernel($app, $events);
+
+            $commands = $kernel->getRegisteredCommands();
+
+            $this->assertContains('App\Console\Commands\ExampleCommand', $commands);
+            $this->assertContains('App\Console\Commands\ExampleCommandTest', $commands);
+            $this->assertNotContains('App\Console\Commands\ExampleCommandUnitTest', $commands);
+
+            Testbench::flushState($this);
+        } finally {
+            $files->cleanDirectory(default_skeleton_path('app', 'Console', 'Commands'));
+        }
     }
 
     protected function getMockConsole(array $methods)
@@ -85,5 +307,48 @@ class ConsoleApplicationTest extends TestCase
         return $this->getMockBuilder(Application::class)->onlyMethods($methods)->setConstructorArgs([
             $app, $events, 'test-version',
         ])->getMock();
+    }
+}
+
+#[AsCommand('command-name')]
+class CommandWithNoAliasViaAttribute extends Command
+{
+    //
+}
+#[AsCommand('command-name', aliases: ['command-alias'])]
+class CommandWithAliasViaAttribute extends Command
+{
+    //
+}
+
+class CommandWithNoAliasViaProperty extends Command
+{
+    public $name = 'command-name';
+}
+
+class CommandWithAliasViaProperty extends Command
+{
+    public $name = 'command-name';
+    public $aliases = ['command-alias'];
+}
+
+class TestKernel extends Kernel
+{
+    public $loadedCommands = [];
+
+    public function loadFrom($paths)
+    {
+        $this->load($paths);
+    }
+
+    #[\Override]
+    protected function commandClassFromFile(\SplFileInfo $file, string $namespace): string
+    {
+        return tap(parent::commandClassFromFile($file, $namespace), fn ($command) => $this->loadedCommands[] = $command);
+    }
+
+    public function getRegisteredCommands(): array
+    {
+        return collect($this->getArtisan()->all())->values()->transform(fn ($command) => $command::class)->all();
     }
 }

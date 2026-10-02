@@ -10,11 +10,6 @@ use PHPUnit\Framework\TestCase;
 
 class AuthTokenGuardTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        m::close();
-    }
-
     public function testUserCanBeRetrievedByQueryStringVariable()
     {
         $provider = m::mock(UserProvider::class);
@@ -49,6 +44,17 @@ class AuthTokenGuardTest extends TestCase
         $this->assertTrue($guard->check());
         $this->assertFalse($guard->guest());
         $this->assertSame(1, $guard->id());
+    }
+
+    public function testUserCannotBeRetrievedWithNonStringToken()
+    {
+        $provider = m::mock(UserProvider::class);
+        $provider->shouldNotReceive('retrieveByCredentials');
+        $request = Request::create('/', 'GET', ['api_token' => [0]]);
+
+        $guard = new TokenGuard($provider, $request);
+
+        $this->assertNull($guard->user());
     }
 
     public function testUserCanBeRetrievedByAuthHeaders()
@@ -109,6 +115,17 @@ class AuthTokenGuardTest extends TestCase
         $guard = new TokenGuard($provider, $request);
 
         $this->assertFalse($guard->validate(['api_token' => '']));
+    }
+
+    public function testValidateRejectsNonStringToken()
+    {
+        $provider = m::mock(UserProvider::class);
+        $provider->shouldNotReceive('retrieveByCredentials');
+        $request = Request::create('/');
+
+        $guard = new TokenGuard($provider, $request);
+
+        $this->assertFalse($guard->validate(['api_token' => [0]]));
     }
 
     public function testItAllowsToPassCustomRequestInSetterAndUseItForValidation()

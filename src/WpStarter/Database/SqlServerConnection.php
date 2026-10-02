@@ -3,9 +3,7 @@
 namespace WpStarter\Database;
 
 use Closure;
-use Doctrine\DBAL\Driver\PDOSqlsrv\Driver as DoctrineDriver;
-use Doctrine\DBAL\Version;
-use WpStarter\Database\PDO\SqlServerDriver;
+use Exception;
 use WpStarter\Database\Query\Grammars\SqlServerGrammar as QueryGrammar;
 use WpStarter\Database\Query\Processors\SqlServerProcessor;
 use WpStarter\Database\Schema\Grammars\SqlServerGrammar as SchemaGrammar;
@@ -16,6 +14,14 @@ use Throwable;
 
 class SqlServerConnection extends Connection
 {
+    /**
+     * {@inheritdoc}
+     */
+    public function getDriverTitle()
+    {
+        return 'SQL Server';
+    }
+
     /**
      * Execute a Closure within a transaction.
      *
@@ -57,13 +63,37 @@ class SqlServerConnection extends Connection
     }
 
     /**
+     * Escape a binary value for safe SQL embedding.
+     *
+     * @param  string  $value
+     * @return string
+     */
+    protected function escapeBinary($value)
+    {
+        $hex = bin2hex($value);
+
+        return "0x{$hex}";
+    }
+
+    /**
+     * Determine if the given database exception was caused by a unique constraint violation.
+     *
+     * @param  \Exception  $exception
+     * @return bool
+     */
+    protected function isUniqueConstraintError(Exception $exception)
+    {
+        return (bool) preg_match('#Cannot insert duplicate key row in object#i', $exception->getMessage());
+    }
+
+    /**
      * Get the default query grammar instance.
      *
      * @return \WpStarter\Database\Query\Grammars\SqlServerGrammar
      */
     protected function getDefaultQueryGrammar()
     {
-        return $this->withTablePrefix(new QueryGrammar);
+        return new QueryGrammar($this);
     }
 
     /**
@@ -87,7 +117,7 @@ class SqlServerConnection extends Connection
      */
     protected function getDefaultSchemaGrammar()
     {
-        return $this->withTablePrefix(new SchemaGrammar);
+        return new SchemaGrammar($this);
     }
 
     /**
@@ -111,15 +141,5 @@ class SqlServerConnection extends Connection
     protected function getDefaultPostProcessor()
     {
         return new SqlServerProcessor;
-    }
-
-    /**
-     * Get the Doctrine DBAL driver.
-     *
-     * @return \Doctrine\DBAL\Driver\PDOSqlsrv\Driver|\WpStarter\Database\PDO\SqlServerDriver
-     */
-    protected function getDoctrineDriver()
-    {
-        return class_exists(Version::class) ? new DoctrineDriver : new SqlServerDriver;
     }
 }

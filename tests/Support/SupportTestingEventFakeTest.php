@@ -5,12 +5,13 @@ namespace WpStarter\Tests\Support;
 use WpStarter\Contracts\Events\Dispatcher;
 use WpStarter\Support\Testing\Fakes\EventFake;
 use Mockery as m;
-use PHPUnit\Framework\Constraint\ExceptionMessage;
 use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\TestCase;
 
 class SupportTestingEventFakeTest extends TestCase
 {
+    protected $fake;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -23,7 +24,7 @@ class SupportTestingEventFakeTest extends TestCase
             $this->fake->assertDispatched(EventStub::class);
             $this->fail();
         } catch (ExpectationFailedException $e) {
-            $this->assertThat($e, new ExceptionMessage('The expected [WpStarter\Tests\Support\EventStub] event was not dispatched.'));
+            $this->assertStringContainsString('The expected [WpStarter\Tests\Support\EventStub] event was not dispatched.', $e->getMessage());
         }
 
         $this->fake->dispatch(EventStub::class);
@@ -40,6 +41,20 @@ class SupportTestingEventFakeTest extends TestCase
         });
     }
 
+    public function testAssertListening()
+    {
+        $listener = ListenerStub::class;
+
+        $dispatcher = m::mock(Dispatcher::class);
+        $dispatcher->shouldReceive('getListeners')->andReturn([function ($event, $payload) use ($listener) {
+            return $listener(...array_values($payload));
+        }]);
+
+        $fake = new EventFake($dispatcher);
+
+        $fake->assertListening(EventStub::class, ListenerStub::class);
+    }
+
     public function testAssertDispatchedWithCallbackInt()
     {
         $this->fake->dispatch(EventStub::class);
@@ -49,10 +64,25 @@ class SupportTestingEventFakeTest extends TestCase
             $this->fake->assertDispatched(EventStub::class, 1);
             $this->fail();
         } catch (ExpectationFailedException $e) {
-            $this->assertThat($e, new ExceptionMessage('The expected [WpStarter\Tests\Support\EventStub] event was dispatched 2 times instead of 1 times.'));
+            $this->assertStringContainsString('The expected [WpStarter\Tests\Support\EventStub] event was dispatched 2 times instead of 1 time.', $e->getMessage());
         }
 
         $this->fake->assertDispatched(EventStub::class, 2);
+    }
+
+    public function testAssertDispatchedOnce()
+    {
+        $this->fake->dispatch(EventStub::class);
+        $this->fake->dispatch(EventStub::class);
+
+        try {
+            $this->fake->assertDispatchedOnce(EventStub::class);
+            $this->fail();
+        } catch (ExpectationFailedException $e) {
+            $this->assertStringContainsString('The expected [WpStarter\Tests\Support\EventStub] event was dispatched 2 times instead of 1 time.', $e->getMessage());
+        }
+
+        $this->fake->assertDispatchedTimes(EventStub::class, 2);
     }
 
     public function testAssertDispatchedTimes()
@@ -64,7 +94,7 @@ class SupportTestingEventFakeTest extends TestCase
             $this->fake->assertDispatchedTimes(EventStub::class, 1);
             $this->fail();
         } catch (ExpectationFailedException $e) {
-            $this->assertThat($e, new ExceptionMessage('The expected [WpStarter\Tests\Support\EventStub] event was dispatched 2 times instead of 1 times.'));
+            $this->assertStringContainsString('The expected [WpStarter\Tests\Support\EventStub] event was dispatched 2 times instead of 1 time.', $e->getMessage());
         }
 
         $this->fake->assertDispatchedTimes(EventStub::class, 2);
@@ -80,7 +110,7 @@ class SupportTestingEventFakeTest extends TestCase
             $this->fake->assertNotDispatched(EventStub::class);
             $this->fail();
         } catch (ExpectationFailedException $e) {
-            $this->assertThat($e, new ExceptionMessage('The unexpected [WpStarter\Tests\Support\EventStub] event was dispatched.'));
+            $this->assertStringContainsString('The unexpected [WpStarter\Tests\Support\EventStub] event was dispatched.', $e->getMessage());
         }
     }
 
@@ -94,7 +124,7 @@ class SupportTestingEventFakeTest extends TestCase
             });
             $this->fail();
         } catch (ExpectationFailedException $e) {
-            $this->assertThat($e, new ExceptionMessage('The unexpected [WpStarter\Tests\Support\EventStub] event was dispatched.'));
+            $this->assertStringContainsString('The unexpected [WpStarter\Tests\Support\EventStub] event was dispatched.', $e->getMessage());
         }
     }
 
@@ -130,12 +160,17 @@ class SupportTestingEventFakeTest extends TestCase
             $this->fake->assertNothingDispatched();
             $this->fail();
         } catch (ExpectationFailedException $e) {
-            $this->assertThat($e, new ExceptionMessage('2 unexpected events were dispatched.'));
+            $this->assertStringContainsString("2 unexpected events were dispatched:\n\n- WpStarter\Tests\Support\EventStub dispatched 2 times", $e->getMessage());
         }
     }
 }
 
 class EventStub
+{
+    //
+}
+
+class ListenerStub
 {
     //
 }

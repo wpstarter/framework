@@ -8,12 +8,10 @@ use WpStarter\Tests\Database\Fixtures\Factories\Money\PriceFactory;
 
 class Price extends Model
 {
+    /** @use HasFactory<PriceFactory> */
     use HasFactory;
 
     protected $table = 'prices';
 
-    public static function factory()
-    {
-        return PriceFactory::new();
-    }
+    protected static string $factory = PriceFactory::class;
 }

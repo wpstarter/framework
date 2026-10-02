@@ -3,7 +3,7 @@
 namespace WpStarter\Database\Eloquent\Relations\Concerns;
 
 use WpStarter\Contracts\Database\Eloquent\SupportsPartialRelations;
-use WpStarter\Database\Eloquent\Contracts\Model;
+use WpStarter\Database\Eloquent\Model;
 
 trait ComparesRelatedModels
 {
@@ -22,8 +22,8 @@ trait ComparesRelatedModels
 
         if ($match && $this instanceof SupportsPartialRelations && $this->isOneOfMany()) {
             return $this->query
-                        ->whereKey($model->getKey())
-                        ->exists();
+                ->whereKey($model->getKey())
+                ->exists();
         }
 
         return $match;

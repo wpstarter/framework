@@ -3,8 +3,11 @@
 namespace WpStarter\Validation\Rules;
 
 use Closure;
+use WpStarter\Contracts\Support\Arrayable;
 use WpStarter\Database\Eloquent\Model;
-use WpStarter\Support\Str;
+use WpStarter\Support\Collection;
+
+use function WpStarter\Support\enum_value;
 
 trait DatabaseRule
 {
@@ -41,7 +44,6 @@ trait DatabaseRule
      *
      * @param  string  $table
      * @param  string  $column
-     * @return void
      */
     public function __construct($table, $column = 'NULL')
     {
@@ -58,14 +60,14 @@ trait DatabaseRule
      */
     public function resolveTableName($table)
     {
-        if (! Str::contains($table, '\\') || ! class_exists($table)) {
+        if (! str_contains($table, '\\') || ! class_exists($table)) {
             return $table;
         }
 
         if (is_subclass_of($table, Model::class)) {
             $model = new $table;
 
-            if (Str::contains($model->getTable(), '.')) {
+            if (str_contains($model->getTable(), '.')) {
                 return $table;
             }
 
@@ -81,12 +83,12 @@ trait DatabaseRule
      * Set a "where" constraint on the query.
      *
      * @param  \Closure|string  $column
-     * @param  array|string|int|null  $value
+     * @param  \WpStarter\Contracts\Support\Arrayable|\UnitEnum|\Closure|array|string|int|bool|null  $value
      * @return $this
      */
     public function where($column, $value = null)
     {
-        if (is_array($value)) {
+        if ($value instanceof Arrayable || is_array($value)) {
             return $this->whereIn($column, $value);
         }
 
@@ -98,6 +100,8 @@ trait DatabaseRule
             return $this->whereNull($column);
         }
 
+        $value = enum_value($value);
+
         $this->wheres[] = compact('column', 'value');
 
         return $this;
@@ -107,14 +111,16 @@ trait DatabaseRule
      * Set a "where not" constraint on the query.
      *
      * @param  string  $column
-     * @param  array|string  $value
+     * @param  \WpStarter\Contracts\Support\Arrayable|\UnitEnum|array|string|int  $value
      * @return $this
      */
     public function whereNot($column, $value)
     {
-        if (is_array($value)) {
+        if ($value instanceof Arrayable || is_array($value)) {
             return $this->whereNotIn($column, $value);
         }
+
+        $value = enum_value($value);
 
         return $this->where($column, '!'.$value);
     }
@@ -145,10 +151,10 @@ trait DatabaseRule
      * Set a "where in" constraint on the query.
      *
      * @param  string  $column
-     * @param  array  $values
+     * @param  \WpStarter\Contracts\Support\Arrayable|\BackedEnum|array  $values
      * @return $this
      */
-    public function whereIn($column, array $values)
+    public function whereIn($column, $values)
     {
         return $this->where(function ($query) use ($column, $values) {
             $query->whereIn($column, $values);
@@ -159,14 +165,40 @@ trait DatabaseRule
      * Set a "where not in" constraint on the query.
      *
      * @param  string  $column
-     * @param  array  $values
+     * @param  \WpStarter\Contracts\Support\Arrayable|\BackedEnum|array  $values
      * @return $this
      */
-    public function whereNotIn($column, array $values)
+    public function whereNotIn($column, $values)
     {
         return $this->where(function ($query) use ($column, $values) {
             $query->whereNotIn($column, $values);
         });
+    }
+
+    /**
+     * Ignore soft deleted models during the existence check.
+     *
+     * @param  string  $deletedAtColumn
+     * @return $this
+     */
+    public function withoutTrashed($deletedAtColumn = 'deleted_at')
+    {
+        $this->whereNull($deletedAtColumn);
+
+        return $this;
+    }
+
+    /**
+     * Only include soft deleted models during the existence check.
+     *
+     * @param  string  $deletedAtColumn
+     * @return $this
+     */
+    public function onlyTrashed($deletedAtColumn = 'deleted_at')
+    {
+        $this->whereNotNull($deletedAtColumn);
+
+        return $this;
     }
 
     /**
@@ -199,8 +231,8 @@ trait DatabaseRule
      */
     protected function formatWheres()
     {
-        return ws_collect($this->wheres)->map(function ($where) {
-            return $where['column'].','.'"'.str_replace('"', '""', $where['value']).'"';
-        })->implode(',');
+        return (new Collection($this->wheres))
+            ->map(fn ($where) => $where['column'].','.'"'.str_replace('"', '""', $where['value']).'"')
+            ->implode(',');
     }
 }

@@ -2,13 +2,18 @@
 
 namespace WpStarter\Notifications\Channels;
 
+use WpStarter\Config\Repository as ConfigRepository;
+use WpStarter\Container\Container;
 use WpStarter\Contracts\Mail\Factory as MailFactory;
 use WpStarter\Contracts\Mail\Mailable;
 use WpStarter\Contracts\Queue\ShouldQueue;
 use WpStarter\Mail\Markdown;
 use WpStarter\Notifications\Notification;
 use WpStarter\Support\Arr;
+use WpStarter\Support\Collection;
 use WpStarter\Support\Str;
+use Symfony\Component\Mailer\Header\MetadataHeader;
+use Symfony\Component\Mailer\Header\TagHeader;
 
 class MailChannel
 {
@@ -31,7 +36,6 @@ class MailChannel
      *
      * @param  \WpStarter\Contracts\Mail\Factory  $mailer
      * @param  \WpStarter\Mail\Markdown  $markdown
-     * @return void
      */
     public function __construct(MailFactory $mailer, Markdown $markdown)
     {
@@ -44,7 +48,7 @@ class MailChannel
      *
      * @param  mixed  $notifiable
      * @param  \WpStarter\Notifications\Notification  $notification
-     * @return void
+     * @return \WpStarter\Mail\SentMessage|null
      */
     public function send($notifiable, Notification $notification)
     {
@@ -59,7 +63,7 @@ class MailChannel
             return $message->send($this->mailer);
         }
 
-        $this->mailer->mailer($message->mailer ?? null)->send(
+        return $this->mailer->mailer($message->mailer ?? null)->send(
             $this->buildView($message),
             array_merge($message->data(), $this->additionalMessageData($notification)),
             $this->messageBuilder($notifiable, $notification, $message)
@@ -93,14 +97,51 @@ class MailChannel
             return $message->view;
         }
 
-        if (property_exists($message, 'theme') && ! is_null($message->theme)) {
-            $this->markdown->theme($message->theme);
-        }
-
         return [
-            'html' => $this->markdown->render($message->markdown, $message->data()),
-            'text' => $this->markdown->renderText($message->markdown, $message->data()),
+            'html' => $this->buildMarkdownHtml($message),
+            'text' => $this->buildMarkdownText($message),
         ];
+    }
+
+    /**
+     * Build the HTML view for a Markdown message.
+     *
+     * @param  \WpStarter\Notifications\Messages\MailMessage  $message
+     * @return \Closure
+     */
+    protected function buildMarkdownHtml($message)
+    {
+        return fn ($data) => $this->markdownRenderer($message)->render(
+            $message->markdown, array_merge($data, $message->data()),
+        );
+    }
+
+    /**
+     * Build the text view for a Markdown message.
+     *
+     * @param  \WpStarter\Notifications\Messages\MailMessage  $message
+     * @return \Closure
+     */
+    protected function buildMarkdownText($message)
+    {
+        return fn ($data) => $this->markdownRenderer($message)->renderText(
+            $message->markdown, array_merge($data, $message->data()),
+        );
+    }
+
+    /**
+     * Get the Markdown implementation.
+     *
+     * @param  \WpStarter\Notifications\Messages\MailMessage  $message
+     * @return \WpStarter\Mail\Markdown
+     */
+    protected function markdownRenderer($message)
+    {
+        $config = Container::getInstance()->get(ConfigRepository::class);
+
+        $theme = $message->theme ?? $config->get('mail.markdown.theme', 'default');
+
+        return $this->markdown->theme($theme);
     }
 
     /**
@@ -135,13 +176,25 @@ class MailChannel
         $this->addressMessage($mailMessage, $notifiable, $notification, $message);
 
         $mailMessage->subject($message->subject ?: Str::title(
-            Str::snake(ws_class_basename($notification), ' ')
+            Str::snake(class_basename($notification), ' ')
         ));
 
         $this->addAttachments($mailMessage, $message);
 
         if (! is_null($message->priority)) {
-            $mailMessage->setPriority($message->priority);
+            $mailMessage->priority($message->priority);
+        }
+
+        if ($message->tags) {
+            foreach ($message->tags as $tag) {
+                $mailMessage->getHeaders()->add(new TagHeader($tag));
+            }
+        }
+
+        if ($message->metadata) {
+            foreach ($message->metadata as $key => $value) {
+                $mailMessage->getHeaders()->add(new MetadataHeader($key, $value));
+            }
         }
 
         $this->runCallbacks($mailMessage, $message);
@@ -209,11 +262,13 @@ class MailChannel
             $recipients = [$recipients];
         }
 
-        return ws_collect($recipients)->mapWithKeys(function ($recipient, $email) {
-            return is_numeric($email)
+        return (new Collection($recipients))
+            ->mapWithKeys(function ($recipient, $email) {
+                return is_numeric($email)
                     ? [$email => (is_string($recipient) ? $recipient : $recipient->email)]
                     : [$email => $recipient];
-        })->all();
+            })
+            ->all();
     }
 
     /**
@@ -244,7 +299,7 @@ class MailChannel
     protected function runCallbacks($mailMessage, $message)
     {
         foreach ($message->callbacks as $callback) {
-            $callback($mailMessage->getSwiftMessage());
+            $callback($mailMessage->getSymfonyMessage());
         }
 
         return $this;

@@ -3,18 +3,17 @@
 namespace WpStarter\Tests\Integration\Mail;
 
 use WpStarter\Mail\Mailable;
-use WpStarter\Support\Facades\View;
 use Orchestra\Testbench\TestCase;
 
 class RenderingMailWithLocaleTest extends TestCase
 {
-    protected function getEnvironmentSetUp($app)
+    protected function defineEnvironment($app)
     {
         $app['config']->set('app.locale', 'en');
 
-        View::addLocation(__DIR__.'/Fixtures');
+        $app['view']->addLocation(__DIR__.'/Fixtures');
 
-        ws_app('translator')->setLoaded([
+        $app['translator']->setLoaded([
             '*' => [
                 '*' => [
                     'en' => ['nom' => 'name'],

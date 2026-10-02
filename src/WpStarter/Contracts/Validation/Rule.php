@@ -2,6 +2,9 @@
 
 namespace WpStarter\Contracts\Validation;
 
+/**
+ * @deprecated see ValidationRule
+ */
 interface Rule
 {
     /**

@@ -4,6 +4,7 @@ namespace WpStarter\Tests\Cache;
 
 use WpStarter\Cache\ApcStore;
 use WpStarter\Cache\ApcWrapper;
+use Mockery as m;
 use PHPUnit\Framework\TestCase;
 
 class CacheApcStoreTest extends TestCase
@@ -22,6 +23,14 @@ class CacheApcStoreTest extends TestCase
         $apc->expects($this->once())->method('get')->willReturn('bar');
         $store = new ApcStore($apc);
         $this->assertSame('bar', $store->get('foo'));
+    }
+
+    public function testAPCFalseValueIsReturned()
+    {
+        $apc = $this->getMockBuilder(ApcWrapper::class)->onlyMethods(['get'])->getMock();
+        $apc->expects($this->once())->method('get')->willReturn(false);
+        $store = new ApcStore($apc);
+        $this->assertFalse($store->get('foo'));
     }
 
     public function testGetMultipleReturnsNullWhenNotFoundAndValueWhenFound()
@@ -53,14 +62,23 @@ class CacheApcStoreTest extends TestCase
 
     public function testSetMultipleMethodProperlyCallsAPC()
     {
-        $apc = $this->getMockBuilder(ApcWrapper::class)->onlyMethods(['put'])->getMock();
-        $apc->expects($this->exactly(3))->method('put')->withConsecutive([
-            $this->equalTo('foo'), $this->equalTo('bar'), $this->equalTo(60),
-        ], [
-            $this->equalTo('baz'), $this->equalTo('qux'), $this->equalTo(60),
-        ], [
-            $this->equalTo('bar'), $this->equalTo('norf'), $this->equalTo(60),
-        ])->willReturn(true);
+        $apc = m::mock(ApcWrapper::class);
+
+        $apc->shouldReceive('put')
+            ->once()
+            ->with('foo', 'bar', 60)
+            ->andReturn(true);
+
+        $apc->shouldReceive('put')
+            ->once()
+            ->with('baz', 'qux', 60)
+            ->andReturn(true);
+
+        $apc->shouldReceive('put')
+            ->once()
+            ->with('bar', 'norf', 60)
+            ->andReturn(true);
+
         $store = new ApcStore($apc);
         $result = $store->putMany([
             'foo' => 'bar',

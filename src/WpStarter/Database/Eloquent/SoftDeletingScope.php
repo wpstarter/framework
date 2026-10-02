@@ -2,8 +2,6 @@
 
 namespace WpStarter\Database\Eloquent;
 
-use WpStarter\Database\Eloquent\Contracts\Model;
-
 class SoftDeletingScope implements Scope
 {
     /**
@@ -11,13 +9,15 @@ class SoftDeletingScope implements Scope
      *
      * @var string[]
      */
-    protected $extensions = ['Restore', 'WithTrashed', 'WithoutTrashed', 'OnlyTrashed'];
+    protected $extensions = ['Restore', 'RestoreOrCreate', 'CreateOrRestore', 'WithTrashed', 'WithoutTrashed', 'OnlyTrashed'];
 
     /**
      * Apply the scope to a given Eloquent query builder.
      *
-     * @param  \WpStarter\Database\Eloquent\Builder  $builder
-     * @param  \WpStarter\Database\Eloquent\Model  $model
+     * @template TModel of \WpStarter\Database\Eloquent\Model
+     *
+     * @param  \WpStarter\Database\Eloquent\Builder<TModel>  $builder
+     * @param  TModel  $model
      * @return void
      */
     public function apply(Builder $builder, Model $model)
@@ -28,7 +28,7 @@ class SoftDeletingScope implements Scope
     /**
      * Extend the query builder with the needed functions.
      *
-     * @param  \WpStarter\Database\Eloquent\Builder  $builder
+     * @param  \WpStarter\Database\Eloquent\Builder<*>  $builder
      * @return void
      */
     public function extend(Builder $builder)
@@ -49,7 +49,7 @@ class SoftDeletingScope implements Scope
     /**
      * Get the "deleted at" column for the builder.
      *
-     * @param  \WpStarter\Database\Eloquent\Builder  $builder
+     * @param  \WpStarter\Database\Eloquent\Builder<*>  $builder
      * @return string
      */
     protected function getDeletedAtColumn(Builder $builder)
@@ -64,7 +64,7 @@ class SoftDeletingScope implements Scope
     /**
      * Add the restore extension to the builder.
      *
-     * @param  \WpStarter\Database\Eloquent\Builder  $builder
+     * @param  \WpStarter\Database\Eloquent\Builder<*>  $builder
      * @return void
      */
     protected function addRestore(Builder $builder)
@@ -77,9 +77,43 @@ class SoftDeletingScope implements Scope
     }
 
     /**
+     * Add the restore-or-create extension to the builder.
+     *
+     * @param  \WpStarter\Database\Eloquent\Builder<*>  $builder
+     * @return void
+     */
+    protected function addRestoreOrCreate(Builder $builder)
+    {
+        $builder->macro('restoreOrCreate', function (Builder $builder, array $attributes = [], array $values = []) {
+            $builder->withTrashed();
+
+            return tap($builder->firstOrCreate($attributes, $values), function ($instance) {
+                $instance->restore();
+            });
+        });
+    }
+
+    /**
+     * Add the create-or-restore extension to the builder.
+     *
+     * @param  \WpStarter\Database\Eloquent\Builder<*>  $builder
+     * @return void
+     */
+    protected function addCreateOrRestore(Builder $builder)
+    {
+        $builder->macro('createOrRestore', function (Builder $builder, array $attributes = [], array $values = []) {
+            $builder->withTrashed();
+
+            return tap($builder->createOrFirst($attributes, $values), function ($instance) {
+                $instance->restore();
+            });
+        });
+    }
+
+    /**
      * Add the with-trashed extension to the builder.
      *
-     * @param  \WpStarter\Database\Eloquent\Builder  $builder
+     * @param  \WpStarter\Database\Eloquent\Builder<*>  $builder
      * @return void
      */
     protected function addWithTrashed(Builder $builder)
@@ -96,7 +130,7 @@ class SoftDeletingScope implements Scope
     /**
      * Add the without-trashed extension to the builder.
      *
-     * @param  \WpStarter\Database\Eloquent\Builder  $builder
+     * @param  \WpStarter\Database\Eloquent\Builder<*>  $builder
      * @return void
      */
     protected function addWithoutTrashed(Builder $builder)
@@ -115,7 +149,7 @@ class SoftDeletingScope implements Scope
     /**
      * Add the only-trashed extension to the builder.
      *
-     * @param  \WpStarter\Database\Eloquent\Builder  $builder
+     * @param  \WpStarter\Database\Eloquent\Builder<*>  $builder
      * @return void
      */
     protected function addOnlyTrashed(Builder $builder)

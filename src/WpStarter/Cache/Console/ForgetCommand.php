@@ -4,7 +4,9 @@ namespace WpStarter\Cache\Console;
 
 use WpStarter\Cache\CacheManager;
 use WpStarter\Console\Command;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'cache:forget')]
 class ForgetCommand extends Command
 {
     /**
@@ -32,7 +34,6 @@ class ForgetCommand extends Command
      * Create a new cache clear command instance.
      *
      * @param  \WpStarter\Cache\CacheManager  $cache
-     * @return void
      */
     public function __construct(CacheManager $cache)
     {
@@ -52,6 +53,6 @@ class ForgetCommand extends Command
             $this->argument('key')
         );
 
-        $this->info('The ['.$this->argument('key').'] key has been removed from the cache.');
+        $this->components->info('The ['.$this->argument('key').'] key has been removed from the cache.');
     }
 }

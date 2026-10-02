@@ -2,43 +2,57 @@
 
 namespace WpStarter\Database;
 
-use Doctrine\DBAL\Driver\PDOPgSql\Driver as DoctrineDriver;
-use Doctrine\DBAL\Version;
-use WpStarter\Database\PDO\PostgresDriver;
+use Exception;
 use WpStarter\Database\Query\Grammars\PostgresGrammar as QueryGrammar;
 use WpStarter\Database\Query\Processors\PostgresProcessor;
 use WpStarter\Database\Schema\Grammars\PostgresGrammar as SchemaGrammar;
 use WpStarter\Database\Schema\PostgresBuilder;
 use WpStarter\Database\Schema\PostgresSchemaState;
 use WpStarter\Filesystem\Filesystem;
-use PDO;
 
 class PostgresConnection extends Connection
 {
     /**
-     * Bind values to their parameters in the given statement.
-     *
-     * @param  \PDOStatement  $statement
-     * @param  array  $bindings
-     * @return void
+     * {@inheritdoc}
      */
-    public function bindValues($statement, $bindings)
+    public function getDriverTitle()
     {
-        foreach ($bindings as $key => $value) {
-            if (is_int($value)) {
-                $pdoParam = PDO::PARAM_INT;
-            } elseif (is_resource($value)) {
-                $pdoParam = PDO::PARAM_LOB;
-            } else {
-                $pdoParam = PDO::PARAM_STR;
-            }
+        return 'PostgreSQL';
+    }
 
-            $statement->bindValue(
-                is_string($key) ? $key : $key + 1,
-                $value,
-                $pdoParam
-            );
-        }
+    /**
+     * Escape a binary value for safe SQL embedding.
+     *
+     * @param  string  $value
+     * @return string
+     */
+    protected function escapeBinary($value)
+    {
+        $hex = bin2hex($value);
+
+        return "'\x{$hex}'::bytea";
+    }
+
+    /**
+     * Escape a bool value for safe SQL embedding.
+     *
+     * @param  bool  $value
+     * @return string
+     */
+    protected function escapeBool($value)
+    {
+        return $value ? 'true' : 'false';
+    }
+
+    /**
+     * Determine if the given database exception was caused by a unique constraint violation.
+     *
+     * @param  \Exception  $exception
+     * @return bool
+     */
+    protected function isUniqueConstraintError(Exception $exception)
+    {
+        return '23505' === $exception->getCode();
     }
 
     /**
@@ -48,7 +62,7 @@ class PostgresConnection extends Connection
      */
     protected function getDefaultQueryGrammar()
     {
-        return $this->withTablePrefix(new QueryGrammar);
+        return new QueryGrammar($this);
     }
 
     /**
@@ -72,7 +86,7 @@ class PostgresConnection extends Connection
      */
     protected function getDefaultSchemaGrammar()
     {
-        return $this->withTablePrefix(new SchemaGrammar);
+        return new SchemaGrammar($this);
     }
 
     /**
@@ -95,15 +109,5 @@ class PostgresConnection extends Connection
     protected function getDefaultPostProcessor()
     {
         return new PostgresProcessor;
-    }
-
-    /**
-     * Get the Doctrine DBAL driver.
-     *
-     * @return \Doctrine\DBAL\Driver\PDOPgSql\Driver|\WpStarter\Database\PDO\PostgresDriver
-     */
-    protected function getDoctrineDriver()
-    {
-        return class_exists(Version::class) ? new DoctrineDriver : new PostgresDriver;
     }
 }

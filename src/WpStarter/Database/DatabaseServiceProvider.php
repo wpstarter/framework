@@ -4,6 +4,8 @@ namespace WpStarter\Database;
 
 use Faker\Factory as FakerFactory;
 use Faker\Generator as FakerGenerator;
+use WpStarter\Contracts\Database\ConcurrencyErrorDetector as ConcurrencyErrorDetectorContract;
+use WpStarter\Contracts\Database\LostConnectionDetector as LostConnectionDetectorContract;
 use WpStarter\Contracts\Queue\EntityResolver;
 use WpStarter\Database\Connectors\ConnectionFactory;
 use WpStarter\Database\Eloquent\Model;
@@ -41,7 +43,7 @@ class DatabaseServiceProvider extends ServiceProvider
         Model::clearBootedModels();
 
         $this->registerConnectionServices();
-        $this->registerEloquentFactory();
+        $this->registerFakerGenerator();
         $this->registerQueueableEntityResolver();
     }
 
@@ -70,18 +72,34 @@ class DatabaseServiceProvider extends ServiceProvider
             return $app['db']->connection();
         });
 
-        $this->app->singleton('db.transactions', function ($app) {
+        $this->app->bind('db.schema', function ($app) {
+            return $app['db']->connection()->getSchemaBuilder();
+        });
+
+        $this->app->singleton('db.transactions', function () {
             return new DatabaseTransactionsManager;
+        });
+
+        $this->app->singleton(ConcurrencyErrorDetectorContract::class, function () {
+            return new ConcurrencyErrorDetector;
+        });
+
+        $this->app->singleton(LostConnectionDetectorContract::class, function () {
+            return new LostConnectionDetector;
         });
     }
 
     /**
-     * Register the Eloquent factory instance in the container.
+     * Register the Faker Generator instance in the container.
      *
      * @return void
      */
-    protected function registerEloquentFactory()
+    protected function registerFakerGenerator()
     {
+        if (! class_exists(FakerGenerator::class)) {
+            return;
+        }
+
         $this->app->singleton(FakerGenerator::class, function ($app, $parameters) {
             $locale = $parameters['locale'] ?? $app['config']->get('app.faker_locale', 'en_US');
 

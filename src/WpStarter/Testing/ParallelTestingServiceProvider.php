@@ -4,11 +4,13 @@ namespace WpStarter\Testing;
 
 use WpStarter\Contracts\Support\DeferrableProvider;
 use WpStarter\Support\ServiceProvider;
+use WpStarter\Testing\Concerns\TestCaches;
 use WpStarter\Testing\Concerns\TestDatabases;
+use WpStarter\Testing\Concerns\TestViews;
 
 class ParallelTestingServiceProvider extends ServiceProvider implements DeferrableProvider
 {
-    use TestDatabases;
+    use TestCaches, TestDatabases, TestViews;
 
     /**
      * Boot the application's service providers.
@@ -18,7 +20,9 @@ class ParallelTestingServiceProvider extends ServiceProvider implements Deferrab
     public function boot()
     {
         if ($this->app->runningInConsole()) {
+            $this->bootTestCache();
             $this->bootTestDatabase();
+            $this->bootTestViews();
         }
     }
 

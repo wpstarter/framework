@@ -3,6 +3,7 @@
 namespace WpStarter\Database\Eloquent;
 
 use ArrayAccess;
+use Closure;
 use WpStarter\Contracts\Broadcasting\HasBroadcastChannel;
 use WpStarter\Contracts\Queue\QueueableCollection;
 use WpStarter\Contracts\Queue\QueueableEntity;
@@ -11,6 +12,10 @@ use WpStarter\Contracts\Support\Arrayable;
 use WpStarter\Contracts\Support\CanBeEscapedWhenCastToString;
 use WpStarter\Contracts\Support\Jsonable;
 use WpStarter\Database\ConnectionResolverInterface as Resolver;
+use WpStarter\Database\Eloquent\Attributes\Boot;
+use WpStarter\Database\Eloquent\Attributes\Initialize;
+use WpStarter\Database\Eloquent\Attributes\Scope as LocalScope;
+use WpStarter\Database\Eloquent\Attributes\UseEloquentBuilder;
 use WpStarter\Database\Eloquent\Collection as EloquentCollection;
 use WpStarter\Database\Eloquent\Relations\BelongsToMany;
 use WpStarter\Database\Eloquent\Relations\Concerns\AsPivot;
@@ -19,33 +24,44 @@ use WpStarter\Database\Eloquent\Relations\Pivot;
 use WpStarter\Support\Arr;
 use WpStarter\Support\Collection as BaseCollection;
 use WpStarter\Support\Str;
+use WpStarter\Support\Stringable as SupportStringable;
 use WpStarter\Support\Traits\ForwardsCalls;
+use JsonException;
 use JsonSerializable;
 use LogicException;
-use WpStarter\Database\Eloquent\Contracts\Model as ModelContract;
+use ReflectionClass;
+use ReflectionMethod;
+use Stringable;
 
-abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEscapedWhenCastToString, HasBroadcastChannel, Jsonable, JsonSerializable, QueueableEntity, UrlRoutable
+use function WpStarter\Support\enum_value;
+
+abstract class Model implements Arrayable, ArrayAccess, CanBeEscapedWhenCastToString, HasBroadcastChannel, Jsonable, JsonSerializable, QueueableEntity, Stringable, UrlRoutable
 {
     use Concerns\HasAttributes,
         Concerns\HasEvents,
         Concerns\HasGlobalScopes,
         Concerns\HasRelationships,
         Concerns\HasTimestamps,
+        Concerns\HasUniqueIds,
         Concerns\HidesAttributes,
         Concerns\GuardsAttributes,
+        Concerns\PreventsCircularRecursion,
+        Concerns\TransformsToResource,
         ForwardsCalls;
+    /** @use HasCollection<\WpStarter\Database\Eloquent\Collection<array-key, static & self>> */
+    use HasCollection;
 
     /**
      * The connection name for the model.
      *
-     * @var string|null
+     * @var \UnitEnum|string|null
      */
     protected $connection;
 
     /**
      * The table associated with the model.
      *
-     * @var string
+     * @var string|null
      */
     protected $table;
 
@@ -106,7 +122,7 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     public $exists = false;
 
     /**
-     * Indicates if the model was inserted during the current request lifecycle.
+     * Indicates if the model was inserted during the object's lifecycle.
      *
      * @var bool
      */
@@ -129,7 +145,7 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     /**
      * The event dispatcher instance.
      *
-     * @var \WpStarter\Contracts\Events\Dispatcher
+     * @var \WpStarter\Contracts\Events\Dispatcher|null
      */
     protected static $dispatcher;
 
@@ -139,6 +155,13 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
      * @var array
      */
     protected static $booted = [];
+
+    /**
+     * The callbacks that should be executed after the model has booted.
+     *
+     * @var array
+     */
+    protected static $bootedCallbacks = [];
 
     /**
      * The array of trait initializers that will be called on each new instance.
@@ -169,11 +192,46 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     protected static $modelsShouldPreventLazyLoading = false;
 
     /**
+     * Indicates whether relations should be automatically loaded on all models when they are accessed.
+     *
+     * @var bool
+     */
+    protected static $modelsShouldAutomaticallyEagerLoadRelationships = false;
+
+    /**
      * The callback that is responsible for handling lazy loading violations.
      *
-     * @var callable|null
+     * @var (callable(self, string))|null
      */
     protected static $lazyLoadingViolationCallback;
+
+    /**
+     * Indicates if an exception should be thrown instead of silently discarding non-fillable attributes.
+     *
+     * @var bool
+     */
+    protected static $modelsShouldPreventSilentlyDiscardingAttributes = false;
+
+    /**
+     * The callback that is responsible for handling discarded attribute violations.
+     *
+     * @var (callable(self, array))|null
+     */
+    protected static $discardedAttributeViolationCallback;
+
+    /**
+     * Indicates if an exception should be thrown when trying to access a missing attribute on a retrieved model.
+     *
+     * @var bool
+     */
+    protected static $modelsShouldPreventAccessingMissingAttributes = false;
+
+    /**
+     * The callback that is responsible for handling missing attribute violations.
+     *
+     * @var (callable(self, string))|null
+     */
+    protected static $missingAttributeViolationCallback;
 
     /**
      * Indicates if broadcasting is currently enabled.
@@ -181,6 +239,41 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
      * @var bool
      */
     protected static $isBroadcasting = true;
+
+    /**
+     * The Eloquent query builder class to use for the model.
+     *
+     * @var class-string<\WpStarter\Database\Eloquent\Builder<*>>
+     */
+    protected static string $builder = Builder::class;
+
+    /**
+     * The Eloquent collection class to use for the model.
+     *
+     * @var class-string<\WpStarter\Database\Eloquent\Collection<*, *>>
+     */
+    protected static string $collectionClass = Collection::class;
+
+    /**
+     * Cache of soft deletable models.
+     *
+     * @var array<class-string<self>, bool>
+     */
+    protected static array $isSoftDeletable;
+
+    /**
+     * Cache of prunable models.
+     *
+     * @var array<class-string<self>, bool>
+     */
+    protected static array $isPrunable;
+
+    /**
+     * Cache of mass prunable models.
+     *
+     * @var array<class-string<self>, bool>
+     */
+    protected static array $isMassPrunable;
 
     /**
      * The name of the "created at" column.
@@ -199,8 +292,7 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     /**
      * Create a new Eloquent model instance.
      *
-     * @param  array  $attributes
-     * @return void
+     * @param  array<string, mixed>  $attributes
      */
     public function __construct(array $attributes = [])
     {
@@ -228,6 +320,12 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
             static::booting();
             static::boot();
             static::booted();
+
+            static::$bootedCallbacks[static::class] ??= [];
+
+            foreach (static::$bootedCallbacks[static::class] as $callback) {
+                $callback();
+            }
 
             $this->fireModelEvent('booted', false);
         }
@@ -266,23 +364,28 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
 
         static::$traitInitializers[$class] = [];
 
-        foreach (ws_class_uses_recursive($class) as $trait) {
-            $method = 'boot'.ws_class_basename($trait);
+        $uses = class_uses_recursive($class);
 
-            if (method_exists($class, $method) && ! in_array($method, $booted)) {
-                forward_static_call([$class, $method]);
+        $conventionalBootMethods = array_map(static fn ($trait) => 'boot'.class_basename($trait), $uses);
+        $conventionalInitMethods = array_map(static fn ($trait) => 'initialize'.class_basename($trait), $uses);
 
-                $booted[] = $method;
+        foreach ((new ReflectionClass($class))->getMethods() as $method) {
+            if (! in_array($method->getName(), $booted) &&
+                $method->isStatic() &&
+                (in_array($method->getName(), $conventionalBootMethods) ||
+                $method->getAttributes(Boot::class) !== [])) {
+                $method->invoke(null);
+
+                $booted[] = $method->getName();
             }
 
-            if (method_exists($class, $method = 'initialize'.ws_class_basename($trait))) {
-                static::$traitInitializers[$class][] = $method;
-
-                static::$traitInitializers[$class] = array_unique(
-                    static::$traitInitializers[$class]
-                );
+            if (in_array($method->getName(), $conventionalInitMethods) ||
+                $method->getAttributes(Initialize::class) !== []) {
+                static::$traitInitializers[$class][] = $method->getName();
             }
         }
+
+        static::$traitInitializers[$class] = array_unique(static::$traitInitializers[$class]);
     }
 
     /**
@@ -308,6 +411,19 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     }
 
     /**
+     * Register a closure to be executed after the model has booted.
+     *
+     * @param  \Closure  $callback
+     * @return void
+     */
+    protected static function whenBooted(Closure $callback)
+    {
+        static::$bootedCallbacks[static::class] ??= [];
+
+        static::$bootedCallbacks[static::class][] = $callback;
+    }
+
+    /**
      * Clear the list of booted models so they will be re-booted.
      *
      * @return void
@@ -315,6 +431,7 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     public static function clearBootedModels()
     {
         static::$booted = [];
+        static::$bootedCallbacks = [];
 
         static::$globalScopes = [];
     }
@@ -372,6 +489,19 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     }
 
     /**
+     * Indicate that models should prevent lazy loading, silently discarding attributes, and accessing missing attributes.
+     *
+     * @param  bool  $shouldBeStrict
+     * @return void
+     */
+    public static function shouldBeStrict(bool $shouldBeStrict = true)
+    {
+        static::preventLazyLoading($shouldBeStrict);
+        static::preventSilentlyDiscardingAttributes($shouldBeStrict);
+        static::preventAccessingMissingAttributes($shouldBeStrict);
+    }
+
+    /**
      * Prevent model relationships from being lazy loaded.
      *
      * @param  bool  $value
@@ -383,14 +513,69 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     }
 
     /**
+     * Determine if model relationships should be automatically eager loaded when accessed.
+     *
+     * @param  bool  $value
+     * @return void
+     */
+    public static function automaticallyEagerLoadRelationships($value = true)
+    {
+        static::$modelsShouldAutomaticallyEagerLoadRelationships = $value;
+    }
+
+    /**
      * Register a callback that is responsible for handling lazy loading violations.
      *
-     * @param  callable|null  $callback
+     * @param  (callable(self, string))|null  $callback
      * @return void
      */
     public static function handleLazyLoadingViolationUsing(?callable $callback)
     {
         static::$lazyLoadingViolationCallback = $callback;
+    }
+
+    /**
+     * Prevent non-fillable attributes from being silently discarded.
+     *
+     * @param  bool  $value
+     * @return void
+     */
+    public static function preventSilentlyDiscardingAttributes($value = true)
+    {
+        static::$modelsShouldPreventSilentlyDiscardingAttributes = $value;
+    }
+
+    /**
+     * Register a callback that is responsible for handling discarded attribute violations.
+     *
+     * @param  (callable(self, array))|null  $callback
+     * @return void
+     */
+    public static function handleDiscardedAttributeViolationUsing(?callable $callback)
+    {
+        static::$discardedAttributeViolationCallback = $callback;
+    }
+
+    /**
+     * Prevent accessing missing attributes on retrieved models.
+     *
+     * @param  bool  $value
+     * @return void
+     */
+    public static function preventAccessingMissingAttributes($value = true)
+    {
+        static::$modelsShouldPreventAccessingMissingAttributes = $value;
+    }
+
+    /**
+     * Register a callback that is responsible for handling missing attribute violations.
+     *
+     * @param  (callable(self, string))|null  $callback
+     * @return void
+     */
+    public static function handleMissingAttributeViolationUsing(?callable $callback)
+    {
+        static::$missingAttributeViolationCallback = $callback;
     }
 
     /**
@@ -415,7 +600,7 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     /**
      * Fill the model with an array of attributes.
      *
-     * @param  array  $attributes
+     * @param  array<string, mixed>  $attributes
      * @return $this
      *
      * @throws \WpStarter\Database\Eloquent\MassAssignmentException
@@ -424,16 +609,37 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     {
         $totallyGuarded = $this->totallyGuarded();
 
-        foreach ($this->fillableFromArray($attributes) as $key => $value) {
+        $fillable = $this->fillableFromArray($attributes);
+
+        foreach ($fillable as $key => $value) {
             // The developers may choose to place some attributes in the "fillable" array
             // which means only those attributes may be set through mass assignment to
             // the model, and all others will just get ignored for security reasons.
             if ($this->isFillable($key)) {
                 $this->setAttribute($key, $value);
-            } elseif ($totallyGuarded) {
+            } elseif ($totallyGuarded || static::preventsSilentlyDiscardingAttributes()) {
+                if (isset(static::$discardedAttributeViolationCallback)) {
+                    call_user_func(static::$discardedAttributeViolationCallback, $this, [$key]);
+                } else {
+                    throw new MassAssignmentException(sprintf(
+                        'Add [%s] to fillable property to allow mass assignment on [%s].',
+                        $key, get_class($this)
+                    ));
+                }
+            }
+        }
+
+        if (count($attributes) !== count($fillable) &&
+            static::preventsSilentlyDiscardingAttributes()) {
+            $keys = array_diff(array_keys($attributes), array_keys($fillable));
+
+            if (isset(static::$discardedAttributeViolationCallback)) {
+                call_user_func(static::$discardedAttributeViolationCallback, $this, $keys);
+            } else {
                 throw new MassAssignmentException(sprintf(
-                    'Add [%s] to fillable property to allow mass assignment on [%s].',
-                    $key, get_class($this)
+                    'Add fillable property [%s] to allow mass assignment on [%s].',
+                    implode(', ', $keys),
+                    get_class($this)
                 ));
             }
         }
@@ -444,14 +650,12 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     /**
      * Fill the model with an array of attributes. Force mass assignment.
      *
-     * @param  array  $attributes
+     * @param  array<string, mixed>  $attributes
      * @return $this
      */
     public function forceFill(array $attributes)
     {
-        return static::unguarded(function () use ($attributes) {
-            return $this->fill($attributes);
-        });
+        return static::unguarded(fn () => $this->fill($attributes));
     }
 
     /**
@@ -462,7 +666,7 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
      */
     public function qualifyColumn($column)
     {
-        if (Str::contains($column, '.')) {
+        if (str_contains($column, '.')) {
             return $column;
         }
 
@@ -477,15 +681,15 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
      */
     public function qualifyColumns($columns)
     {
-        return ws_collect($columns)->map(function ($column) {
-            return $this->qualifyColumn($column);
-        })->all();
+        return (new BaseCollection($columns))
+            ->map(fn ($column) => $this->qualifyColumn($column))
+            ->all();
     }
 
     /**
      * Create a new instance of the given model.
      *
-     * @param  array  $attributes
+     * @param  array<string, mixed>  $attributes
      * @param  bool  $exists
      * @return static
      */
@@ -494,7 +698,7 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
         // This method just provides a convenient way for us to generate fresh model
         // instances of this current model. It is particularly useful during the
         // hydration of new objects via the Eloquent query builder instances.
-        $model = new static((array) $attributes);
+        $model = new static;
 
         $model->exists = $exists;
 
@@ -506,14 +710,16 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
 
         $model->mergeCasts($this->casts);
 
+        $model->fill((array) $attributes);
+
         return $model;
     }
 
     /**
      * Create a new model instance that is existing.
      *
-     * @param  array  $attributes
-     * @param  string|null  $connection
+     * @param  array<string, mixed>  $attributes
+     * @param  \UnitEnum|string|null  $connection
      * @return static
      */
     public function newFromBuilder($attributes = [], $connection = null)
@@ -522,7 +728,7 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
 
         $model->setRawAttributes((array) $attributes, true);
 
-        $model->setConnection($connection ?: $this->getConnectionName());
+        $model->setConnection($connection ?? $this->getConnectionName());
 
         $model->fireModelEvent('retrieved', false);
 
@@ -532,25 +738,21 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     /**
      * Begin querying the model on a given connection.
      *
-     * @param  string|null  $connection
-     * @return \WpStarter\Database\Eloquent\Builder
+     * @param  \UnitEnum|string|null  $connection
+     * @return \WpStarter\Database\Eloquent\Builder<static>
      */
     public static function on($connection = null)
     {
         // First we will just create a fresh instance of this model, and then we can set the
         // connection on the model so that it is used for the queries we execute, as well
         // as being set on every relation we retrieve without a custom connection name.
-        $instance = new static;
-
-        $instance->setConnection($connection);
-
-        return $instance->newQuery();
+        return (new static)->setConnection($connection)->newQuery();
     }
 
     /**
      * Begin querying the model on the write connection.
      *
-     * @return \WpStarter\Database\Query\Builder
+     * @return \WpStarter\Database\Eloquent\Builder<static>
      */
     public static function onWriteConnection()
     {
@@ -560,8 +762,8 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     /**
      * Get all of the models from the database.
      *
-     * @param  array|mixed  $columns
-     * @return \WpStarter\Database\Eloquent\Collection|static[]
+     * @param  array|string  $columns
+     * @return \WpStarter\Database\Eloquent\Collection<int, static>
      */
     public static function all($columns = ['*'])
     {
@@ -574,7 +776,7 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
      * Begin querying a model with eager loading.
      *
      * @param  array|string  $relations
-     * @return \WpStarter\Database\Eloquent\Builder
+     * @return \WpStarter\Database\Eloquent\Builder<static>
      */
     public static function with($relations)
     {
@@ -640,7 +842,7 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
      *
      * @param  array|string  $relations
      * @param  string  $column
-     * @param  string  $function
+     * @param  string|null  $function
      * @return $this
      */
     public function loadAggregate($relations, $column, $function = null)
@@ -728,7 +930,7 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
      * @param  string  $relation
      * @param  array  $relations
      * @param  string  $column
-     * @param  string  $function
+     * @param  string|null  $function
      * @return $this
      */
     public function loadMorphAggregate($relation, $relations, $column, $function = null)
@@ -845,10 +1047,8 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
      */
     protected function incrementOrDecrement($column, $amount, $extra, $method)
     {
-        $query = $this->newQueryWithoutRelationships();
-
         if (! $this->exists) {
-            return $query->{$method}($column, $amount, $extra);
+            return $this->newQueryWithoutRelationships()->{$method}($column, $amount, $extra);
         }
 
         $this->{$column} = $this->isClassDeviable($column)
@@ -861,7 +1061,11 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
             return false;
         }
 
-        return ws_tap($this->setKeysForSaveQuery($query)->{$method}($column, $amount, $extra), function () use ($column) {
+        if ($this->isClassDeviable($column)) {
+            $amount = (clone $this)->setAttribute($column, $amount)->getAttributeFromArray($column);
+        }
+
+        return tap($this->setKeysForSaveQuery($this->newQueryWithoutScopes())->{$method}($column, $amount, $extra), function () use ($column) {
             $this->syncChanges();
 
             $this->fireModelEvent('updated', false);
@@ -873,8 +1077,8 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     /**
      * Update the model in the database.
      *
-     * @param  array  $attributes
-     * @param  array  $options
+     * @param  array<string, mixed>  $attributes
+     * @param  array<string, mixed>  $options
      * @return bool
      */
     public function update(array $attributes = [], array $options = [])
@@ -889,8 +1093,8 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     /**
      * Update the model in the database within a transaction.
      *
-     * @param  array  $attributes
-     * @param  array  $options
+     * @param  array<string, mixed>  $attributes
+     * @param  array<string, mixed>  $options
      * @return bool
      *
      * @throws \Throwable
@@ -907,8 +1111,8 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     /**
      * Update the model in the database without raising any events.
      *
-     * @param  array  $attributes
-     * @param  array  $options
+     * @param  array<string, mixed>  $attributes
+     * @param  array<string, mixed>  $options
      * @return bool
      */
     public function updateQuietly(array $attributes = [], array $options = [])
@@ -921,31 +1125,74 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     }
 
     /**
+     * Increment a column's value by a given amount without raising any events.
+     *
+     * @param  string  $column
+     * @param  float|int  $amount
+     * @param  array  $extra
+     * @return int
+     */
+    protected function incrementQuietly($column, $amount = 1, array $extra = [])
+    {
+        return static::withoutEvents(
+            fn () => $this->incrementOrDecrement($column, $amount, $extra, 'increment')
+        );
+    }
+
+    /**
+     * Decrement a column's value by a given amount without raising any events.
+     *
+     * @param  string  $column
+     * @param  float|int  $amount
+     * @param  array  $extra
+     * @return int
+     */
+    protected function decrementQuietly($column, $amount = 1, array $extra = [])
+    {
+        return static::withoutEvents(
+            fn () => $this->incrementOrDecrement($column, $amount, $extra, 'decrement')
+        );
+    }
+
+    /**
      * Save the model and all of its relationships.
      *
      * @return bool
      */
     public function push()
     {
-        if (! $this->save()) {
-            return false;
-        }
+        return $this->withoutRecursion(function () {
+            if (! $this->save()) {
+                return false;
+            }
 
-        // To sync all of the relationships to the database, we will simply spin through
-        // the relationships and save each model via this "push" method, which allows
-        // us to recurse into all of these nested relations for the model instance.
-        foreach ($this->relations as $models) {
-            $models = $models instanceof Collection
-                        ? $models->all() : [$models];
+            // To sync all of the relationships to the database, we will simply spin through
+            // the relationships and save each model via this "push" method, which allows
+            // us to recurse into all of these nested relations for the model instance.
+            foreach ($this->relations as $models) {
+                $models = $models instanceof Collection
+                    ? $models->all()
+                    : [$models];
 
-            foreach (array_filter($models) as $model) {
-                if (! $model->push()) {
-                    return false;
+                foreach (array_filter($models) as $model) {
+                    if (! $model->push()) {
+                        return false;
+                    }
                 }
             }
-        }
 
-        return true;
+            return true;
+        }, true);
+    }
+
+    /**
+     * Save the model and all of its relationships without raising any events to the parent model.
+     *
+     * @return bool
+     */
+    public function pushQuietly()
+    {
+        return static::withoutEvents(fn () => $this->push());
     }
 
     /**
@@ -956,9 +1203,7 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
      */
     public function saveQuietly(array $options = [])
     {
-        return static::withoutEvents(function () use ($options) {
-            return $this->save($options);
-        });
+        return static::withoutEvents(fn () => $this->save($options));
     }
 
     /**
@@ -985,7 +1230,7 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
         // clause to only update this model. Otherwise, we'll just insert them.
         if ($this->exists) {
             $saved = $this->isDirty() ?
-                        $this->performUpdate($query) : true;
+                $this->performUpdate($query) : true;
         }
 
         // If the model is brand new, we'll insert it into our database and set the
@@ -1020,9 +1265,7 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
      */
     public function saveOrFail(array $options = [])
     {
-        return $this->getConnection()->transaction(function () use ($options) {
-            return $this->save($options);
-        });
+        return $this->getConnection()->transaction(fn () => $this->save($options));
     }
 
     /**
@@ -1045,7 +1288,7 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     /**
      * Perform a model update operation.
      *
-     * @param  \WpStarter\Database\Eloquent\Builder  $query
+     * @param  \WpStarter\Database\Eloquent\Builder<static>  $query
      * @return bool
      */
     protected function performUpdate(Builder $query)
@@ -1067,7 +1310,7 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
         // Once we have run the update operation, we will fire the "updated" event for
         // this model instance. This will allow developers to hook into these after
         // models are updated, giving them a chance to do any special processing.
-        $dirty = $this->getDirty();
+        $dirty = $this->getDirtyForUpdate();
 
         if (count($dirty) > 0) {
             $this->setKeysForSaveQuery($query)->update($dirty);
@@ -1083,8 +1326,8 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     /**
      * Set the keys for a select query.
      *
-     * @param  \WpStarter\Database\Eloquent\Builder  $query
-     * @return \WpStarter\Database\Eloquent\Builder
+     * @param  \WpStarter\Database\Eloquent\Builder<static>  $query
+     * @return \WpStarter\Database\Eloquent\Builder<static>
      */
     protected function setKeysForSelectQuery($query)
     {
@@ -1106,8 +1349,8 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     /**
      * Set the keys for a save update query.
      *
-     * @param  \WpStarter\Database\Eloquent\Builder  $query
-     * @return \WpStarter\Database\Eloquent\Builder
+     * @param  \WpStarter\Database\Eloquent\Builder<static>  $query
+     * @return \WpStarter\Database\Eloquent\Builder<static>
      */
     protected function setKeysForSaveQuery($query)
     {
@@ -1129,11 +1372,15 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     /**
      * Perform a model insert operation.
      *
-     * @param  \WpStarter\Database\Eloquent\Builder  $query
+     * @param  \WpStarter\Database\Eloquent\Builder<static>  $query
      * @return bool
      */
     protected function performInsert(Builder $query)
     {
+        if ($this->usesUniqueIds()) {
+            $this->setUniqueIds();
+        }
+
         if ($this->fireModelEvent('creating') === false) {
             return false;
         }
@@ -1180,8 +1427,8 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     /**
      * Insert the given attributes and set the ID on the model.
      *
-     * @param  \WpStarter\Database\Eloquent\Builder  $query
-     * @param  array  $attributes
+     * @param  \WpStarter\Database\Eloquent\Builder<static>  $query
+     * @param  array<string, mixed>  $attributes
      * @return void
      */
     protected function insertAndSetId(Builder $query, $attributes)
@@ -1271,6 +1518,16 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     }
 
     /**
+     * Delete the model from the database without raising any events.
+     *
+     * @return bool
+     */
+    public function deleteQuietly()
+    {
+        return static::withoutEvents(fn () => $this->delete());
+    }
+
+    /**
      * Delete the model from the database within a transaction.
      *
      * @return bool|null
@@ -1283,9 +1540,7 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
             return false;
         }
 
-        return $this->getConnection()->transaction(function () {
-            return $this->delete();
-        });
+        return $this->getConnection()->transaction(fn () => $this->delete());
     }
 
     /**
@@ -1298,6 +1553,19 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     public function forceDelete()
     {
         return $this->delete();
+    }
+
+    /**
+     * Force a hard destroy on a soft deleted model.
+     *
+     * This method protects developers from running forceDestroy when the trait is missing.
+     *
+     * @param  \WpStarter\Support\Collection|array|int|string  $ids
+     * @return bool|null
+     */
+    public static function forceDestroy($ids)
+    {
+        return static::destroy($ids);
     }
 
     /**
@@ -1315,7 +1583,7 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     /**
      * Begin querying the model.
      *
-     * @return \WpStarter\Database\Eloquent\Builder
+     * @return \WpStarter\Database\Eloquent\Builder<static>
      */
     public static function query()
     {
@@ -1325,7 +1593,7 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     /**
      * Get a new query builder for the model's table.
      *
-     * @return \WpStarter\Database\Eloquent\Builder
+     * @return \WpStarter\Database\Eloquent\Builder<static>
      */
     public function newQuery()
     {
@@ -1335,7 +1603,7 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     /**
      * Get a new query builder that doesn't have any global scopes or eager loading.
      *
-     * @return \WpStarter\Database\Eloquent\Builder|static
+     * @return \WpStarter\Database\Eloquent\Builder<static>
      */
     public function newModelQuery()
     {
@@ -1347,7 +1615,7 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     /**
      * Get a new query builder with no relationships loaded.
      *
-     * @return \WpStarter\Database\Eloquent\Builder
+     * @return \WpStarter\Database\Eloquent\Builder<static>
      */
     public function newQueryWithoutRelationships()
     {
@@ -1357,8 +1625,8 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     /**
      * Register the global scopes for this builder instance.
      *
-     * @param  \WpStarter\Database\Eloquent\Builder  $builder
-     * @return \WpStarter\Database\Eloquent\Builder
+     * @param  \WpStarter\Database\Eloquent\Builder<static>  $builder
+     * @return \WpStarter\Database\Eloquent\Builder<static>
      */
     public function registerGlobalScopes($builder)
     {
@@ -1372,20 +1640,20 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     /**
      * Get a new query builder that doesn't have any global scopes.
      *
-     * @return \WpStarter\Database\Eloquent\Builder|static
+     * @return \WpStarter\Database\Eloquent\Builder<static>
      */
     public function newQueryWithoutScopes()
     {
         return $this->newModelQuery()
-                    ->with($this->with)
-                    ->withCount($this->withCount);
+            ->with($this->with)
+            ->withCount($this->withCount);
     }
 
     /**
      * Get a new query instance without a given scope.
      *
      * @param  \WpStarter\Database\Eloquent\Scope|string  $scope
-     * @return \WpStarter\Database\Eloquent\Builder
+     * @return \WpStarter\Database\Eloquent\Builder<static>
      */
     public function newQueryWithoutScope($scope)
     {
@@ -1396,24 +1664,43 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
      * Get a new query to restore one or more models by their queueable IDs.
      *
      * @param  array|int  $ids
-     * @return \WpStarter\Database\Eloquent\Builder
+     * @return \WpStarter\Database\Eloquent\Builder<static>
      */
     public function newQueryForRestoration($ids)
     {
-        return is_array($ids)
-                ? $this->newQueryWithoutScopes()->whereIn($this->getQualifiedKeyName(), $ids)
-                : $this->newQueryWithoutScopes()->whereKey($ids);
+        return $this->newQueryWithoutScopes()->whereKey($ids);
     }
 
     /**
      * Create a new Eloquent query builder for the model.
      *
      * @param  \WpStarter\Database\Query\Builder  $query
-     * @return \WpStarter\Database\Eloquent\Builder|static
+     * @return \WpStarter\Database\Eloquent\Builder<*>
      */
     public function newEloquentBuilder($query)
     {
-        return new Builder($query);
+        $builderClass = $this->resolveCustomBuilderClass();
+
+        if ($builderClass && is_subclass_of($builderClass, Builder::class)) {
+            return new $builderClass($query);
+        }
+
+        return new static::$builder($query);
+    }
+
+    /**
+     * Resolve the custom Eloquent builder class from the model attributes.
+     *
+     * @return class-string<\WpStarter\Database\Eloquent\Builder>|false
+     */
+    protected function resolveCustomBuilderClass()
+    {
+        $attributes = (new ReflectionClass($this))
+            ->getAttributes(UseEloquentBuilder::class);
+
+        return ! empty($attributes)
+            ? $attributes[0]->newInstance()->builderClass
+            : false;
     }
 
     /**
@@ -1427,21 +1714,10 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     }
 
     /**
-     * Create a new Eloquent Collection instance.
-     *
-     * @param  array  $models
-     * @return \WpStarter\Database\Eloquent\Collection
-     */
-    public function newCollection(array $models = [])
-    {
-        return new Collection($models);
-    }
-
-    /**
      * Create a new pivot model instance.
      *
      * @param  \WpStarter\Database\Eloquent\Model  $parent
-     * @param  array  $attributes
+     * @param  array<string, mixed>  $attributes
      * @param  string  $table
      * @param  bool  $exists
      * @param  string|null  $using
@@ -1450,7 +1726,7 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     public function newPivot(self $parent, array $attributes, $table, $exists, $using = null)
     {
         return $using ? $using::fromRawAttributes($parent, $attributes, $table, $exists)
-                      : Pivot::fromAttributes($parent, $attributes, $table, $exists);
+            : Pivot::fromAttributes($parent, $attributes, $table, $exists);
     }
 
     /**
@@ -1461,7 +1737,8 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
      */
     public function hasNamedScope($scope)
     {
-        return method_exists($this, 'scope'.ucfirst($scope));
+        return method_exists($this, 'scope'.ucfirst($scope)) ||
+            static::isScopeMethodWithAttribute($scope);
     }
 
     /**
@@ -1473,7 +1750,28 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
      */
     public function callNamedScope($scope, array $parameters = [])
     {
+        if ($this->isScopeMethodWithAttribute($scope)) {
+            return $this->{$scope}(...$parameters);
+        }
+
         return $this->{'scope'.ucfirst($scope)}(...$parameters);
+    }
+
+    /**
+     * Determine if the given method has a scope attribute.
+     *
+     * @param  string  $method
+     * @return bool
+     */
+    protected static function isScopeMethodWithAttribute(string $method)
+    {
+        if (method_exists(static::class, $method)) {
+            $reflectionClass = new ReflectionMethod(static::class, $method);
+
+            return ! $reflectionClass->isPrivate() && $reflectionClass->getAttributes(LocalScope::class) !== [];
+        }
+
+        return false;
     }
 
     /**
@@ -1483,7 +1781,10 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
      */
     public function toArray()
     {
-        return array_merge($this->attributesToArray(), $this->relationsToArray());
+        return $this->withoutRecursion(
+            fn () => array_merge($this->attributesToArray(), $this->relationsToArray()),
+            fn () => $this->attributesToArray(),
+        );
     }
 
     /**
@@ -1496,22 +1797,34 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
      */
     public function toJson($options = 0)
     {
-        $json = json_encode($this->jsonSerialize(), $options);
-
-        if (JSON_ERROR_NONE !== json_last_error()) {
-            throw JsonEncodingException::forModel($this, json_last_error_msg());
+        try {
+            $json = json_encode($this->jsonSerialize(), $options | JSON_THROW_ON_ERROR);
+        } catch (JsonException $e) {
+            throw JsonEncodingException::forModel($this, $e->getMessage());
         }
 
         return $json;
     }
 
     /**
+     * Convert the model instance to pretty print formatted JSON.
+     *
+     * @param  int  $options
+     * @return string
+     *
+     * @throws \WpStarter\Database\Eloquent\JsonEncodingException
+     */
+    public function toPrettyJson(int $options = 0)
+    {
+        return $this->toJson(JSON_PRETTY_PRINT | $options);
+    }
+
+    /**
      * Convert the object into something JSON serializable.
      *
-     * @return array
+     * @return mixed
      */
-    #[\ReturnTypeWillChange]
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return $this->toArray();
     }
@@ -1529,8 +1842,9 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
         }
 
         return $this->setKeysForSelectQuery($this->newQueryWithoutScopes())
-                        ->with(is_string($with) ? func_get_args() : $with)
-                        ->first();
+            ->useWritePdo()
+            ->with(is_string($with) ? func_get_args() : $with)
+            ->first();
     }
 
     /**
@@ -1545,13 +1859,16 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
         }
 
         $this->setRawAttributes(
-            $this->setKeysForSelectQuery($this->newQueryWithoutScopes())->firstOrFail()->attributes
+            $this->setKeysForSelectQuery($this->newQueryWithoutScopes())
+                ->useWritePdo()
+                ->firstOrFail()
+                ->attributes
         );
 
-        $this->load(ws_collect($this->relations)->reject(function ($relation) {
-            return $relation instanceof Pivot
-                || (is_object($relation) && in_array(AsPivot::class, ws_class_uses_recursive($relation), true));
-        })->keys()->all());
+        $this->load((new BaseCollection($this->relations))->reject(
+            fn ($relation) => $relation instanceof Pivot
+                || (is_object($relation) && in_array(AsPivot::class, class_uses_recursive($relation), true))
+        )->keys()->all());
 
         $this->syncOriginal();
 
@@ -1566,23 +1883,36 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
      */
     public function replicate(?array $except = null)
     {
-        $defaults = [
+        $defaults = array_values(array_filter([
             $this->getKeyName(),
             $this->getCreatedAtColumn(),
             $this->getUpdatedAtColumn(),
-        ];
+            ...$this->uniqueIds(),
+            'laravel_through_key',
+        ]));
 
         $attributes = Arr::except(
             $this->getAttributes(), $except ? array_unique(array_merge($except, $defaults)) : $defaults
         );
 
-        return ws_tap(new static, function ($instance) use ($attributes) {
+        return tap(new static, function ($instance) use ($attributes) {
             $instance->setRawAttributes($attributes);
 
             $instance->setRelations($this->relations);
 
             $instance->fireModelEvent('replicating', false);
         });
+    }
+
+    /**
+     * Clone the model into a new, non-existing instance without raising any events.
+     *
+     * @param  array|null  $except
+     * @return static
+     */
+    public function replicateQuietly(?array $except = null)
+    {
+        return static::withoutEvents(fn () => $this->replicate($except));
     }
 
     /**
@@ -1594,9 +1924,9 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     public function is($model)
     {
         return ! is_null($model) &&
-               $this->getKey() === $model->getKey() &&
-               $this->getTable() === $model->getTable() &&
-               $this->getConnectionName() === $model->getConnectionName();
+            $this->getKey() === $model->getKey() &&
+            $this->getTable() === $model->getTable() &&
+            $this->getConnectionName() === $model->getConnectionName();
     }
 
     /**
@@ -1627,13 +1957,13 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
      */
     public function getConnectionName()
     {
-        return $this->connection;
+        return enum_value($this->connection);
     }
 
     /**
      * Set the connection associated with the model.
      *
-     * @param  string|null  $name
+     * @param  \UnitEnum|string|null  $name
      * @return $this
      */
     public function setConnection($name)
@@ -1646,7 +1976,7 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     /**
      * Resolve a connection instance.
      *
-     * @param  string|null  $connection
+     * @param  \UnitEnum|string|null  $connection
      * @return \WpStarter\Database\Connection
      */
     public static function resolveConnection($connection = null)
@@ -1657,7 +1987,7 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     /**
      * Get the connection resolver instance.
      *
-     * @return \WpStarter\Database\ConnectionResolverInterface
+     * @return \WpStarter\Database\ConnectionResolverInterface|null
      */
     public static function getConnectionResolver()
     {
@@ -1692,7 +2022,7 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
      */
     public function getTable()
     {
-        return $this->table ?? Str::snake(Str::pluralStudly(ws_class_basename($this)));
+        return $this->table ?? Str::snake(Str::pluralStudly(class_basename($this)));
     }
 
     /**
@@ -1814,29 +2144,31 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
      */
     public function getQueueableRelations()
     {
-        $relations = [];
+        return $this->withoutRecursion(function () {
+            $relations = [];
 
-        foreach ($this->getRelations() as $key => $relation) {
-            if (! method_exists($this, $key)) {
-                continue;
-            }
+            foreach ($this->getRelations() as $key => $relation) {
+                if (! method_exists($this, $key)) {
+                    continue;
+                }
 
-            $relations[] = $key;
+                $relations[] = $key;
 
-            if ($relation instanceof QueueableCollection) {
-                foreach ($relation->getQueueableRelations() as $collectionValue) {
-                    $relations[] = $key.'.'.$collectionValue;
+                if ($relation instanceof QueueableCollection) {
+                    foreach ($relation->getQueueableRelations() as $collectionValue) {
+                        $relations[] = $key.'.'.$collectionValue;
+                    }
+                }
+
+                if ($relation instanceof QueueableEntity) {
+                    foreach ($relation->getQueueableRelations() as $entityValue) {
+                        $relations[] = $key.'.'.$entityValue;
+                    }
                 }
             }
 
-            if ($relation instanceof QueueableEntity) {
-                foreach ($relation->getQueueableRelations() as $entityKey => $entityValue) {
-                    $relations[] = $key.'.'.$entityValue;
-                }
-            }
-        }
-
-        return array_unique($relations);
+            return array_unique($relations);
+        }, []);
     }
 
     /**
@@ -1925,31 +2257,42 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
      * @param  string  $childType
      * @param  mixed  $value
      * @param  string|null  $field
-     * @return \WpStarter\Database\Eloquent\Relations\Relation
+     * @return \WpStarter\Database\Eloquent\Relations\Relation<\WpStarter\Database\Eloquent\Model, $this, *>
      */
     protected function resolveChildRouteBindingQuery($childType, $value, $field)
     {
-        $relationship = $this->{Str::plural(Str::camel($childType))}();
+        $relationship = $this->{$this->childRouteBindingRelationshipName($childType)}();
 
         $field = $field ?: $relationship->getRelated()->getRouteKeyName();
 
         if ($relationship instanceof HasManyThrough ||
             $relationship instanceof BelongsToMany) {
-            $field = $relationship->getRelated()->getTable().'.'.$field;
+            $field = $relationship->getRelated()->qualifyColumn($field);
         }
 
         return $relationship instanceof Model
-                ? $relationship->resolveRouteBindingQuery($relationship, $value, $field)
-                : $relationship->getRelated()->resolveRouteBindingQuery($relationship, $value, $field);
+            ? $relationship->resolveRouteBindingQuery($relationship, $value, $field)
+            : $relationship->getRelated()->resolveRouteBindingQuery($relationship, $value, $field);
+    }
+
+    /**
+     * Retrieve the child route model binding relationship name for the given child type.
+     *
+     * @param  string  $childType
+     * @return string
+     */
+    protected function childRouteBindingRelationshipName($childType)
+    {
+        return Str::plural(Str::camel($childType));
     }
 
     /**
      * Retrieve the model for a bound value.
      *
-     * @param  \WpStarter\Database\Eloquent\Model|WpStarter\Database\Eloquent\Relations\Relation  $query
+     * @param  \WpStarter\Database\Eloquent\Model|\WpStarter\Contracts\Database\Eloquent\Builder|\WpStarter\Database\Eloquent\Relations\Relation  $query
      * @param  mixed  $value
      * @param  string|null  $field
-     * @return \WpStarter\Database\Eloquent\Relations\Relation
+     * @return \WpStarter\Contracts\Database\Eloquent\Builder
      */
     public function resolveRouteBindingQuery($query, $value, $field = null)
     {
@@ -1963,7 +2306,7 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
      */
     public function getForeignKey()
     {
-        return Str::snake(ws_class_basename($this)).'_'.$this->getKeyName();
+        return Str::snake(class_basename($this)).'_'.$this->getKeyName();
     }
 
     /**
@@ -1990,6 +2333,30 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     }
 
     /**
+     * Determine if the model is soft deletable.
+     */
+    public static function isSoftDeletable(): bool
+    {
+        return static::$isSoftDeletable[static::class] ??= in_array(SoftDeletes::class, class_uses_recursive(static::class));
+    }
+
+    /**
+     * Determine if the model is prunable.
+     */
+    protected function isPrunable(): bool
+    {
+        return self::$isPrunable[static::class] ??= in_array(Prunable::class, class_uses_recursive(static::class)) || static::isMassPrunable();
+    }
+
+    /**
+     * Determine if the model is mass prunable.
+     */
+    protected function isMassPrunable(): bool
+    {
+        return self::$isMassPrunable[static::class] ??= in_array(MassPrunable::class, class_uses_recursive(static::class));
+    }
+
+    /**
      * Determine if lazy loading is disabled.
      *
      * @return bool
@@ -2000,13 +2367,43 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     }
 
     /**
+     * Determine if relationships are being automatically eager loaded when accessed.
+     *
+     * @return bool
+     */
+    public static function isAutomaticallyEagerLoadingRelationships()
+    {
+        return static::$modelsShouldAutomaticallyEagerLoadRelationships;
+    }
+
+    /**
+     * Determine if discarding guarded attribute fills is disabled.
+     *
+     * @return bool
+     */
+    public static function preventsSilentlyDiscardingAttributes()
+    {
+        return static::$modelsShouldPreventSilentlyDiscardingAttributes;
+    }
+
+    /**
+     * Determine if accessing missing attributes is disabled.
+     *
+     * @return bool
+     */
+    public static function preventsAccessingMissingAttributes()
+    {
+        return static::$modelsShouldPreventAccessingMissingAttributes;
+    }
+
+    /**
      * Get the broadcast channel route definition that is associated with the given entity.
      *
      * @return string
      */
     public function broadcastChannelRoute()
     {
-        return str_replace('\\', '.', get_class($this)).'.{'.Str::camel(ws_class_basename($this)).'}';
+        return str_replace('\\', '.', get_class($this)).'.{'.Str::camel(class_basename($this)).'}';
     }
 
     /**
@@ -2048,10 +2445,17 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
      * @param  mixed  $offset
      * @return bool
      */
-    #[\ReturnTypeWillChange]
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
-        return ! is_null($this->getAttribute($offset));
+        $shouldPrevent = static::$modelsShouldPreventAccessingMissingAttributes;
+
+        static::$modelsShouldPreventAccessingMissingAttributes = false;
+
+        try {
+            return ! is_null($this->getAttribute($offset));
+        } finally {
+            static::$modelsShouldPreventAccessingMissingAttributes = $shouldPrevent;
+        }
     }
 
     /**
@@ -2060,8 +2464,7 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
      * @param  mixed  $offset
      * @return mixed
      */
-    #[\ReturnTypeWillChange]
-    public function offsetGet($offset)
+    public function offsetGet($offset): mixed
     {
         return $this->getAttribute($offset);
     }
@@ -2073,8 +2476,7 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
      * @param  mixed  $value
      * @return void
      */
-    #[\ReturnTypeWillChange]
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         $this->setAttribute($offset, $value);
     }
@@ -2085,10 +2487,14 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
      * @param  mixed  $offset
      * @return void
      */
-    #[\ReturnTypeWillChange]
-    public function offsetUnset($offset)
+    public function offsetUnset($offset): void
     {
-        unset($this->attributes[$offset], $this->relations[$offset]);
+        unset(
+            $this->attributes[$offset],
+            $this->relations[$offset],
+            $this->attributeCastCache[$offset],
+            $this->classCastCache[$offset]
+        );
     }
 
     /**
@@ -2122,12 +2528,17 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
      */
     public function __call($method, $parameters)
     {
-        if (in_array($method, ['increment', 'decrement'])) {
+        if (in_array($method, ['increment', 'decrement', 'incrementQuietly', 'decrementQuietly'])) {
             return $this->$method(...$parameters);
         }
 
-        if ($resolver = (static::$relationResolvers[get_class($this)][$method] ?? null)) {
+        if ($resolver = $this->relationResolver(static::class, $method)) {
             return $resolver($this);
+        }
+
+        if (Str::startsWith($method, 'through') &&
+            method_exists($this, $relationMethod = (new SupportStringable($method))->after('through')->lcfirst()->toString())) {
+            return $this->through($relationMethod);
         }
 
         return $this->forwardCallTo($this->newQuery(), $method, $parameters);
@@ -2142,6 +2553,10 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
      */
     public static function __callStatic($method, $parameters)
     {
+        if (static::isScopeMethodWithAttribute($method)) {
+            return static::query()->$method(...$parameters);
+        }
+
         return (new static)->$method(...$parameters);
     }
 
@@ -2153,8 +2568,8 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
     public function __toString()
     {
         return $this->escapeWhenCastingToString
-                    ? ws_e($this->toJson())
-                    : $this->toJson();
+            ? e($this->toJson())
+            : $this->toJson();
     }
 
     /**
@@ -2181,8 +2596,20 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
 
         $this->classCastCache = [];
         $this->attributeCastCache = [];
+        $this->relationAutoloadCallback = null;
+        $this->relationAutoloadContext = null;
 
-        return array_keys(get_object_vars($this));
+        $keys = get_object_vars($this);
+
+        if (version_compare(PHP_VERSION, '8.4.0', '>=')) {
+            foreach ((new ReflectionClass($this))->getProperties() as $property) {
+                if ($property->hasHooks()) {
+                    unset($keys[$property->getName()]);
+                }
+            }
+        }
+
+        return array_keys($keys);
     }
 
     /**
@@ -2195,5 +2622,9 @@ abstract class Model implements ModelContract, Arrayable, ArrayAccess, CanBeEsca
         $this->bootIfNotBooted();
 
         $this->initializeTraits();
+
+        if (static::isAutomaticallyEagerLoadingRelationships()) {
+            $this->withRelationshipAutoloading();
+        }
     }
 }

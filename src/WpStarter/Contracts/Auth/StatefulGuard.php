@@ -35,7 +35,7 @@ interface StatefulGuard extends Guard
      *
      * @param  mixed  $id
      * @param  bool  $remember
-     * @return \WpStarter\Contracts\Auth\Authenticatable|bool
+     * @return \WpStarter\Contracts\Auth\Authenticatable|false
      */
     public function loginUsingId($id, $remember = false);
 
@@ -43,7 +43,7 @@ interface StatefulGuard extends Guard
      * Log the given user ID into the application without sessions or cookies.
      *
      * @param  mixed  $id
-     * @return \WpStarter\Contracts\Auth\Authenticatable|bool
+     * @return \WpStarter\Contracts\Auth\Authenticatable|false
      */
     public function onceUsingId($id);
 

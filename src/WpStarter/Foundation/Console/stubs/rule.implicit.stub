@@ -1,0 +1,27 @@
+<?php
+
+namespace {{ namespace }};
+
+use Closure;
+use WpStarter\Contracts\Validation\ValidationRule;
+use WpStarter\Translation\PotentiallyTranslatedString;
+
+class {{ class }} implements ValidationRule
+{
+    /**
+     * Indicates whether the rule should be implicit.
+     *
+     * @var bool
+     */
+    public $implicit = true;
+
+    /**
+     * Run the validation rule.
+     *
+     * @param  Closure(string, ?string=): PotentiallyTranslatedString  $fail
+     */
+    public function validate(string $attribute, mixed $value, Closure $fail): void
+    {
+        //
+    }
+}

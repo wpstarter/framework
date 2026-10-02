@@ -2,7 +2,6 @@
 
 namespace WpStarter\Tests\Integration\Database;
 
-use WpStarter\Container\Container;
 use WpStarter\Contracts\Events\Dispatcher;
 use WpStarter\Database\Eloquent\MassPrunable;
 use WpStarter\Database\Eloquent\Model;
@@ -13,31 +12,29 @@ use WpStarter\Support\Facades\Schema;
 use LogicException;
 use Mockery as m;
 
-/** @group SkipMSSQL */
 class EloquentMassPrunableTest extends DatabaseTestCase
 {
     protected function setUp(): void
     {
         parent::setUp();
 
-        Container::setInstance($container = new Container);
-
-        $container->singleton(Dispatcher::class, function () {
+        $this->app->singleton(Dispatcher::class, function () {
             return m::mock(Dispatcher::class);
         });
 
-        $container->alias(Dispatcher::class, 'events');
+        $this->app->alias(Dispatcher::class, 'events');
     }
 
-    protected function defineDatabaseMigrationsAfterDatabaseRefreshed()
+    protected function afterRefreshingDatabase()
     {
-        ws_collect([
+        collect([
             'mass_prunable_test_models',
             'mass_prunable_soft_delete_test_models',
             'mass_prunable_test_model_missing_prunable_methods',
         ])->each(function ($table) {
             Schema::create($table, function (Blueprint $table) {
                 $table->increments('id');
+                $table->string('name')->nullable();
                 $table->softDeletes();
                 $table->boolean('pruned')->default(false);
                 $table->timestamps();
@@ -57,13 +54,13 @@ class EloquentMassPrunableTest extends DatabaseTestCase
 
     public function testPrunesRecords()
     {
-        ws_app('events')
+        app('events')
             ->shouldReceive('dispatch')
             ->times(2)
             ->with(m::type(ModelsPruned::class));
 
-        ws_collect(range(1, 5000))->map(function ($id) {
-            return ['id' => $id];
+        collect(range(1, 5000))->map(function ($id) {
+            return ['name' => 'foo'];
         })->chunk(200)->each(function ($chunk) {
             MassPrunableTestModel::insert($chunk->all());
         });
@@ -76,13 +73,13 @@ class EloquentMassPrunableTest extends DatabaseTestCase
 
     public function testPrunesSoftDeletedRecords()
     {
-        ws_app('events')
+        app('events')
             ->shouldReceive('dispatch')
             ->times(3)
             ->with(m::type(ModelsPruned::class));
 
-        ws_collect(range(1, 5000))->map(function ($id) {
-            return ['id' => $id, 'deleted_at' => ws_now()];
+        collect(range(1, 5000))->map(function ($id) {
+            return ['deleted_at' => now()];
         })->chunk(200)->each(function ($chunk) {
             MassPrunableSoftDeleteTestModel::insert($chunk->all());
         });
@@ -92,15 +89,6 @@ class EloquentMassPrunableTest extends DatabaseTestCase
         $this->assertEquals(3000, $count);
         $this->assertEquals(0, MassPrunableSoftDeleteTestModel::count());
         $this->assertEquals(2000, MassPrunableSoftDeleteTestModel::withTrashed()->count());
-    }
-
-    public function tearDown(): void
-    {
-        parent::tearDown();
-
-        Container::setInstance(null);
-
-        m::close();
     }
 }
 

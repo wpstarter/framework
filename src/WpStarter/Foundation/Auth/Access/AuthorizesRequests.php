@@ -5,13 +5,15 @@ namespace WpStarter\Foundation\Auth\Access;
 use WpStarter\Contracts\Auth\Access\Gate;
 use WpStarter\Support\Str;
 
+use function WpStarter\Support\enum_value;
+
 trait AuthorizesRequests
 {
     /**
      * Authorize a given action for the current user.
      *
      * @param  mixed  $ability
-     * @param  mixed|array  $arguments
+     * @param  mixed  $arguments
      * @return \WpStarter\Auth\Access\Response
      *
      * @throws \WpStarter\Auth\Access\AuthorizationException
@@ -20,7 +22,7 @@ trait AuthorizesRequests
     {
         [$ability, $arguments] = $this->parseAbilityAndArguments($ability, $arguments);
 
-        return ws_app(Gate::class)->authorize($ability, $arguments);
+        return app(Gate::class)->authorize($ability, $arguments);
     }
 
     /**
@@ -28,7 +30,7 @@ trait AuthorizesRequests
      *
      * @param  \WpStarter\Contracts\Auth\Authenticatable|mixed  $user
      * @param  mixed  $ability
-     * @param  mixed|array  $arguments
+     * @param  mixed  $arguments
      * @return \WpStarter\Auth\Access\Response
      *
      * @throws \WpStarter\Auth\Access\AuthorizationException
@@ -37,19 +39,21 @@ trait AuthorizesRequests
     {
         [$ability, $arguments] = $this->parseAbilityAndArguments($ability, $arguments);
 
-        return ws_app(Gate::class)->forUser($user)->authorize($ability, $arguments);
+        return app(Gate::class)->forUser($user)->authorize($ability, $arguments);
     }
 
     /**
      * Guesses the ability's name if it wasn't provided.
      *
      * @param  mixed  $ability
-     * @param  mixed|array  $arguments
+     * @param  mixed  $arguments
      * @return array
      */
     protected function parseAbilityAndArguments($ability, $arguments)
     {
-        if (is_string($ability) && strpos($ability, '\\') === false) {
+        $ability = enum_value($ability);
+
+        if (is_string($ability) && ! str_contains($ability, '\\')) {
             return [$ability, $arguments];
         }
 
@@ -86,7 +90,7 @@ trait AuthorizesRequests
 
         $parameter = is_array($parameter) ? implode(',', $parameter) : $parameter;
 
-        $parameter = $parameter ?: Str::snake(ws_class_basename($model));
+        $parameter = $parameter ?: Str::snake(class_basename($model));
 
         $middleware = [];
 
@@ -104,7 +108,7 @@ trait AuthorizesRequests
     /**
      * Get the map of resource methods to ability names.
      *
-     * @return array
+     * @return array<string, string>
      */
     protected function resourceAbilityMap()
     {
@@ -122,7 +126,7 @@ trait AuthorizesRequests
     /**
      * Get the list of resource methods which do not have model parameters.
      *
-     * @return array
+     * @return list<string>
      */
     protected function resourceMethodsWithoutModels()
     {

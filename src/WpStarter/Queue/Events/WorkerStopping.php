@@ -5,20 +5,16 @@ namespace WpStarter\Queue\Events;
 class WorkerStopping
 {
     /**
-     * The exit status.
-     *
-     * @var int
-     */
-    public $status;
-
-    /**
      * Create a new event instance.
      *
-     * @param  int  $status
-     * @return void
+     * @param  int  $status  The worker exit status.
+     * @param  \WpStarter\Queue\WorkerOptions|null  $workerOptions  The worker options.
+     * @param  \WpStarter\Queue\WorkerStopReason|null  $reason  The reason why the worker is stopping.
      */
-    public function __construct($status = 0)
-    {
-        $this->status = $status;
+    public function __construct(
+        public $status = 0,
+        public $workerOptions = null,
+        public $reason = null,
+    ) {
     }
 }

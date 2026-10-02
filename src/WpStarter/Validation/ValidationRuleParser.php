@@ -3,10 +3,17 @@
 namespace WpStarter\Validation;
 
 use Closure;
+use WpStarter\Contracts\Validation\CompilableRules;
+use WpStarter\Contracts\Validation\InvokableRule;
 use WpStarter\Contracts\Validation\Rule as RuleContract;
+use WpStarter\Contracts\Validation\ValidationRule;
 use WpStarter\Support\Arr;
+use WpStarter\Support\Collection;
 use WpStarter\Support\Str;
+use WpStarter\Validation\Rules\Date;
 use WpStarter\Validation\Rules\Exists;
+use WpStarter\Validation\Rules\Numeric;
+use WpStarter\Validation\Rules\StringRule;
 use WpStarter\Validation\Rules\Unique;
 
 class ValidationRuleParser
@@ -29,7 +36,6 @@ class ValidationRuleParser
      * Create a new validation rule parser.
      *
      * @param  array  $data
-     * @return void
      */
     public function __construct(array $data)
     {
@@ -63,12 +69,12 @@ class ValidationRuleParser
     protected function explodeRules($rules)
     {
         foreach ($rules as $key => $rule) {
-            if (Str::contains($key, '*')) {
+            if (str_contains($key, '*')) {
                 $rules = $this->explodeWildcardRules($rules, $key, [$rule]);
 
                 unset($rules[$key]);
             } else {
-                $rules[$key] = $this->explodeExplicitRule($rule);
+                $rules[$key] = $this->explodeExplicitRule($rule, $key);
             }
         }
 
@@ -79,29 +85,51 @@ class ValidationRuleParser
      * Explode the explicit rule into an array if necessary.
      *
      * @param  mixed  $rule
+     * @param  string  $attribute
      * @return array
      */
-    protected function explodeExplicitRule($rule)
+    protected function explodeExplicitRule($rule, $attribute)
     {
         if (is_string($rule)) {
             return explode('|', $rule);
-        } elseif (is_object($rule)) {
-            return [$this->prepareRule($rule)];
         }
 
-        return array_map([$this, 'prepareRule'], $rule);
+        if (is_object($rule)) {
+            if ($rule instanceof Date || $rule instanceof Numeric || $rule instanceof StringRule) {
+                return explode('|', (string) $rule);
+            }
+
+            return Arr::wrap($this->prepareRule($rule, $attribute));
+        }
+
+        $rules = [];
+
+        foreach ($rule as $value) {
+            if ($value instanceof Date || $value instanceof Numeric || $value instanceof StringRule) {
+                $rules = array_merge($rules, explode('|', (string) $value));
+            } else {
+                $rules[] = $this->prepareRule($value, $attribute);
+            }
+        }
+
+        return $rules;
     }
 
     /**
      * Prepare the given rule for the Validator.
      *
      * @param  mixed  $rule
+     * @param  string  $attribute
      * @return mixed
      */
-    protected function prepareRule($rule)
+    protected function prepareRule($rule, $attribute)
     {
         if ($rule instanceof Closure) {
             $rule = new ClosureValidationRule($rule);
+        }
+
+        if ($rule instanceof InvokableRule || $rule instanceof ValidationRule) {
+            $rule = InvokableValidationRule::make($rule);
         }
 
         if (! is_object($rule) ||
@@ -109,6 +137,12 @@ class ValidationRuleParser
             ($rule instanceof Exists && $rule->queryCallbacks()) ||
             ($rule instanceof Unique && $rule->queryCallbacks())) {
             return $rule;
+        }
+
+        if ($rule instanceof CompilableRules) {
+            return $rule->compile(
+                $attribute, $this->data[$attribute] ?? null, Arr::dot($this->data), $this->data
+            )->rules[$attribute];
         }
 
         return (string) $rule;
@@ -124,16 +158,32 @@ class ValidationRuleParser
      */
     protected function explodeWildcardRules($results, $attribute, $rules)
     {
-        $pattern = str_replace('\*', '[^\.]*', preg_quote($attribute));
+        $pattern = str_replace('\*', '[^\.]*', preg_quote($attribute, '/'));
 
         $data = ValidationData::initializeAndGatherData($attribute, $this->data);
 
         foreach ($data as $key => $value) {
             if (Str::startsWith($key, $attribute) || (bool) preg_match('/^'.$pattern.'\z/', $key)) {
                 foreach ((array) $rules as $rule) {
-                    $this->implicitAttributes[$attribute][] = $key;
+                    if ($rule instanceof CompilableRules) {
+                        $context = Arr::get($this->data, Str::beforeLast($key, '.'));
 
-                    $results = $this->mergeRules($results, $key, $rule);
+                        $compiled = $rule->compile($key, $value, $data, $context);
+
+                        $this->implicitAttributes = array_merge_recursive(
+                            $compiled->implicitAttributes,
+                            $this->implicitAttributes,
+                            [$attribute => [$key]]
+                        );
+
+                        foreach ($compiled->rules as $compiledAttribute => $compiledRules) {
+                            $this->mergeRulesForAttributeInto($results, $compiledAttribute, $compiledRules);
+                        }
+                    } else {
+                        $this->implicitAttributes[$attribute][] = $key;
+
+                        $this->mergeRulesForAttributeInto($results, $key, $rule);
+                    }
                 }
             }
         }
@@ -174,13 +224,26 @@ class ValidationRuleParser
      */
     protected function mergeRulesForAttribute($results, $attribute, $rules)
     {
-        $merge = ws_head($this->explodeRules([$rules]));
-
-        $results[$attribute] = array_merge(
-            isset($results[$attribute]) ? $this->explodeExplicitRule($results[$attribute]) : [], $merge
-        );
+        $this->mergeRulesForAttributeInto($results, $attribute, $rules);
 
         return $results;
+    }
+
+    /**
+     * Merge additional rules into a given attribute by reference.
+     *
+     * @param  array  $results
+     * @param  string  $attribute
+     * @param  string|array  $rules
+     * @return void
+     */
+    private function mergeRulesForAttributeInto(&$results, $attribute, $rules)
+    {
+        $merge = head($this->explodeRules([$rules]));
+
+        $results[$attribute] = array_merge(
+            isset($results[$attribute]) ? $this->explodeExplicitRule($results[$attribute], $attribute) : [], $merge
+        );
     }
 
     /**
@@ -191,7 +254,7 @@ class ValidationRuleParser
      */
     public static function parse($rule)
     {
-        if ($rule instanceof RuleContract) {
+        if ($rule instanceof RuleContract || $rule instanceof CompilableRules) {
             return [$rule, []];
         }
 
@@ -230,7 +293,7 @@ class ValidationRuleParser
         // The format for specifying validation rules and parameters follows an
         // easy {rule}:{parameters} formatting convention. For instance the
         // rule "Max:3" states that the value may only be three letters.
-        if (strpos($rule, ':') !== false) {
+        if (str_contains($rule, ':')) {
             [$rule, $parameter] = explode(':', $rule, 2);
 
             $parameters = static::parseParameters($rule, $parameter);
@@ -248,13 +311,18 @@ class ValidationRuleParser
      */
     protected static function parseParameters($rule, $parameter)
     {
-        $rule = strtolower($rule);
+        return static::ruleIsRegex($rule) ? [$parameter] : str_getcsv($parameter, escape: '\\');
+    }
 
-        if (in_array($rule, ['regex', 'not_regex', 'notregex'], true)) {
-            return [$parameter];
-        }
-
-        return str_getcsv($parameter);
+    /**
+     * Determine if the rule is a regular expression.
+     *
+     * @param  string  $rule
+     * @return bool
+     */
+    protected static function ruleIsRegex($rule)
+    {
+        return in_array(strtolower($rule), ['regex', 'not_regex', 'notregex'], true);
     }
 
     /**
@@ -265,18 +333,15 @@ class ValidationRuleParser
      */
     protected static function normalizeRule($rule)
     {
-        switch ($rule) {
-            case 'Int':
-                return 'Integer';
-            case 'Bool':
-                return 'Boolean';
-            default:
-                return $rule;
-        }
+        return match ($rule) {
+            'Int' => 'Integer',
+            'Bool' => 'Boolean',
+            default => $rule,
+        };
     }
 
     /**
-     * Expand and conditional rules in the given array of rules.
+     * Expand the conditional rules in the given array of rules.
      *
      * @param  array  $rules
      * @param  array  $data
@@ -284,7 +349,7 @@ class ValidationRuleParser
      */
     public static function filterConditionalRules($rules, array $data = [])
     {
-        return ws_collect($rules)->mapWithKeys(function ($attributeRules, $attribute) use ($data) {
+        return (new Collection($rules))->mapWithKeys(function ($attributeRules, $attribute) use ($data) {
             if (! is_array($attributeRules) &&
                 ! $attributeRules instanceof ConditionalRules) {
                 return [$attribute => $attributeRules];
@@ -292,16 +357,16 @@ class ValidationRuleParser
 
             if ($attributeRules instanceof ConditionalRules) {
                 return [$attribute => $attributeRules->passes($data)
-                                ? array_filter($attributeRules->rules())
-                                : array_filter($attributeRules->defaultRules()), ];
+                    ? array_filter($attributeRules->rules($data))
+                    : array_filter($attributeRules->defaultRules($data)), ];
             }
 
-            return [$attribute => ws_collect($attributeRules)->map(function ($rule) use ($data) {
+            return [$attribute => (new Collection($attributeRules))->map(function ($rule) use ($data) {
                 if (! $rule instanceof ConditionalRules) {
                     return [$rule];
                 }
 
-                return $rule->passes($data) ? $rule->rules() : $rule->defaultRules();
+                return $rule->passes($data) ? $rule->rules($data) : $rule->defaultRules($data);
             })->filter()->flatten(1)->values()->all()];
         })->all();
     }

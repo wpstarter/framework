@@ -8,6 +8,7 @@ use WpStarter\Support\MessageBag;
 use WpStarter\Support\Str;
 use WpStarter\Support\Traits\ForwardsCalls;
 use WpStarter\Support\Traits\Macroable;
+use WpStarter\Support\Uri;
 use WpStarter\Support\ViewErrorBag;
 use Symfony\Component\HttpFoundation\File\UploadedFile as SymfonyUploadedFile;
 use Symfony\Component\HttpFoundation\RedirectResponse as BaseRedirectResponse;
@@ -169,7 +170,7 @@ class RedirectResponse extends BaseRedirectResponse
     public function withFragment($fragment)
     {
         return $this->withoutFragment()
-                ->setTargetUrl($this->getTargetUrl().'#'.Str::after($fragment, '#'));
+            ->setTargetUrl($this->getTargetUrl().'#'.Str::after($fragment, '#'));
     }
 
     /**
@@ -180,6 +181,26 @@ class RedirectResponse extends BaseRedirectResponse
     public function withoutFragment()
     {
         return $this->setTargetUrl(Str::before($this->getTargetUrl(), '#'));
+    }
+
+    /**
+     * Enforce that the redirect target must have the same host as the current request.
+     */
+    public function enforceSameOrigin(
+        string $fallback,
+        bool $validateScheme = true,
+        bool $validatePort = true,
+    ): static {
+        $target = Uri::of($this->targetUrl);
+        $current = Uri::of($this->request->getSchemeAndHttpHost());
+
+        if ($target->host() !== $current->host() ||
+            ($validateScheme && $target->scheme() !== $current->scheme()) ||
+            ($validatePort && $target->port() !== $current->port())) {
+            $this->setTargetUrl($fallback);
+        }
+
+        return $this;
     }
 
     /**
@@ -206,11 +227,13 @@ class RedirectResponse extends BaseRedirectResponse
      * Set the request instance.
      *
      * @param  \WpStarter\Http\Request  $request
-     * @return void
+     * @return $this
      */
     public function setRequest(Request $request)
     {
         $this->request = $request;
+
+        return $this;
     }
 
     /**
@@ -227,11 +250,13 @@ class RedirectResponse extends BaseRedirectResponse
      * Set the session store instance.
      *
      * @param  \WpStarter\Session\Store  $session
-     * @return void
+     * @return $this
      */
     public function setSession(SessionStore $session)
     {
         $this->session = $session;
+
+        return $this;
     }
 
     /**
@@ -249,7 +274,7 @@ class RedirectResponse extends BaseRedirectResponse
             return $this->macroCall($method, $parameters);
         }
 
-        if (Str::startsWith($method, 'with')) {
+        if (str_starts_with($method, 'with')) {
             return $this->with(Str::snake(substr($method, 4)), $parameters[0]);
         }
 

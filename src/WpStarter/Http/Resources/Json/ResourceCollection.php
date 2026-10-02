@@ -3,6 +3,7 @@
 namespace WpStarter\Http\Resources\Json;
 
 use Countable;
+use WpStarter\Http\Request;
 use WpStarter\Http\Resources\CollectsResources;
 use WpStarter\Pagination\AbstractCursorPaginator;
 use WpStarter\Pagination\AbstractPaginator;
@@ -22,7 +23,7 @@ class ResourceCollection extends JsonResource implements Countable, IteratorAggr
     /**
      * The mapped collection instance.
      *
-     * @var \WpStarter\Support\Collection
+     * @var \WpStarter\Support\Collection|null
      */
     public $collection;
 
@@ -44,7 +45,6 @@ class ResourceCollection extends JsonResource implements Countable, IteratorAggr
      * Create a new resource instance.
      *
      * @param  mixed  $resource
-     * @return void
      */
     public function __construct($resource)
     {
@@ -85,8 +85,7 @@ class ResourceCollection extends JsonResource implements Countable, IteratorAggr
      *
      * @return int
      */
-    #[\ReturnTypeWillChange]
-    public function count()
+    public function count(): int
     {
         return $this->collection->count();
     }
@@ -97,8 +96,13 @@ class ResourceCollection extends JsonResource implements Countable, IteratorAggr
      * @param  \WpStarter\Http\Request  $request
      * @return array|\WpStarter\Contracts\Support\Arrayable|\JsonSerializable
      */
-    public function toArray($request)
+    #[\Override]
+    public function toArray(Request $request)
     {
+        if ($this->collection->first() instanceof JsonResource) {
+            return $this->collection->map->resolve($request)->all();
+        }
+
         return $this->collection->map->toArray($request)->all();
     }
 

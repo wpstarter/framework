@@ -25,7 +25,7 @@ interface Mailer
      *
      * @param  string  $text
      * @param  mixed  $callback
-     * @return void
+     * @return \WpStarter\Mail\SentMessage|null
      */
     public function raw($text, $callback);
 
@@ -35,14 +35,17 @@ interface Mailer
      * @param  \WpStarter\Contracts\Mail\Mailable|string|array  $view
      * @param  array  $data
      * @param  \Closure|string|null  $callback
-     * @return void
+     * @return \WpStarter\Mail\SentMessage|null
      */
     public function send($view, array $data = [], $callback = null);
 
     /**
-     * Get the array of failed recipients.
+     * Send a new message synchronously using a view.
      *
-     * @return array
+     * @param  \WpStarter\Contracts\Mail\Mailable|string|array  $mailable
+     * @param  array  $data
+     * @param  \Closure|string|null  $callback
+     * @return \WpStarter\Mail\SentMessage|null
      */
-    public function failures();
+    public function sendNow($mailable, array $data = [], $callback = null);
 }

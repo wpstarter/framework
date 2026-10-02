@@ -3,8 +3,11 @@
 namespace WpStarter\Database\Query\Grammars;
 
 use WpStarter\Database\Query\Builder;
+use WpStarter\Database\Query\JoinLateralClause;
 use WpStarter\Support\Arr;
+use WpStarter\Support\Collection;
 use WpStarter\Support\Str;
+use InvalidArgumentException;
 
 class SqlServerGrammar extends Grammar
 {
@@ -20,6 +23,26 @@ class SqlServerGrammar extends Grammar
     ];
 
     /**
+     * The components that make up a select clause.
+     *
+     * @var string[]
+     */
+    protected $selectComponents = [
+        'aggregate',
+        'columns',
+        'from',
+        'indexHint',
+        'joins',
+        'wheres',
+        'groups',
+        'havings',
+        'orders',
+        'offset',
+        'limit',
+        'lock',
+    ];
+
+    /**
      * Compile a select query into SQL.
      *
      * @param  \WpStarter\Database\Query\Builder  $query
@@ -27,26 +50,12 @@ class SqlServerGrammar extends Grammar
      */
     public function compileSelect(Builder $query)
     {
-        if (! $query->offset) {
-            return parent::compileSelect($query);
+        // An order by clause is required for SQL Server offset to function...
+        if ($query->offset && empty($query->orders)) {
+            $query->orders[] = ['sql' => '(SELECT 0)'];
         }
 
-        if (is_null($query->columns)) {
-            $query->columns = ['*'];
-        }
-
-        $components = $this->compileComponents($query);
-
-        if (! empty($components['orders'])) {
-            return parent::compileSelect($query)." offset {$query->offset} rows fetch next {$query->limit} rows only";
-        }
-
-        // If an offset is present on the query, we will need to wrap the query in
-        // a big "ANSI" offset syntax block. This is very nasty compared to the
-        // other database systems but is necessary for implementing features.
-        return $this->compileAnsiOffset(
-            $query, $components
-        );
+        return parent::compileSelect($query);
     }
 
     /**
@@ -97,6 +106,30 @@ class SqlServerGrammar extends Grammar
     }
 
     /**
+     * Compile the index hints for the query.
+     *
+     * @param  \WpStarter\Database\Query\Builder  $query
+     * @param  \WpStarter\Database\Query\IndexHint  $indexHint
+     * @return string
+     *
+     * @throws \InvalidArgumentException
+     */
+    protected function compileIndexHint(Builder $query, $indexHint)
+    {
+        if ($indexHint->type !== 'force') {
+            return '';
+        }
+
+        $index = $indexHint->index;
+
+        if (! preg_match('/^[a-zA-Z0-9_$]+$/', $index)) {
+            throw new InvalidArgumentException('Index name contains invalid characters.');
+        }
+
+        return "with (index([{$index}]))";
+    }
+
+    /**
      * {@inheritdoc}
      *
      * @param  \WpStarter\Database\Query\Builder  $query
@@ -110,6 +143,18 @@ class SqlServerGrammar extends Grammar
         $operator = str_replace('?', '??', $where['operator']);
 
         return '('.$this->wrap($where['column']).' '.$operator.' '.$value.') != 0';
+    }
+
+    /**
+     * Compile a "where null safe equals" clause.
+     *
+     * @param  \WpStarter\Database\Query\Builder  $query
+     * @param  array  $where
+     * @return string
+     */
+    protected function whereNullSafeEquals(Builder $query, $where)
+    {
+        return 'exists (select '.$this->wrap($where['column']).' intersect select '.$this->parameter($where['value']).')';
     }
 
     /**
@@ -166,6 +211,31 @@ class SqlServerGrammar extends Grammar
     }
 
     /**
+     * Compile a "JSON contains key" statement into SQL.
+     *
+     * @param  string  $column
+     * @return string
+     */
+    protected function compileJsonContainsKey($column)
+    {
+        $segments = explode('->', $column);
+
+        $lastSegment = array_pop($segments);
+
+        if (preg_match('/\[([0-9]+)\]$/', $lastSegment, $matches)) {
+            $segments[] = Str::beforeLast($lastSegment, $matches[0]);
+
+            $key = $matches[1];
+        } else {
+            $key = "'".str_replace("'", "''", $lastSegment)."'";
+        }
+
+        [$field, $path] = $this->wrapJsonFieldAndPath(implode('->', $segments));
+
+        return $key.' in (select [key] from openjson('.$field.$path.'))';
+    }
+
+    /**
      * Compile a "JSON length" statement into SQL.
      *
      * @param  string  $column
@@ -181,7 +251,18 @@ class SqlServerGrammar extends Grammar
     }
 
     /**
-     * {@inheritdoc}
+     * Compile a "JSON value cast" statement into SQL.
+     *
+     * @param  string  $value
+     * @return string
+     */
+    public function compileJsonValueCast($value)
+    {
+        return 'json_query('.$value.')';
+    }
+
+    /**
+     * Compile a single having clause.
      *
      * @param  array  $having
      * @return string
@@ -207,116 +288,7 @@ class SqlServerGrammar extends Grammar
 
         $parameter = $this->parameter($having['value']);
 
-        return $having['boolean'].' ('.$column.' '.$having['operator'].' '.$parameter.') != 0';
-    }
-
-    /**
-     * Create a full ANSI offset clause for the query.
-     *
-     * @param  \WpStarter\Database\Query\Builder  $query
-     * @param  array  $components
-     * @return string
-     */
-    protected function compileAnsiOffset(Builder $query, $components)
-    {
-        // An ORDER BY clause is required to make this offset query work, so if one does
-        // not exist we'll just create a dummy clause to trick the database and so it
-        // does not complain about the queries for not having an "order by" clause.
-        if (empty($components['orders'])) {
-            $components['orders'] = 'order by (select 0)';
-        }
-
-        // We need to add the row number to the query so we can compare it to the offset
-        // and limit values given for the statements. So we will add an expression to
-        // the "select" that will give back the row numbers on each of the records.
-        $components['columns'] .= $this->compileOver($components['orders']);
-
-        unset($components['orders']);
-
-        if ($this->queryOrderContainsSubquery($query)) {
-            $query->bindings = $this->sortBindingsForSubqueryOrderBy($query);
-        }
-
-        // Next we need to calculate the constraints that should be placed on the query
-        // to get the right offset and limit from our query but if there is no limit
-        // set we will just handle the offset only since that is all that matters.
-        $sql = $this->concatenate($components);
-
-        return $this->compileTableExpression($sql, $query);
-    }
-
-    /**
-     * Compile the over statement for a table expression.
-     *
-     * @param  string  $orderings
-     * @return string
-     */
-    protected function compileOver($orderings)
-    {
-        return ", row_number() over ({$orderings}) as row_num";
-    }
-
-    /**
-     * Determine if the query's order by clauses contain a subquery.
-     *
-     * @param  \WpStarter\Database\Query\Builder  $query
-     * @return bool
-     */
-    protected function queryOrderContainsSubquery($query)
-    {
-        if (! is_array($query->orders)) {
-            return false;
-        }
-
-        return Arr::first($query->orders, function ($value) {
-            return $this->isExpression($value['column'] ?? null);
-        }, false) !== false;
-    }
-
-    /**
-     * Move the order bindings to be after the "select" statement to account for an order by subquery.
-     *
-     * @param  \WpStarter\Database\Query\Builder  $query
-     * @return array
-     */
-    protected function sortBindingsForSubqueryOrderBy($query)
-    {
-        return Arr::sort($query->bindings, function ($bindings, $key) {
-            return array_search($key, ['select', 'order', 'from', 'join', 'where', 'groupBy', 'having', 'union', 'unionOrder']);
-        });
-    }
-
-    /**
-     * Compile a common table expression for a query.
-     *
-     * @param  string  $sql
-     * @param  \WpStarter\Database\Query\Builder  $query
-     * @return string
-     */
-    protected function compileTableExpression($sql, $query)
-    {
-        $constraint = $this->compileRowConstraint($query);
-
-        return "select * from ({$sql}) as temp_table where row_num {$constraint} order by row_num";
-    }
-
-    /**
-     * Compile the limit / offset row constraint for a query.
-     *
-     * @param  \WpStarter\Database\Query\Builder  $query
-     * @return string
-     */
-    protected function compileRowConstraint($query)
-    {
-        $start = (int) $query->offset + 1;
-
-        if ($query->limit > 0) {
-            $finish = (int) $query->offset + (int) $query->limit;
-
-            return "between {$start} and {$finish}";
-        }
-
-        return ">= {$start}";
+        return '('.$column.' '.$having['operator'].' '.$parameter.') != 0';
     }
 
     /**
@@ -332,14 +304,14 @@ class SqlServerGrammar extends Grammar
         $sql = parent::compileDeleteWithoutJoins($query, $table, $where);
 
         return ! is_null($query->limit) && $query->limit > 0 && $query->offset <= 0
-                        ? Str::replaceFirst('delete', 'delete top ('.$query->limit.')', $sql)
-                        : $sql;
+            ? Str::replaceFirst('delete', 'delete top ('.$query->limit.')', $sql)
+            : $sql;
     }
 
     /**
      * Compile the random statement into SQL.
      *
-     * @param  string  $seed
+     * @param  string|int  $seed
      * @return string
      */
     public function compileRandom($seed)
@@ -356,7 +328,29 @@ class SqlServerGrammar extends Grammar
      */
     protected function compileLimit(Builder $query, $limit)
     {
+        $limit = (int) $limit;
+
+        if ($limit && $query->offset > 0) {
+            return "fetch next {$limit} rows only";
+        }
+
         return '';
+    }
+
+    /**
+     * Compile a row number clause.
+     *
+     * @param  string  $partition
+     * @param  string  $orders
+     * @return string
+     */
+    protected function compileRowNumber($partition, $orders)
+    {
+        if (empty($orders)) {
+            $orders = 'order by (select 0)';
+        }
+
+        return parent::compileRowNumber($partition, $orders);
     }
 
     /**
@@ -368,6 +362,12 @@ class SqlServerGrammar extends Grammar
      */
     protected function compileOffset(Builder $query, $offset)
     {
+        $offset = (int) $offset;
+
+        if ($offset) {
+            return "offset {$offset} rows";
+        }
+
         return '';
     }
 
@@ -420,7 +420,7 @@ class SqlServerGrammar extends Grammar
      */
     protected function compileUpdateWithJoins(Builder $query, $table, $columns, $where)
     {
-        $alias = ws_last(explode(' as ', $table));
+        $alias = last(explode(' as ', $table));
 
         $joins = $this->compileJoins($query, $query->joins);
 
@@ -438,24 +438,24 @@ class SqlServerGrammar extends Grammar
      */
     public function compileUpsert(Builder $query, array $values, array $uniqueBy, array $update)
     {
-        $columns = $this->columnize(array_keys(reset($values)));
+        $columns = $this->columnize(array_keys(array_first($values)));
 
         $sql = 'merge '.$this->wrapTable($query->from).' ';
 
-        $parameters = ws_collect($values)->map(function ($record) {
-            return '('.$this->parameterize($record).')';
-        })->implode(', ');
+        $parameters = (new Collection($values))
+            ->map(fn ($record) => '('.$this->parameterize($record).')')
+            ->implode(', ');
 
         $sql .= 'using (values '.$parameters.') '.$this->wrapTable('laravel_source').' ('.$columns.') ';
 
-        $on = ws_collect($uniqueBy)->map(function ($column) use ($query) {
-            return $this->wrap('laravel_source.'.$column).' = '.$this->wrap($query->from.'.'.$column);
-        })->implode(' and ');
+        $on = (new Collection($uniqueBy))
+            ->map(fn ($column) => $this->wrap('laravel_source.'.$column).' = '.$this->wrap($query->from.'.'.$column))
+            ->implode(' and ');
 
         $sql .= 'on '.$on.' ';
 
         if ($update) {
-            $update = ws_collect($update)->map(function ($value, $key) {
+            $update = (new Collection($update))->map(function ($value, $key) {
                 return is_numeric($key)
                     ? $this->wrap($value).' = '.$this->wrap('laravel_source.'.$value)
                     : $this->wrap($key).' = '.$this->parameter($value);
@@ -476,13 +476,30 @@ class SqlServerGrammar extends Grammar
      * @param  array  $values
      * @return array
      */
+    #[\Override]
     public function prepareBindingsForUpdate(array $bindings, array $values)
     {
         $cleanBindings = Arr::except($bindings, 'select');
 
+        $values = Arr::flatten(array_map(fn ($value) => value($value), $values));
+
         return array_values(
             array_merge($values, Arr::flatten($cleanBindings))
         );
+    }
+
+    /**
+     * Compile a "lateral join" clause.
+     *
+     * @param  \WpStarter\Database\Query\JoinLateralClause  $join
+     * @param  string  $expression
+     * @return string
+     */
+    public function compileJoinLateral(JoinLateralClause $join, string $expression): string
+    {
+        $type = $join->type == 'left' ? 'outer' : 'cross';
+
+        return trim("{$type} apply {$expression}");
     }
 
     /**
@@ -505,6 +522,16 @@ class SqlServerGrammar extends Grammar
     public function compileSavepointRollBack($name)
     {
         return 'ROLLBACK TRANSACTION '.$name;
+    }
+
+    /**
+     * Compile a query to get the number of open connections for a database.
+     *
+     * @return string
+     */
+    public function compileThreadCount()
+    {
+        return 'select count(*) Value from sys.dm_exec_sessions where status = N\'running\'';
     }
 
     /**
@@ -555,13 +582,14 @@ class SqlServerGrammar extends Grammar
     /**
      * Wrap a table in keyword identifiers.
      *
-     * @param  \WpStarter\Database\Query\Expression|string  $table
+     * @param  \WpStarter\Contracts\Database\Query\Expression|string  $table
+     * @param  string|null  $prefix
      * @return string
      */
-    public function wrapTable($table)
+    public function wrapTable($table, $prefix = null)
     {
         if (! $this->isExpression($table)) {
-            return $this->wrapTableValuedFunction(parent::wrapTable($table));
+            return $this->wrapTableValuedFunction(parent::wrapTable($table, $prefix));
         }
 
         return $this->getValue($table);

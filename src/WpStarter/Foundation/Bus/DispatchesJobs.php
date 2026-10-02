@@ -2,8 +2,6 @@
 
 namespace WpStarter\Foundation\Bus;
 
-use WpStarter\Contracts\Bus\Dispatcher;
-
 trait DispatchesJobs
 {
     /**
@@ -14,20 +12,7 @@ trait DispatchesJobs
      */
     protected function dispatch($job)
     {
-        return ws_app(Dispatcher::class)->dispatch($job);
-    }
-
-    /**
-     * Dispatch a job to its appropriate handler in the current process.
-     *
-     * @param  mixed  $job
-     * @return mixed
-     *
-     * @deprecated Will be removed in a future Laravel version.
-     */
-    public function dispatchNow($job)
-    {
-        return ws_app(Dispatcher::class)->dispatchNow($job);
+        return dispatch($job);
     }
 
     /**
@@ -40,6 +25,6 @@ trait DispatchesJobs
      */
     public function dispatchSync($job)
     {
-        return ws_app(Dispatcher::class)->dispatchSync($job);
+        return dispatch_sync($job);
     }
 }

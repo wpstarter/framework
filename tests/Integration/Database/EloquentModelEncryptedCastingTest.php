@@ -11,6 +11,7 @@ use WpStarter\Database\Schema\Blueprint;
 use WpStarter\Support\Collection;
 use WpStarter\Support\Facades\Crypt;
 use WpStarter\Support\Facades\Schema;
+use WpStarter\Support\Fluent;
 use stdClass;
 
 class EloquentModelEncryptedCastingTest extends DatabaseTestCase
@@ -27,7 +28,7 @@ class EloquentModelEncryptedCastingTest extends DatabaseTestCase
         Model::$encrypter = null;
     }
 
-    protected function defineDatabaseMigrationsAfterDatabaseRefreshed()
+    protected function afterRefreshingDatabase()
     {
         Schema::create('encrypted_casts', function (Blueprint $table) {
             $table->increments('id');
@@ -188,7 +189,7 @@ class EloquentModelEncryptedCastingTest extends DatabaseTestCase
             ->with('{"key1":"value1"}')
             ->andReturn('encrypted-secret-collection-string-1');
         $this->encrypter->expects('encryptString')
-            ->times(12)
+            ->times(9)
             ->with('{"key1":"value1","key2":"value2"}')
             ->andReturn('encrypted-secret-collection-string-2');
         $this->encrypter->expects('decryptString')
@@ -231,6 +232,58 @@ class EloquentModelEncryptedCastingTest extends DatabaseTestCase
         $this->assertNull($subject->fresh()->secret_collection);
     }
 
+    public function testAsEncryptedCollectionMap()
+    {
+        $this->encrypter->expects('encryptString')
+            ->twice()
+            ->with('[{"key1":"value1"}]')
+            ->andReturn('encrypted-secret-collection-string-1');
+        $this->encrypter->expects('encryptString')
+            ->times(11)
+            ->with('[{"key1":"value1"},{"key2":"value2"}]')
+            ->andReturn('encrypted-secret-collection-string-2');
+        $this->encrypter->expects('decryptString')
+            ->once()
+            ->with('encrypted-secret-collection-string-2')
+            ->andReturn('[{"key1":"value1"},{"key2":"value2"}]');
+
+        $subject = new EncryptedCast;
+
+        $subject->mergeCasts(['secret_collection' => AsEncryptedCollection::of(Fluent::class)]);
+
+        $subject->secret_collection = new Collection([new Fluent(['key1' => 'value1'])]);
+        $subject->secret_collection->push(new Fluent(['key2' => 'value2']));
+
+        $subject->save();
+
+        $this->assertInstanceOf(Collection::class, $subject->secret_collection);
+        $this->assertInstanceOf(Fluent::class, $subject->secret_collection->first());
+        $this->assertSame('value1', $subject->secret_collection->get(0)->key1);
+        $this->assertSame('value2', $subject->secret_collection->get(1)->key2);
+        $this->assertDatabaseHas('encrypted_casts', [
+            'id' => $subject->id,
+            'secret_collection' => 'encrypted-secret-collection-string-2',
+        ]);
+
+        $subject = $subject->fresh();
+
+        $this->assertInstanceOf(Collection::class, $subject->secret_collection);
+        $this->assertInstanceOf(Fluent::class, $subject->secret_collection->first());
+        $this->assertSame('value1', $subject->secret_collection->get(0)->key1);
+        $this->assertSame('value2', $subject->secret_collection->get(1)->key2);
+
+        $subject->secret_collection = null;
+        $subject->save();
+
+        $this->assertNull($subject->secret_collection);
+        $this->assertDatabaseHas('encrypted_casts', [
+            'id' => $subject->id,
+            'secret_collection' => null,
+        ]);
+
+        $this->assertNull($subject->fresh()->secret_collection);
+    }
+
     public function testAsEncryptedArrayObject()
     {
         $this->encrypter->expects('encryptString')
@@ -242,7 +295,7 @@ class EloquentModelEncryptedCastingTest extends DatabaseTestCase
             ->with('encrypted-secret-array-string-1')
             ->andReturn('{"key1":"value1"}');
         $this->encrypter->expects('encryptString')
-            ->times(12)
+            ->times(9)
             ->with('{"key1":"value1","key2":"value2"}')
             ->andReturn('encrypted-secret-array-string-2');
         $this->encrypter->expects('decryptString')

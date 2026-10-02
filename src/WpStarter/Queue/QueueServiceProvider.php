@@ -4,9 +4,13 @@ namespace WpStarter\Queue;
 
 use Aws\DynamoDb\DynamoDbClient;
 use WpStarter\Contracts\Debug\ExceptionHandler;
+use WpStarter\Contracts\Events\Dispatcher as EventDispatcher;
 use WpStarter\Contracts\Support\DeferrableProvider;
+use WpStarter\Queue\Connectors\BackgroundConnector;
 use WpStarter\Queue\Connectors\BeanstalkdConnector;
 use WpStarter\Queue\Connectors\DatabaseConnector;
+use WpStarter\Queue\Connectors\DeferredConnector;
+use WpStarter\Queue\Connectors\FailoverConnector;
 use WpStarter\Queue\Connectors\NullConnector;
 use WpStarter\Queue\Connectors\RedisConnector;
 use WpStarter\Queue\Connectors\SqsConnector;
@@ -14,6 +18,7 @@ use WpStarter\Queue\Connectors\SyncConnector;
 use WpStarter\Queue\Failed\DatabaseFailedJobProvider;
 use WpStarter\Queue\Failed\DatabaseUuidFailedJobProvider;
 use WpStarter\Queue\Failed\DynamoDbFailedJobProvider;
+use WpStarter\Queue\Failed\FileFailedJobProvider;
 use WpStarter\Queue\Failed\NullFailedJobProvider;
 use WpStarter\Support\Arr;
 use WpStarter\Support\Facades\Facade;
@@ -75,7 +80,7 @@ class QueueServiceProvider extends ServiceProvider implements DeferrableProvider
             // Once we have an instance of the queue manager, we will register the various
             // resolvers for the queue connectors. These connectors are responsible for
             // creating the classes that accept queue configs and instantiate queues.
-            return ws_tap(new QueueManager($app), function ($manager) {
+            return tap(new QueueManager($app), function ($manager) {
                 $this->registerConnectors($manager);
             });
         });
@@ -101,7 +106,7 @@ class QueueServiceProvider extends ServiceProvider implements DeferrableProvider
      */
     public function registerConnectors($manager)
     {
-        foreach (['Null', 'Sync', 'Database', 'Redis', 'Beanstalkd', 'Sqs'] as $connector) {
+        foreach (['Null', 'Sync', 'Deferred', 'Background', 'Failover', 'Database', 'Redis', 'Beanstalkd', 'Sqs'] as $connector) {
             $this->{"register{$connector}Connector"}($manager);
         }
     }
@@ -129,6 +134,48 @@ class QueueServiceProvider extends ServiceProvider implements DeferrableProvider
     {
         $manager->addConnector('sync', function () {
             return new SyncConnector;
+        });
+    }
+
+    /**
+     * Register the Deferred queue connector.
+     *
+     * @param  \WpStarter\Queue\QueueManager  $manager
+     * @return void
+     */
+    protected function registerDeferredConnector($manager)
+    {
+        $manager->addConnector('deferred', function () {
+            return new DeferredConnector;
+        });
+    }
+
+    /**
+     * Register the Background queue connector.
+     *
+     * @param  \WpStarter\Queue\QueueManager  $manager
+     * @return void
+     */
+    protected function registerBackgroundConnector($manager)
+    {
+        $manager->addConnector('background', function () {
+            return new BackgroundConnector;
+        });
+    }
+
+    /**
+     * Register the Failover queue connector.
+     *
+     * @param  \WpStarter\Queue\QueueManager  $manager
+     * @return void
+     */
+    protected function registerFailoverConnector($manager)
+    {
+        $manager->addConnector('failover', function () use ($manager) {
+            return new FailoverConnector(
+                $manager,
+                $this->app->make(EventDispatcher::class)
+            );
         });
     }
 
@@ -197,13 +244,26 @@ class QueueServiceProvider extends ServiceProvider implements DeferrableProvider
             };
 
             $resetScope = function () use ($app) {
-                if (method_exists($app['log']->driver(), 'withoutContext')) {
+                if (method_exists($app['log'], 'flushSharedContext')) {
+                    $app['log']->flushSharedContext();
+                }
+
+                if (method_exists($app['log'], 'withoutContext')) {
                     $app['log']->withoutContext();
+                }
+
+                if (method_exists($app['db'], 'getConnections')) {
+                    foreach ($app['db']->getConnections() as $connection) {
+                        $connection->resetTotalQueryDuration();
+                        $connection->allowQueryDurationHandlersToRunAgain();
+                    }
                 }
 
                 $app->forgetScopedInstances();
 
-                return Facade::clearResolvedInstances();
+                Facade::clearResolvedInstances();
+
+                memory_reset_peak_usage();
             };
 
             return new Worker(
@@ -243,7 +303,13 @@ class QueueServiceProvider extends ServiceProvider implements DeferrableProvider
                 return new NullFailedJobProvider;
             }
 
-            if (isset($config['driver']) && $config['driver'] === 'dynamodb') {
+            if (isset($config['driver']) && $config['driver'] === 'file') {
+                return new FileFailedJobProvider(
+                    $config['path'] ?? $this->app->storagePath('framework/cache/failed-jobs.json'),
+                    $config['limit'] ?? 100,
+                    fn () => $app['cache']->store('file'),
+                );
+            } elseif (isset($config['driver']) && $config['driver'] === 'dynamodb') {
                 return $this->dynamoFailedJobProvider($config);
             } elseif (isset($config['driver']) && $config['driver'] === 'database-uuids') {
                 return $this->databaseUuidFailedJobProvider($config);
@@ -296,9 +362,11 @@ class QueueServiceProvider extends ServiceProvider implements DeferrableProvider
         ];
 
         if (! empty($config['key']) && ! empty($config['secret'])) {
-            $dynamoConfig['credentials'] = Arr::only(
-                $config, ['key', 'secret', 'token']
-            );
+            $dynamoConfig['credentials'] = Arr::only($config, ['key', 'secret']);
+
+            if (! empty($config['token'])) {
+                $dynamoConfig['credentials']['token'] = $config['token'];
+            }
         }
 
         return new DynamoDbFailedJobProvider(

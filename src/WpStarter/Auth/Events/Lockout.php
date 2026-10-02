@@ -17,7 +17,6 @@ class Lockout
      * Create a new event instance.
      *
      * @param  \WpStarter\Http\Request  $request
-     * @return void
      */
     public function __construct(Request $request)
     {

@@ -2,15 +2,36 @@
 
 namespace WpStarter\Session;
 
+use BackedEnum;
 use Closure;
 use WpStarter\Contracts\Session\Session;
 use WpStarter\Support\Arr;
+use WpStarter\Support\Collection;
+use WpStarter\Support\Facades\Cache;
+use WpStarter\Support\Facades\Date;
+use WpStarter\Support\MessageBag;
 use WpStarter\Support\Str;
+use WpStarter\Support\Traits\Macroable;
+use WpStarter\Support\Uri;
+use WpStarter\Support\ViewErrorBag;
+use RuntimeException;
 use SessionHandlerInterface;
 use stdClass;
+use UnitEnum;
+
+use function WpStarter\Support\enum_value;
 
 class Store implements Session
 {
+    use Macroable;
+
+    /**
+     * The length of session ID strings.
+     *
+     * @var int
+     */
+    protected const SESSION_ID_LENGTH = 40;
+
     /**
      * The session ID.
      *
@@ -40,6 +61,13 @@ class Store implements Session
     protected $handler;
 
     /**
+     * The session store's serialization strategy.
+     *
+     * @var string
+     */
+    protected $serialization = 'php';
+
+    /**
      * Session store started status.
      *
      * @var bool
@@ -52,13 +80,14 @@ class Store implements Session
      * @param  string  $name
      * @param  \SessionHandlerInterface  $handler
      * @param  string|null  $id
-     * @return void
+     * @param  string  $serialization
      */
-    public function __construct($name, SessionHandlerInterface $handler, $id = null)
+    public function __construct($name, SessionHandlerInterface $handler, $id = null, $serialization = 'php')
     {
         $this->setId($id);
         $this->name = $name;
         $this->handler = $handler;
+        $this->serialization = $serialization;
     }
 
     /**
@@ -84,7 +113,9 @@ class Store implements Session
      */
     protected function loadSession()
     {
-        $this->attributes = array_merge($this->attributes, $this->readFromHandler());
+        $this->attributes = array_replace($this->attributes, $this->readFromHandler());
+
+        $this->marshalErrorBag();
     }
 
     /**
@@ -95,9 +126,13 @@ class Store implements Session
     protected function readFromHandler()
     {
         if ($data = $this->handler->read($this->getId())) {
-            $data = @unserialize($this->prepareForUnserialize($data));
+            if ($this->serialization === 'json') {
+                $data = json_decode($this->prepareForUnserialize($data), true);
+            } else {
+                $data = @unserialize($this->prepareForUnserialize($data));
+            }
 
-            if ($data !== false && ! is_null($data) && is_array($data)) {
+            if ($data !== false && is_array($data)) {
                 return $data;
             }
         }
@@ -117,6 +152,28 @@ class Store implements Session
     }
 
     /**
+     * Marshal the ViewErrorBag when using JSON serialization for sessions.
+     *
+     * @return void
+     */
+    protected function marshalErrorBag()
+    {
+        if ($this->serialization !== 'json' || $this->missing('errors')) {
+            return;
+        }
+
+        $errorBag = new ViewErrorBag;
+
+        foreach ($this->get('errors') as $key => $value) {
+            $messageBag = new MessageBag($value['messages']);
+
+            $errorBag->put($key, $messageBag->setFormat($value['format']));
+        }
+
+        $this->put('errors', $errorBag);
+    }
+
+    /**
      * Save the session data to storage.
      *
      * @return void
@@ -125,11 +182,36 @@ class Store implements Session
     {
         $this->ageFlashData();
 
+        $this->prepareErrorBagForSerialization();
+
         $this->handler->write($this->getId(), $this->prepareForStorage(
-            serialize($this->attributes)
+            $this->serialization === 'json' ? json_encode($this->attributes) : serialize($this->attributes)
         ));
 
         $this->started = false;
+    }
+
+    /**
+     * Prepare the ViewErrorBag instance for JSON serialization.
+     *
+     * @return void
+     */
+    protected function prepareErrorBagForSerialization()
+    {
+        if ($this->serialization !== 'json' || $this->missing('errors')) {
+            return;
+        }
+
+        $errors = [];
+
+        foreach ($this->attributes['errors']->getBags() as $key => $value) {
+            $errors[$key] = [
+                'format' => $value->getFormat(),
+                'messages' => $value->getMessages(),
+            ];
+        }
+
+        $this->attributes['errors'] = $errors;
     }
 
     /**
@@ -179,16 +261,27 @@ class Store implements Session
     }
 
     /**
+     * Get all the session data except for a specified array of items.
+     *
+     * @param  array  $keys
+     * @return array
+     */
+    public function except(array $keys)
+    {
+        return Arr::except($this->attributes, $keys);
+    }
+
+    /**
      * Checks if a key exists.
      *
-     * @param  string|array  $key
+     * @param  \UnitEnum|string|array  $key
      * @return bool
      */
     public function exists($key)
     {
         $placeholder = new stdClass;
 
-        return ! ws_collect(is_array($key) ? $key : func_get_args())->contains(function ($key) use ($placeholder) {
+        return ! (new Collection(is_array($key) ? $key : func_get_args()))->contains(function ($key) use ($placeholder) {
             return $this->get($key, $placeholder) === $placeholder;
         });
     }
@@ -196,7 +289,7 @@ class Store implements Session
     /**
      * Determine if the given key is missing from the session data.
      *
-     * @param  string|array  $key
+     * @param  \UnitEnum|string|array  $key
      * @return bool
      */
     public function missing($key)
@@ -205,40 +298,53 @@ class Store implements Session
     }
 
     /**
-     * Checks if a key is present and not null.
+     * Determine if a key is present and not null.
      *
-     * @param  string|array  $key
+     * @param  \UnitEnum|string|array  $key
      * @return bool
      */
     public function has($key)
     {
-        return ! ws_collect(is_array($key) ? $key : func_get_args())->contains(function ($key) {
+        return ! (new Collection(is_array($key) ? $key : func_get_args()))->contains(function ($key) {
             return is_null($this->get($key));
         });
     }
 
     /**
+     * Determine if any of the given keys are present and not null.
+     *
+     * @param  \UnitEnum|string|array  $key
+     * @return bool
+     */
+    public function hasAny($key)
+    {
+        return (new Collection(is_array($key) ? $key : func_get_args()))->filter(function ($key) {
+            return ! is_null($this->get($key));
+        })->count() >= 1;
+    }
+
+    /**
      * Get an item from the session.
      *
-     * @param  string  $key
+     * @param  \UnitEnum|string  $key
      * @param  mixed  $default
      * @return mixed
      */
     public function get($key, $default = null)
     {
-        return Arr::get($this->attributes, $key, $default);
+        return Arr::get($this->attributes, enum_value($key), $default);
     }
 
     /**
      * Get the value of a given key and then forget it.
      *
-     * @param  string  $key
+     * @param  \UnitEnum|string  $key
      * @param  mixed  $default
      * @return mixed
      */
     public function pull($key, $default = null)
     {
-        return Arr::pull($this->attributes, $key, $default);
+        return Arr::pull($this->attributes, enum_value($key), $default);
     }
 
     /**
@@ -280,25 +386,25 @@ class Store implements Session
     /**
      * Put a key / value pair or array of key / value pairs in the session.
      *
-     * @param  string|array  $key
+     * @param  \UnitEnum|string|array  $key
      * @param  mixed  $value
      * @return void
      */
     public function put($key, $value = null)
     {
         if (! is_array($key)) {
-            $key = [$key => $value];
+            $key = [enum_value($key) => $value];
         }
 
         foreach ($key as $arrayKey => $arrayValue) {
-            Arr::set($this->attributes, $arrayKey, $arrayValue);
+            Arr::set($this->attributes, enum_value($arrayKey), $arrayValue);
         }
     }
 
     /**
      * Get an item from the session, or store the default value.
      *
-     * @param  string  $key
+     * @param  \UnitEnum|string  $key
      * @param  \Closure  $callback
      * @return mixed
      */
@@ -308,7 +414,7 @@ class Store implements Session
             return $value;
         }
 
-        return ws_tap($callback(), function ($value) use ($key) {
+        return tap($callback(), function ($value) use ($key) {
             $this->put($key, $value);
         });
     }
@@ -316,7 +422,7 @@ class Store implements Session
     /**
      * Push a value onto a session array.
      *
-     * @param  string  $key
+     * @param  \UnitEnum|string  $key
      * @param  mixed  $value
      * @return void
      */
@@ -332,7 +438,7 @@ class Store implements Session
     /**
      * Increment the value of an item in the session.
      *
-     * @param  string  $key
+     * @param  \UnitEnum|string  $key
      * @param  int  $amount
      * @return mixed
      */
@@ -346,7 +452,7 @@ class Store implements Session
     /**
      * Decrement the value of an item in the session.
      *
-     * @param  string  $key
+     * @param  \UnitEnum|string  $key
      * @param  int  $amount
      * @return int
      */
@@ -358,12 +464,14 @@ class Store implements Session
     /**
      * Flash a key / value pair to the session.
      *
-     * @param  string  $key
+     * @param  \UnitEnum|string  $key
      * @param  mixed  $value
      * @return void
      */
-    public function flash(string $key, $value = true)
+    public function flash(BackedEnum|UnitEnum|string $key, $value = true)
     {
+        $key = enum_value($key);
+
         $this->put($key, $value);
 
         $this->push('_flash.new', $key);
@@ -374,12 +482,14 @@ class Store implements Session
     /**
      * Flash a key / value pair to the session for immediate use.
      *
-     * @param  string  $key
+     * @param  \UnitEnum|string  $key
      * @param  mixed  $value
      * @return void
      */
     public function now($key, $value)
     {
+        $key = enum_value($key);
+
         $this->put($key, $value);
 
         $this->push('_flash.old', $key);
@@ -400,7 +510,7 @@ class Store implements Session
     /**
      * Reflash a subset of the current flash data.
      *
-     * @param  array|mixed  $keys
+     * @param  mixed  $keys
      * @return void
      */
     public function keep($keys = null)
@@ -446,25 +556,35 @@ class Store implements Session
     }
 
     /**
+     * Get the session cache instance.
+     *
+     * @return \WpStarter\Contracts\Cache\Repository
+     */
+    public function cache()
+    {
+        return Cache::store('session');
+    }
+
+    /**
      * Remove an item from the session, returning its value.
      *
-     * @param  string  $key
+     * @param  \UnitEnum|string  $key
      * @return mixed
      */
     public function remove($key)
     {
-        return Arr::pull($this->attributes, $key);
+        return Arr::pull($this->attributes, enum_value($key));
     }
 
     /**
      * Remove one or many items from the session.
      *
-     * @param  string|array  $keys
+     * @param  \UnitEnum|string|array  $keys
      * @return void
      */
     public function forget($keys)
     {
-        Arr::forget($this->attributes, $keys);
+        Arr::forget($this->attributes, (new Collection((array) $keys))->map(fn ($key) => enum_value($key))->all());
     }
 
     /**
@@ -497,7 +617,7 @@ class Store implements Session
      */
     public function regenerate($destroy = false)
     {
-        return ws_tap($this->migrate($destroy), function () {
+        return tap($this->migrate($destroy), function () {
             $this->regenerateToken();
         });
     }
@@ -557,6 +677,16 @@ class Store implements Session
      *
      * @return string
      */
+    public function id()
+    {
+        return $this->getId();
+    }
+
+    /**
+     * Get the current session ID.
+     *
+     * @return string
+     */
     public function getId()
     {
         return $this->id;
@@ -565,7 +695,7 @@ class Store implements Session
     /**
      * Set the session ID.
      *
-     * @param  string  $id
+     * @param  string|null  $id
      * @return void
      */
     public function setId($id)
@@ -576,12 +706,12 @@ class Store implements Session
     /**
      * Determine if this is a valid session ID.
      *
-     * @param  string  $id
+     * @param  string|null  $id
      * @return bool
      */
     public function isValidId($id)
     {
-        return is_string($id) && ctype_alnum($id) && strlen($id) === 40;
+        return is_string($id) && ctype_alnum($id) && strlen($id) === self::SESSION_ID_LENGTH;
     }
 
     /**
@@ -591,7 +721,7 @@ class Store implements Session
      */
     protected function generateSessionId()
     {
-        return Str::random(40);
+        return Str::random(self::SESSION_ID_LENGTH);
     }
 
     /**
@@ -624,7 +754,33 @@ class Store implements Session
      */
     public function regenerateToken()
     {
-        $this->put('_token', Str::random(40));
+        $this->put('_token', Str::random(self::SESSION_ID_LENGTH));
+    }
+
+    /**
+     * Determine if the previous URI is available.
+     *
+     * @return bool
+     */
+    public function hasPreviousUri()
+    {
+        return ! is_null($this->previousUrl());
+    }
+
+    /**
+     * Get the previous URL from the session as a URI instance.
+     *
+     * @return \WpStarter\Support\Uri
+     *
+     * @throws \RuntimeException
+     */
+    public function previousUri()
+    {
+        if ($previousUrl = $this->previousUrl()) {
+            return Uri::of($previousUrl);
+        }
+
+        throw new RuntimeException('Unable to generate URI instance for previous URL. No previous URL detected.');
     }
 
     /**
@@ -649,13 +805,34 @@ class Store implements Session
     }
 
     /**
+     * Get the previous route name from the session.
+     *
+     * @return string|null
+     */
+    public function previousRoute()
+    {
+        return $this->get('_previous.route');
+    }
+
+    /**
+     * Set the "previous" route name in the session.
+     *
+     * @param  string|null  $route
+     * @return void
+     */
+    public function setPreviousRoute($route)
+    {
+        $this->put('_previous.route', $route);
+    }
+
+    /**
      * Specify that the user has confirmed their password.
      *
      * @return void
      */
     public function passwordConfirmed()
     {
-        $this->put('auth.password_confirmed_at', time());
+        $this->put('auth.password_confirmed_at', Date::now()->unix());
     }
 
     /**
@@ -666,6 +843,17 @@ class Store implements Session
     public function getHandler()
     {
         return $this->handler;
+    }
+
+    /**
+     * Set the underlying session handler implementation.
+     *
+     * @param  \SessionHandlerInterface  $handler
+     * @return \SessionHandlerInterface
+     */
+    public function setHandler(SessionHandlerInterface $handler)
+    {
+        return $this->handler = $handler;
     }
 
     /**

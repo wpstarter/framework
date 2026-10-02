@@ -13,7 +13,7 @@ trait GuardHelpers
     /**
      * The currently authenticated user.
      *
-     * @var \WpStarter\Contracts\Auth\Authenticatable
+     * @var \WpStarter\Contracts\Auth\Authenticatable|null
      */
     protected $user;
 
@@ -33,11 +33,7 @@ trait GuardHelpers
      */
     public function authenticate()
     {
-        if (! is_null($user = $this->user())) {
-            return $user;
-        }
-
-        throw new AuthenticationException;
+        return $this->user() ?? throw new AuthenticationException;
     }
 
     /**
@@ -77,9 +73,7 @@ trait GuardHelpers
      */
     public function id()
     {
-        if ($this->user()) {
-            return $this->user()->getAuthIdentifier();
-        }
+        return $this->user()?->getAuthIdentifier();
     }
 
     /**
@@ -91,6 +85,18 @@ trait GuardHelpers
     public function setUser(AuthenticatableContract $user)
     {
         $this->user = $user;
+
+        return $this;
+    }
+
+    /**
+     * Forget the current user.
+     *
+     * @return $this
+     */
+    public function forgetUser()
+    {
+        $this->user = null;
 
         return $this;
     }

@@ -13,6 +13,7 @@ use WpStarter\Auth\Events\Validated;
 use WpStarter\Auth\SessionGuard;
 use WpStarter\Database\Schema\Blueprint;
 use WpStarter\Events\Dispatcher;
+use WpStarter\Foundation\Testing\RefreshDatabase;
 use WpStarter\Support\Facades\Auth;
 use WpStarter\Support\Facades\Event;
 use WpStarter\Support\Facades\Schema;
@@ -20,46 +21,51 @@ use WpStarter\Support\Str;
 use WpStarter\Support\Testing\Fakes\EventFake;
 use WpStarter\Tests\Integration\Auth\Fixtures\AuthenticationTestUser;
 use InvalidArgumentException;
+use Orchestra\Testbench\Attributes\WithMigration;
 use Orchestra\Testbench\TestCase;
 
+#[WithMigration]
 class AuthenticationTest extends TestCase
 {
-    protected function getEnvironmentSetUp($app)
-    {
-        $app['config']->set('auth.providers.users.model', AuthenticationTestUser::class);
+    use RefreshDatabase;
 
-        $app['config']->set('hashing', ['driver' => 'bcrypt']);
+    protected function defineEnvironment($app)
+    {
+        $app['config']->set([
+            'auth.providers.users.model' => AuthenticationTestUser::class,
+            'hashing.driver' => 'bcrypt',
+        ]);
     }
 
-    protected function setUp(): void
+    protected function defineRoutes($router)
     {
-        parent::setUp();
+        $router->get('basic', function () {
+            return $this->app['auth']->guard()->basic()
+                ?: $this->app['auth']->user()->toJson();
+        });
 
-        Schema::create('users', function (Blueprint $table) {
-            $table->increments('id');
-            $table->string('email');
-            $table->string('username');
-            $table->string('password');
-            $table->string('remember_token')->default(null)->nullable();
+        $router->get('basicWithCondition', function () {
+            return $this->app['auth']->guard()->basic('email', ['is_active' => true])
+                ?: $this->app['auth']->user()->toJson();
+        });
+    }
+
+    protected function afterRefreshingDatabase()
+    {
+        Schema::table('users', function (Blueprint $table) {
+            $table->renameColumn('name', 'username');
+        });
+
+        Schema::table('users', function (Blueprint $table) {
             $table->tinyInteger('is_active')->default(0);
         });
 
         AuthenticationTestUser::create([
             'username' => 'username',
             'email' => 'email',
-            'password' => ws_bcrypt('password'),
+            'password' => bcrypt('password'),
             'is_active' => true,
         ]);
-
-        $this->app->make('router')->get('basic', function () {
-            return $this->app['auth']->guard()->basic()
-                ?: $this->app['auth']->user()->toJson();
-        });
-
-        $this->app->make('router')->get('basicWithCondition', function () {
-            return $this->app['auth']->guard()->basic('email', ['is_active' => true])
-                ?: $this->app['auth']->user()->toJson();
-        });
     }
 
     public function testBasicAuthProtectsRoute()
@@ -82,7 +88,7 @@ class AuthenticationTest extends TestCase
         AuthenticationTestUser::create([
             'username' => 'username2',
             'email' => 'email2',
-            'password' => ws_bcrypt('password'),
+            'password' => bcrypt('password'),
             'is_active' => false,
         ]);
 
@@ -139,6 +145,10 @@ class AuthenticationTest extends TestCase
         );
         $this->assertInstanceOf(AuthenticationTestUser::class, $this->app['auth']->user());
         $this->assertTrue($this->app['auth']->check());
+        $this->assertSame(
+            $this->app['auth']->guard()->hashPasswordForCookie($this->app['auth']->user()->getAuthPassword()),
+            $this->app['session']->get('password_hash_web')
+        );
 
         Event::assertDispatched(Attempting::class, function ($event) {
             $this->assertSame('web', $event->guard);
@@ -264,12 +274,12 @@ class AuthenticationTest extends TestCase
 
     public function testAuthViaAttemptRemembering()
     {
-        $provider = new EloquentUserProvider(ws_app('hash'), AuthenticationTestUser::class);
+        $provider = new EloquentUserProvider(app('hash'), AuthenticationTestUser::class);
 
         $user = AuthenticationTestUser::create([
             'username' => 'username2',
             'email' => 'email2',
-            'password' => ws_bcrypt('password'),
+            'password' => bcrypt('password'),
             'remember_token' => $token = Str::random(),
             'is_active' => false,
         ]);

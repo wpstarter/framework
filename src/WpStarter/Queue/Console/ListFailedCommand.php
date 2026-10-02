@@ -4,7 +4,10 @@ namespace WpStarter\Queue\Console;
 
 use WpStarter\Console\Command;
 use WpStarter\Support\Arr;
+use WpStarter\Support\Collection;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'queue:failed')]
 class ListFailedCommand extends Command
 {
     /**
@@ -36,10 +39,12 @@ class ListFailedCommand extends Command
     public function handle()
     {
         if (count($jobs = $this->getFailedJobs()) === 0) {
-            return $this->info('No failed jobs!');
+            return $this->components->info('No failed jobs found.');
         }
 
+        $this->newLine();
         $this->displayFailedJobs($jobs);
+        $this->newLine();
     }
 
     /**
@@ -51,9 +56,10 @@ class ListFailedCommand extends Command
     {
         $failed = $this->laravel['queue.failer']->all();
 
-        return ws_collect($failed)->map(function ($failed) {
-            return $this->parseFailedJob((array) $failed);
-        })->filter()->all();
+        return (new Collection($failed))
+            ->map(fn ($failed) => $this->parseFailedJob((array) $failed))
+            ->filter()
+            ->all();
     }
 
     /**
@@ -81,11 +87,19 @@ class ListFailedCommand extends Command
     {
         $payload = json_decode($payload, true);
 
-        if ($payload && (! isset($payload['data']['command']))) {
-            return $payload['job'] ?? null;
-        } elseif ($payload && isset($payload['data']['command'])) {
-            return $this->matchJobName($payload);
+        if (! $payload) {
+            return null;
         }
+
+        if (! isset($payload['data']['command'])) {
+            return $payload['job'] ?? null;
+        }
+
+        if (! empty($payload['displayName']) && is_string($payload['displayName'])) {
+            return $payload['displayName'];
+        }
+
+        return $this->matchJobName($payload);
     }
 
     /**
@@ -109,6 +123,11 @@ class ListFailedCommand extends Command
      */
     protected function displayFailedJobs(array $jobs)
     {
-        $this->table($this->headers, $jobs);
+        (new Collection($jobs))->each(
+            fn ($job) => $this->components->twoColumnDetail(
+                sprintf('<fg=gray>%s</> %s</>', $job[4], $job[0]),
+                sprintf('<fg=gray>%s@%s</> %s', $job[1], $job[2], $job[3])
+            ),
+        );
     }
 }

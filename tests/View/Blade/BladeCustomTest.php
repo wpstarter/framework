@@ -13,7 +13,7 @@ class BladeCustomTest extends AbstractBladeTestCase
 
     public function testMixingYieldAndEcho()
     {
-        $this->assertSame('<?php echo $__env->yieldContent(\'title\'); ?> - <?php echo ws_e(Config::get(\'site.title\')); ?>', $this->compiler->compileString("@yield('title') - {{Config::get('site.title')}}"));
+        $this->assertSame('<?php echo $__env->yieldContent(\'title\'); ?> - <?php echo e(Config::get(\'site.title\')); ?>', $this->compiler->compileString("@yield('title') - {{Config::get('site.title')}}"));
     }
 
     public function testCustomExtensionsAreCompiled()
@@ -193,7 +193,7 @@ class BladeCustomTest extends AbstractBladeTestCase
         $this->compiler->include('app.includes.input', 'input');
 
         $string = '@input';
-        $expected = '<?php echo $__env->make(\'app.includes.input\', [], \WpStarter\Support\Arr::except(get_defined_vars(), [\'__data\', \'__path\']))->render(); ?>';
+        $expected = '<?php echo $__env->make(\'app.includes.input\', [], array_diff_key(get_defined_vars(), [\'__data\' => 1, \'__path\' => 1]))->render(); ?>';
         $this->assertEquals($expected, $this->compiler->compileString($string));
     }
 
@@ -202,7 +202,7 @@ class BladeCustomTest extends AbstractBladeTestCase
         $this->compiler->include('app.includes.input', 'input');
 
         $string = '@input([\'type\' => \'email\'])';
-        $expected = '<?php echo $__env->make(\'app.includes.input\', [\'type\' => \'email\'], \WpStarter\Support\Arr::except(get_defined_vars(), [\'__data\', \'__path\']))->render(); ?>';
+        $expected = '<?php echo $__env->make(\'app.includes.input\', [\'type\' => \'email\'], array_diff_key(get_defined_vars(), [\'__data\' => 1, \'__path\' => 1]))->render(); ?>';
         $this->assertEquals($expected, $this->compiler->compileString($string));
     }
 
@@ -211,7 +211,7 @@ class BladeCustomTest extends AbstractBladeTestCase
         $this->compiler->include('app.includes.input');
 
         $string = '@input';
-        $expected = '<?php echo $__env->make(\'app.includes.input\', [], \WpStarter\Support\Arr::except(get_defined_vars(), [\'__data\', \'__path\']))->render(); ?>';
+        $expected = '<?php echo $__env->make(\'app.includes.input\', [], array_diff_key(get_defined_vars(), [\'__data\' => 1, \'__path\' => 1]))->render(); ?>';
         $this->assertEquals($expected, $this->compiler->compileString($string));
     }
 
@@ -220,7 +220,14 @@ class BladeCustomTest extends AbstractBladeTestCase
         $this->compiler->include('app.includes.foreach');
 
         $string = '@foreach';
-        $expected = '<?php echo $__env->make(\'app.includes.foreach\', [], \WpStarter\Support\Arr::except(get_defined_vars(), [\'__data\', \'__path\']))->render(); ?>';
+        $expected = '<?php echo $__env->make(\'app.includes.foreach\', [], array_diff_key(get_defined_vars(), [\'__data\' => 1, \'__path\' => 1]))->render(); ?>';
+        $this->assertEquals($expected, $this->compiler->compileString($string));
+    }
+
+    public function testUnescapedNonRegisteredDirective()
+    {
+        $string = '@media only screen and (min-width:480px) {';
+        $expected = '@media only screen and (min-width:480px) {';
         $this->assertEquals($expected, $this->compiler->compileString($string));
     }
 }

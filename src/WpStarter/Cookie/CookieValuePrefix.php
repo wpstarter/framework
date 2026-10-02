@@ -26,4 +26,23 @@ class CookieValuePrefix
     {
         return substr($cookieValue, 41);
     }
+
+    /**
+     * Validate a cookie value contains a valid prefix. If it does, return the cookie value with the prefix removed. Otherwise, return null.
+     *
+     * @param  string  $cookieName
+     * @param  string  $cookieValue
+     * @param  array  $keys
+     * @return string|null
+     */
+    public static function validate($cookieName, $cookieValue, array $keys)
+    {
+        foreach ($keys as $key) {
+            $hasValidPrefix = str_starts_with($cookieValue, static::create($cookieName, $key));
+
+            if ($hasValidPrefix) {
+                return static::remove($cookieValue);
+            }
+        }
+    }
 }

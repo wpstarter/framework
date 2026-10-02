@@ -2,35 +2,65 @@
 
 namespace WpStarter\Tests\Integration\Console;
 
+use WpStarter\Console\Application as Artisan;
 use WpStarter\Console\Command;
 use WpStarter\Console\Scheduling\Schedule;
 use WpStarter\Contracts\Console\Kernel;
+use WpStarter\Foundation\Console\QueuedCommand;
+use WpStarter\Support\Facades\Queue;
 use Orchestra\Testbench\TestCase;
+use Symfony\Component\Console\Attribute\AsCommand;
 
 class ConsoleApplicationTest extends TestCase
 {
     protected function setUp(): void
     {
-        parent::setUp();
+        Artisan::starting(function ($artisan) {
+            $artisan->resolveCommands([
+                FooCommandStub::class,
+                ZondaCommandStub::class,
+            ]);
+        });
 
-        $this->app[Kernel::class]->registerCommand(new FooCommandStub);
+        parent::setUp();
     }
 
-    public function testArtisanCallUsingCommandName()
+    public function testArtisanCallUsingCommandName(): void
     {
         $this->artisan('foo:bar', [
             'id' => 1,
         ])->assertExitCode(0);
     }
 
-    public function testArtisanCallUsingCommandClass()
+    public function testArtisanCallUsingCommandNameAliases(): void
+    {
+        $this->artisan('app:foobar', [
+            'id' => 1,
+        ])->assertExitCode(0);
+    }
+
+    public function testArtisanCallUsingCommandClass(): void
     {
         $this->artisan(FooCommandStub::class, [
             'id' => 1,
         ])->assertExitCode(0);
     }
 
-    public function testArtisanCallNow()
+    public function testArtisanCallUsingCommandNameUsingAsCommandAttribute(): void
+    {
+        $this->artisan('zonda', [
+            'id' => 1,
+        ])->assertExitCode(0);
+    }
+
+    public function testArtisanCallUsingCommandNameAliasesUsingAsCommandAttribute(): void
+    {
+        $this->artisan('app:zonda', [
+            'id' => 1,
+        ])->assertExitCode(0);
+    }
+
+    public function testArtisanCallNow(): void
     {
         $exitCode = $this->artisan('foo:bar', [
             'id' => 1,
@@ -39,7 +69,7 @@ class ConsoleApplicationTest extends TestCase
         $this->assertSame(0, $exitCode);
     }
 
-    public function testArtisanWithMockCallAfterCallNow()
+    public function testArtisanWithMockCallAfterCallNow(): void
     {
         $exitCode = $this->artisan('foo:bar', [
             'id' => 1,
@@ -53,7 +83,7 @@ class ConsoleApplicationTest extends TestCase
         $mock->assertExitCode(0);
     }
 
-    public function testArtisanInstantiateScheduleWhenNeed()
+    public function testArtisanInstantiateScheduleWhenNeed(): void
     {
         $this->assertFalse($this->app->resolved(Schedule::class));
 
@@ -65,11 +95,39 @@ class ConsoleApplicationTest extends TestCase
 
         $this->assertTrue($this->app->resolved(Schedule::class));
     }
+
+    public function testArtisanQueue(): void
+    {
+        Queue::fake();
+
+        $this->app[Kernel::class]->queue('foo:bar', [
+            'id' => 1,
+        ]);
+
+        Queue::assertPushed(QueuedCommand::class, function ($job) {
+            return $job->displayName() === 'foo:bar';
+        });
+    }
 }
 
 class FooCommandStub extends Command
 {
     protected $signature = 'foo:bar {id}';
+
+    protected $aliases = ['app:foobar'];
+
+    public function handle()
+    {
+        //
+    }
+}
+
+#[AsCommand(name: 'zonda', aliases: ['app:zonda'])]
+class ZondaCommandStub extends Command
+{
+    protected $signature = 'zonda {id}';
+
+    protected $aliases = ['app:zonda'];
 
     public function handle()
     {

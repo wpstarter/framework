@@ -2,22 +2,20 @@
 
 namespace WpStarter\Tests\Integration\Database;
 
-use WpStarter\Database\Schema\Blueprint;
+use WpStarter\Cache\DatabaseLock;
+use WpStarter\Database\Connection;
+use WpStarter\Database\Query\Builder;
+use WpStarter\Database\QueryException;
 use WpStarter\Support\Facades\Cache;
 use WpStarter\Support\Facades\DB;
-use WpStarter\Support\Facades\Schema;
+use Mockery as m;
+use Orchestra\Testbench\Attributes\WithMigration;
+use PDOException;
+use PHPUnit\Framework\Attributes\TestWith;
 
+#[WithMigration('cache')]
 class DatabaseLockTest extends DatabaseTestCase
 {
-    protected function defineDatabaseMigrationsAfterDatabaseRefreshed()
-    {
-        Schema::create('cache_locks', function (Blueprint $table) {
-            $table->string('key')->primary();
-            $table->string('owner');
-            $table->integer('expiration');
-        });
-    }
-
     public function testLockCanHaveASeparateConnection()
     {
         $this->app['config']->set('cache.stores.database.lock_connection', 'test');
@@ -58,11 +56,133 @@ class DatabaseLockTest extends DatabaseTestCase
     {
         $lock = Cache::driver('database')->lock('foo');
         $this->assertTrue($lock->get());
-        DB::table('cache_locks')->update(['expiration' => ws_now()->subDays(1)->getTimestamp()]);
+        DB::table('cache_locks')->update(['expiration' => now()->subDays(1)->getTimestamp()]);
 
         $otherLock = Cache::driver('database')->lock('foo');
         $this->assertTrue($otherLock->get());
 
         $otherLock->release();
+    }
+
+    public function testOtherOwnerDoesNotOwnLockAfterRestore()
+    {
+        $firstLock = Cache::store('database')->lock('foo');
+        $this->assertTrue($firstLock->isOwnedBy(null));
+        $this->assertTrue($firstLock->get());
+        $this->assertTrue($firstLock->isOwnedBy($firstLock->owner()));
+
+        $secondLock = Cache::store('database')->restoreLock('foo', 'other_owner');
+        $this->assertTrue($secondLock->isOwnedBy($firstLock->owner()));
+        $this->assertFalse($secondLock->isOwnedByCurrentProcess());
+    }
+
+    public function testLockCanBeRefreshed()
+    {
+        $lock = Cache::driver('database')->lock('foo', 10);
+        $this->assertTrue($lock->get());
+
+        // Refresh the lock for another 20 seconds
+        $this->assertTrue($lock->refresh(20));
+
+        // Lock should still be held
+        $this->assertFalse(Cache::driver('database')->lock('foo', 10)->get());
+
+        $lock->release();
+    }
+
+    public function testLockCannotBeRefreshedByAnotherOwner()
+    {
+        $firstLock = Cache::driver('database')->lock('foo', 10);
+        $this->assertTrue($firstLock->get());
+
+        // Create a new lock with a different owner
+        $secondLock = Cache::store('database')->restoreLock('foo', 'other_owner');
+
+        // Second lock should not be able to refresh
+        $this->assertFalse($secondLock->refresh(20));
+
+        // Original lock should still be able to refresh
+        $this->assertTrue($firstLock->refresh(20));
+
+        $firstLock->release();
+    }
+
+    public function testExpiredLockCannotBeRefreshedByPreviousOwner()
+    {
+        $lock = Cache::driver('database')->lock('foo', 10);
+        $this->assertTrue($lock->get());
+
+        DB::table('cache_locks')->update(['expiration' => now()->subDay()->getTimestamp()]);
+
+        $this->assertFalse($lock->refresh(20));
+    }
+
+    #[TestWith(['Deadlock found when trying to get lock', 1213, true])]
+    #[TestWith(['Table does not exist', 1146, false])]
+    public function testIgnoresConcurrencyException(string $message, int $code, bool $hasConcurrenyError)
+    {
+        $connection = m::mock(Connection::class);
+        $insertBuilder = m::mock(Builder::class);
+        $deleteBuilder = m::mock(Builder::class);
+
+        $insertBuilder->shouldReceive('insert')->once()->andReturn(true);
+
+        $deleteBuilder->shouldReceive('where')->with('expiration', '<=', m::any())->once()->andReturnSelf();
+        $deleteBuilder->shouldReceive('delete')->once()->andThrow(
+            new QueryException(
+                'mysql',
+                'delete from cache_locks where expiration <= ?',
+                [],
+                new PDOException($message, $code)
+            )
+        );
+
+        $connection->shouldReceive('table')->with('cache_locks')->andReturn($insertBuilder, $deleteBuilder);
+
+        $lock = new DatabaseLock($connection, 'cache_locks', 'foo', 0, lottery: [1, 1]);
+
+        if ($hasConcurrenyError) {
+            $this->assertTrue($lock->acquire());
+        } else {
+            $this->expectException(QueryException::class);
+            $this->assertFalse($lock->acquire());
+        }
+    }
+
+    #[TestWith(['Serialization failure: 1213 Deadlock', 40001, true])]
+    #[TestWith(['Table does not exist', 1146, false])]
+    public function testReleaseIgnoresConcurrencyException(string $message, int $code, bool $hasConcurrencyError)
+    {
+        $connection = m::mock(Connection::class);
+        $selectBuilder = m::mock(Builder::class);
+        $deleteBuilder = m::mock(Builder::class);
+
+        $owner = 'owner-123';
+
+        $selectBuilder->shouldReceive('where')->with('key', 'foo')->once()->andReturnSelf();
+        $selectBuilder->shouldReceive('first')->once()->andReturn((object) ['owner' => $owner]);
+
+        $deleteBuilder->shouldReceive('where')->with('key', 'foo')->once()->andReturnSelf();
+        $deleteBuilder->shouldReceive('where')->with('owner', $owner)->once()->andReturnSelf();
+        $deleteBuilder->shouldReceive('delete')->once()->andThrow(
+            new QueryException(
+                'mysql',
+                'delete from cache_locks where key = ? and owner = ?',
+                ['foo', $owner],
+                new PDOException($message, $code)
+            )
+        );
+
+        $connection->shouldReceive('table')->with('cache_locks')->andReturn($selectBuilder, $deleteBuilder);
+
+        $lock = new DatabaseLock($connection, 'cache_locks', 'foo', 10, $owner); // same owner...
+
+        if ($hasConcurrencyError) {
+            $this->assertTrue($lock->release());
+        } else {
+            $this->expectException(QueryException::class);
+            $this->expectExceptionMessage($message);
+            $lock->release();
+        }
     }
 }

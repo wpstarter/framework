@@ -6,15 +6,11 @@ use WpStarter\Filesystem\Filesystem;
 use WpStarter\View\FileViewFinder;
 use InvalidArgumentException;
 use Mockery as m;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class ViewFileViewFinderTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        m::close();
-    }
-
     public function testBasicViewFinding()
     {
         $finder = $this->getFinder();
@@ -146,16 +142,14 @@ class ViewFileViewFinderTest extends TestCase
         $this->assertFalse($finder->hasHintInformation('::foo.bar'));
     }
 
-    public function pathsProvider()
+    public static function pathsProvider()
     {
         return [
             ['incorrect_path', 'incorrect_path'],
         ];
     }
 
-    /**
-     * @dataProvider pathsProvider
-     */
+    #[DataProvider('pathsProvider')]
     public function testNormalizedPaths($originalPath, $exceptedPath)
     {
         $finder = $this->getFinder();

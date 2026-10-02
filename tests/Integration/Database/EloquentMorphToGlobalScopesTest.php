@@ -11,7 +11,7 @@ use WpStarter\Tests\Integration\Database\DatabaseTestCase;
 
 class EloquentMorphToGlobalScopesTest extends DatabaseTestCase
 {
-    protected function defineDatabaseMigrationsAfterDatabaseRefreshed()
+    protected function afterRefreshingDatabase()
     {
         Schema::create('posts', function (Blueprint $table) {
             $table->increments('id');
@@ -27,7 +27,7 @@ class EloquentMorphToGlobalScopesTest extends DatabaseTestCase
         $post = Post::create();
         (new Comment)->commentable()->associate($post)->save();
 
-        $post = ws_tap(Post::create())->delete();
+        $post = tap(Post::create())->delete();
         (new Comment)->commentable()->associate($post)->save();
     }
 

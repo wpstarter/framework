@@ -3,6 +3,7 @@
 namespace WpStarter\Redis\Limiters;
 
 use WpStarter\Contracts\Redis\LimiterTimeoutException;
+use WpStarter\Support\Sleep;
 use WpStarter\Support\Str;
 use Throwable;
 
@@ -43,7 +44,6 @@ class ConcurrencyLimiter
      * @param  string  $name
      * @param  int  $maxLocks
      * @param  int  $releaseAfter
-     * @return void
      */
     public function __construct($redis, $name, $maxLocks, $releaseAfter)
     {
@@ -58,12 +58,13 @@ class ConcurrencyLimiter
      *
      * @param  int  $timeout
      * @param  callable|null  $callback
-     * @return bool
+     * @param  int  $sleep
+     * @return mixed
      *
      * @throws \WpStarter\Contracts\Redis\LimiterTimeoutException
      * @throws \Throwable
      */
-    public function block($timeout, $callback = null)
+    public function block($timeout, $callback = null, $sleep = 250)
     {
         $starting = time();
 
@@ -74,12 +75,12 @@ class ConcurrencyLimiter
                 throw new LimiterTimeoutException;
             }
 
-            usleep(250 * 1000);
+            Sleep::usleep($sleep * 1000);
         }
 
         if (is_callable($callback)) {
             try {
-                return ws_tap($callback(), function () use ($slot, $id) {
+                return tap($callback(), function () use ($slot, $id) {
                     $this->release($slot, $id);
                 });
             } catch (Throwable $exception) {

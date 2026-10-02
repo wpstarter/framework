@@ -5,29 +5,14 @@ namespace WpStarter\Routing\Events;
 class RouteMatched
 {
     /**
-     * The route instance.
-     *
-     * @var \WpStarter\Routing\Route
-     */
-    public $route;
-
-    /**
-     * The request instance.
-     *
-     * @var \WpStarter\Http\Request
-     */
-    public $request;
-
-    /**
      * Create a new event instance.
      *
-     * @param  \WpStarter\Routing\Route  $route
-     * @param  \WpStarter\Http\Request  $request
-     * @return void
+     * @param  \WpStarter\Routing\Route  $route  The route instance.
+     * @param  \WpStarter\Http\Request  $request  The request instance.
      */
-    public function __construct($route, $request)
-    {
-        $this->route = $route;
-        $this->request = $request;
+    public function __construct(
+        public $route,
+        public $request,
+    ) {
     }
 }

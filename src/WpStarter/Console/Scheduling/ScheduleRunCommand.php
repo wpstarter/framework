@@ -2,24 +2,31 @@
 
 namespace WpStarter\Console\Scheduling;
 
+use Exception;
+use WpStarter\Console\Application;
 use WpStarter\Console\Command;
 use WpStarter\Console\Events\ScheduledTaskFailed;
 use WpStarter\Console\Events\ScheduledTaskFinished;
 use WpStarter\Console\Events\ScheduledTaskSkipped;
 use WpStarter\Console\Events\ScheduledTaskStarting;
+use WpStarter\Contracts\Cache\Repository as Cache;
 use WpStarter\Contracts\Debug\ExceptionHandler;
 use WpStarter\Contracts\Events\Dispatcher;
+use WpStarter\Support\Carbon;
 use WpStarter\Support\Facades\Date;
+use WpStarter\Support\Sleep;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Throwable;
 
+#[AsCommand(name: 'schedule:run')]
 class ScheduleRunCommand extends Command
 {
     /**
-     * The console command name.
+     * The name and signature of the console command.
      *
      * @var string
      */
-    protected $name = 'schedule:run';
+    protected $signature = 'schedule:run {--whisper : Do not output message indicating that no jobs were ready to run}';
 
     /**
      * The console command description.
@@ -64,9 +71,21 @@ class ScheduleRunCommand extends Command
     protected $handler;
 
     /**
-     * Create a new command instance.
+     * The cache store implementation.
      *
-     * @return void
+     * @var \WpStarter\Contracts\Cache\Repository
+     */
+    protected $cache;
+
+    /**
+     * The PHP binary used by the command.
+     *
+     * @var string
+     */
+    protected $phpBinary;
+
+    /**
+     * Create a new command instance.
      */
     public function __construct()
     {
@@ -80,20 +99,33 @@ class ScheduleRunCommand extends Command
      *
      * @param  \WpStarter\Console\Scheduling\Schedule  $schedule
      * @param  \WpStarter\Contracts\Events\Dispatcher  $dispatcher
+     * @param  \WpStarter\Contracts\Cache\Repository  $cache
      * @param  \WpStarter\Contracts\Debug\ExceptionHandler  $handler
      * @return void
      */
-    public function handle(Schedule $schedule, Dispatcher $dispatcher, ExceptionHandler $handler)
+    public function handle(Schedule $schedule, Dispatcher $dispatcher, Cache $cache, ExceptionHandler $handler)
     {
         $this->schedule = $schedule;
         $this->dispatcher = $dispatcher;
+        $this->cache = $cache;
         $this->handler = $handler;
+        $this->phpBinary = Application::phpBinary();
 
-        foreach ($this->schedule->dueEvents($this->laravel) as $event) {
+        $events = $this->schedule->dueEvents($this->laravel);
+
+        if ($events->contains->isRepeatable()) {
+            $this->clearInterruptSignal();
+        }
+
+        foreach ($events as $event) {
             if (! $event->filtersPass($this->laravel)) {
                 $this->dispatcher->dispatch(new ScheduledTaskSkipped($event));
 
                 continue;
+            }
+
+            if (! $this->eventsRan) {
+                $this->newLine();
             }
 
             if ($event->onOneServer) {
@@ -105,8 +137,16 @@ class ScheduleRunCommand extends Command
             $this->eventsRan = true;
         }
 
+        if ($events->contains->isRepeatable()) {
+            $this->repeatEvents($events->filter->isRepeatable());
+        }
+
         if (! $this->eventsRan) {
-            $this->info('No scheduled commands are ready to run.');
+            if (! $this->option('whisper')) {
+                $this->components->info('No scheduled commands are ready to run.');
+            }
+        } else {
+            $this->newLine();
         }
     }
 
@@ -121,7 +161,9 @@ class ScheduleRunCommand extends Command
         if ($this->schedule->serverShouldRun($event, $this->startedAt)) {
             $this->runEvent($event);
         } else {
-            $this->line('<info>Skipping command (has already run on another server):</info> '.$event->getSummaryForDisplay());
+            $this->components->info(sprintf(
+                'Skipping [%s] because the command already ran on another server.', $event->getSummaryForDisplay()
+            ));
         }
     }
 
@@ -133,25 +175,115 @@ class ScheduleRunCommand extends Command
      */
     protected function runEvent($event)
     {
-        $this->line('<info>['.date('c').'] Running scheduled command:</info> '.$event->getSummaryForDisplay());
+        $summary = $event->getSummaryForDisplay();
 
-        $this->dispatcher->dispatch(new ScheduledTaskStarting($event));
+        $command = $event instanceof CallbackEvent
+            ? $summary
+            : trim(str_replace($this->phpBinary, '', $event->command));
 
-        $start = microtime(true);
+        $description = sprintf(
+            '<fg=gray>%s</> Running [%s]%s',
+            Carbon::now()->format('Y-m-d H:i:s'),
+            $command,
+            $event->runInBackground ? ' in background' : '',
+        );
 
-        try {
-            $event->run($this->laravel);
+        $this->components->task($description, function () use ($event) {
+            $this->dispatcher->dispatch(new ScheduledTaskStarting($event));
 
-            $this->dispatcher->dispatch(new ScheduledTaskFinished(
-                $event,
-                round(microtime(true) - $start, 2)
-            ));
+            $start = microtime(true);
 
-            $this->eventsRan = true;
-        } catch (Throwable $e) {
-            $this->dispatcher->dispatch(new ScheduledTaskFailed($event, $e));
+            try {
+                $event->run($this->laravel);
 
-            $this->handler->report($e);
+                $this->dispatcher->dispatch(new ScheduledTaskFinished(
+                    $event,
+                    round(microtime(true) - $start, 2)
+                ));
+
+                $this->eventsRan = true;
+
+                if ($event->exitCode != 0 && ! $event->runInBackground) {
+                    throw new Exception("Scheduled command [{$event->command}] failed with exit code [{$event->exitCode}].");
+                }
+            } catch (Throwable $e) {
+                $this->dispatcher->dispatch(new ScheduledTaskFailed($event, $e));
+
+                $this->handler->report($e);
+            }
+
+            return $event->exitCode == 0;
+        });
+
+        if (! $event instanceof CallbackEvent) {
+            $this->components->bulletList([
+                $event->getSummaryForDisplay(),
+            ]);
         }
+    }
+
+    /**
+     * Run the given repeating events.
+     *
+     * @param  \WpStarter\Support\Collection<\WpStarter\Console\Scheduling\Event>  $events
+     * @return void
+     */
+    protected function repeatEvents($events)
+    {
+        $hasEnteredMaintenanceMode = false;
+
+        while (Date::now()->lte($this->startedAt->endOfMinute())) {
+            foreach ($events as $event) {
+                if ($this->shouldInterrupt()) {
+                    return;
+                }
+
+                if (! $event->shouldRepeatNow()) {
+                    continue;
+                }
+
+                $hasEnteredMaintenanceMode = $hasEnteredMaintenanceMode || $this->laravel->isDownForMaintenance();
+
+                if ($hasEnteredMaintenanceMode && ! $event->runsInMaintenanceMode()) {
+                    continue;
+                }
+
+                if (! $event->filtersPass($this->laravel)) {
+                    $this->dispatcher->dispatch(new ScheduledTaskSkipped($event));
+
+                    continue;
+                }
+
+                if ($event->onOneServer) {
+                    $this->runSingleServerEvent($event);
+                } else {
+                    $this->runEvent($event);
+                }
+
+                $this->eventsRan = true;
+            }
+
+            Sleep::usleep(100_000);
+        }
+    }
+
+    /**
+     * Determine if the schedule run should be interrupted.
+     *
+     * @return bool
+     */
+    protected function shouldInterrupt()
+    {
+        return $this->cache->get('wpstarter:schedule:interrupt', false);
+    }
+
+    /**
+     * Ensure the interrupt signal is cleared.
+     *
+     * @return void
+     */
+    protected function clearInterruptSignal()
+    {
+        $this->cache->forget('wpstarter:schedule:interrupt');
     }
 }

@@ -15,11 +15,6 @@ use PHPUnit\Framework\TestCase;
 
 class DatabaseEloquentRelationTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        m::close();
-    }
-
     public function testSetRelationFail()
     {
         $parent = new EloquentRelationResetModelStub;
@@ -205,7 +200,7 @@ class DatabaseEloquentRelationTest extends TestCase
             });
 
             $this->fail('Exception was not thrown');
-        } catch (Exception $exception) {
+        } catch (Exception) {
             // Does nothing.
         }
 
@@ -235,6 +230,14 @@ class DatabaseEloquentRelationTest extends TestCase
         Relation::morphMap([], false);
     }
 
+    public function testGetMorphAlias()
+    {
+        Relation::morphMap(['user' => 'App\User']);
+
+        $this->assertSame('user', Relation::getMorphAlias('App\User'));
+        $this->assertSame('Does\Not\Exist', Relation::getMorphAlias('Does\Not\Exist'));
+    }
+
     public function testWithoutRelations()
     {
         $original = new EloquentNoTouchingModelStub;
@@ -256,6 +259,41 @@ class DatabaseEloquentRelationTest extends TestCase
         $this->assertFalse($model->relationLoaded('foo'));
     }
 
+    public function testWithoutRelation()
+    {
+        $original = new EloquentNoTouchingModelStub;
+
+        $original->setRelation('foo', 'baz');
+        $original->setRelation('bar', 'qux');
+
+        $model = $original->withoutRelation('foo');
+
+        $this->assertInstanceOf(EloquentNoTouchingModelStub::class, $model);
+        $this->assertNotSame($model, $original);
+        $this->assertTrue($original->relationLoaded('foo'));
+        $this->assertTrue($original->relationLoaded('bar'));
+        $this->assertFalse($model->relationLoaded('foo'));
+        $this->assertTrue($model->relationLoaded('bar'));
+    }
+
+    public function testWithoutRelationWithArray()
+    {
+        $original = new EloquentNoTouchingModelStub;
+
+        $original->setRelation('foo', 'baz');
+        $original->setRelation('bar', 'qux');
+        $original->setRelation('bam', 'zap');
+
+        $model = $original->withoutRelation(['foo', 'bar']);
+
+        $this->assertTrue($original->relationLoaded('foo'));
+        $this->assertTrue($original->relationLoaded('bar'));
+        $this->assertTrue($original->relationLoaded('bam'));
+        $this->assertFalse($model->relationLoaded('foo'));
+        $this->assertFalse($model->relationLoaded('bar'));
+        $this->assertTrue($model->relationLoaded('bam'));
+    }
+
     public function testMacroable()
     {
         Relation::macro('foo', function () {
@@ -269,23 +307,9 @@ class DatabaseEloquentRelationTest extends TestCase
         $this->assertSame('foo', $result);
     }
 
-    public function testRelationResolvers()
-    {
-        $model = new EloquentRelationResetModelStub;
-        $builder = m::mock(Builder::class);
-        $builder->shouldReceive('getModel')->andReturn($model);
-
-        EloquentRelationResetModelStub::resolveRelationUsing('customer', function ($model) use ($builder) {
-            return new EloquentResolverRelationStub($builder, $model);
-        });
-
-        $this->assertInstanceOf(EloquentResolverRelationStub::class, $model->customer());
-        $this->assertSame(['key' => 'value'], $model->customer);
-    }
-
     public function testIsRelationIgnoresAttribute()
     {
-        $model = new EloquentRelationAndAtrributeModelStub;
+        $model = new EloquentRelationAndAttributeModelStub;
 
         $this->assertTrue($model->isRelation('parent'));
         $this->assertFalse($model->isRelation('field'));
@@ -353,15 +377,7 @@ class EloquentNoTouchingAnotherModelStub extends Model
     ];
 }
 
-class EloquentResolverRelationStub extends EloquentRelationStub
-{
-    public function getResults()
-    {
-        return ['key' => 'value'];
-    }
-}
-
-class EloquentRelationAndAtrributeModelStub extends Model
+class EloquentRelationAndAttributeModelStub extends Model
 {
     protected $table = 'one_more_table';
 

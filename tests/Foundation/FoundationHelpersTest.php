@@ -3,44 +3,55 @@
 namespace WpStarter\Tests\Foundation;
 
 use Exception;
+use WpStarter\Broadcasting\FakePendingBroadcast;
+use WpStarter\Container\Container;
+use WpStarter\Contracts\Cache\Repository as CacheRepository;
 use WpStarter\Contracts\Config\Repository;
+use WpStarter\Contracts\Events\Dispatcher;
+use WpStarter\Contracts\Support\Responsable;
 use WpStarter\Foundation\Application;
 use WpStarter\Foundation\Mix;
+use WpStarter\Http\Exceptions\HttpResponseException;
+use WpStarter\Http\Request;
 use WpStarter\Support\Str;
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
-use stdClass;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class FoundationHelpersTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        m::close();
-    }
-
     public function testCache()
     {
         $app = new Application;
-        $app['cache'] = $cache = m::mock(stdClass::class);
+        $app['cache'] = $cache = m::mock(CacheRepository::class);
 
         // 1. cache()
-        $this->assertInstanceOf(stdClass::class, ws_cache());
+        $this->assertInstanceOf(CacheRepository::class, cache());
 
         // 2. cache(['foo' => 'bar'], 1);
         $cache->shouldReceive('put')->once()->with('foo', 'bar', 1);
-        ws_cache(['foo' => 'bar'], 1);
+        cache(['foo' => 'bar'], 1);
 
         // 3. cache('foo');
-        $cache->shouldReceive('get')->once()->with('foo')->andReturn('bar');
-        $this->assertSame('bar', ws_cache('foo'));
+        $cache->shouldReceive('get')->once()->with('foo', null)->andReturn('bar');
+        $this->assertSame('bar', cache('foo'));
 
         // 4. cache('foo', null);
         $cache->shouldReceive('get')->once()->with('foo', null)->andReturn('bar');
-        $this->assertSame('bar', ws_cache('foo', null));
+        $this->assertSame('bar', cache('foo', null));
 
         // 5. cache('baz', 'default');
         $cache->shouldReceive('get')->once()->with('baz', 'default')->andReturn('default');
-        $this->assertSame('default', ws_cache('baz', 'default'));
+        $this->assertSame('default', cache('baz', 'default'));
+    }
+
+    public function testEvents()
+    {
+        $app = new Application;
+        $app['events'] = $dispatcher = m::mock(Dispatcher::class);
+
+        $dispatcher->shouldReceive('dispatch')->once()->with('a', 'b', 'c')->andReturn('foo');
+        $this->assertSame('foo', event('a', 'b', 'c'));
     }
 
     public function testMixDoesNotIncludeHost()
@@ -52,7 +63,7 @@ class FoundationHelpersTest extends TestCase
 
         $manifest = $this->makeManifest();
 
-        $result = ws_mix('/unversioned.css');
+        $result = mix('/unversioned.css');
 
         $this->assertSame('/versioned.css', $result->toHtml());
 
@@ -67,10 +78,10 @@ class FoundationHelpersTest extends TestCase
         $app['config']->shouldReceive('get')->with('app.mix_hot_proxy_url');
 
         $manifest = $this->makeManifest();
-        ws_mix('unversioned.css');
+        mix('unversioned.css');
         unlink($manifest);
 
-        $result = ws_mix('/unversioned.css');
+        $result = mix('/unversioned.css');
 
         $this->assertSame('/versioned.css', $result->toHtml());
     }
@@ -84,7 +95,7 @@ class FoundationHelpersTest extends TestCase
 
         $manifest = $this->makeManifest();
 
-        $result = ws_mix('unversioned.css');
+        $result = mix('unversioned.css');
 
         $this->assertSame('/versioned.css', $result->toHtml());
 
@@ -94,9 +105,9 @@ class FoundationHelpersTest extends TestCase
     public function testMixMissingManifestThrowsException()
     {
         $this->expectException(Exception::class);
-        $this->expectExceptionMessage('The Mix manifest does not exist.');
+        $this->expectExceptionMessage('Mix manifest not found');
 
-        ws_mix('unversioned.css', 'missing');
+        mix('unversioned.css', 'missing');
     }
 
     public function testMixWithManifestDirectory()
@@ -109,7 +120,7 @@ class FoundationHelpersTest extends TestCase
         mkdir($directory = __DIR__.'/mix');
         $manifest = $this->makeManifest('mix');
 
-        $result = ws_mix('unversioned.css', 'mix');
+        $result = mix('unversioned.css', 'mix');
 
         $this->assertSame('/mix/versioned.css', $result->toHtml());
 
@@ -122,7 +133,7 @@ class FoundationHelpersTest extends TestCase
         mkdir($directory = __DIR__.'/mix');
         $manifest = $this->makeManifest('/mix');
 
-        $result = ws_mix('unversioned.css', 'mix');
+        $result = mix('unversioned.css', 'mix');
 
         $this->assertSame('/mix/versioned.css', $result->toHtml());
 
@@ -134,7 +145,7 @@ class FoundationHelpersTest extends TestCase
     {
         $path = $this->makeHotModuleReloadFile('https://laravel.com/docs');
 
-        $result = ws_mix('unversioned.css');
+        $result = mix('unversioned.css');
 
         $this->assertSame('//laravel.com/docs/unversioned.css', $result->toHtml());
 
@@ -145,7 +156,7 @@ class FoundationHelpersTest extends TestCase
     {
         $path = $this->makeHotModuleReloadFile('http://laravel.com/docs');
 
-        $result = ws_mix('unversioned.css');
+        $result = mix('unversioned.css');
 
         $this->assertSame('//laravel.com/docs/unversioned.css', $result->toHtml());
 
@@ -157,7 +168,7 @@ class FoundationHelpersTest extends TestCase
         mkdir($directory = __DIR__.'/mix');
         $path = $this->makeHotModuleReloadFile('https://laravel.com/docs', 'mix');
 
-        $result = ws_mix('unversioned.css', 'mix');
+        $result = mix('unversioned.css', 'mix');
 
         $this->assertSame('//laravel.com/docs/unversioned.css', $result->toHtml());
 
@@ -170,7 +181,7 @@ class FoundationHelpersTest extends TestCase
         mkdir($directory = __DIR__.'/mix');
         $path = $this->makeHotModuleReloadFile('http://laravel.com/docs', 'mix');
 
-        $result = ws_mix('unversioned.css', 'mix');
+        $result = mix('unversioned.css', 'mix');
 
         $this->assertSame('//laravel.com/docs/unversioned.css', $result->toHtml());
 
@@ -182,7 +193,7 @@ class FoundationHelpersTest extends TestCase
     {
         $path = $this->makeHotModuleReloadFile('');
 
-        $result = ws_mix('unversioned.css');
+        $result = mix('unversioned.css');
 
         $this->assertSame('//localhost:8080/unversioned.css', $result->toHtml());
 
@@ -194,7 +205,7 @@ class FoundationHelpersTest extends TestCase
         mkdir($directory = __DIR__.'/mix');
         $path = $this->makeHotModuleReloadFile('', 'mix');
 
-        $result = ws_mix('unversioned.css', 'mix');
+        $result = mix('unversioned.css', 'mix');
 
         $this->assertSame('//localhost:8080/unversioned.css', $result->toHtml());
 
@@ -204,11 +215,9 @@ class FoundationHelpersTest extends TestCase
 
     protected function makeHotModuleReloadFile($url, $directory = '')
     {
-        ws_app()->singleton('path.public', function () {
-            return __DIR__;
-        });
+        app()->usePublicPath(__DIR__);
 
-        $path = ws_public_path(Str::finish($directory, '/').'hot');
+        $path = public_path(Str::finish($directory, '/').'hot');
 
         // Laravel mix when run 'hot' has a new line after the
         // url, so for consistency this "\n" is added.
@@ -219,11 +228,9 @@ class FoundationHelpersTest extends TestCase
 
     protected function makeManifest($directory = '')
     {
-        ws_app()->singleton('path.public', function () {
-            return __DIR__;
-        });
+        app()->usePublicPath(__DIR__);
 
-        $path = ws_public_path(Str::finish($directory, '/').'mix-manifest.json');
+        $path = public_path(Str::finish($directory, '/').'mix-manifest.json');
 
         touch($path);
 
@@ -242,6 +249,61 @@ class FoundationHelpersTest extends TestCase
             return 'expected';
         });
 
-        $this->assertSame('expected', ws_mix('asset.png'));
+        $this->assertSame('expected', mix('asset.png'));
+    }
+
+    public function testAbortReceivesCodeAsSymfonyResponseInstance()
+    {
+        try {
+            abort($code = new SymfonyResponse());
+
+            $this->fail(
+                sprintf('abort function must throw %s when receiving code as Symfony Response instance.', HttpResponseException::class)
+            );
+        } catch (HttpResponseException $ex) {
+            $this->assertSame($code, $ex->getResponse());
+        }
+    }
+
+    public function testAbortReceivesCodeAsResponableImplementation()
+    {
+        app()->instance('request', $request = Request::create('/'));
+
+        try {
+            abort($code = new class implements Responsable
+            {
+                public $request;
+
+                public function toResponse($request)
+                {
+                    $this->request = $request;
+
+                    return new SymfonyResponse();
+                }
+            });
+
+            $this->fail(
+                sprintf('abort function must throw %s when receiving code as Responable implementation.', HttpResponseException::class)
+            );
+        } catch (HttpResponseException) {
+            $this->assertSame($request, $code->request);
+        }
+    }
+
+    public function testAbortReceivesCodeAsInteger()
+    {
+        $app = m::mock(Application::class);
+        $app->shouldReceive('abort')
+            ->with($code = 400, $message = 'Bad request', $headers = ['X-FOO' => 'BAR'])
+            ->once();
+
+        Container::setInstance($app);
+
+        abort($code, $message, $headers);
+    }
+
+    public function testBroadcastIfReturnsFakeOnFalse()
+    {
+        $this->assertInstanceOf(FakePendingBroadcast::class, broadcast_if(false, 'foo'));
     }
 }

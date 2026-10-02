@@ -9,7 +9,7 @@ use WpStarter\Support\Carbon;
 use WpStarter\Support\Facades\Route;
 use WpStarter\Support\Facades\Session;
 use WpStarter\Support\Str;
-use Mockery;
+use Mockery as m;
 use Orchestra\Testbench\TestCase;
 
 class CookieTest extends TestCase
@@ -24,7 +24,7 @@ class CookieTest extends TestCase
 
         $response = $this->get('/');
         $this->assertCount(2, $response->headers->getCookies());
-        $this->assertEquals(0, ($response->headers->getCookies()[1])->getExpiresTime());
+        $this->assertEquals(0, $response->headers->getCookies()[1]->getExpiresTime());
     }
 
     public function test_cookie_is_sent_back_with_proper_expire_time_with_respect_to_lifetime()
@@ -39,14 +39,14 @@ class CookieTest extends TestCase
         Carbon::setTestNow(Carbon::now());
         $response = $this->get('/');
         $this->assertCount(2, $response->headers->getCookies());
-        $this->assertEquals(Carbon::now()->getTimestamp() + 60, ($response->headers->getCookies()[1])->getExpiresTime());
+        $this->assertEquals(Carbon::now()->getTimestamp() + 60, $response->headers->getCookies()[1]->getExpiresTime());
     }
 
-    protected function getEnvironmentSetUp($app)
+    protected function defineEnvironment($app)
     {
         $app->instance(
             ExceptionHandler::class,
-            $handler = Mockery::mock(ExceptionHandler::class)->shouldIgnoreMissing()
+            $handler = m::mock(ExceptionHandler::class)->shouldIgnoreMissing()
         );
 
         $handler->shouldReceive('render')->andReturn(new Response);

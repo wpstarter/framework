@@ -58,7 +58,7 @@ trait ManagesStacks
             throw new InvalidArgumentException('Cannot end a push stack without first starting one.');
         }
 
-        return ws_tap(array_pop($this->pushStack), function ($last) {
+        return tap(array_pop($this->pushStack), function ($last) {
             $this->extendPush($last, ob_get_clean());
         });
     }
@@ -114,7 +114,7 @@ trait ManagesStacks
             throw new InvalidArgumentException('Cannot end a prepend operation without first starting one.');
         }
 
-        return ws_tap(array_pop($this->pushStack), function ($last) {
+        return tap(array_pop($this->pushStack), function ($last) {
             $this->extendPrepend($last, ob_get_clean());
         });
     }
@@ -148,7 +148,7 @@ trait ManagesStacks
      */
     public function yieldPushContent($section, $default = '')
     {
-        if (! isset($this->pushes[$section]) && ! isset($this->prepends[$section])) {
+        if ($this->isStackEmpty($section)) {
             return $default;
         }
 
@@ -163,6 +163,14 @@ trait ManagesStacks
         }
 
         return $output;
+    }
+
+    /**
+     * Determine if the stack has any content in it.
+     */
+    public function isStackEmpty(string $section): bool
+    {
+        return ! isset($this->pushes[$section]) && ! isset($this->prepends[$section]);
     }
 
     /**

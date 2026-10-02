@@ -4,8 +4,9 @@ namespace WpStarter\Foundation\Console;
 
 use WpStarter\Console\Command;
 use WpStarter\Foundation\Support\Providers\EventServiceProvider;
-use WpStarter\Support\Str;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'event:generate')]
 class EventGenerateCommand extends Command
 {
     /**
@@ -23,6 +24,13 @@ class EventGenerateCommand extends Command
     protected $description = 'Generate the missing events and listeners based on registration';
 
     /**
+     * Indicates whether the command should be shown in the Artisan command list.
+     *
+     * @var bool
+     */
+    protected $hidden = true;
+
+    /**
      * Execute the console command.
      *
      * @return void
@@ -37,7 +45,7 @@ class EventGenerateCommand extends Command
             }
         }
 
-        $this->info('Events and listeners generated successfully!');
+        $this->components->info('Events and listeners generated successfully.');
     }
 
     /**
@@ -49,7 +57,7 @@ class EventGenerateCommand extends Command
      */
     protected function makeEventAndListeners($event, $listeners)
     {
-        if (! Str::contains($event, '\\')) {
+        if (! str_contains($event, '\\')) {
             return;
         }
 

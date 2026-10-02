@@ -2,26 +2,31 @@
 
 namespace WpStarter\Tests\Http;
 
+use Carbon\CarbonInterval;
+use Carbon\Unit;
 use WpStarter\Http\Request;
 use WpStarter\Http\UploadedFile;
 use WpStarter\Routing\Route;
 use WpStarter\Session\Store;
 use WpStarter\Support\Carbon;
 use WpStarter\Support\Collection;
+use WpStarter\Support\Stringable;
+use WpStarter\Tests\Database\Fixtures\Models\Money\Price;
 use InvalidArgumentException;
 use Mockery as m;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use Symfony\Component\HttpFoundation\Exception\SessionNotFoundException;
 use Symfony\Component\HttpFoundation\File\UploadedFile as SymfonyUploadedFile;
+use Symfony\Component\HttpFoundation\InputBag;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
+
+include_once 'Enums.php';
 
 class HttpRequestTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        m::close();
-    }
-
     public function testInstanceMethod()
     {
         $request = Request::create('');
@@ -73,16 +78,14 @@ class HttpRequestTest extends TestCase
         $this->assertSame('foo bar', $request->decodedPath());
     }
 
-    /**
-     * @dataProvider segmentProvider
-     */
+    #[DataProvider('segmentProvider')]
     public function testSegmentMethod($path, $segment, $expected)
     {
         $request = Request::create($path);
         $this->assertEquals($expected, $request->segment($segment, 'default'));
     }
 
-    public function segmentProvider()
+    public static function segmentProvider()
     {
         return [
             ['', 1, 'default'],
@@ -92,9 +95,7 @@ class HttpRequestTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider segmentsProvider
-     */
+    #[DataProvider('segmentsProvider')]
     public function testSegmentsMethod($path, $expected)
     {
         $request = Request::create($path);
@@ -104,7 +105,7 @@ class HttpRequestTest extends TestCase
         $this->assertEquals(['foo', 'bar'], $request->segments());
     }
 
-    public function segmentsProvider()
+    public static function segmentsProvider()
     {
         return [
             ['', []],
@@ -151,6 +152,30 @@ class HttpRequestTest extends TestCase
 
         $request = Request::create('https://foo.com');
         $this->assertSame('https://foo.com/?key=value%20with%20spaces', $request->fullUrlWithQuery(['key' => 'value with spaces']));
+    }
+
+    public function testFullUrlWithoutQueryMethod()
+    {
+        $request = Request::create('http://foo.com/foo/bar?name=taylor&age=30');
+        $this->assertSame('http://foo.com/foo/bar?age=30', $request->fullUrlWithoutQuery('name'));
+
+        $request = Request::create('http://foo.com/foo/bar?name=taylor&age=30');
+        $this->assertSame('http://foo.com/foo/bar?age=30', $request->fullUrlWithoutQuery(['name']));
+
+        $request = Request::create('http://foo.com/foo/bar?name=taylor&age=30&city=nyc');
+        $this->assertSame('http://foo.com/foo/bar?city=nyc', $request->fullUrlWithoutQuery(['name', 'age']));
+
+        $request = Request::create('http://foo.com/foo/bar?name=taylor');
+        $this->assertSame('http://foo.com/foo/bar', $request->fullUrlWithoutQuery('name'));
+
+        $request = Request::create('http://foo.com/foo/bar');
+        $this->assertSame('http://foo.com/foo/bar', $request->fullUrlWithoutQuery('name'));
+
+        $request = Request::create('https://foo.com?a=b&c=d');
+        $this->assertSame('https://foo.com/?c=d', $request->fullUrlWithoutQuery('a'));
+
+        $request = Request::create('https://foo.com/?name=taylor&age=30');
+        $this->assertSame('https://foo.com/?age=30', $request->fullUrlWithoutQuery('name'));
     }
 
     public function testIsMethod()
@@ -247,6 +272,15 @@ class HttpRequestTest extends TestCase
         $this->assertTrue($request->prefetch());
         $request->headers->set('Purpose', 'Prefetch');
         $this->assertTrue($request->prefetch());
+
+        $request->headers->remove('Purpose');
+
+        $request->headers->set('Sec-Purpose', '');
+        $this->assertFalse($request->prefetch());
+        $request->headers->set('Sec-Purpose', 'prefetch');
+        $this->assertTrue($request->prefetch());
+        $request->headers->set('Sec-Purpose', 'Prefetch');
+        $this->assertTrue($request->prefetch());
     }
 
     public function testPjaxMethod()
@@ -278,6 +312,51 @@ class HttpRequestTest extends TestCase
         $this->assertSame('Laravel', $request->userAgent());
     }
 
+    public function testHostMethod()
+    {
+        $request = Request::create('http://example.com');
+        $this->assertSame('example.com', $request->host());
+
+        $request = Request::create('https://example.com');
+        $this->assertSame('example.com', $request->host());
+
+        $request = Request::create('https://example.com:8080');
+        $this->assertSame('example.com', $request->host());
+
+        $request = Request::create('http://example.com:8080');
+        $this->assertSame('example.com', $request->host());
+    }
+
+    public function testHttpHostMethod()
+    {
+        $request = Request::create('http://example.com');
+        $this->assertSame('example.com', $request->httpHost());
+
+        $request = Request::create('https://example.com');
+        $this->assertSame('example.com', $request->httpHost());
+
+        $request = Request::create('http://example.com:8080');
+        $this->assertSame('example.com:8080', $request->httpHost());
+
+        $request = Request::create('https://example.com:8080');
+        $this->assertSame('example.com:8080', $request->httpHost());
+    }
+
+    public function testSchemeAndHttpHostMethod()
+    {
+        $request = Request::create('http://example.com');
+        $this->assertSame('http://example.com', $request->schemeAndHttpHost());
+
+        $request = Request::create('https://example.com');
+        $this->assertSame('https://example.com', $request->schemeAndHttpHost());
+
+        $request = Request::create('http://example.com:8080');
+        $this->assertSame('http://example.com:8080', $request->schemeAndHttpHost());
+
+        $request = Request::create('https://example.com:8080');
+        $this->assertSame('https://example.com:8080', $request->schemeAndHttpHost());
+    }
+
     public function testHasMethod()
     {
         $request = Request::create('/', 'GET', ['name' => 'Taylor', 'age' => '', 'city' => null]);
@@ -290,6 +369,7 @@ class HttpRequestTest extends TestCase
         $request = Request::create('/', 'GET', ['name' => 'Taylor', 'email' => 'foo']);
         $this->assertTrue($request->has('name'));
         $this->assertTrue($request->has('name', 'email'));
+        $this->assertTrue($request->has(['name', 'email']));
 
         $request = Request::create('/', 'GET', ['foo' => ['bar', 'bar']]);
         $this->assertTrue($request->has('foo'));
@@ -381,6 +461,7 @@ class HttpRequestTest extends TestCase
         $this->assertFalse($request->missing('city'));
         $this->assertTrue($request->missing('foo'));
         $this->assertTrue($request->missing('name', 'email'));
+        $this->assertTrue($request->missing(['name', 'email']));
 
         $request = Request::create('/', 'GET', ['name' => 'Taylor', 'email' => 'foo']);
         $this->assertFalse($request->missing('name'));
@@ -396,6 +477,41 @@ class HttpRequestTest extends TestCase
         $request = Request::create('/', 'GET', ['foo' => ['bar' => null, 'baz' => '']]);
         $this->assertFalse($request->missing('foo.bar'));
         $this->assertFalse($request->missing('foo.baz'));
+    }
+
+    public function testWhenMissingMethod()
+    {
+        $request = Request::create('/', 'GET', ['bar' => null]);
+
+        $name = $age = $city = $foo = $bar = true;
+
+        $request->whenMissing('name', function ($value) use (&$name) {
+            $name = 'Taylor';
+        });
+
+        $request->whenMissing('age', function ($value) use (&$age) {
+            $age = '';
+        });
+
+        $request->whenMissing('city', function ($value) use (&$city) {
+            $city = null;
+        });
+
+        $request->whenMissing('foo', function () use (&$foo) {
+            $foo = false;
+        });
+
+        $request->whenMissing('bar', function () use (&$bar) {
+            $bar = 'test';
+        }, function () use (&$bar) {
+            $bar = true;
+        });
+
+        $this->assertSame('Taylor', $name);
+        $this->assertSame('', $age);
+        $this->assertNull($city);
+        $this->assertFalse($foo);
+        $this->assertTrue($bar);
     }
 
     public function testHasAnyMethod()
@@ -432,6 +548,7 @@ class HttpRequestTest extends TestCase
         $request = Request::create('/', 'GET', ['name' => 'Taylor', 'email' => 'foo']);
         $this->assertTrue($request->filled('name'));
         $this->assertTrue($request->filled('name', 'email'));
+        $this->assertTrue($request->filled(['name', 'email']));
 
         // test arrays within query string
         $request = Request::create('/', 'GET', ['foo' => ['bar', 'baz']]);
@@ -477,10 +594,10 @@ class HttpRequestTest extends TestCase
         $this->assertTrue($request->anyFilled(['foo', 'name']));
         $this->assertTrue($request->anyFilled('foo', 'name'));
 
-        $this->assertFalse($request->anyFilled('age', 'city'));
+        $this->assertFalse($request->anyFilled(['age', 'city']));
         $this->assertFalse($request->anyFilled('age', 'city'));
 
-        $this->assertFalse($request->anyFilled('foo', 'bar'));
+        $this->assertFalse($request->anyFilled(['foo', 'bar']));
         $this->assertFalse($request->anyFilled('foo', 'bar'));
     }
 
@@ -495,14 +612,131 @@ class HttpRequestTest extends TestCase
         $this->assertInstanceOf(SymfonyUploadedFile::class, $request['file']);
     }
 
+    public function testFluentMethod()
+    {
+        $request = Request::create('/', 'GET', [
+            'user' => [
+                'name' => 'Michael',
+                'role' => 'admin',
+            ],
+            'users' => null,
+        ]);
+        $this->assertSame(['name' => 'Michael', 'role' => 'admin'], $request->fluent('user')->toArray());
+        $this->assertSame([], $request->fluent('users')->toArray());
+        $this->assertSame([], $request->fluent('not_found')->toArray());
+    }
+
+    public function testStringMethod()
+    {
+        $request = Request::create('/', 'GET', [
+            'int' => 123,
+            'int_str' => '456',
+            'float' => 123.456,
+            'float_str' => '123.456',
+            'float_zero' => 0.000,
+            'float_str_zero' => '0.000',
+            'str' => 'abc',
+            'empty_str' => '',
+            'null' => null,
+        ]);
+        $this->assertTrue($request->string('int') instanceof Stringable);
+        $this->assertTrue($request->string('unknown_key') instanceof Stringable);
+        $this->assertSame('123', $request->string('int')->value());
+        $this->assertSame('456', $request->string('int_str')->value());
+        $this->assertSame('123.456', $request->string('float')->value());
+        $this->assertSame('123.456', $request->string('float_str')->value());
+        $this->assertSame('0', $request->string('float_zero')->value());
+        $this->assertSame('0.000', $request->string('float_str_zero')->value());
+        $this->assertSame('', $request->string('empty_str')->value());
+        $this->assertSame('', $request->string('null')->value());
+        $this->assertSame('', $request->string('unknown_key')->value());
+    }
+
     public function testBooleanMethod()
     {
-        $request = Request::create('/', 'GET', ['with_trashed' => 'false', 'download' => true, 'checked' => 1, 'unchecked' => '0']);
+        $request = Request::create('/', 'GET', ['with_trashed' => 'false', 'download' => true, 'checked' => 1, 'unchecked' => '0', 'with_on' => 'on', 'with_yes' => 'yes']);
         $this->assertTrue($request->boolean('checked'));
         $this->assertTrue($request->boolean('download'));
         $this->assertFalse($request->boolean('unchecked'));
         $this->assertFalse($request->boolean('with_trashed'));
         $this->assertFalse($request->boolean('some_undefined_key'));
+        $this->assertTrue($request->boolean('with_on'));
+        $this->assertTrue($request->boolean('with_yes'));
+    }
+
+    public function testIntegerMethod()
+    {
+        $request = Request::create('/', 'GET', [
+            'int' => '123',
+            'raw_int' => 456,
+            'zero_padded' => '078',
+            'space_padded' => ' 901',
+            'nan' => 'nan',
+            'mixed' => '1ab',
+            'underscore_notation' => '2_000',
+            'null' => null,
+        ]);
+        $this->assertSame(123, $request->integer('int'));
+        $this->assertSame(456, $request->integer('raw_int'));
+        $this->assertSame(78, $request->integer('zero_padded'));
+        $this->assertSame(901, $request->integer('space_padded'));
+        $this->assertSame(0, $request->integer('nan'));
+        $this->assertSame(1, $request->integer('mixed'));
+        $this->assertSame(2, $request->integer('underscore_notation'));
+        $this->assertSame(123456, $request->integer('unknown_key', 123456));
+        $this->assertSame(0, $request->integer('null'));
+        $this->assertSame(0, $request->integer('null', 123456));
+    }
+
+    public function testFloatMethod()
+    {
+        $request = Request::create('/', 'GET', [
+            'float' => '1.23',
+            'raw_float' => 45.6,
+            'decimal_only' => '.6',
+            'zero_padded' => '0.78',
+            'space_padded' => ' 90.1',
+            'nan' => 'nan',
+            'mixed' => '1.ab',
+            'scientific_notation' => '1e3',
+            'null' => null,
+        ]);
+        $this->assertSame(1.23, $request->float('float'));
+        $this->assertSame(45.6, $request->float('raw_float'));
+        $this->assertSame(.6, $request->float('decimal_only'));
+        $this->assertSame(0.78, $request->float('zero_padded'));
+        $this->assertSame(90.1, $request->float('space_padded'));
+        $this->assertSame(0.0, $request->float('nan'));
+        $this->assertSame(1.0, $request->float('mixed'));
+        $this->assertSame(1e3, $request->float('scientific_notation'));
+        $this->assertSame(123.456, $request->float('unknown_key', 123.456));
+        $this->assertSame(0.0, $request->float('null'));
+        $this->assertSame(0.0, $request->float('null', 123.456));
+    }
+
+    public function testArrayMethod()
+    {
+        $request = Request::create('/', 'GET', []);
+        $this->assertIsArray($request->array());
+        $this->assertEmpty($request->array());
+
+        $request = Request::create('/', 'GET', [
+            'users' => [1, 2, 3],
+            'roles' => [4, 5, 6],
+            'email' => 'test@example.com',
+        ]);
+
+        $this->assertEmpty($request->array('missing'));
+        $this->assertEmpty($request->array(['missing']));
+        $this->assertEquals([1, 2, 3], $request->array('users'));
+        $this->assertEquals(['users' => [1, 2, 3]], $request->array(['users']));
+        $this->assertEquals(['users' => [1, 2, 3], 'email' => 'test@example.com'], $request->array(['users', 'email']));
+
+        $this->assertEquals([
+            'users' => [1, 2, 3],
+            'roles' => [4, 5, 6],
+            'email' => 'test@example.com',
+        ], $request->array());
     }
 
     public function testCollectMethod()
@@ -530,7 +764,7 @@ class HttpRequestTest extends TestCase
         $this->assertTrue($request->collect(['roles'])->isNotEmpty());
         $this->assertEquals(['roles' => [4, 5, 6]], $request->collect(['roles'])->all());
         $this->assertEquals(['users' => [1, 2, 3], 'email' => 'test@example.com'], $request->collect(['users', 'email'])->all());
-        $this->assertEquals(ws_collect(['roles' => [4, 5, 6], 'foo' => ['bar', 'baz']]), $request->collect(['roles', 'foo']));
+        $this->assertEquals(collect(['roles' => [4, 5, 6], 'foo' => ['bar', 'baz']]), $request->collect(['roles', 'foo']));
         $this->assertEquals(['users' => [1, 2, 3], 'roles' => [4, 5, 6], 'foo' => ['bar', 'baz'], 'email' => 'test@example.com'], $request->collect()->all());
     }
 
@@ -581,6 +815,126 @@ class HttpRequestTest extends TestCase
         ]);
 
         $request->date('date', 'invalid_format');
+    }
+
+    public function testIntervalMethod()
+    {
+        $request = Request::create('/', 'GET', [
+            'as_null' => null,
+            'as_empty' => '',
+            'as_iso' => 'P1Y2M3DT4H5M6S',
+            'as_human' => '2 hours 30 minutes',
+            'as_seconds' => '90',
+            'as_minutes' => '45',
+        ]);
+
+        $this->assertNull($request->interval('as_null'));
+        $this->assertNull($request->interval('as_empty'));
+        $this->assertNull($request->interval('doesnt_exist'));
+
+        $interval = $request->interval('as_iso');
+        $this->assertInstanceOf(CarbonInterval::class, $interval);
+        $this->assertSame(1, $interval->years);
+        $this->assertSame(2, $interval->months);
+        $this->assertSame(3, $interval->dayz);
+        $this->assertSame(4, $interval->hours);
+        $this->assertSame(5, $interval->minutes);
+        $this->assertSame(6, $interval->seconds);
+
+        $interval = $request->interval('as_human');
+        $this->assertInstanceOf(CarbonInterval::class, $interval);
+        $this->assertSame(2, $interval->hours);
+        $this->assertSame(30, $interval->minutes);
+
+        $interval = $request->interval('as_seconds', 'second');
+        $this->assertInstanceOf(CarbonInterval::class, $interval);
+        $this->assertSame(90, $interval->seconds);
+
+        $this->assertSame(90, $request->interval('as_seconds', 'minute')->minutes);
+        $this->assertSame(90, $request->interval('as_seconds', 'hour')->hours);
+        $this->assertSame(90, $request->interval('as_seconds', 'day')->dayz);
+
+        $this->assertSame(45, $request->interval('as_minutes', Unit::Minute)->minutes);
+        $this->assertSame(45, $request->interval('as_minutes', Unit::Second)->seconds);
+    }
+
+    public function testEnumMethod()
+    {
+        $request = Request::create('/', 'GET', [
+            'valid_enum_value' => 'test',
+            'invalid_enum_value' => 'invalid',
+            'empty_value_request' => '',
+            'string' => [
+                'minus_1' => '-1',
+                '0' => '0',
+                'plus_1' => '1',
+                'doesnt_exist' => '-1024',
+            ],
+            'int' => [
+                'minus_1' => -1,
+                '0' => 0,
+                'plus_1' => 1,
+                'doesnt_exist' => 1024,
+            ],
+        ]);
+
+        $this->assertNull($request->enum('doesnt_exist', TestEnumBacked::class));
+
+        $this->assertEquals(TestEnumBacked::test, $request->enum('invalid_enum_value', TestEnumBacked::class, TestEnumBacked::test));
+        $this->assertEquals(TestEnumBacked::test, $request->enum('missing_key', TestEnumBacked::class, TestEnumBacked::test));
+
+        $this->assertEquals(TestEnumBacked::test, $request->enum('valid_enum_value', TestEnumBacked::class));
+
+        $this->assertNull($request->enum('invalid_enum_value', TestEnumBacked::class));
+        $this->assertNull($request->enum('empty_value_request', TestEnumBacked::class));
+        $this->assertNull($request->enum('valid_enum_value', TestEnum::class));
+
+        $this->assertEquals(TestIntegerEnumBacked::minus_1, $request->enum('string.minus_1', TestIntegerEnumBacked::class));
+        $this->assertEquals(TestIntegerEnumBacked::zero, $request->enum('string.0', TestIntegerEnumBacked::class));
+        $this->assertEquals(TestIntegerEnumBacked::plus_1, $request->enum('string.plus_1', TestIntegerEnumBacked::class));
+        $this->assertNull($request->enum('string.doesnt_exist', TestIntegerEnumBacked::class));
+        $this->assertEquals(TestIntegerEnumBacked::minus_1, $request->enum('int.minus_1', TestIntegerEnumBacked::class));
+        $this->assertEquals(TestIntegerEnumBacked::zero, $request->enum('int.0', TestIntegerEnumBacked::class));
+        $this->assertEquals(TestIntegerEnumBacked::plus_1, $request->enum('int.plus_1', TestIntegerEnumBacked::class));
+        $this->assertNull($request->enum('int.doesnt_exist', TestIntegerEnumBacked::class));
+    }
+
+    public function testEnumsMethod()
+    {
+        $request = Request::create('/', 'GET', [
+            'valid_enum_values' => ['test', 'test'],
+            'invalid_enum_values' => ['invalid', 'invalid'],
+            'empty_value_request' => [],
+            'string' => [
+                'minus_1' => ['-1', '0'],
+                '0' => '0',
+                'plus_1' => '1',
+                'doesnt_exist' => '-1024',
+            ],
+            'int' => [
+                'minus_1' => -1,
+                '0' => 0,
+                'plus_1' => 1,
+                'doesnt_exist' => 1024,
+            ],
+        ]);
+
+        $this->assertEmpty($request->enums('doesnt_exist', TestEnumBacked::class));
+
+        $this->assertEquals([TestEnumBacked::test, TestEnumBacked::test], $request->enums('valid_enum_values', TestEnumBacked::class));
+
+        $this->assertEmpty($request->enums('invalid_enum_value', TestEnumBacked::class));
+        $this->assertEmpty($request->enums('empty_value_request', TestEnumBacked::class));
+        $this->assertEmpty($request->enums('valid_enum_value', TestEnum::class));
+
+        $this->assertEquals([TestIntegerEnumBacked::minus_1, TestIntegerEnumBacked::zero], $request->enums('string.minus_1', TestIntegerEnumBacked::class));
+        $this->assertEquals([TestIntegerEnumBacked::zero], $request->enums('string.0', TestIntegerEnumBacked::class));
+        $this->assertEquals([TestIntegerEnumBacked::plus_1], $request->enums('string.plus_1', TestIntegerEnumBacked::class));
+        $this->assertEmpty($request->enums('string.doesnt_exist', TestIntegerEnumBacked::class));
+        $this->assertEquals([TestIntegerEnumBacked::minus_1], $request->enums('int.minus_1', TestIntegerEnumBacked::class));
+        $this->assertEquals([TestIntegerEnumBacked::zero], $request->enums('int.0', TestIntegerEnumBacked::class));
+        $this->assertEquals([TestIntegerEnumBacked::plus_1], $request->enums('int.plus_1', TestIntegerEnumBacked::class));
+        $this->assertEmpty($request->enums('int.doesnt_exist', TestIntegerEnumBacked::class));
     }
 
     public function testArrayAccess()
@@ -676,12 +1030,15 @@ class HttpRequestTest extends TestCase
         $request = Request::create('/', 'GET', ['name' => 'Taylor', 'age' => 25]);
         $this->assertEquals(['name' => 'Taylor'], $request->except('age'));
         $this->assertEquals([], $request->except('age', 'name'));
+        $this->assertEquals([], $request->except(['age', 'name']));
     }
 
     public function testQueryMethod()
     {
         $request = Request::create('/', 'GET', ['name' => 'Taylor']);
+        $this->assertSame(['name' => 'Taylor'], $request->query());
         $this->assertSame('Taylor', $request->query('name'));
+        $this->assertSame('Taylor', $request->query('name', 'Amir'));
         $this->assertSame('Bob', $request->query('foo', 'Bob'));
         $all = $request->query(null);
         $this->assertSame('Taylor', $all['name']);
@@ -698,7 +1055,9 @@ class HttpRequestTest extends TestCase
     public function testPostMethod()
     {
         $request = Request::create('/', 'POST', ['name' => 'Taylor']);
+        $this->assertSame(['name' => 'Taylor'], $request->post());
         $this->assertSame('Taylor', $request->post('name'));
+        $this->assertSame('Taylor', $request->post('name', 'Amir'));
         $this->assertSame('Bob', $request->post('foo', 'Bob'));
         $all = $request->post(null);
         $this->assertSame('Taylor', $all['name']);
@@ -707,7 +1066,9 @@ class HttpRequestTest extends TestCase
     public function testCookieMethod()
     {
         $request = Request::create('/', 'GET', [], ['name' => 'Taylor']);
+        $this->assertSame(['name' => 'Taylor'], $request->cookie());
         $this->assertSame('Taylor', $request->cookie('name'));
+        $this->assertSame('Taylor', $request->cookie('name', 'Amir'));
         $this->assertSame('Bob', $request->cookie('foo', 'Bob'));
         $all = $request->cookie(null);
         $this->assertSame('Taylor', $all['name']);
@@ -751,6 +1112,7 @@ class HttpRequestTest extends TestCase
         ];
         $request = Request::create('/', 'GET', [], [], $files);
         $this->assertTrue($request->hasFile('foo'));
+        $this->assertFalse($request->hasFile('bar'));
     }
 
     public function testServerMethod()
@@ -784,6 +1146,16 @@ class HttpRequestTest extends TestCase
         $request->mergeIfMissing($merge);
         $this->assertSame('Taylor', $request->input('name'));
         $this->assertSame(1, $request->input('boolean_setting'));
+
+        $request = Request::create('/', 'GET', ['user' => ['first_name' => 'Taylor', 'email' => 'taylor@laravel.com']]);
+        $merge = ['user.last_name' => 'Otwell'];
+        $request->mergeIfMissing($merge);
+        $this->assertSame('Otwell', $request->input('user.last_name'));
+
+        $request = Request::create('/', 'GET', ['user' => ['first_name' => 'Taylor', 'email' => 'taylor@laravel.com']]);
+        $merge = ['user.first_name' => 'John'];
+        $request->mergeIfMissing($merge);
+        $this->assertSame('Taylor', $request->input('user.first_name'));
     }
 
     public function testReplaceMethod()
@@ -806,6 +1178,7 @@ class HttpRequestTest extends TestCase
     {
         $request = Request::create('/', 'GET', [], [], [], ['HTTP_DO_THIS' => 'foo']);
         $this->assertSame('foo', $request->header('do-this'));
+        $this->assertSame('default', $request->header('do-that', 'default'));
         $all = $request->header(null);
         $this->assertSame('foo', $all['do-this'][0]);
     }
@@ -815,11 +1188,20 @@ class HttpRequestTest extends TestCase
         $request = Request::create('/', 'GET', [], [], [], ['HTTP_AUTHORIZATION' => 'Bearer fooBearerbar']);
         $this->assertSame('fooBearerbar', $request->bearerToken());
 
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_AUTHORIZATION' => 'bearer fooBearerbar']);
+        $this->assertSame('fooBearerbar', $request->bearerToken());
+
         $request = Request::create('/', 'GET', [], [], [], ['HTTP_AUTHORIZATION' => 'Basic foo, Bearer bar']);
         $this->assertSame('bar', $request->bearerToken());
 
         $request = Request::create('/', 'GET', [], [], [], ['HTTP_AUTHORIZATION' => 'Bearer foo,bar']);
         $this->assertSame('foo', $request->bearerToken());
+
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_AUTHORIZATION' => 'bearer foo,bar']);
+        $this->assertSame('foo', $request->bearerToken());
+
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_AUTHORIZATION' => 'foo,bar']);
+        $this->assertNull($request->bearerToken());
     }
 
     public function testJSONMethod()
@@ -827,6 +1209,8 @@ class HttpRequestTest extends TestCase
         $payload = ['name' => 'taylor'];
         $request = Request::create('/', 'GET', [], [], [], ['CONTENT_TYPE' => 'application/json'], json_encode($payload));
         $this->assertSame('taylor', $request->json('name'));
+        $this->assertSame('taylor', $request->json('name', 'Otwell'));
+        $this->assertSame('Moharami', $request->json('family', 'Moharami'));
         $this->assertSame('taylor', $request->input('name'));
         $data = $request->json()->all();
         $this->assertEquals($payload, $data);
@@ -845,7 +1229,7 @@ class HttpRequestTest extends TestCase
         $this->assertEquals($payload, $data);
     }
 
-    public function getPrefersCases()
+    public static function getPrefersCases()
     {
         return [
             ['application/json', ['json'], 'json'],
@@ -872,9 +1256,7 @@ class HttpRequestTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider getPrefersCases
-     */
+    #[DataProvider('getPrefersCases')]
     public function testPrefersMethod($accept, $prefers, $expected)
     {
         $this->assertSame(
@@ -959,6 +1341,26 @@ class HttpRequestTest extends TestCase
         $this->assertSame('boom', $request->old('foo', 'bar'));
     }
 
+    public function testOldMethodCallsSessionWhenDefaultIsArray()
+    {
+        $request = Request::create('/');
+        $session = m::mock(Store::class);
+        $session->shouldReceive('getOldInput')->once()->with('foo', ['bar'])->andReturn(['bar']);
+        $request->setLaravelSession($session);
+        $this->assertSame(['bar'], $request->old('foo', ['bar']));
+    }
+
+    public function testOldMethodCanGetDefaultValueFromModelByKey()
+    {
+        $request = Request::create('/');
+        $model = m::mock(Price::class);
+        $model->shouldReceive('getAttribute')->once()->with('name')->andReturn('foobar');
+        $session = m::mock(Store::class);
+        $session->shouldReceive('getOldInput')->once()->with('name', 'foobar')->andReturn('foobar');
+        $request->setLaravelSession($session);
+        $this->assertSame('foobar', $request->old('name', $model));
+    }
+
     public function testFlushMethodCallsSession()
     {
         $request = Request::create('/');
@@ -1012,6 +1414,34 @@ class HttpRequestTest extends TestCase
         $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'is/not/known']);
         $this->assertSame('html', $request->format());
         $this->assertSame('foo', $request->format('foo'));
+    }
+
+    public function testWantsMarkdown()
+    {
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'text/markdown']);
+        $this->assertTrue($request->wantsMarkdown());
+
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'text/markdown; charset=utf-8']);
+        $this->assertTrue($request->wantsMarkdown());
+
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/json']);
+        $this->assertFalse($request->wantsMarkdown());
+
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'text/html']);
+        $this->assertFalse($request->wantsMarkdown());
+    }
+
+    public function testAcceptsMarkdown()
+    {
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'text/markdown']);
+        $this->assertTrue($request->acceptsMarkdown());
+
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'text/html, text/markdown']);
+        $this->assertFalse($request->wantsMarkdown());
+        $this->assertTrue($request->acceptsMarkdown());
+
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/json']);
+        $this->assertFalse($request->acceptsMarkdown());
     }
 
     public function testFormatReturnsAcceptsJson()
@@ -1085,6 +1515,79 @@ class HttpRequestTest extends TestCase
         $this->assertTrue($request->accepts('application/baz+json'));
     }
 
+    public function testWantsJsonRespectsHeaderChanges()
+    {
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => '*/*']);
+
+        $this->assertFalse($request->wantsJson());
+
+        $this->assertTrue($request->acceptsAnyContentType());
+
+        $request->headers->set('Accept', 'application/json');
+
+        $this->assertTrue($request->wantsJson(), 'wantsJson() should return true after Accept header is changed to application/json');
+    }
+
+    public function testAcceptsJsonRespectsHeaderChanges()
+    {
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => '*/*']);
+
+        $this->assertTrue($request->acceptsAnyContentType());
+
+        $request->headers->set('Accept', 'application/json');
+
+        $this->assertTrue($request->acceptsJson(), 'acceptsJson() should return true after Accept header is changed to application/json');
+    }
+
+    public function testPrefersRespectsHeaderChanges()
+    {
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => '*/*']);
+
+        $this->assertTrue($request->acceptsAnyContentType());
+
+        $request->headers->set('Accept', 'application/json');
+
+        $this->assertSame('json', $request->prefers(['html', 'json']), 'prefers() should return json after Accept header is changed to application/json');
+    }
+
+    public function testWantsJsonWorksWhenHeaderSetBeforeFirstCall()
+    {
+        $request = Request::create('/', 'GET', [], [], [], []);
+
+        $request->headers->set('Accept', 'application/json');
+
+        $this->assertTrue($request->wantsJson(), 'wantsJson() should return true when Accept header is set to application/json');
+    }
+
+    public function testCacheClearedWhenTransitioningFromUnsetToSetHeader()
+    {
+        $request = Request::create('/', 'GET', [], [], [], []);
+
+        $request->getAcceptableContentTypes();
+
+        $request->headers->set('Accept', 'application/json');
+
+        $this->assertTrue($request->wantsJson(), 'wantsJson() should return true after Accept header is set from null to application/json');
+
+        $this->assertTrue($request->acceptsJson(), 'acceptsJson() should return true after Accept header is set from null to application/json');
+    }
+
+    public function testAcceptsJsonWorksWhenHeaderChangedMultipleTimes()
+    {
+        $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'text/html']);
+
+        $this->assertFalse($request->acceptsJson());
+
+        $request->headers->set('Accept', 'application/json');
+        $this->assertTrue($request->acceptsJson());
+
+        $request->headers->set('Accept', 'text/html');
+        $this->assertFalse($request->acceptsJson());
+
+        $request->headers->set('Accept', 'application/json');
+        $this->assertTrue($request->acceptsJson());
+    }
+
     public function testBadAcceptHeader()
     {
         $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'Mozilla/5.0 (Windows; U; Windows NT 5.1; pt-PT; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2 (.NET CLR 3.5.30729)']);
@@ -1130,6 +1633,42 @@ class HttpRequestTest extends TestCase
         $request->session();
     }
 
+    public function testHasSessionMethod()
+    {
+        $request = Request::create('/');
+
+        $this->assertFalse($request->hasSession());
+
+        $session = m::mock(Store::class);
+        $request->setLaravelSession($session);
+
+        $this->assertTrue($request->hasSession());
+    }
+
+    public function testGetSessionMethodWithLaravelSession()
+    {
+        $request = Request::create('/');
+
+        $laravelSession = m::mock(Store::class);
+        $request->setLaravelSession($laravelSession);
+
+        $session = $request->getSession();
+        $this->assertInstanceOf(SessionInterface::class, $session);
+
+        $laravelSession->shouldReceive('start')->once()->andReturn(true);
+        $session->start();
+    }
+
+    public function testGetSessionMethodWithoutLaravelSession()
+    {
+        $this->expectException(SessionNotFoundException::class);
+        $this->expectExceptionMessage('There is currently no session available.');
+
+        $request = Request::create('/');
+
+        $request->getSession();
+    }
+
     public function testUserResolverMakesUserAvailableAsMagicProperty()
     {
         $request = Request::create('/', 'GET', [], [], [], ['HTTP_ACCEPT' => 'application/json']);
@@ -1161,7 +1700,12 @@ class HttpRequestTest extends TestCase
         $request->fingerprint();
     }
 
-    public function testCreateFromBase()
+    /**
+     * Ensure JSON GET requests populate $request->request with the JSON content.
+     *
+     * @link https://github.com/laravel/framework/pull/7052 Correctly fill the $request->request parameter bag on creation.
+     */
+    public function testJsonRequestFillsRequestBodyParams()
     {
         $body = [
             'foo' => 'bar',
@@ -1177,6 +1721,24 @@ class HttpRequestTest extends TestCase
         $request = Request::createFromBase($base);
 
         $this->assertEquals($request->request->all(), $body);
+    }
+
+    /**
+     * Ensure non-JSON GET requests don't pollute $request->request with the GET parameters.
+     *
+     * @link https://github.com/laravel/framework/pull/37921 Manually populate POST request body with JSON data only when required.
+     */
+    public function testNonJsonRequestDoesntFillRequestBodyParams()
+    {
+        $params = ['foo' => 'bar'];
+
+        $getRequest = Request::create('/', 'GET', $params, [], [], []);
+        $this->assertEquals($getRequest->request->all(), []);
+        $this->assertEquals($getRequest->query->all(), $params);
+
+        $postRequest = Request::create('/', 'POST', $params, [], [], []);
+        $this->assertEquals($postRequest->request->all(), $params);
+        $this->assertEquals($postRequest->query->all(), []);
     }
 
     /**
@@ -1279,5 +1841,70 @@ class HttpRequestTest extends TestCase
         $request = Request::create('/', 'GET', ['name' => 'Taylor', 'email' => 'foo']);
         $request->setLaravelSession($session);
         $request->flashExcept(['email']);
+    }
+
+    public function testGeneratingJsonRequestFromParentRequestUsesCorrectType()
+    {
+        if (! method_exists(SymfonyRequest::class, 'getPayload')) {
+            return;
+        }
+
+        $base = SymfonyRequest::create('/', 'POST', server: ['CONTENT_TYPE' => 'application/json'], content: '{"hello":"world"}');
+
+        $request = Request::createFromBase($base);
+
+        $this->assertInstanceOf(InputBag::class, $request->getPayload());
+        $this->assertSame('world', $request->getPayload()->get('hello'));
+    }
+
+    public function testJsonRequestsCanMergeDataIntoJsonRequest()
+    {
+        if (! method_exists(SymfonyRequest::class, 'getPayload')) {
+            return;
+        }
+
+        $base = SymfonyRequest::create('/', 'POST', server: ['CONTENT_TYPE' => 'application/json'], content: '{"first":"Taylor","last":"Otwell"}');
+        $request = Request::createFromBase($base);
+
+        $request->merge([
+            'name' => $request->get('first').' '.$request->get('last'),
+        ]);
+
+        $this->assertSame('Taylor Otwell', $request->get('name'));
+    }
+
+    public function testItCanHaveObjectsInJsonPayload()
+    {
+        if (! method_exists(SymfonyRequest::class, 'getPayload')) {
+            return;
+        }
+
+        $base = SymfonyRequest::create('/', 'POST', server: ['CONTENT_TYPE' => 'application/json'], content: '{"framework":{"name":"Laravel"}}');
+        $request = Request::createFromBase($base);
+
+        $value = $request->get('framework');
+
+        $this->assertSame(['name' => 'Laravel'], $request->get('framework'));
+    }
+
+    public function testItDoesNotGenerateJsonErrorsForEmptyContent()
+    {
+        // clear any existing errors
+        json_encode(null);
+
+        Request::create('', 'GET')->json();
+
+        $this->assertTrue(json_last_error() === JSON_ERROR_NONE);
+    }
+
+    public function testItClampsValues()
+    {
+        $request = Request::create('/', 'GET', ['per_page' => 100, 'float' => 9.24]);
+        $this->assertSame(100, $request->clamp('per_page', 100, 101));
+        $this->assertSame(10, $request->clamp('per_page', -10, 10));
+        $this->assertSame(25, $request->clamp('per_page_2', 25, 100, 1));
+        $this->assertSame(100, $request->clamp('per_page', 1, 250, 99));
+        $this->assertSame(22.4, $request->clamp('per_page', 1.11, 22.4, 2));
+        $this->assertSame(9.24, $request->clamp('float', 1, 10));
     }
 }

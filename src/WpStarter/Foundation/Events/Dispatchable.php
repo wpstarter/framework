@@ -7,11 +7,12 @@ trait Dispatchable
     /**
      * Dispatch the event with the given arguments.
      *
-     * @return void
+     * @param  mixed  ...$arguments
+     * @return mixed
      */
-    public static function dispatch()
+    public static function dispatch(...$arguments)
     {
-        return ws_event(new static(...func_get_args()));
+        return event(new static(...$arguments));
     }
 
     /**
@@ -19,12 +20,12 @@ trait Dispatchable
      *
      * @param  bool  $boolean
      * @param  mixed  ...$arguments
-     * @return void
+     * @return mixed
      */
     public static function dispatchIf($boolean, ...$arguments)
     {
         if ($boolean) {
-            return ws_event(new static(...$arguments));
+            return event(new static(...$arguments));
         }
     }
 
@@ -33,22 +34,23 @@ trait Dispatchable
      *
      * @param  bool  $boolean
      * @param  mixed  ...$arguments
-     * @return void
+     * @return mixed
      */
     public static function dispatchUnless($boolean, ...$arguments)
     {
         if (! $boolean) {
-            return ws_event(new static(...$arguments));
+            return event(new static(...$arguments));
         }
     }
 
     /**
      * Broadcast the event with the given arguments.
      *
+     * @param  mixed  ...$arguments
      * @return \WpStarter\Broadcasting\PendingBroadcast
      */
-    public static function broadcast()
+    public static function broadcast(...$arguments)
     {
-        return ws_broadcast(new static(...func_get_args()));
+        return broadcast(new static(...$arguments));
     }
 }

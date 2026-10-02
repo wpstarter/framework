@@ -10,7 +10,7 @@ use WpStarter\Tests\Integration\Database\DatabaseTestCase;
 
 class EloquentLazyEagerLoadingTest extends DatabaseTestCase
 {
-    protected function defineDatabaseMigrationsAfterDatabaseRefreshed()
+    protected function afterRefreshingDatabase()
     {
         Schema::create('one', function (Blueprint $table) {
             $table->increments('id');

@@ -5,7 +5,6 @@ namespace WpStarter\View\Concerns;
 use WpStarter\Contracts\Support\Htmlable;
 use WpStarter\Contracts\View\View;
 use WpStarter\Support\Arr;
-use WpStarter\Support\HtmlString;
 use WpStarter\View\ComponentSlot;
 
 trait ManagesComponents
@@ -94,7 +93,7 @@ trait ManagesComponents
         );
 
         try {
-            $view = ws_value($view, $data);
+            $view = value($view, $data);
 
             if ($view instanceof View) {
                 return $view->with($data)->render();
@@ -115,7 +114,7 @@ trait ManagesComponents
      */
     protected function componentData()
     {
-        $defaultSlot = new HtmlString(trim(ob_get_clean()));
+        $defaultSlot = new ComponentSlot(trim(ob_get_clean()));
 
         $slots = array_merge([
             '__default' => $defaultSlot,
@@ -134,7 +133,7 @@ trait ManagesComponents
      *
      * @param  string  $key
      * @param  mixed  $default
-     * @return mixed|null
+     * @return mixed
      */
     public function getConsumableComponentData($key, $default = null)
     {
@@ -145,7 +144,7 @@ trait ManagesComponents
         $currentComponent = count($this->componentStack);
 
         if ($currentComponent === 0) {
-            return ws_value($default);
+            return value($default);
         }
 
         for ($i = $currentComponent - 1; $i >= 0; $i--) {
@@ -156,7 +155,7 @@ trait ManagesComponents
             }
         }
 
-        return ws_value($default);
+        return value($default);
     }
 
     /**
@@ -185,7 +184,7 @@ trait ManagesComponents
      */
     public function endSlot()
     {
-        ws_last($this->componentStack);
+        last($this->componentStack);
 
         $currentSlot = array_pop(
             $this->slotStack[$this->currentComponent()]

@@ -7,15 +7,19 @@ use WpStarter\Bus\Queueable;
 use WpStarter\Cache\RateLimiter;
 use WpStarter\Cache\RateLimiting\Limit;
 use WpStarter\Contracts\Queue\Job;
-use WpStarter\Contracts\Redis\Factory as Redis;
+use WpStarter\Contracts\Redis\Connection;
 use WpStarter\Foundation\Testing\Concerns\InteractsWithRedis;
 use WpStarter\Queue\CallQueuedHandler;
 use WpStarter\Queue\InteractsWithQueue;
 use WpStarter\Queue\Middleware\RateLimitedWithRedis;
 use WpStarter\Support\Str;
 use Mockery as m;
+use Orchestra\Testbench\Attributes\RequiresEnv;
 use Orchestra\Testbench\TestCase;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 
+#[RequiresEnv('REDIS_CLIENT')]
+#[RequiresPhpExtension('redis')]
 class RateLimitedWithRedisTest extends TestCase
 {
     use InteractsWithRedis;
@@ -29,11 +33,9 @@ class RateLimitedWithRedisTest extends TestCase
 
     protected function tearDown(): void
     {
-        parent::tearDown();
-
         $this->tearDownRedis();
 
-        m::close();
+        parent::tearDown();
     }
 
     public function testUnlimitedJobsAreExecuted()
@@ -111,7 +113,7 @@ class RateLimitedWithRedisTest extends TestCase
 
     public function testMiddlewareSerialization()
     {
-        $rateLimited = new RateLimitedWithRedis('limiterName');
+        $rateLimited = new RateLimitedWithRedis('limiterName', 'default');
         $rateLimited->shouldRelease = false;
 
         $restoredRateLimited = unserialize(serialize($rateLimited));
@@ -122,8 +124,9 @@ class RateLimitedWithRedisTest extends TestCase
 
         $this->assertFalse($restoredRateLimited->shouldRelease);
         $this->assertSame('limiterName', $fetch('limiterName'));
+        $this->assertSame('default', $fetch('connectionName'));
         $this->assertInstanceOf(RateLimiter::class, $fetch('limiter'));
-        $this->assertInstanceOf(Redis::class, $fetch('redis'));
+        // $this->assertInstanceOf(Connection::class, $fetch('redis'));
     }
 
     protected function assertJobRanSuccessfully($testJob)

@@ -23,7 +23,6 @@ class AnonymousComponent extends Component
      *
      * @param  string  $view
      * @param  array  $data
-     * @return void
      */
     public function __construct($view, $data)
     {
@@ -51,7 +50,7 @@ class AnonymousComponent extends Component
         $this->attributes = $this->attributes ?: $this->newAttributeBag();
 
         return array_merge(
-            ws_optional($this->data['attributes'] ?? null)->getAttributes() ?: [],
+            ($this->data['attributes'] ?? null)?->getAttributes() ?: [],
             $this->attributes->getAttributes(),
             $this->data,
             ['attributes' => $this->attributes]

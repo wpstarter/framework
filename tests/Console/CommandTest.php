@@ -5,6 +5,7 @@ namespace WpStarter\Tests\Console;
 use WpStarter\Console\Application;
 use WpStarter\Console\Command;
 use WpStarter\Console\OutputStyle;
+use WpStarter\Console\View\Components\Factory;
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Input\ArrayInput;
@@ -16,11 +17,6 @@ use Symfony\Component\Console\Question\ChoiceQuestion;
 
 class CommandTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        m::close();
-    }
-
     public function testCallingClassCommandResolveCommandViaApplicationResolution()
     {
         $command = new class extends Command
@@ -35,7 +31,9 @@ class CommandTest extends TestCase
 
         $input = new ArrayInput([]);
         $output = new NullOutput;
-        $application->shouldReceive('make')->with(OutputStyle::class, ['input' => $input, 'output' => $output])->andReturn(m::mock(OutputStyle::class));
+        $outputStyle = m::mock(OutputStyle::class);
+        $application->shouldReceive('make')->with(OutputStyle::class, ['input' => $input, 'output' => $output])->andReturn($outputStyle);
+        $application->shouldReceive('make')->with(Factory::class, ['output' => $outputStyle])->andReturn(m::mock(Factory::class));
 
         $application->shouldReceive('call')->with([$command, 'handle'])->andReturnUsing(function () use ($command, $application) {
             $commandCalled = m::mock(Command::class);
@@ -48,6 +46,7 @@ class CommandTest extends TestCase
 
             $command->call(Command::class);
         });
+        $application->shouldReceive('runningUnitTests')->andReturn(true);
 
         $command->run($input, $output);
     }
@@ -65,6 +64,12 @@ class CommandTest extends TestCase
                 return [
                     new InputArgument('argument-one', InputArgument::REQUIRED, 'first test argument'),
                     ['argument-two', InputArgument::OPTIONAL, 'a second test argument'],
+                    [
+                        'name' => 'argument-three',
+                        'description' => 'a third test argument',
+                        'mode' => InputArgument::OPTIONAL,
+                        'default' => 'third-argument-default',
+                    ],
                 ];
             }
 
@@ -73,11 +78,17 @@ class CommandTest extends TestCase
                 return [
                     new InputOption('option-one', 'o', InputOption::VALUE_OPTIONAL, 'first test option'),
                     ['option-two', 't', InputOption::VALUE_REQUIRED, 'second test option'],
+                    [
+                        'name' => 'option-three',
+                        'description' => 'a third test option',
+                        'mode' => InputOption::VALUE_OPTIONAL,
+                        'default' => 'third-option-default',
+                    ],
                 ];
             }
         };
 
-        $application = ws_app();
+        $application = app();
         $command->setLaravel($application);
 
         $input = new ArrayInput([
@@ -92,8 +103,10 @@ class CommandTest extends TestCase
 
         $this->assertSame('test-first-argument', $command->argument('argument-one'));
         $this->assertSame('test-second-argument', $command->argument('argument-two'));
+        $this->assertSame('third-argument-default', $command->argument('argument-three'));
         $this->assertSame('test-first-option', $command->option('option-one'));
         $this->assertSame('test-second-option', $command->option('option-two'));
+        $this->assertSame('third-option-default', $command->option('option-three'));
     }
 
     public function testTheInputSetterOverwrite()
@@ -118,6 +131,58 @@ class CommandTest extends TestCase
         $command->setOutput($output);
 
         $command->info('foo');
+    }
+
+    public function testSetHidden()
+    {
+        $command = new class extends Command
+        {
+            public function parentIsHidden()
+            {
+                return parent::isHidden();
+            }
+        };
+
+        $this->assertFalse($command->isHidden());
+        $this->assertFalse($command->parentIsHidden());
+
+        $command->setHidden(true);
+
+        $this->assertTrue($command->isHidden());
+        $this->assertTrue($command->parentIsHidden());
+    }
+
+    public function testHiddenProperty()
+    {
+        $command = new class extends Command
+        {
+            protected $hidden = true;
+
+            public function parentIsHidden()
+            {
+                return parent::isHidden();
+            }
+        };
+
+        $this->assertTrue($command->isHidden());
+        $this->assertTrue($command->parentIsHidden());
+
+        $command->setHidden(false);
+
+        $this->assertFalse($command->isHidden());
+        $this->assertFalse($command->parentIsHidden());
+    }
+
+    public function testAliasesProperty()
+    {
+        $command = new class extends Command
+        {
+            protected $name = 'foo:bar';
+
+            protected $aliases = ['bar:baz', 'baz:qux'];
+        };
+
+        $this->assertSame(['bar:baz', 'baz:qux'], $command->getAliases());
     }
 
     public function testChoiceIsSingleSelectByDefault()

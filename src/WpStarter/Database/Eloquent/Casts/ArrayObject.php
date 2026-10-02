@@ -4,8 +4,15 @@ namespace WpStarter\Database\Eloquent\Casts;
 
 use ArrayObject as BaseArrayObject;
 use WpStarter\Contracts\Support\Arrayable;
+use WpStarter\Support\Collection;
 use JsonSerializable;
 
+/**
+ * @template TKey of array-key
+ * @template TItem
+ *
+ * @extends  \ArrayObject<TKey, TItem>
+ */
 class ArrayObject extends BaseArrayObject implements Arrayable, JsonSerializable
 {
     /**
@@ -15,7 +22,7 @@ class ArrayObject extends BaseArrayObject implements Arrayable, JsonSerializable
      */
     public function collect()
     {
-        return ws_collect($this->getArrayCopy());
+        return new Collection($this->getArrayCopy());
     }
 
     /**
@@ -33,8 +40,7 @@ class ArrayObject extends BaseArrayObject implements Arrayable, JsonSerializable
      *
      * @return array
      */
-    #[\ReturnTypeWillChange]
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return $this->getArrayCopy();
     }

@@ -4,13 +4,18 @@ namespace WpStarter\Database\Console\Migrations;
 
 use WpStarter\Console\Command;
 use WpStarter\Console\ConfirmableTrait;
+use WpStarter\Console\Prohibitable;
 use WpStarter\Contracts\Events\Dispatcher;
 use WpStarter\Database\Events\DatabaseRefreshed;
+use WpStarter\Database\Migrations\Migrator;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputOption;
+use Throwable;
 
+#[AsCommand(name: 'migrate:fresh')]
 class FreshCommand extends Command
 {
-    use ConfirmableTrait;
+    use ConfirmableTrait, Prohibitable;
 
     /**
      * The console command name.
@@ -27,24 +32,58 @@ class FreshCommand extends Command
     protected $description = 'Drop all tables and re-run all migrations';
 
     /**
+     * The migrator instance.
+     *
+     * @var \WpStarter\Database\Migrations\Migrator
+     */
+    protected $migrator;
+
+    /**
+     * Create a new fresh command instance.
+     *
+     * @param  \WpStarter\Database\Migrations\Migrator  $migrator
+     */
+    public function __construct(Migrator $migrator)
+    {
+        parent::__construct();
+
+        $this->migrator = $migrator;
+    }
+
+    /**
      * Execute the console command.
      *
      * @return int
      */
     public function handle()
     {
-        if (! $this->confirmToProceed()) {
-            return 1;
+        if ($this->isProhibited() ||
+            ! $this->confirmToProceed()) {
+            return Command::FAILURE;
         }
 
         $database = $this->input->getOption('database');
 
-        $this->call('db:wipe', array_filter([
-            '--database' => $database,
-            '--drop-views' => $this->option('drop-views'),
-            '--drop-types' => $this->option('drop-types'),
-            '--force' => true,
-        ]));
+        $this->migrator->usingConnection($database, function () use ($database) {
+            try {
+                $repositoryExists = $this->migrator->repositoryExists();
+            } catch (Throwable) {
+                $repositoryExists = false;
+            }
+
+            if ($repositoryExists) {
+                $this->newLine();
+
+                $this->components->task('Dropping all tables', fn () => $this->callSilent('db:wipe', array_filter([
+                    '--database' => $database,
+                    '--drop-views' => $this->option('drop-views'),
+                    '--drop-types' => $this->option('drop-types'),
+                    '--force' => true,
+                ])) == 0);
+            }
+        });
+
+        $this->newLine();
 
         $this->call('migrate', array_filter([
             '--database' => $database,
@@ -57,7 +96,7 @@ class FreshCommand extends Command
 
         if ($this->laravel->bound(Dispatcher::class)) {
             $this->laravel[Dispatcher::class]->dispatch(
-                new DatabaseRefreshed
+                new DatabaseRefreshed($database, $this->needsSeeding())
             );
         }
 

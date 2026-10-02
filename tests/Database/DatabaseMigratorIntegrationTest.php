@@ -46,6 +46,9 @@ class DatabaseMigratorIntegrationTest extends TestCase
 
         $container = new Container;
         $container->instance('db', $db->getDatabaseManager());
+        $container->bind('db.schema', function ($app) {
+            return $app['db']->connection()->getSchemaBuilder();
+        });
 
         Facade::setFacadeApplication($container);
 
@@ -56,7 +59,9 @@ class DatabaseMigratorIntegrationTest extends TestCase
         );
 
         $output = m::mock(OutputStyle::class);
+        $output->shouldReceive('write');
         $output->shouldReceive('writeln');
+        $output->shouldReceive('newLinesWritten');
 
         $this->migrator->setOutput($output);
 
@@ -76,6 +81,8 @@ class DatabaseMigratorIntegrationTest extends TestCase
     {
         Facade::clearResolvedInstances();
         Facade::setFacadeApplication(null);
+
+        parent::tearDown();
     }
 
     public function testBasicMigrationOfSingleFolder()
@@ -85,8 +92,8 @@ class DatabaseMigratorIntegrationTest extends TestCase
         $this->assertTrue($this->db->schema()->hasTable('users'));
         $this->assertTrue($this->db->schema()->hasTable('password_resets'));
 
-        $this->assertTrue(Str::contains($ran[0], 'users'));
-        $this->assertTrue(Str::contains($ran[1], 'password_resets'));
+        $this->assertTrue(str_contains($ran[0], 'users'));
+        $this->assertTrue(str_contains($ran[1], 'password_resets'));
     }
 
     public function testMigrationsDefaultConnectionCanBeChanged()
@@ -147,11 +154,24 @@ class DatabaseMigratorIntegrationTest extends TestCase
         $this->assertFalse($this->db->schema()->hasTable('users'));
         $this->assertFalse($this->db->schema()->hasTable('password_resets'));
 
-        $this->assertTrue(Str::contains($rolledBack[0], 'password_resets'));
-        $this->assertTrue(Str::contains($rolledBack[1], 'users'));
+        $this->assertTrue(str_contains($rolledBack[0], 'password_resets'));
+        $this->assertTrue(str_contains($rolledBack[1], 'users'));
     }
 
-    public function testMigrationsCanBeReset()
+    public function testMigrationsCanBeResetUsingAnString()
+    {
+        $this->migrator->run([__DIR__.'/migrations/one']);
+        $this->assertTrue($this->db->schema()->hasTable('users'));
+        $this->assertTrue($this->db->schema()->hasTable('password_resets'));
+        $rolledBack = $this->migrator->reset(__DIR__.'/migrations/one');
+        $this->assertFalse($this->db->schema()->hasTable('users'));
+        $this->assertFalse($this->db->schema()->hasTable('password_resets'));
+
+        $this->assertTrue(str_contains($rolledBack[0], 'password_resets'));
+        $this->assertTrue(str_contains($rolledBack[1], 'users'));
+    }
+
+    public function testMigrationsCanBeResetUsingAnArray()
     {
         $this->migrator->run([__DIR__.'/migrations/one']);
         $this->assertTrue($this->db->schema()->hasTable('users'));
@@ -160,8 +180,8 @@ class DatabaseMigratorIntegrationTest extends TestCase
         $this->assertFalse($this->db->schema()->hasTable('users'));
         $this->assertFalse($this->db->schema()->hasTable('password_resets'));
 
-        $this->assertTrue(Str::contains($rolledBack[0], 'password_resets'));
-        $this->assertTrue(Str::contains($rolledBack[1], 'users'));
+        $this->assertTrue(str_contains($rolledBack[0], 'password_resets'));
+        $this->assertTrue(str_contains($rolledBack[1], 'users'));
     }
 
     public function testNoErrorIsThrownWhenNoOutstandingMigrationsExist()

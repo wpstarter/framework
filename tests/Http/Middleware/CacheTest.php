@@ -8,9 +8,35 @@ use WpStarter\Http\Response;
 use WpStarter\Support\Carbon;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CacheTest extends TestCase
 {
+    public function testItCanGenerateDefinitionViaStaticMethod()
+    {
+        $signature = (string) Cache::using('max_age=120;no-transform;s_maxage=60;');
+        $this->assertSame('WpStarter\Http\Middleware\SetCacheHeaders:max_age=120;no-transform;s_maxage=60;', $signature);
+
+        $signature = (string) Cache::using('max_age=120;no-transform;s_maxage=60');
+        $this->assertSame('WpStarter\Http\Middleware\SetCacheHeaders:max_age=120;no-transform;s_maxage=60', $signature);
+
+        $signature = (string) Cache::using([
+            'max_age=120',
+            'no-transform',
+            's_maxage=60',
+            'etag' => true,
+        ]);
+        $this->assertSame('WpStarter\Http\Middleware\SetCacheHeaders:max_age=120;no-transform;s_maxage=60;etag', $signature);
+
+        $signature = (string) Cache::using([
+            'max_age' => 120,
+            'no-transform',
+            's_maxage' => '60',
+        ]);
+        $this->assertSame('WpStarter\Http\Middleware\SetCacheHeaders:max_age=120;no-transform;s_maxage=60', $signature);
+    }
+
     public function testDoNotSetHeaderWhenMethodNotCacheable()
     {
         $request = new Request;
@@ -31,6 +57,29 @@ class CacheTest extends TestCase
 
         $this->assertNull($response->getMaxAge());
         $this->assertNull($response->getEtag());
+    }
+
+    public function testSetHeaderToFileResponseEvenWithNoContent()
+    {
+        $response = (new Cache)->handle(new Request, function () {
+            $filePath = __DIR__.'/../fixtures/test.txt';
+
+            return new BinaryFileResponse($filePath);
+        }, 'max_age=120;s_maxage=60');
+
+        $this->assertNotNull($response->getMaxAge());
+    }
+
+    public function testSetHeaderToDownloadResponseEvenWithNoContent()
+    {
+        $response = (new Cache)->handle(new Request, function () {
+            return new StreamedResponse(function () {
+                $filePath = __DIR__.'/../fixtures/test.txt';
+                readfile($filePath);
+            });
+        }, 'max_age=120;s_maxage=60');
+
+        $this->assertNotNull($response->getMaxAge());
     }
 
     public function testAddHeaders()
@@ -59,14 +108,23 @@ class CacheTest extends TestCase
             return new Response('some content');
         }, 'etag;max_age=100;s_maxage=200');
 
-        $this->assertSame('"9893532233caff98cd083a116b013c0b"', $response->getEtag());
+        $this->assertSame('"4f1b32bff4356281946800d355007128"', $response->getEtag());
         $this->assertSame('max-age=100, public, s-maxage=200', $response->headers->get('Cache-Control'));
+    }
+
+    public function testDoesNotOverrideEtag()
+    {
+        $response = (new Cache)->handle(new Request, function () {
+            return (new Response('some content'))->setEtag('XYZ');
+        }, 'etag');
+
+        $this->assertSame('"XYZ"', $response->getEtag());
     }
 
     public function testIsNotModified()
     {
         $request = new Request;
-        $request->headers->set('If-None-Match', '"9893532233caff98cd083a116b013c0b"');
+        $request->headers->set('If-None-Match', '"4f1b32bff4356281946800d355007128"');
 
         $response = (new Cache)->handle($request, function () {
             return new Response('some content');
@@ -114,5 +172,14 @@ class CacheTest extends TestCase
         }, "last_modified=$time;");
 
         $this->assertSame($time, $response->getLastModified()->getTimestamp());
+    }
+
+    public function testItDoesNotSetEtagHeadersForBinaryContent()
+    {
+        $response = (new Cache)->handle(new Request, function () {
+            return new BinaryFileResponse(__DIR__.'/../fixtures/test.txt');
+        }, 'etag');
+
+        $this->assertNull($response->getEtag());
     }
 }

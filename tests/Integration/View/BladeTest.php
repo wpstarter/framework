@@ -3,12 +3,30 @@
 namespace WpStarter\Tests\Integration\View;
 
 use WpStarter\Support\Facades\Blade;
+use WpStarter\Support\Facades\Config;
 use WpStarter\Support\Facades\View;
 use WpStarter\View\Component;
+use Mockery;
 use Orchestra\Testbench\TestCase;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
+use Symfony\Component\Finder\Finder;
+use Symfony\Component\Finder\SplFileInfo;
+
+use function WpStarter\Filesystem\join_paths;
+use function Orchestra\Testbench\artisan;
+use function Orchestra\Testbench\phpunit_version_compare;
 
 class BladeTest extends TestCase
 {
+    /** {@inheritdoc} */
+    #[\Override]
+    protected function tearDown(): void
+    {
+        artisan($this, 'view:clear');
+
+        parent::tearDown();
+    }
+
     public function test_rendering_blade_string()
     {
         $this->assertSame('Hello Taylor', Blade::render('Hello {{ $name }}', ['name' => 'Taylor']));
@@ -21,6 +39,31 @@ class BladeTest extends TestCase
         $result = Blade::render($longString.'{{ $name }}', ['name' => 'a']);
 
         $this->assertSame($longString.'a', $result);
+    }
+
+    #[RunInSeparateProcess]
+    public function test_rendering_blade_long_maxpathlen_string_with_exact_length()
+    {
+        // The PHP_MAXPATHLEN restriction is only active, if
+        // open_basedir is set and active. Otherwise, the check
+        // for the PHP_MAXPATHLEN is not active.
+        if (ini_get('open_basedir') === '' && phpunit_version_compare('12.1.0', '<')) {
+            $openBaseDir = explode(DIRECTORY_SEPARATOR, __DIR__)[0].DIRECTORY_SEPARATOR.PATH_SEPARATOR.sys_get_temp_dir();
+            $iniSet = ini_set(
+                'open_basedir',
+                $openBaseDir
+            );
+
+            $this->assertNotFalse($iniSet, 'Could not set config for open_basedir.');
+        }
+
+        for ($i = PHP_MAXPATHLEN - 200; $i <= PHP_MAXPATHLEN + 1; $i++) {
+            $longString = str_repeat('x', $i);
+
+            $result = Blade::render($longString);
+
+            $this->assertSame($longString, $result);
+        }
     }
 
     public function test_rendering_blade_component_instance()
@@ -122,7 +165,120 @@ class BladeTest extends TestCase
 <div>Slot: F, Color: yellow, Default: foo</div>', trim($view));
     }
 
-    protected function getEnvironmentSetUp($app)
+    public function test_name_attribute_can_be_used_if_using_short_slot_names()
+    {
+        $content = Blade::render('<x-input-with-slot>
+    <x-slot:input name="my_form_field" class="text-input-lg" data-test="data">Test</x-slot:input>
+</x-input-with-slot>');
+
+        $this->assertSame('<div>
+    <input type="text" class="input text-input-lg" data-test="data" name="my_form_field" />
+</div>', trim($content));
+    }
+
+    public function test_name_attribute_cant_be_used_if_not_using_short_slot_names()
+    {
+        $content = Blade::render('<x-input-with-slot>
+    <x-slot name="input" class="text-input-lg" data-test="data">Test</x-slot>
+</x-input-with-slot>');
+
+        $this->assertSame('<div>
+    <input type="text" class="input text-input-lg" data-test="data" />
+</div>', trim($content));
+    }
+
+    public function test_bound_name_attribute_can_be_used_if_using_short_slot_names()
+    {
+        $content = Blade::render('<x-input-with-slot>
+    <x-slot:input :name="\'my_form_field\'" class="text-input-lg" data-test="data">Test</x-slot:input>
+</x-input-with-slot>');
+
+        $this->assertSame('<div>
+    <input type="text" class="input text-input-lg" data-test="data" name="my_form_field" />
+</div>', trim($content));
+    }
+
+    public function test_bound_name_attribute_can_be_used_if_using_short_slot_names_and_not_first_attribute()
+    {
+        $content = Blade::render('<x-input-with-slot>
+    <x-slot:input class="text-input-lg" :name="\'my_form_field\'" data-test="data">Test</x-slot:input>
+</x-input-with-slot>');
+
+        $this->assertSame('<div>
+    <input type="text" class="input text-input-lg" name="my_form_field" data-test="data" />
+</div>', trim($content));
+    }
+
+    public function test_dynamic_component_slot_attributes_are_not_compiled_as_blade()
+    {
+        $payload = '{{ 7191 * 2 }}';
+
+        $static = Blade::render('<x-input-with-slot>
+    <x-slot:input :data-x="$payload">Test</x-slot:input>
+</x-input-with-slot>', ['payload' => $payload]);
+
+        $dynamic = Blade::render('<x-dynamic-component component="input-with-slot">
+    <x-slot:input :data-x="$payload">Test</x-slot:input>
+</x-dynamic-component>', ['payload' => $payload]);
+
+        $this->assertStringContainsString('data-x="{{ 7191 * 2 }}"', $static);
+        $this->assertStringNotContainsString('14382', $dynamic);
+        $this->assertSame(trim($static), trim($dynamic));
+    }
+
+    public function test_no_name_passed_to_slot_uses_default_name()
+    {
+        $content = Blade::render('<x-link href="#"><x-slot>default slot</x-slot></x-link>');
+
+        $this->assertSame('<a href="#">default slot</a>', trim($content));
+    }
+
+    public function testViewCacheCommandHandlesConfiguredBladeExtensions()
+    {
+        View::addExtension('sh', 'blade');
+        $this->artisan('view:cache');
+
+        $compiledFiles = Finder::create()->in(Config::get('view.compiled'))->files();
+        $found = collect($compiledFiles)
+            ->contains(fn (SplFileInfo $file) => str_contains($file->getContents(), 'echo "<?php echo e($scriptMessage); ?>" > output.log'));
+        $this->assertTrue($found);
+    }
+
+    public function test_include_scoped_does_not_inherit_parent_scope()
+    {
+        // Regular @include passes parent scope variables
+        $regularInclude = View::make('uses-include-regular', [
+            'parentVar' => 'parent-value',
+            'explicitVar' => 'explicit-value',
+        ])->render();
+
+        $this->assertSame('Parent: parent-value, Explicit: explicit-value', trim($regularInclude));
+
+        // @includeIsolated does NOT pass parent scope variables
+        $scopedInclude = View::make('uses-include-scoped', [
+            'parentVar' => 'parent-value',
+            'explicitVar' => 'explicit-value',
+        ])->render();
+
+        $this->assertSame('Parent: undefined, Explicit: explicit-value', trim($scopedInclude));
+    }
+
+    public function test_view_cache_command_deduplicates_paths_before_compiling()
+    {
+        View::addNamespace('templates', join_paths(__DIR__, 'templates'));
+        View::addNamespace('components', join_paths(__DIR__, 'templates', 'components'));
+
+        $compiler = Mockery::mock(app('blade.compiler'))->makePartial();
+        $compiler->shouldReceive('compile')->with(realpath(__DIR__.'/templates/components/panel.blade.php'))->once();
+
+        $this->instance('blade.compiler', $compiler);
+
+        $this->artisan('view:cache');
+    }
+
+    /** {@inheritdoc} */
+    #[\Override]
+    protected function defineEnvironment($app)
     {
         $app['config']->set('view.paths', [__DIR__.'/templates']);
     }

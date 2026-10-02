@@ -9,7 +9,7 @@ use WpStarter\Session\TokenMismatchException;
 use WpStarter\Support\Facades\Route;
 use WpStarter\Support\Facades\Session;
 use WpStarter\Support\Str;
-use Mockery;
+use Mockery as m;
 use Orchestra\Testbench\TestCase;
 
 class SessionPersistenceTest extends TestCase
@@ -31,11 +31,11 @@ class SessionPersistenceTest extends TestCase
         $this->assertTrue($handler->written);
     }
 
-    protected function getEnvironmentSetUp($app)
+    protected function defineEnvironment($app)
     {
         $app->instance(
             ExceptionHandler::class,
-            $handler = Mockery::mock(ExceptionHandler::class)->shouldIgnoreMissing()
+            $handler = m::mock(ExceptionHandler::class)->shouldIgnoreMissing()
         );
 
         $handler->shouldReceive('render')->andReturn(new Response);
@@ -50,7 +50,7 @@ class FakeNullSessionHandler extends NullSessionHandler
 {
     public $written = false;
 
-    public function write($sessionId, $data)
+    public function write($sessionId, $data): bool
     {
         $this->written = true;
 

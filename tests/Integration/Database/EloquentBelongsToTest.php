@@ -10,7 +10,7 @@ use WpStarter\Tests\Integration\Database\DatabaseTestCase;
 
 class EloquentBelongsToTest extends DatabaseTestCase
 {
-    protected function defineDatabaseMigrationsAfterDatabaseRefreshed()
+    protected function afterRefreshingDatabase()
     {
         Schema::create('users', function (Blueprint $table) {
             $table->increments('id');

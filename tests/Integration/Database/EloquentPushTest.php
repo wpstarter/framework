@@ -8,7 +8,7 @@ use WpStarter\Support\Facades\Schema;
 
 class EloquentPushTest extends DatabaseTestCase
 {
-    protected function defineDatabaseMigrationsAfterDatabaseRefreshed()
+    protected function afterRefreshingDatabase()
     {
         Schema::create('users', function (Blueprint $table) {
             $table->increments('id');

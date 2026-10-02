@@ -1,20 +1,27 @@
 <?php
 
+use Carbon\CarbonInterval;
 use WpStarter\Contracts\Support\DeferringDisplayableValue;
 use WpStarter\Contracts\Support\Htmlable;
+use WpStarter\Database\Eloquent\Model;
 use WpStarter\Support\Arr;
 use WpStarter\Support\Env;
+use WpStarter\Support\Fluent;
 use WpStarter\Support\HigherOrderTapProxy;
+use WpStarter\Support\Once;
+use WpStarter\Support\Onceable;
 use WpStarter\Support\Optional;
+use WpStarter\Support\Sleep;
+use WpStarter\Support\Str;
+use WpStarter\Support\Stringable as SupportStringable;
 
-if (! function_exists('ws_append_config')) {
+if (! function_exists('append_config')) {
     /**
      * Assign high numeric IDs to a config item to force appending.
      *
      * @param  array  $array
-     * @return array
      */
-    function ws_append_config(array $array)
+    function append_config(array $array): array
     {
         $start = 9999;
 
@@ -30,14 +37,17 @@ if (! function_exists('ws_append_config')) {
     }
 }
 
-if (! function_exists('ws_blank')) {
+if (! function_exists('blank')) {
     /**
      * Determine if the given value is "blank".
      *
+     * @phpstan-assert-if-false !=null|'' $value
+     *
+     * @phpstan-assert-if-true !=numeric|bool $value
+     *
      * @param  mixed  $value
-     * @return bool
      */
-    function ws_blank($value)
+    function blank($value): bool
     {
         if (is_null($value)) {
             return true;
@@ -51,22 +61,29 @@ if (! function_exists('ws_blank')) {
             return false;
         }
 
+        if ($value instanceof Model) {
+            return false;
+        }
+
         if ($value instanceof Countable) {
             return count($value) === 0;
+        }
+
+        if ($value instanceof Stringable) {
+            return trim((string) $value) === '';
         }
 
         return empty($value);
     }
 }
 
-if (! function_exists('ws_class_basename')) {
+if (! function_exists('class_basename')) {
     /**
      * Get the class "basename" of the given object / class.
      *
      * @param  string|object  $class
-     * @return string
      */
-    function ws_class_basename($class)
+    function class_basename($class): string
     {
         $class = is_object($class) ? get_class($class) : $class;
 
@@ -74,14 +91,14 @@ if (! function_exists('ws_class_basename')) {
     }
 }
 
-if (! function_exists('ws_class_uses_recursive')) {
+if (! function_exists('class_uses_recursive')) {
     /**
      * Returns all traits used by a class, its parent classes and trait of their traits.
      *
      * @param  object|string  $class
-     * @return array
+     * @return array<string, string>
      */
-    function ws_class_uses_recursive($class)
+    function class_uses_recursive($class): array
     {
         if (is_object($class)) {
             $class = get_class($class);
@@ -89,37 +106,40 @@ if (! function_exists('ws_class_uses_recursive')) {
 
         $results = [];
 
-        foreach (array_reverse(class_parents($class)) + [$class => $class] as $class) {
-            $results += ws_trait_uses_recursive($class);
+        foreach (array_reverse(class_parents($class) ?: []) + [$class => $class] as $class) {
+            $results += trait_uses_recursive($class);
         }
 
         return array_unique($results);
     }
 }
 
-if (! function_exists('ws_e')) {
+if (! function_exists('e')) {
     /**
      * Encode HTML special characters in a string.
      *
-     * @param  \WpStarter\Contracts\Support\DeferringDisplayableValue|\WpStarter\Contracts\Support\Htmlable|string|null  $value
+     * @param  \WpStarter\Contracts\Support\DeferringDisplayableValue|\WpStarter\Contracts\Support\Htmlable|\BackedEnum|string|int|float|null  $value
      * @param  bool  $doubleEncode
-     * @return string
      */
-    function ws_e($value, $doubleEncode = true)
+    function e($value, $doubleEncode = true): string
     {
         if ($value instanceof DeferringDisplayableValue) {
             $value = $value->resolveDisplayableValue();
         }
 
         if ($value instanceof Htmlable) {
-            return $value->toHtml();
+            return $value->toHtml() ?? '';
         }
 
-        return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8', $doubleEncode);
+        if ($value instanceof BackedEnum) {
+            $value = $value->value;
+        }
+
+        return htmlspecialchars($value ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8', $doubleEncode);
     }
 }
 
-if (! function_exists('ws_env')) {
+if (! function_exists('env')) {
     /**
      * Gets the value of an environment variable.
      *
@@ -127,35 +147,68 @@ if (! function_exists('ws_env')) {
      * @param  mixed  $default
      * @return mixed
      */
-    function ws_env($key, $default = null)
+    function env($key, $default = null)
     {
         return Env::get($key, $default);
     }
 }
 
-if (! function_exists('ws_filled')) {
+if (! function_exists('filled')) {
     /**
      * Determine if a value is "filled".
      *
+     * @phpstan-assert-if-true !=null|'' $value
+     *
+     * @phpstan-assert-if-false !=numeric|bool $value
+     *
      * @param  mixed  $value
-     * @return bool
      */
-    function ws_filled($value)
+    function filled($value): bool
     {
-        return ! ws_blank($value);
+        return ! blank($value);
     }
 }
 
-if (! function_exists('ws_object_get')) {
+if (! function_exists('fluent')) {
+    /**
+     * Create a Fluent object from the given value.
+     *
+     * @param  iterable|object|null  $value
+     */
+    function fluent($value = null): Fluent
+    {
+        return new Fluent($value ?? []);
+    }
+}
+
+if (! function_exists('literal')) {
+    /**
+     * Return a new literal or anonymous object using named arguments.
+     *
+     * @return mixed
+     */
+    function literal(...$arguments)
+    {
+        if (count($arguments) === 1 && array_is_list($arguments)) {
+            return $arguments[0];
+        }
+
+        return (object) $arguments;
+    }
+}
+
+if (! function_exists('object_get')) {
     /**
      * Get an item from an object using "dot" notation.
      *
-     * @param  object  $object
+     * @template TValue of object
+     *
+     * @param  TValue  $object
      * @param  string|null  $key
      * @param  mixed  $default
-     * @return mixed
+     * @return ($key is empty ? TValue : mixed)
      */
-    function ws_object_get($object, $key, $default = null)
+    function object_get($object, $key, $default = null)
     {
         if (is_null($key) || trim($key) === '') {
             return $object;
@@ -163,7 +216,7 @@ if (! function_exists('ws_object_get')) {
 
         foreach (explode('.', $key) as $segment) {
             if (! is_object($object) || ! isset($object->{$segment})) {
-                return ws_value($default);
+                return value($default);
             }
 
             $object = $object->{$segment};
@@ -173,15 +226,49 @@ if (! function_exists('ws_object_get')) {
     }
 }
 
-if (! function_exists('ws_optional')) {
+if (! function_exists('laravel_cloud')) {
+    /**
+     * Determine if the application is running on Laravel Cloud.
+     */
+    function laravel_cloud(): bool
+    {
+        return ($_ENV['LARAVEL_CLOUD'] ?? false) === '1' ||
+            ($_SERVER['LARAVEL_CLOUD'] ?? false) === '1';
+    }
+}
+
+if (! function_exists('once')) {
+    /**
+     * Ensures a callable is only called once, and returns the result on subsequent calls.
+     *
+     * @template  TReturnType
+     *
+     * @param  callable(): TReturnType  $callback
+     * @return TReturnType
+     */
+    function once(callable $callback)
+    {
+        $onceable = Onceable::tryFromTrace(
+            debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 2),
+            $callback,
+        );
+
+        return $onceable ? Once::instance()->value($onceable) : call_user_func($callback);
+    }
+}
+
+if (! function_exists('optional')) {
     /**
      * Provide access to optional objects.
      *
-     * @param  mixed  $value
-     * @param  callable|null  $callback
-     * @return mixed
+     * @template TValue
+     * @template TReturn
+     *
+     * @param  TValue  $value
+     * @param  (callable(TValue): TReturn)|null  $callback
+     * @return ($callback is null ? \WpStarter\Support\Optional : ($value is null ? null : TReturn))
      */
-    function ws_optional($value = null, ?callable $callback = null)
+    function optional($value = null, ?callable $callback = null)
     {
         if (is_null($callback)) {
             return new Optional($value);
@@ -191,40 +278,47 @@ if (! function_exists('ws_optional')) {
     }
 }
 
-if (! function_exists('ws_preg_replace_array')) {
+if (! function_exists('preg_replace_array')) {
     /**
      * Replace a given pattern with each value in the array in sequentially.
      *
      * @param  string  $pattern
      * @param  array  $replacements
      * @param  string  $subject
-     * @return string
      */
-    function ws_preg_replace_array($pattern, array $replacements, $subject)
+    function preg_replace_array($pattern, array $replacements, $subject): string
     {
         return preg_replace_callback($pattern, function () use (&$replacements) {
-            foreach ($replacements as $key => $value) {
-                return array_shift($replacements);
-            }
+            return array_shift($replacements);
         }, $subject);
     }
 }
 
-if (! function_exists('ws_retry')) {
+if (! function_exists('retry')) {
     /**
      * Retry an operation a given number of times.
      *
-     * @param  int  $times
-     * @param  callable  $callback
-     * @param  int|\Closure  $sleepMilliseconds
-     * @param  callable|null  $when
-     * @return mixed
+     * @template TValue
      *
-     * @throws \Exception
+     * @param  int|array<int, int>  $times
+     * @param  callable(int): TValue  $callback
+     * @param  CarbonInterval|int|\Closure(int, \Throwable): CarbonInterval|int  $sleepMilliseconds
+     * @param  (callable(\Throwable): bool)|null  $when
+     * @return TValue
+     *
+     * @throws \Throwable
      */
-    function ws_retry($times, callable $callback, $sleepMilliseconds = 0, $when = null)
+    function retry($times, callable $callback, $sleepMilliseconds = 0, $when = null)
     {
         $attempts = 0;
+
+        $backoff = [];
+
+        if (is_array($times)) {
+            $backoff = $times;
+
+            $times = count($times) + 1;
+        }
 
         beginning:
         $attempts++;
@@ -232,13 +326,19 @@ if (! function_exists('ws_retry')) {
 
         try {
             return $callback($attempts);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             if ($times < 1 || ($when && ! $when($e))) {
                 throw $e;
             }
 
+            $sleepMilliseconds = $backoff[$attempts - 1] ?? $sleepMilliseconds;
+
             if ($sleepMilliseconds) {
-                usleep(ws_value($sleepMilliseconds, $attempts) * 1000);
+                $duration = value($sleepMilliseconds, $attempts, $e);
+
+                $duration instanceof CarbonInterval
+                    ? Sleep::usleep($duration->totalMicroseconds)
+                    : Sleep::usleep($duration * 1000);
             }
 
             goto beginning;
@@ -246,15 +346,45 @@ if (! function_exists('ws_retry')) {
     }
 }
 
-if (! function_exists('ws_tap')) {
+if (! function_exists('str')) {
+    /**
+     * Get a new stringable object from the given string.
+     *
+     * @param  string|null  $string
+     * @return ($string is null ? object : \WpStarter\Support\Stringable)
+     */
+    function str($string = null)
+    {
+        if (func_num_args() === 0) {
+            return new class
+            {
+                public function __call($method, $parameters)
+                {
+                    return Str::$method(...$parameters);
+                }
+
+                public function __toString()
+                {
+                    return '';
+                }
+            };
+        }
+
+        return new SupportStringable($string);
+    }
+}
+
+if (! function_exists('tap')) {
     /**
      * Call the given Closure with the given value then return the value.
      *
-     * @param  mixed  $value
-     * @param  callable|null  $callback
-     * @return mixed
+     * @template TValue
+     *
+     * @param  TValue  $value
+     * @param  (callable(TValue): mixed)|null  $callback
+     * @return ($callback is null ? \WpStarter\Support\HigherOrderTapProxy : TValue)
      */
-    function ws_tap($value, $callback = null)
+    function tap($value, $callback = null)
     {
         if (is_null($callback)) {
             return new HigherOrderTapProxy($value);
@@ -266,20 +396,29 @@ if (! function_exists('ws_tap')) {
     }
 }
 
-if (! function_exists('ws_throw_if')) {
+if (! function_exists('throw_if')) {
     /**
      * Throw the given exception if the given condition is true.
      *
-     * @param  mixed  $condition
-     * @param  \Throwable|string  $exception
-     * @param  mixed  ...$parameters
-     * @return mixed
+     * @template TValue
+     * @template TParams of mixed
+     * @template TException of \Throwable
+     * @template TExceptionValue of TException|class-string<TException>|string
      *
-     * @throws \Throwable
+     * @param  TValue  $condition
+     * @param  Closure(TParams): TExceptionValue|TExceptionValue  $exception
+     * @param  TParams  ...$parameters
+     * @return ($condition is true ? never : ($condition is non-empty-mixed ? never : TValue))
+     *
+     * @throws TException
      */
-    function ws_throw_if($condition, $exception = 'RuntimeException', ...$parameters)
+    function throw_if($condition, $exception = 'RuntimeException', ...$parameters)
     {
         if ($condition) {
+            if ($exception instanceof Closure) {
+                $exception = $exception(...$parameters);
+            }
+
             if (is_string($exception) && class_exists($exception)) {
                 $exception = new $exception(...$parameters);
             }
@@ -291,56 +430,65 @@ if (! function_exists('ws_throw_if')) {
     }
 }
 
-if (! function_exists('ws_throw_unless')) {
+if (! function_exists('throw_unless')) {
     /**
      * Throw the given exception unless the given condition is true.
      *
-     * @param  mixed  $condition
-     * @param  \Throwable|string  $exception
-     * @param  mixed  ...$parameters
-     * @return mixed
+     * @template TValue
+     * @template TParams of mixed
+     * @template TException of \Throwable
+     * @template TExceptionValue of TException|class-string<TException>|string
      *
-     * @throws \Throwable
+     * @param  TValue  $condition
+     * @param  Closure(TParams): TExceptionValue|TExceptionValue  $exception
+     * @param  TParams  ...$parameters
+     * @return ($condition is false ? never : ($condition is non-empty-mixed ? TValue : never))
+     *
+     * @throws TException
      */
-    function ws_throw_unless($condition, $exception = 'RuntimeException', ...$parameters)
+    function throw_unless($condition, $exception = 'RuntimeException', ...$parameters)
     {
-        ws_throw_if(! $condition, $exception, ...$parameters);
+        throw_if(! $condition, $exception, ...$parameters);
 
         return $condition;
     }
 }
 
-if (! function_exists('ws_trait_uses_recursive')) {
+if (! function_exists('trait_uses_recursive')) {
     /**
      * Returns all traits used by a trait and its traits.
      *
-     * @param  string  $trait
-     * @return array
+     * @param  object|string  $trait
+     * @return array<string, string>
      */
-    function ws_trait_uses_recursive($trait)
+    function trait_uses_recursive($trait): array
     {
         $traits = class_uses($trait) ?: [];
 
         foreach ($traits as $trait) {
-            $traits += ws_trait_uses_recursive($trait);
+            $traits += trait_uses_recursive($trait);
         }
 
         return $traits;
     }
 }
 
-if (! function_exists('ws_transform')) {
+if (! function_exists('transform')) {
     /**
      * Transform the given value if it is present.
      *
-     * @param  mixed  $value
-     * @param  callable  $callback
-     * @param  mixed  $default
-     * @return mixed|null
+     * @template TValue
+     * @template TReturn
+     * @template TDefault
+     *
+     * @param  TValue  $value
+     * @param  callable(TValue): TReturn  $callback
+     * @param  TDefault|callable(TValue): TDefault  $default
+     * @return ($value is empty ? TDefault : TReturn)
      */
-    function ws_transform($value, callable $callback, $default = null)
+    function transform($value, callable $callback, $default = null)
     {
-        if (ws_filled($value)) {
+        if (filled($value)) {
             return $callback($value);
         }
 
@@ -352,27 +500,28 @@ if (! function_exists('ws_transform')) {
     }
 }
 
-if (! function_exists('ws_windows_os')) {
+if (! function_exists('windows_os')) {
     /**
      * Determine whether the current environment is Windows based.
-     *
-     * @return bool
      */
-    function ws_windows_os()
+    function windows_os(): bool
     {
         return PHP_OS_FAMILY === 'Windows';
     }
 }
 
-if (! function_exists('ws_with')) {
+if (! function_exists('with')) {
     /**
      * Return the given value, optionally passed through the given callback.
      *
-     * @param  mixed  $value
-     * @param  callable|null  $callback
-     * @return mixed
+     * @template TValue
+     * @template TReturn
+     *
+     * @param  TValue  $value
+     * @param  (callable(TValue): (TReturn))|null  $callback
+     * @return ($callback is null ? TValue : TReturn)
      */
-    function ws_with($value, ?callable $callback = null)
+    function with($value, ?callable $callback = null)
     {
         return is_null($callback) ? $value : $callback($value);
     }

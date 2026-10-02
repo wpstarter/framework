@@ -4,7 +4,6 @@ namespace WpStarter\Validation;
 
 use Closure;
 use WpStarter\Database\ConnectionResolverInterface;
-use WpStarter\Support\Str;
 
 class DatabasePresenceVerifier implements DatabasePresenceVerifierInterface
 {
@@ -26,7 +25,6 @@ class DatabasePresenceVerifier implements DatabasePresenceVerifierInterface
      * Create a new database presence verifier.
      *
      * @param  \WpStarter\Database\ConnectionResolverInterface  $db
-     * @return void
      */
     public function __construct(ConnectionResolverInterface $db)
     {
@@ -107,7 +105,7 @@ class DatabasePresenceVerifier implements DatabasePresenceVerifierInterface
             $query->whereNull($key);
         } elseif ($extraValue === 'NOT_NULL') {
             $query->whereNotNull($key);
-        } elseif (Str::startsWith($extraValue, '!')) {
+        } elseif (str_starts_with($extraValue, '!')) {
             $query->where($key, '!=', mb_substr($extraValue, 1));
         } else {
             $query->where($key, $extraValue);

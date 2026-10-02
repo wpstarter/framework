@@ -3,7 +3,6 @@
 namespace WpStarter\Validation;
 
 use WpStarter\Support\Arr;
-use WpStarter\Support\Str;
 
 class ValidationData
 {
@@ -36,11 +35,11 @@ class ValidationData
 
         $data = static::extractDataFromPath($explicitPath, $masterData);
 
-        if (! Str::contains($attribute, '*') || Str::endsWith($attribute, '*')) {
+        if (! str_contains($attribute, '*') || str_ends_with($attribute, '*')) {
             return $data;
         }
 
-        return ws_data_set($data, $attribute, null, true);
+        return data_set($data, $attribute, null, true);
     }
 
     /**
@@ -55,7 +54,7 @@ class ValidationData
     {
         $keys = [];
 
-        $pattern = str_replace('\*', '[^\.]+', preg_quote($attribute));
+        $pattern = str_replace('\*', '[^\.]+', preg_quote($attribute, '/'));
 
         foreach ($data as $key => $value) {
             if ((bool) preg_match('/^'.$pattern.'/', $key, $matches)) {

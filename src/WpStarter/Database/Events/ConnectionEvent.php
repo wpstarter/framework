@@ -22,7 +22,6 @@ abstract class ConnectionEvent
      * Create a new event instance.
      *
      * @param  \WpStarter\Database\Connection  $connection
-     * @return void
      */
     public function __construct($connection)
     {

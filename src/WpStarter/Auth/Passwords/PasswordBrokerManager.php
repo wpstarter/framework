@@ -3,7 +3,6 @@
 namespace WpStarter\Auth\Passwords;
 
 use WpStarter\Contracts\Auth\PasswordBrokerFactory as FactoryContract;
-use WpStarter\Support\Str;
 use InvalidArgumentException;
 
 /**
@@ -29,7 +28,6 @@ class PasswordBrokerManager implements FactoryContract
      * Create a new PasswordBroker manager instance.
      *
      * @param  \WpStarter\Contracts\Foundation\Application  $app
-     * @return void
      */
     public function __construct($app)
     {
@@ -70,7 +68,9 @@ class PasswordBrokerManager implements FactoryContract
         // aggregate service of sorts providing a convenient interface for resets.
         return new PasswordBroker(
             $this->createTokenRepository($config),
-            $this->app['auth']->createUserProvider($config['provider'] ?? null)
+            $this->app['auth']->createUserProvider($config['provider'] ?? null),
+            $this->app['events'] ?? null,
+            timeboxDuration: $this->app['config']->get('auth.timebox_duration', 200000),
         );
     }
 
@@ -84,19 +84,27 @@ class PasswordBrokerManager implements FactoryContract
     {
         $key = $this->app['config']['app.key'];
 
-        if (Str::startsWith($key, 'base64:')) {
+        if (str_starts_with($key, 'base64:')) {
             $key = base64_decode(substr($key, 7));
         }
 
-        $connection = $config['connection'] ?? null;
+        if (isset($config['driver']) && $config['driver'] === 'cache') {
+            return new CacheTokenRepository(
+                $this->app['cache']->store($config['store'] ?? null),
+                $this->app['hash'],
+                $key,
+                ($config['expire'] ?? 60) * 60,
+                $config['throttle'] ?? 0,
+            );
+        }
 
         return new DatabaseTokenRepository(
-            $this->app['db']->connection($connection),
+            $this->app['db']->connection($config['connection'] ?? null),
             $this->app['hash'],
             $config['table'],
             $key,
-            $config['expire'],
-            $config['throttle'] ?? 0
+            ($config['expire'] ?? 60) * 60,
+            $config['throttle'] ?? 0,
         );
     }
 
@@ -104,7 +112,7 @@ class PasswordBrokerManager implements FactoryContract
      * Get the password broker configuration.
      *
      * @param  string  $name
-     * @return array
+     * @return array|null
      */
     protected function getConfig($name)
     {

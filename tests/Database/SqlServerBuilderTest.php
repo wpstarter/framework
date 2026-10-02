@@ -10,16 +10,11 @@ use PHPUnit\Framework\TestCase;
 
 class SqlServerBuilderTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        m::close();
-    }
-
     public function testCreateDatabase()
     {
-        $grammar = new SqlServerGrammar;
-
         $connection = m::mock(Connection::class);
+        $grammar = new SqlServerGrammar($connection);
+
         $connection->shouldReceive('getSchemaGrammar')->once()->andReturn($grammar);
         $connection->shouldReceive('statement')->once()->with(
             'create database "my_temporary_database_a"'
@@ -31,9 +26,9 @@ class SqlServerBuilderTest extends TestCase
 
     public function testDropDatabaseIfExists()
     {
-        $grammar = new SqlServerGrammar;
-
         $connection = m::mock(Connection::class);
+        $grammar = new SqlServerGrammar($connection);
+
         $connection->shouldReceive('getSchemaGrammar')->once()->andReturn($grammar);
         $connection->shouldReceive('statement')->once()->with(
             'drop database if exists "my_temporary_database_b"'

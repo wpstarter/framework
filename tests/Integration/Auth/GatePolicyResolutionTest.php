@@ -3,10 +3,14 @@
 namespace WpStarter\Tests\Integration\Auth;
 
 use WpStarter\Auth\Access\Events\GateEvaluated;
+use WpStarter\Database\Eloquent\Attributes\UsePolicy;
+use WpStarter\Database\Eloquent\Model;
 use WpStarter\Support\Facades\Event;
 use WpStarter\Support\Facades\Gate;
 use WpStarter\Tests\Integration\Auth\Fixtures\AuthenticationTestUser;
+use WpStarter\Tests\Integration\Auth\Fixtures\Models\Policies\Nested\SubTestUserPolicy;
 use WpStarter\Tests\Integration\Auth\Fixtures\Policies\AuthenticationTestUserPolicy;
+use WpStarter\Tests\Integration\Auth\Fixtures\Policies\Nested\TopTestUserPolicy;
 use Orchestra\Testbench\TestCase;
 
 class GatePolicyResolutionTest extends TestCase
@@ -37,6 +41,19 @@ class GatePolicyResolutionTest extends TestCase
         );
     }
 
+    public function testPolicyCanBeGuessedForParallelClassHierarchies()
+    {
+        $this->assertInstanceOf(
+            TopTestUserPolicy::class,
+            Gate::getPolicyFor(Fixtures\Models\Nested\TopTestUser::class)
+        );
+
+        $this->assertInstanceOf(
+            SubTestUserPolicy::class,
+            Gate::getPolicyFor(Fixtures\Models\Nested\SubTestUser::class)
+        );
+    }
+
     public function testPolicyCanBeGuessedUsingCallback()
     {
         Gate::guessPolicyNamesUsing(function () {
@@ -63,4 +80,20 @@ class GatePolicyResolutionTest extends TestCase
             Gate::getPolicyFor(AuthenticationTestUser::class)
         );
     }
+
+    public function testPolicyCanBeGivenByAttribute(): void
+    {
+        Gate::guessPolicyNamesUsing(fn () => [AuthenticationTestUserPolicy::class]);
+
+        $this->assertInstanceOf(PostPolicy::class, Gate::getPolicyFor(Post::class));
+    }
+}
+
+#[UsePolicy(PostPolicy::class)]
+class Post extends Model
+{
+}
+
+class PostPolicy
+{
 }

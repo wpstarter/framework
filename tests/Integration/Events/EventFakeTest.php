@@ -3,18 +3,24 @@
 namespace WpStarter\Tests\Integration\Events;
 
 use Closure;
+use Exception;
+use WpStarter\Contracts\Events\ShouldDispatchAfterCommit;
 use WpStarter\Database\Eloquent\Model;
 use WpStarter\Database\Schema\Blueprint;
+use WpStarter\Foundation\Testing\LazilyRefreshDatabase;
+use WpStarter\Support\Arr;
+use WpStarter\Support\Facades\DB;
 use WpStarter\Support\Facades\Event;
 use WpStarter\Support\Facades\Schema;
 use Orchestra\Testbench\TestCase;
+use PHPUnit\Framework\ExpectationFailedException;
 
 class EventFakeTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
+    use LazilyRefreshDatabase;
 
+    protected function afterRefreshingDatabase()
+    {
         Schema::create('posts', function (Blueprint $table) {
             $table->increments('id');
             $table->string('title');
@@ -23,11 +29,9 @@ class EventFakeTest extends TestCase
         });
     }
 
-    protected function tearDown(): void
+    protected function beforeRefreshingDatabase()
     {
         Schema::dropIfExists('posts');
-
-        parent::tearDown();
     }
 
     public function testNonFakedEventGetsProperlyDispatched()
@@ -121,30 +125,129 @@ class EventFakeTest extends TestCase
         Event::assertNotDispatched('non-fake-event');
     }
 
+    public function testEventsListedInExceptAreProperlyDispatched()
+    {
+        Event::fake()->except('important-event');
+
+        Event::listen('test', function () {
+            return 'test';
+        });
+
+        Event::listen('important-event', function () {
+            return 'important';
+        });
+
+        $this->assertEquals(null, Event::dispatch('test'));
+        $this->assertEquals(['important'], Event::dispatch('important-event'));
+    }
+
     public function testAssertListening()
     {
         Event::fake();
-        Event::listen('event', 'listener');
-        Event::listen('event', PostEventSubscriber::class);
-        Event::listen('event', 'WpStarter\\Tests\\Integration\\Events\\PostAutoEventSubscriber@handle');
-        Event::listen('event', [PostEventSubscriber::class, 'foo']);
+
+        $listenersOfSameEventInRandomOrder = Arr::shuffle([
+            'listener',
+            'WpStarter\\Tests\\Integration\\Events\\PostAutoEventSubscriber@handle',
+            PostEventSubscriber::class,
+            [PostEventSubscriber::class, 'foo'],
+            InvokableEventSubscriber::class,
+        ]);
+
+        foreach ($listenersOfSameEventInRandomOrder as $listener) {
+            Event::listen('event', $listener);
+        }
+
         Event::subscribe(PostEventSubscriber::class);
+
         Event::listen(function (NonImportantEvent $event) {
             // do something
         });
+
+        Post::observe(new PostObserver);
+
+        (new Post)->save();
 
         Event::assertListening('event', 'listener');
         Event::assertListening('event', PostEventSubscriber::class);
         Event::assertListening('event', PostAutoEventSubscriber::class);
         Event::assertListening('event', [PostEventSubscriber::class, 'foo']);
         Event::assertListening('post-created', [PostEventSubscriber::class, 'handlePostCreated']);
+        Event::assertListening('post-deleted', [PostEventSubscriber::class, 'handlePostDeleted']);
         Event::assertListening(NonImportantEvent::class, Closure::class);
+        Event::assertListening('eloquent.saving: '.Post::class, PostObserver::class.'@saving');
+        Event::assertListening('eloquent.saving: '.Post::class, [PostObserver::class, 'saving']);
+        Event::assertListening('event', InvokableEventSubscriber::class);
+    }
+
+    public function testMissingMethodsAreForwarded()
+    {
+        Event::macro('foo', fn () => 'bar');
+
+        $this->assertEquals('bar', Event::fake()->foo());
+    }
+
+    public function testShouldDispatchAfterCommitEventsAreNotDispatchedIfTransactionFails()
+    {
+        Event::fake();
+
+        try {
+            DB::transaction(function () {
+                Event::dispatch(new ShouldDispatchAfterCommitEvent());
+
+                throw new Exception('foo');
+            });
+        } catch (Exception $e) {
+        }
+
+        Event::assertNotDispatched(ShouldDispatchAfterCommitEvent::class);
+    }
+
+    public function testShouldDispatchAfterCommitEventsAreDispatchedIfTransactionSucceeds()
+    {
+        Event::fake();
+
+        DB::transaction(function () {
+            Event::dispatch(new ShouldDispatchAfterCommitEvent());
+        });
+
+        Event::assertDispatched(ShouldDispatchAfterCommitEvent::class);
+    }
+
+    public function testShouldDispatchAfterCommitEventsAreDispatchedIfThereIsNoTransaction()
+    {
+        Event::fake();
+
+        Event::dispatch(new ShouldDispatchAfterCommitEvent());
+        Event::assertDispatched(ShouldDispatchAfterCommitEvent::class);
+    }
+
+    public function testAssertNothingDispatchedShouldDispatchAfterCommit()
+    {
+        Event::fake();
+        Event::assertNothingDispatched();
+
+        Event::dispatch(new ShouldDispatchAfterCommitEvent);
+        Event::dispatch(new ShouldDispatchAfterCommitEvent);
+
+        try {
+            Event::assertNothingDispatched();
+            $this->fail();
+        } catch (ExpectationFailedException $e) {
+            $this->assertStringContainsString("2 unexpected events were dispatched:\n\n- WpStarter\Tests\Integration\Events\ShouldDispatchAfterCommitEvent dispatched 2 times", $e->getMessage());
+        }
     }
 }
 
 class Post extends Model
 {
     public $table = 'posts';
+
+    public function save(array $options = [])
+    {
+        if ($this->fireModelEvent('saving') === false) {
+            return false;
+        }
+    }
 }
 
 class NonImportantEvent
@@ -158,11 +261,20 @@ class PostEventSubscriber
     {
     }
 
+    public function handlePostDeleted($event)
+    {
+    }
+
     public function subscribe($events)
     {
         $events->listen(
             'post-created',
             [PostEventSubscriber::class, 'handlePostCreated']
+        );
+
+        $events->listen(
+            'post-deleted',
+            PostEventSubscriber::class.'@handlePostDeleted'
         );
     }
 }
@@ -181,4 +293,17 @@ class PostObserver
     {
         $post->slug = sprintf('%s-Test', $post->title);
     }
+}
+
+class InvokableEventSubscriber
+{
+    public function __invoke($event)
+    {
+        //
+    }
+}
+
+class ShouldDispatchAfterCommitEvent implements ShouldDispatchAfterCommit
+{
+    //
 }

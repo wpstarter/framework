@@ -4,6 +4,7 @@ namespace WpStarter\Routing;
 
 use WpStarter\Http\RedirectResponse;
 use WpStarter\Http\Request;
+use WpStarter\Support\Collection;
 use WpStarter\Support\Str;
 
 class RedirectController extends Controller
@@ -17,7 +18,7 @@ class RedirectController extends Controller
      */
     public function __invoke(Request $request, UrlGenerator $url)
     {
-        $parameters = ws_collect($request->route()->parameters());
+        $parameters = new Collection($request->route()->parameters());
 
         $status = $parameters->get('status');
 
@@ -31,11 +32,11 @@ class RedirectController extends Controller
 
         $parameters = $parameters->only(
             $route->getCompiled()->getPathVariables()
-        )->toArray();
+        )->all();
 
         $url = $url->toRoute($route, $parameters, false);
 
-        if (! Str::startsWith($destination, '/') && Str::startsWith($url, '/')) {
+        if (! str_starts_with($destination, '/') && str_starts_with($url, '/')) {
             $url = Str::after($url, '/');
         }
 

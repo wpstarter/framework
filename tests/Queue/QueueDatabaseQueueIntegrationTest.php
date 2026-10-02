@@ -6,8 +6,12 @@ use WpStarter\Container\Container;
 use WpStarter\Database\Capsule\Manager as DB;
 use WpStarter\Database\Eloquent\Model as Eloquent;
 use WpStarter\Database\Schema\Blueprint;
+use WpStarter\Events\Dispatcher;
 use WpStarter\Queue\DatabaseQueue;
+use WpStarter\Queue\Events\JobQueued;
+use WpStarter\Queue\Events\JobQueueing;
 use WpStarter\Support\Carbon;
+use WpStarter\Support\Str;
 use PHPUnit\Framework\TestCase;
 
 class QueueDatabaseQueueIntegrationTest extends TestCase
@@ -44,7 +48,9 @@ class QueueDatabaseQueueIntegrationTest extends TestCase
 
         $this->queue = new DatabaseQueue($this->connection(), $this->table);
 
-        $this->container = $this->createMock(Container::class);
+        $this->container = new Container;
+
+        $this->container->instance('events', new Dispatcher($this->container));
 
         $this->queue->setContainer($this->container);
 
@@ -98,6 +104,8 @@ class QueueDatabaseQueueIntegrationTest extends TestCase
     protected function tearDown(): void
     {
         $this->schema()->drop('jobs');
+
+        parent::tearDown();
     }
 
     /**
@@ -240,5 +248,30 @@ class QueueDatabaseQueueIntegrationTest extends TestCase
         $popped_job = $this->queue->pop($mock_queue_name);
 
         $this->assertNull($popped_job);
+    }
+
+    public function testJobPayloadIsAvailableOnEvents()
+    {
+        $jobQueueingEvent = null;
+        $jobQueuedEvent = null;
+        Str::createUuidsUsingSequence([
+            'expected-job-uuid',
+        ]);
+        $this->container['events']->listen(function (JobQueueing $e) use (&$jobQueueingEvent) {
+            $jobQueueingEvent = $e;
+        });
+        $this->container['events']->listen(function (JobQueued $e) use (&$jobQueuedEvent) {
+            $jobQueuedEvent = $e;
+        });
+
+        $this->queue->push('MyJob', [
+            'laravel' => 'Framework',
+        ]);
+
+        $this->assertIsArray($jobQueueingEvent->payload());
+        $this->assertSame('expected-job-uuid', $jobQueueingEvent->payload()['uuid']);
+
+        $this->assertIsArray($jobQueuedEvent->payload());
+        $this->assertSame('expected-job-uuid', $jobQueuedEvent->payload()['uuid']);
     }
 }

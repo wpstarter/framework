@@ -15,6 +15,8 @@ class FoundationAuthorizesRequestsTraitTest extends TestCase
     protected function tearDown(): void
     {
         Container::setInstance(null);
+
+        parent::tearDown();
     }
 
     public function testBasicGateCheck()
@@ -33,6 +35,24 @@ class FoundationAuthorizesRequestsTraitTest extends TestCase
 
         $this->assertInstanceOf(Response::class, $response);
         $this->assertTrue($_SERVER['_test.authorizes.trait']);
+    }
+
+    public function testAcceptsBackedEnumAsAbility()
+    {
+        unset($_SERVER['_test.authorizes.trait.enum']);
+
+        $gate = $this->getBasicGate();
+
+        $gate->define('baz', function () {
+            $_SERVER['_test.authorizes.trait.enum'] = true;
+
+            return true;
+        });
+
+        $response = (new FoundationTestAuthorizeTraitClass)->authorize(TestAbility::BAZ);
+
+        $this->assertInstanceOf(Response::class, $response);
+        $this->assertTrue($_SERVER['_test.authorizes.trait.enum']);
     }
 
     public function testExceptionIsThrownIfGateCheckFails()
@@ -162,4 +182,9 @@ class FoundationTestAuthorizeTraitClass
     {
         $this->authorize($object);
     }
+}
+
+enum TestAbility: string
+{
+    case BAZ = 'baz';
 }

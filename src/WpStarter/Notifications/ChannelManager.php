@@ -7,10 +7,20 @@ use WpStarter\Contracts\Events\Dispatcher;
 use WpStarter\Contracts\Notifications\Dispatcher as DispatcherContract;
 use WpStarter\Contracts\Notifications\Factory as FactoryContract;
 use WpStarter\Support\Manager;
+use WpStarter\Support\Traits\Macroable;
 use InvalidArgumentException;
 
 class ChannelManager extends Manager implements DispatcherContract, FactoryContract
 {
+    use Macroable;
+
+    /**
+     * The resolved notification sender instance.
+     *
+     * @var \WpStarter\Notifications\NotificationSender|null
+     */
+    protected $notificationSender;
+
     /**
      * The default channel used to deliver messages.
      *
@@ -28,30 +38,26 @@ class ChannelManager extends Manager implements DispatcherContract, FactoryContr
     /**
      * Send the given notification to the given notifiable entities.
      *
-     * @param  \WpStarter\Support\Collection|array|mixed  $notifiables
+     * @param  \WpStarter\Support\Collection|mixed  $notifiables
      * @param  mixed  $notification
      * @return void
      */
     public function send($notifiables, $notification)
     {
-        (new NotificationSender(
-            $this, $this->container->make(Bus::class), $this->container->make(Dispatcher::class), $this->locale)
-        )->send($notifiables, $notification);
+        $this->resolveNotificationSender()->send($notifiables, $notification);
     }
 
     /**
      * Send the given notification immediately.
      *
-     * @param  \WpStarter\Support\Collection|array|mixed  $notifiables
+     * @param  \WpStarter\Support\Collection|mixed  $notifiables
      * @param  mixed  $notification
      * @param  array|null  $channels
      * @return void
      */
     public function sendNow($notifiables, $notification, ?array $channels = null)
     {
-        (new NotificationSender(
-            $this, $this->container->make(Bus::class), $this->container->make(Dispatcher::class), $this->locale)
-        )->sendNow($notifiables, $notification, $channels);
+        $this->resolveNotificationSender()->sendNow($notifiables, $notification, $channels);
     }
 
     /**
@@ -114,6 +120,18 @@ class ChannelManager extends Manager implements DispatcherContract, FactoryContr
 
             throw $e;
         }
+    }
+
+    /**
+     * Resolve the NotificationSender instance.
+     *
+     * @return \WpStarter\Notifications\NotificationSender
+     */
+    protected function resolveNotificationSender()
+    {
+        return $this->notificationSender ??= new NotificationSender(
+            $this, $this->container->make(Bus::class), $this->container->make(Dispatcher::class), $this->locale
+        );
     }
 
     /**

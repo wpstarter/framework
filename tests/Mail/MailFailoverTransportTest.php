@@ -2,12 +2,12 @@
 
 namespace WpStarter\Tests\Mail;
 
-use WpStarter\Mail\Transport\ArrayTransport;
 use Orchestra\Testbench\TestCase;
+use Symfony\Component\Mailer\Transport\FailoverTransport;
 
 class MailFailoverTransportTest extends TestCase
 {
-    public function testGetFailoverTransportWithConfiguredTransports()
+    public function testGetFailoverTransportWithConfiguredTransports(): void
     {
         $this->app['config']->set('mail.default', 'failover');
 
@@ -30,17 +30,11 @@ class MailFailoverTransportTest extends TestCase
             ],
         ]);
 
-        $transport = ws_app('mailer')->getSwiftMailer()->getTransport();
-        $this->assertInstanceOf(\Swift_FailoverTransport::class, $transport);
-
-        $transports = $transport->getTransports();
-        $this->assertCount(2, $transports);
-        $this->assertInstanceOf(\Swift_SendmailTransport::class, $transports[0]);
-        $this->assertEquals('/usr/sbin/sendmail -bs', $transports[0]->getCommand());
-        $this->assertInstanceOf(ArrayTransport::class, $transports[1]);
+        $transport = app('mailer')->getSymfonyTransport();
+        $this->assertInstanceOf(FailoverTransport::class, $transport);
     }
 
-    public function testGetFailoverTransportWithLaravel6StyleMailConfiguration()
+    public function testGetFailoverTransportWithLaravel6StyleMailConfiguration(): void
     {
         $this->app['config']->set('mail.driver', 'failover');
 
@@ -51,13 +45,7 @@ class MailFailoverTransportTest extends TestCase
 
         $this->app['config']->set('mail.sendmail', '/usr/sbin/sendmail -bs');
 
-        $transport = ws_app('mailer')->getSwiftMailer()->getTransport();
-        $this->assertInstanceOf(\Swift_FailoverTransport::class, $transport);
-
-        $transports = $transport->getTransports();
-        $this->assertCount(2, $transports);
-        $this->assertInstanceOf(\Swift_SendmailTransport::class, $transports[0]);
-        $this->assertEquals('/usr/sbin/sendmail -bs', $transports[0]->getCommand());
-        $this->assertInstanceOf(ArrayTransport::class, $transports[1]);
+        $transport = app('mailer')->getSymfonyTransport();
+        $this->assertInstanceOf(FailoverTransport::class, $transport);
     }
 }

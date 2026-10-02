@@ -3,6 +3,7 @@
 namespace WpStarter\Foundation\Validation;
 
 use WpStarter\Contracts\Validation\Factory;
+use WpStarter\Foundation\Precognition;
 use WpStarter\Http\Request;
 use WpStarter\Validation\ValidationException;
 
@@ -19,10 +20,17 @@ trait ValidatesRequests
      */
     public function validateWith($validator, ?Request $request = null)
     {
-        $request = $request ?: ws_request();
+        $request = $request ?: request();
 
         if (is_array($validator)) {
             $validator = $this->getValidationFactory()->make($request->all(), $validator);
+        }
+
+        if ($request->isPrecognitive()) {
+            $validator->after(Precognition::afterValidationHook($request))
+                ->setRules(
+                    $request->filterPrecognitiveRules($validator->getRulesWithoutPlaceholders())
+                );
         }
 
         return $validator->validate();
@@ -34,17 +42,26 @@ trait ValidatesRequests
      * @param  \WpStarter\Http\Request  $request
      * @param  array  $rules
      * @param  array  $messages
-     * @param  array  $customAttributes
+     * @param  array  $attributes
      * @return array
      *
      * @throws \WpStarter\Validation\ValidationException
      */
     public function validate(Request $request, array $rules,
-                             array $messages = [], array $customAttributes = [])
+                             array $messages = [], array $attributes = [])
     {
-        return $this->getValidationFactory()->make(
-            $request->all(), $rules, $messages, $customAttributes
-        )->validate();
+        $validator = $this->getValidationFactory()->make(
+            $request->all(), $rules, $messages, $attributes
+        );
+
+        if ($request->isPrecognitive()) {
+            $validator->after(Precognition::afterValidationHook($request))
+                ->setRules(
+                    $request->filterPrecognitiveRules($validator->getRulesWithoutPlaceholders())
+                );
+        }
+
+        return $validator->validate();
     }
 
     /**
@@ -54,16 +71,16 @@ trait ValidatesRequests
      * @param  \WpStarter\Http\Request  $request
      * @param  array  $rules
      * @param  array  $messages
-     * @param  array  $customAttributes
+     * @param  array  $attributes
      * @return array
      *
      * @throws \WpStarter\Validation\ValidationException
      */
     public function validateWithBag($errorBag, Request $request, array $rules,
-                                    array $messages = [], array $customAttributes = [])
+                                    array $messages = [], array $attributes = [])
     {
         try {
-            return $this->validate($request, $rules, $messages, $customAttributes);
+            return $this->validate($request, $rules, $messages, $attributes);
         } catch (ValidationException $e) {
             $e->errorBag = $errorBag;
 
@@ -78,6 +95,6 @@ trait ValidatesRequests
      */
     protected function getValidationFactory()
     {
-        return ws_app(Factory::class);
+        return app(Factory::class);
     }
 }

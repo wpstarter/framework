@@ -2,8 +2,8 @@
 
 namespace WpStarter\Tests\Pagination;
 
-use Carbon\Carbon;
 use WpStarter\Pagination\Cursor;
+use WpStarter\Support\Carbon;
 use PHPUnit\Framework\TestCase;
 
 class CursorTest extends TestCase

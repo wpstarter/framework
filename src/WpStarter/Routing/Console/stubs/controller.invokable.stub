@@ -9,9 +9,6 @@ class {{ class }} extends Controller
 {
     /**
      * Handle the incoming request.
-     *
-     * @param  \WpStarter\Http\Request  $request
-     * @return \WpStarter\Http\Response
      */
     public function __invoke(Request $request)
     {

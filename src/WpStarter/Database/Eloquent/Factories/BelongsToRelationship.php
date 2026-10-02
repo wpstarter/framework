@@ -2,7 +2,7 @@
 
 namespace WpStarter\Database\Eloquent\Factories;
 
-use WpStarter\Database\Eloquent\Contracts\Model;
+use WpStarter\Database\Eloquent\Model;
 use WpStarter\Database\Eloquent\Relations\MorphTo;
 
 class BelongsToRelationship
@@ -33,7 +33,6 @@ class BelongsToRelationship
      *
      * @param  \WpStarter\Database\Eloquent\Factories\Factory|\WpStarter\Database\Eloquent\Model  $factory
      * @param  string  $relationship
-     * @return void
      */
     public function __construct($factory, $relationship)
     {
@@ -69,12 +68,29 @@ class BelongsToRelationship
     {
         return function () use ($key) {
             if (! $this->resolved) {
-                $instance = $this->factory instanceof Factory ? $this->factory->create() : $this->factory;
+                $instance = $this->factory instanceof Factory
+                    ? ($this->factory->getRandomRecycledModel($this->factory->modelName()) ?? $this->factory->create())
+                    : $this->factory;
 
                 return $this->resolved = $key ? $instance->{$key} : $instance->getKey();
             }
 
             return $this->resolved;
         };
+    }
+
+    /**
+     * Specify the model instances to always use when creating relationships.
+     *
+     * @param  \WpStarter\Support\Collection  $recycle
+     * @return $this
+     */
+    public function recycle($recycle)
+    {
+        if ($this->factory instanceof Factory) {
+            $this->factory = $this->factory->recycle($recycle);
+        }
+
+        return $this;
     }
 }

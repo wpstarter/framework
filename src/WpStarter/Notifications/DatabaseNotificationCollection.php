@@ -2,9 +2,15 @@
 
 namespace WpStarter\Notifications;
 
-use WpStarter\Database\Eloquent\Collection;
+use WpStarter\Database\Eloquent\Collection as EloquentCollection;
 
-class DatabaseNotificationCollection extends Collection
+/**
+ * @template TKey of array-key
+ * @template TModel of DatabaseNotification
+ *
+ * @extends \WpStarter\Database\Eloquent\Collection<TKey, TModel>
+ */
+class DatabaseNotificationCollection extends EloquentCollection
 {
     /**
      * Mark all notifications as read.

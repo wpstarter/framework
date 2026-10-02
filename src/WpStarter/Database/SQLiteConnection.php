@@ -2,9 +2,7 @@
 
 namespace WpStarter\Database;
 
-use Doctrine\DBAL\Driver\PDOSqlite\Driver as DoctrineDriver;
-use Doctrine\DBAL\Version;
-use WpStarter\Database\PDO\SQLiteDriver;
+use Exception;
 use WpStarter\Database\Query\Grammars\SQLiteGrammar as QueryGrammar;
 use WpStarter\Database\Query\Processors\SQLiteProcessor;
 use WpStarter\Database\Schema\Grammars\SQLiteGrammar as SchemaGrammar;
@@ -15,27 +13,53 @@ use WpStarter\Filesystem\Filesystem;
 class SQLiteConnection extends Connection
 {
     /**
-     * Create a new database connection instance.
+     * {@inheritdoc}
+     */
+    public function getDriverTitle()
+    {
+        return 'SQLite';
+    }
+
+    /**
+     * Run the statement to start a new transaction.
      *
-     * @param  \PDO|\Closure  $pdo
-     * @param  string  $database
-     * @param  string  $tablePrefix
-     * @param  array  $config
      * @return void
      */
-    public function __construct($pdo, $database = '', $tablePrefix = '', array $config = [])
+    protected function executeBeginTransactionStatement()
     {
-        parent::__construct($pdo, $database, $tablePrefix, $config);
+        if (version_compare(PHP_VERSION, '8.4.0', '>=')) {
+            $mode = $this->getConfig('transaction_mode') ?? 'DEFERRED';
 
-        $enableForeignKeyConstraints = $this->getForeignKeyConstraintsConfigurationValue();
+            $this->getPdo()->exec("BEGIN {$mode} TRANSACTION");
 
-        if ($enableForeignKeyConstraints === null) {
             return;
         }
 
-        $enableForeignKeyConstraints
-            ? $this->getSchemaBuilder()->enableForeignKeyConstraints()
-            : $this->getSchemaBuilder()->disableForeignKeyConstraints();
+        $this->getPdo()->beginTransaction();
+    }
+
+    /**
+     * Escape a binary value for safe SQL embedding.
+     *
+     * @param  string  $value
+     * @return string
+     */
+    protected function escapeBinary($value)
+    {
+        $hex = bin2hex($value);
+
+        return "x'{$hex}'";
+    }
+
+    /**
+     * Determine if the given database exception was caused by a unique constraint violation.
+     *
+     * @param  \Exception  $exception
+     * @return bool
+     */
+    protected function isUniqueConstraintError(Exception $exception)
+    {
+        return (bool) preg_match('#(column(s)? .* (is|are) not unique|UNIQUE constraint failed: .*)#i', $exception->getMessage());
     }
 
     /**
@@ -45,7 +69,7 @@ class SQLiteConnection extends Connection
      */
     protected function getDefaultQueryGrammar()
     {
-        return $this->withTablePrefix(new QueryGrammar);
+        return new QueryGrammar($this);
     }
 
     /**
@@ -69,7 +93,7 @@ class SQLiteConnection extends Connection
      */
     protected function getDefaultSchemaGrammar()
     {
-        return $this->withTablePrefix(new SchemaGrammar);
+        return new SchemaGrammar($this);
     }
 
     /**
@@ -93,25 +117,5 @@ class SQLiteConnection extends Connection
     protected function getDefaultPostProcessor()
     {
         return new SQLiteProcessor;
-    }
-
-    /**
-     * Get the Doctrine DBAL driver.
-     *
-     * @return \Doctrine\DBAL\Driver\PDOSqlite\Driver|\WpStarter\Database\PDO\SQLiteDriver
-     */
-    protected function getDoctrineDriver()
-    {
-        return class_exists(Version::class) ? new DoctrineDriver : new SQLiteDriver;
-    }
-
-    /**
-     * Get the database connection foreign key constraints configuration option.
-     *
-     * @return bool|null
-     */
-    protected function getForeignKeyConstraintsConfigurationValue()
-    {
-        return $this->getConfig('foreign_key_constraints');
     }
 }

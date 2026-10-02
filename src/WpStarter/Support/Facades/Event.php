@@ -6,26 +6,40 @@ use WpStarter\Database\Eloquent\Model;
 use WpStarter\Support\Testing\Fakes\EventFake;
 
 /**
- * @method static \Closure createClassListener(string $listener, bool $wildcard = false)
- * @method static \Closure makeListener(\Closure|string $listener, bool $wildcard = false)
- * @method static \WpStarter\Events\Dispatcher setQueueResolver(callable $resolver)
- * @method static array getListeners(string $eventName)
- * @method static array|null dispatch(string|object $event, mixed $payload = [], bool $halt = false)
- * @method static array|null until(string|object $event, mixed $payload = [])
+ * @method static void listen(\WpStarter\Events\QueuedClosure|callable|array|string $events, \WpStarter\Events\QueuedClosure|callable|array|string|null $listener = null)
  * @method static bool hasListeners(string $eventName)
- * @method static void assertDispatched(string|\Closure $event, callable|int $callback = null)
- * @method static void assertDispatchedTimes(string $event, int $times = 1)
- * @method static void assertNotDispatched(string|\Closure $event, callable|int $callback = null)
- * @method static void assertNothingDispatched()
- * @method static void assertListening(string $expectedEvent, string $expectedListener)
+ * @method static bool hasWildcardListeners(string $eventName)
+ * @method static void push(string $event, object|array $payload = [])
  * @method static void flush(string $event)
+ * @method static void subscribe(object|string $subscriber)
+ * @method static array|null until(string|object $event, mixed $payload = [])
+ * @method static array|null dispatch(string|object $event, mixed $payload = [], bool $halt = false)
+ * @method static array getListeners(string $eventName)
+ * @method static \Closure makeListener(\Closure|string|array $listener, bool $wildcard = false)
+ * @method static \Closure createClassListener(string $listener, bool $wildcard = false)
  * @method static void forget(string $event)
  * @method static void forgetPushed()
- * @method static void listen(\Closure|string|array $events, \Closure|string|array $listener = null)
- * @method static void push(string $event, array $payload = [])
- * @method static void subscribe(object|string $subscriber)
+ * @method static \WpStarter\Events\Dispatcher setQueueResolver(callable $resolver)
+ * @method static \WpStarter\Events\Dispatcher setTransactionManagerResolver(callable $resolver)
+ * @method static mixed defer(callable $callback, string[]|null $events = null)
+ * @method static array getRawListeners()
+ * @method static void macro(string $name, object|callable $macro)
+ * @method static void mixin(object $mixin, bool $replace = true)
+ * @method static bool hasMacro(string $name)
+ * @method static void flushMacros()
+ * @method static \WpStarter\Support\Testing\Fakes\EventFake except(array|string $eventsToDispatch)
+ * @method static void assertListening(string $expectedEvent, string|array $expectedListener)
+ * @method static void assertDispatched(string|\Closure $event, callable|int|null $callback = null)
+ * @method static void assertDispatchedOnce(string $event)
+ * @method static void assertDispatchedTimes(string $event, int $times = 1)
+ * @method static void assertNotDispatched(string|\Closure $event, callable|null $callback = null)
+ * @method static void assertNothingDispatched()
+ * @method static \WpStarter\Support\Collection dispatched(string $event, callable|null $callback = null)
+ * @method static bool hasDispatched(string $event)
+ * @method static array dispatchedEvents()
  *
  * @see \WpStarter\Events\Dispatcher
+ * @see \WpStarter\Support\Testing\Fakes\EventFake
  */
 class Event extends Facade
 {
@@ -37,12 +51,16 @@ class Event extends Facade
      */
     public static function fake($eventsToFake = [])
     {
-        static::swap($fake = new EventFake(static::getFacadeRoot(), $eventsToFake));
+        $actualDispatcher = static::isFake()
+            ? static::getFacadeRoot()->dispatcher
+            : static::getFacadeRoot();
 
-        Model::setEventDispatcher($fake);
-        Cache::refreshEventDispatcher();
+        return tap(new EventFake($actualDispatcher, $eventsToFake), function ($fake) {
+            static::swap($fake);
 
-        return $fake;
+            Model::setEventDispatcher($fake);
+            Cache::refreshEventDispatcher();
+        });
     }
 
     /**
@@ -73,12 +91,14 @@ class Event extends Facade
 
         static::fake($eventsToFake);
 
-        return ws_tap($callable(), function () use ($originalDispatcher) {
+        try {
+            return $callable();
+        } finally {
             static::swap($originalDispatcher);
 
             Model::setEventDispatcher($originalDispatcher);
             Cache::refreshEventDispatcher();
-        });
+        }
     }
 
     /**
@@ -94,12 +114,14 @@ class Event extends Facade
 
         static::fakeExcept($eventsToAllow);
 
-        return ws_tap($callable(), function () use ($originalDispatcher) {
+        try {
+            return $callable();
+        } finally {
             static::swap($originalDispatcher);
 
             Model::setEventDispatcher($originalDispatcher);
             Cache::refreshEventDispatcher();
-        });
+        }
     }
 
     /**

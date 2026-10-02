@@ -2,8 +2,6 @@
 
 namespace WpStarter\Auth;
 
-use WpStarter\Support\Str;
-
 class Recaller
 {
     /**
@@ -17,7 +15,6 @@ class Recaller
      * Create a new recaller instance.
      *
      * @param  string  $recaller
-     * @return void
      */
     public function __construct($recaller)
     {
@@ -51,7 +48,7 @@ class Recaller
      */
     public function hash()
     {
-        return explode('|', $this->recaller, 3)[2];
+        return explode('|', $this->recaller, 4)[2];
     }
 
     /**
@@ -71,7 +68,7 @@ class Recaller
      */
     protected function properString()
     {
-        return is_string($this->recaller) && Str::contains($this->recaller, '|');
+        return is_string($this->recaller) && str_contains($this->recaller, '|');
     }
 
     /**
@@ -83,6 +80,16 @@ class Recaller
     {
         $segments = explode('|', $this->recaller);
 
-        return count($segments) === 3 && trim($segments[0]) !== '' && trim($segments[1]) !== '';
+        return count($segments) >= 3 && trim($segments[0]) !== '' && trim($segments[1]) !== '';
+    }
+
+    /**
+     * Get the recaller's segments.
+     *
+     * @return array
+     */
+    public function segments()
+    {
+        return explode('|', $this->recaller);
     }
 }

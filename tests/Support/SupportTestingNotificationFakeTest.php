@@ -3,13 +3,14 @@
 namespace WpStarter\Tests\Support;
 
 use Exception;
+use WpStarter\Bus\Queueable;
+use WpStarter\Contracts\Queue\ShouldQueue;
 use WpStarter\Contracts\Translation\HasLocalePreference;
 use WpStarter\Foundation\Auth\User;
 use WpStarter\Notifications\AnonymousNotifiable;
 use WpStarter\Notifications\Notification;
 use WpStarter\Support\Collection;
 use WpStarter\Support\Testing\Fakes\NotificationFake;
-use PHPUnit\Framework\Constraint\ExceptionMessage;
 use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\TestCase;
 
@@ -45,7 +46,7 @@ class SupportTestingNotificationFakeTest extends TestCase
             $this->fake->assertSentTo($this->user, NotificationStub::class);
             $this->fail();
         } catch (ExpectationFailedException $e) {
-            $this->assertThat($e, new ExceptionMessage('The expected [WpStarter\Tests\Support\NotificationStub] notification was not sent.'));
+            $this->assertStringContainsString('The expected [WpStarter\Tests\Support\NotificationStub] notification was not sent.', $e->getMessage());
         }
 
         $this->fake->send($this->user, new NotificationStub);
@@ -88,7 +89,7 @@ class SupportTestingNotificationFakeTest extends TestCase
             $this->fake->assertNotSentTo($this->user, NotificationStub::class);
             $this->fail();
         } catch (ExpectationFailedException $e) {
-            $this->assertThat($e, new ExceptionMessage('The unexpected [WpStarter\Tests\Support\NotificationStub] notification was sent.'));
+            $this->assertStringContainsString('The unexpected [WpStarter\Tests\Support\NotificationStub] notification was sent.', $e->getMessage());
         }
     }
 
@@ -102,7 +103,33 @@ class SupportTestingNotificationFakeTest extends TestCase
             });
             $this->fail();
         } catch (ExpectationFailedException $e) {
-            $this->assertThat($e, new ExceptionMessage('The unexpected [WpStarter\Tests\Support\NotificationStub] notification was sent.'));
+            $this->assertStringContainsString('The unexpected [WpStarter\Tests\Support\NotificationStub] notification was sent.', $e->getMessage());
+        }
+    }
+
+    public function testAssertNothingSent()
+    {
+        $this->fake->assertNothingSent();
+        $this->fake->send($this->user, new NotificationStub);
+
+        try {
+            $this->fake->assertNothingSent();
+            $this->fail();
+        } catch (ExpectationFailedException $e) {
+            $this->assertStringContainsString("The following notifications were sent unexpectedly:\n\n- ".get_class(new NotificationStub), $e->getMessage());
+        }
+    }
+
+    public function testAssertNothingSentTo()
+    {
+        $this->fake->assertNothingSentTo($this->user);
+        $this->fake->send($this->user, new NotificationStub);
+
+        try {
+            $this->fake->assertNothingSentTo($this->user);
+            $this->fail();
+        } catch (ExpectationFailedException $e) {
+            $this->assertStringContainsString('Notifications were sent unexpectedly.', $e->getMessage());
         }
     }
 
@@ -138,9 +165,9 @@ class SupportTestingNotificationFakeTest extends TestCase
         $this->assertNotSame($id, $this->notification->id);
     }
 
-    public function testAssertTimesSent()
+    public function testAssertSentTimes()
     {
-        $this->fake->assertTimesSent(0, NotificationStub::class);
+        $this->fake->assertSentTimes(NotificationStub::class, 0);
 
         $this->fake->send($this->user, new NotificationStub);
 
@@ -148,7 +175,7 @@ class SupportTestingNotificationFakeTest extends TestCase
 
         $this->fake->send(new UserStub, new NotificationStub);
 
-        $this->fake->assertTimesSent(3, NotificationStub::class);
+        $this->fake->assertSentTimes(NotificationStub::class, 3);
     }
 
     public function testAssertSentToTimes()
@@ -196,6 +223,16 @@ class SupportTestingNotificationFakeTest extends TestCase
 
         $this->fake->assertNotSentTo($user, NotificationWithFalsyShouldSendStub::class);
     }
+
+    public function testAssertItCanSerializeAndRestoreNotifications()
+    {
+        $this->fake->serializeAndRestore();
+        $this->fake->send($this->user, new NotificationWithSerialization('hello'));
+
+        $this->fake->assertSentTo($this->user, NotificationWithSerialization::class, function ($notification) {
+            return $notification->value === 'hello-serialized-unserialized';
+        });
+    }
 }
 
 class NotificationStub extends Notification
@@ -229,5 +266,24 @@ class LocalizedUserStub extends User implements HasLocalePreference
     public function preferredLocale()
     {
         return 'au';
+    }
+}
+
+class NotificationWithSerialization extends NotificationStub implements ShouldQueue
+{
+    use Queueable;
+
+    public function __construct(public $value)
+    {
+    }
+
+    public function __serialize(): array
+    {
+        return ['value' => $this->value.'-serialized'];
+    }
+
+    public function __unserialize(array $data): void
+    {
+        $this->value = $data['value'].'-unserialized';
     }
 }

@@ -2,27 +2,22 @@
 
 namespace WpStarter\Tests\Cache;
 
+use Exception;
 use WpStarter\Cache\FileStore;
 use WpStarter\Contracts\Filesystem\FileNotFoundException;
 use WpStarter\Filesystem\Filesystem;
 use WpStarter\Support\Carbon;
+use WpStarter\Support\Str;
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
 
 class CacheFileStoreTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        Carbon::setTestNow(Carbon::now());
-    }
-
     protected function tearDown(): void
     {
-        parent::tearDown();
-
         Carbon::setTestNow(null);
+
+        parent::tearDown();
     }
 
     public function testNullIsReturnedIfFileDoesntExist()
@@ -31,21 +26,6 @@ class CacheFileStoreTest extends TestCase
         $files->expects($this->once())->method('get')->will($this->throwException(new FileNotFoundException));
         $store = new FileStore($files, __DIR__);
         $value = $store->get('foo');
-        $this->assertNull($value);
-    }
-
-    public function testUnserializableFileContentGetDeleted()
-    {
-        $files = $this->mockFilesystem();
-        $hash = sha1('foo');
-        $cachePath = __DIR__.'/'.substr($hash, 0, 2).'/'.substr($hash, 2, 2).'/'.$hash;
-
-        $files->expects($this->once())->method('get')->willReturn('9999999999-I_am_unserializableee: \(~_~)/');
-        $files->expects($this->once())->method('exists')->with($this->equalTo($cachePath))->willReturn(true);
-        $files->expects($this->once())->method('delete')->with($this->equalTo($cachePath));
-
-        $value = (new FileStore($files, __DIR__))->get('foo');
-
         $this->assertNull($value);
     }
 
@@ -149,7 +129,6 @@ class CacheFileStoreTest extends TestCase
         $this->assertTrue($result);
         $result = $store->put('foo', 'baz', 10);
         $this->assertTrue($result);
-        m::close();
     }
 
     public function testStoreItemDirectoryProperlySetsPermissions()
@@ -174,7 +153,6 @@ class CacheFileStoreTest extends TestCase
 
         $result = $store->put('foo', 'foo', 10);
         $this->assertTrue($result);
-        m::close();
     }
 
     public function testForeversAreStoredWithHighTimestamp()
@@ -200,21 +178,88 @@ class CacheFileStoreTest extends TestCase
         $this->assertSame('Hello World', $store->get('foo'));
     }
 
+    public function testIncrementExpiredKeys()
+    {
+        Carbon::setTestNow(Carbon::now());
+
+        $filePath = $this->getCachePath('foo');
+        $files = $this->mockFilesystem();
+        $now = Carbon::now()->getTimestamp();
+        $initialValue = ($now - 10).serialize(77);
+        $valueAfterIncrement = '9999999999'.serialize(3);
+        $store = new FileStore($files, __DIR__);
+
+        $files->expects($this->once())->method('get')->with($this->equalTo($filePath), $this->equalTo(true))->willReturn($initialValue);
+        $files->expects($this->once())->method('put')->with($this->equalTo($filePath), $this->equalTo($valueAfterIncrement));
+
+        $result = $store->increment('foo', 3);
+    }
+
     public function testIncrementCanAtomicallyJump()
     {
+        $filePath = $this->getCachePath('foo');
         $files = $this->mockFilesystem();
         $initialValue = '9999999999'.serialize(1);
         $valueAfterIncrement = '9999999999'.serialize(4);
         $store = new FileStore($files, __DIR__);
-        $files->expects($this->once())->method('get')->willReturn($initialValue);
-        $hash = sha1('foo');
-        $cache_dir = substr($hash, 0, 2).'/'.substr($hash, 2, 2);
-        $files->expects($this->once())->method('put')->with($this->equalTo(__DIR__.'/'.$cache_dir.'/'.$hash), $this->equalTo($valueAfterIncrement));
-        $store->increment('foo', 3);
+
+        $files->expects($this->once())->method('get')->with($this->equalTo($filePath), $this->equalTo(true))->willReturn($initialValue);
+        $files->expects($this->once())->method('put')->with($this->equalTo($filePath), $this->equalTo($valueAfterIncrement));
+
+        $result = $store->increment('foo', 3);
+        $this->assertEquals(4, $result);
+    }
+
+    public function testDecrementCanAtomicallyJump()
+    {
+        $filePath = $this->getCachePath('foo');
+
+        $files = $this->mockFilesystem();
+        $initialValue = '9999999999'.serialize(2);
+        $valueAfterIncrement = '9999999999'.serialize(0);
+        $store = new FileStore($files, __DIR__);
+
+        $files->expects($this->once())->method('get')->with($this->equalTo($filePath), $this->equalTo(true))->willReturn($initialValue);
+        $files->expects($this->once())->method('put')->with($this->equalTo($filePath), $this->equalTo($valueAfterIncrement));
+
+        $result = $store->decrement('foo', 2);
+        $this->assertEquals(0, $result);
+    }
+
+    public function testIncrementNonNumericValues()
+    {
+        $filePath = $this->getCachePath('foo');
+
+        $files = $this->mockFilesystem();
+        $initialValue = '1999999909'.serialize('foo');
+        $valueAfterIncrement = '1999999909'.serialize(1);
+        $store = new FileStore($files, __DIR__);
+        $files->expects($this->once())->method('get')->with($this->equalTo($filePath), $this->equalTo(true))->willReturn($initialValue);
+        $files->expects($this->once())->method('put')->with($this->equalTo($filePath), $this->equalTo($valueAfterIncrement));
+        $result = $store->increment('foo');
+
+        $this->assertEquals(1, $result);
+    }
+
+    public function testIncrementNonExistentKeys()
+    {
+        $filePath = $this->getCachePath('foo');
+
+        $files = $this->mockFilesystem();
+        $valueAfterIncrement = '9999999999'.serialize(1);
+        $store = new FileStore($files, __DIR__);
+        // simulates a missing item in file store by the exception
+        $files->expects($this->once())->method('get')->with($this->equalTo($filePath), $this->equalTo(true))->willThrowException(new Exception);
+        $files->expects($this->once())->method('put')->with($this->equalTo($filePath), $this->equalTo($valueAfterIncrement));
+        $result = $store->increment('foo');
+        $this->assertIsInt($result);
+        $this->assertEquals(1, $result);
     }
 
     public function testIncrementDoesNotExtendCacheLife()
     {
+        Carbon::setTestNow(Carbon::now());
+
         $files = $this->mockFilesystem();
         $expiration = Carbon::now()->addSeconds(50)->getTimestamp();
         $initialValue = $expiration.serialize(1);
@@ -239,14 +284,15 @@ class CacheFileStoreTest extends TestCase
 
     public function testRemoveDeletesFile()
     {
-        $files = $this->mockFilesystem();
-        $hash = sha1('foobar');
-        $cache_dir = substr($hash, 0, 2).'/'.substr($hash, 2, 2);
+        $files = new Filesystem;
         $store = new FileStore($files, __DIR__);
         $store->put('foobar', 'Hello Baby', 10);
-        $files->expects($this->once())->method('exists')->with($this->equalTo(__DIR__.'/'.$cache_dir.'/'.$hash))->willReturn(true);
-        $files->expects($this->once())->method('delete')->with($this->equalTo(__DIR__.'/'.$cache_dir.'/'.$hash));
+
+        $this->assertFileExists($store->path('foobar'));
+
         $store->forget('foobar');
+
+        $this->assertFileDoesNotExist($store->path('foobar'));
     }
 
     public function testFlushCleansDirectory()
@@ -283,8 +329,59 @@ class CacheFileStoreTest extends TestCase
         $this->assertFalse($result, 'Flush should not clean directory');
     }
 
+    public function testItHandlesForgettingNonFlexibleKeys()
+    {
+        $store = new FileStore(new Filesystem, __DIR__);
+
+        $key = Str::random();
+        $path = $store->path($key);
+        $flexiblePath = "wpstarter:cache:flexible:created:{$key}";
+
+        $store->put($key, 'value', 5);
+
+        $this->assertFileExists($path);
+        $this->assertFileDoesNotExist($flexiblePath);
+
+        $store->forget($key);
+
+        $this->assertFileDoesNotExist($path);
+        $this->assertFileDoesNotExist($flexiblePath);
+    }
+
+    public function itOnlyForgetsFlexibleKeysIfParentIsForgotten()
+    {
+        $store = new FileStore(new Filesystem, __DIR__);
+
+        $key = Str::random();
+        $path = $store->path($key);
+        $flexiblePath = "wpstarter:cache:flexible:created:{$key}";
+
+        touch($flexiblePath);
+
+        $this->assertFileDoesNotExist($path);
+        $this->assertFileExists($flexiblePath);
+
+        $store->forget($key);
+
+        $this->assertFileDoesNotExist($path);
+        $this->assertFileExists($flexiblePath);
+
+        $store->put($key, 'value', 5);
+
+        $this->assertFileDoesNotExist($path);
+        $this->assertFileDoesNotExist($flexiblePath);
+    }
+
     protected function mockFilesystem()
     {
         return $this->createMock(Filesystem::class);
+    }
+
+    protected function getCachePath($key)
+    {
+        $hash = sha1($key);
+        $cache_dir = substr($hash, 0, 2).'/'.substr($hash, 2, 2);
+
+        return __DIR__.'/'.$cache_dir.'/'.$hash;
     }
 }

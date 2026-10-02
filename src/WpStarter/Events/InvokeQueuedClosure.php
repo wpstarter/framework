@@ -2,6 +2,8 @@
 
 namespace WpStarter\Events;
 
+use WpStarter\Support\Collection;
+
 class InvokeQueuedClosure
 {
     /**
@@ -29,6 +31,6 @@ class InvokeQueuedClosure
     {
         $arguments[] = $exception;
 
-        ws_collect($catchCallbacks)->each->__invoke(...$arguments);
+        (new Collection($catchCallbacks))->each->__invoke(...$arguments);
     }
 }

@@ -4,7 +4,7 @@ namespace WpStarter\Database\Eloquent\Casts;
 
 use WpStarter\Contracts\Database\Eloquent\Castable;
 use WpStarter\Contracts\Database\Eloquent\CastsAttributes;
-use WpStarter\Support\Str;
+use WpStarter\Support\Stringable;
 
 class AsStringable implements Castable
 {
@@ -12,7 +12,7 @@ class AsStringable implements Castable
      * Get the caster class to use when casting from / to this cast target.
      *
      * @param  array  $arguments
-     * @return object|string
+     * @return \WpStarter\Contracts\Database\Eloquent\CastsAttributes<\WpStarter\Support\Stringable, string|\Stringable>
      */
     public static function castUsing(array $arguments)
     {
@@ -20,7 +20,7 @@ class AsStringable implements Castable
         {
             public function get($model, $key, $value, $attributes)
             {
-                return isset($value) ? Str::of($value) : null;
+                return isset($value) ? new Stringable($value) : null;
             }
 
             public function set($model, $key, $value, $attributes)

@@ -99,6 +99,21 @@ trait ResponseTrait
     }
 
     /**
+     * Remove a header(s) from the response.
+     *
+     * @param  array|string  $key
+     * @return $this
+     */
+    public function withoutHeader($key)
+    {
+        foreach ((array) $key as $header) {
+            $this->headers->remove($header);
+        }
+
+        return $this;
+    }
+
+    /**
      * Add a cookie to the response.
      *
      * @param  \Symfony\Component\HttpFoundation\Cookie|mixed  $cookie
@@ -117,8 +132,8 @@ trait ResponseTrait
      */
     public function withCookie($cookie)
     {
-        if (is_string($cookie) && function_exists('ws_cookie')) {
-            $cookie = ws_cookie(...func_get_args());
+        if (is_string($cookie) && function_exists('cookie')) {
+            $cookie = cookie(...func_get_args());
         }
 
         $this->headers->setCookie($cookie);
@@ -136,8 +151,8 @@ trait ResponseTrait
      */
     public function withoutCookie($cookie, $path = null, $domain = null)
     {
-        if (is_string($cookie) && function_exists('ws_cookie')) {
-            $cookie = ws_cookie($cookie, null, -2628000, $path, $domain);
+        if (is_string($cookie) && function_exists('cookie')) {
+            $cookie = cookie($cookie, null, -2628000, $path, $domain);
         }
 
         $this->headers->setCookie($cookie);
@@ -171,7 +186,7 @@ trait ResponseTrait
     /**
      * Throws the response in a HttpResponseException instance.
      *
-     * @return void
+     * @return never
      *
      * @throws \WpStarter\Http\Exceptions\HttpResponseException
      */

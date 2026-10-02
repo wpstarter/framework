@@ -2,8 +2,10 @@
 
 namespace WpStarter\Database\Eloquent;
 
+use WpStarter\Contracts\Debug\ExceptionHandler;
 use WpStarter\Database\Events\ModelsPruned;
 use LogicException;
+use Throwable;
 
 trait Prunable
 {
@@ -18,14 +20,26 @@ trait Prunable
         $total = 0;
 
         $this->prunable()
-            ->when(in_array(SoftDeletes::class, ws_class_uses_recursive(get_class($this))), function ($query) {
+            ->when(static::isSoftDeletable(), function ($query) {
                 $query->withTrashed();
             })->chunkById($chunkSize, function ($models) use (&$total) {
-                $models->each->prune();
+                $models->each(function ($model) use (&$total) {
+                    try {
+                        $model->prune();
 
-                $total += $models->count();
+                        $total++;
+                    } catch (Throwable $e) {
+                        $handler = app(ExceptionHandler::class);
 
-                ws_event(new ModelsPruned(static::class, $total));
+                        if ($handler) {
+                            $handler->report($e);
+                        } else {
+                            throw $e;
+                        }
+                    }
+                });
+
+                event(new ModelsPruned(static::class, $total));
             });
 
         return $total;
@@ -34,7 +48,7 @@ trait Prunable
     /**
      * Get the prunable model query.
      *
-     * @return \WpStarter\Database\Eloquent\Builder
+     * @return \WpStarter\Database\Eloquent\Builder<static>
      */
     public function prunable()
     {
@@ -50,9 +64,9 @@ trait Prunable
     {
         $this->pruning();
 
-        return in_array(SoftDeletes::class, ws_class_uses_recursive(get_class($this)))
-                ? $this->forceDelete()
-                : $this->delete();
+        return static::isSoftDeletable()
+            ? $this->forceDelete()
+            : $this->delete();
     }
 
     /**

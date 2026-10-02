@@ -6,6 +6,7 @@ use WpStarter\Console\Scheduling\Schedule;
 use WpStarter\Filesystem\Filesystem;
 use WpStarter\Support\Str;
 use Orchestra\Testbench\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class CommandSchedulingTest extends TestCase
 {
@@ -45,7 +46,7 @@ class CommandSchedulingTest extends TestCase
         $this->fs = new Filesystem;
 
         $this->id = Str::random();
-        $this->logfile = ws_storage_path("logs/command_scheduling_test_{$this->id}.log");
+        $this->logfile = storage_path("logs/command_scheduling_test_{$this->id}.log");
 
         $this->writeArtisanScript();
     }
@@ -53,28 +54,27 @@ class CommandSchedulingTest extends TestCase
     protected function tearDown(): void
     {
         $this->fs->delete($this->logfile);
-        $this->fs->delete(ws_base_path('artisan'));
+        $this->fs->delete(base_path('artisan'));
 
         if (! is_null($this->originalArtisan)) {
-            $this->fs->put(ws_base_path('artisan'), $this->originalArtisan);
+            $this->fs->put(base_path('artisan'), $this->originalArtisan);
         }
 
         parent::tearDown();
     }
 
-    /**
-     * @dataProvider executionProvider
-     */
-    public function testExecutionOrder($background)
+    #[DataProvider('executionProvider')]
+    public function testExecutionOrder($background, $expected): void
     {
-        $event = $this->app->make(Schedule::class)
+        $schedule = $this->app->make(Schedule::class);
+        $event = $schedule
             ->command("test:{$this->id}")
             ->onOneServer()
             ->after(function () {
-                $this->fs->append($this->logfile, "after\n");
+                $this->fs->append($this->logfile, "foreground:after\n");
             })
             ->before(function () {
-                $this->fs->append($this->logfile, "before\n");
+                $this->fs->append($this->logfile, "foreground:before\n");
             });
 
         if ($background) {
@@ -82,24 +82,27 @@ class CommandSchedulingTest extends TestCase
         }
 
         // We'll trigger the scheduler three times to simulate multiple servers
+        $this->app->instance(Schedule::class, clone $schedule);
         $this->artisan('schedule:run');
+        $this->app->instance(Schedule::class, clone $schedule);
         $this->artisan('schedule:run');
+        $this->app->instance(Schedule::class, clone $schedule);
         $this->artisan('schedule:run');
 
         if ($background) {
             // Since our command is running in a separate process, we need to wait
             // until it has finished executing before running our assertions.
-            $this->waitForLogMessages('before', 'handled', 'after');
+            $this->waitForLogMessages(...$expected);
         }
 
-        $this->assertLogged('before', 'handled', 'after');
+        $this->assertLogged(...$expected);
     }
 
-    public function executionProvider()
+    public static function executionProvider()
     {
         return [
-            'Foreground' => [false],
-            'Background' => [true],
+            'Foreground' => [false, ['foreground:before', 'handled', 'foreground:after']],
+            'Background' => [true, ['foreground:before', 'handled', 'background:after']],
         ];
     }
 
@@ -130,7 +133,7 @@ class CommandSchedulingTest extends TestCase
 
     protected function writeArtisanScript()
     {
-        $path = ws_base_path('artisan');
+        $path = base_path('artisan');
 
         // Save existing artisan script if there is one
         if ($this->fs->exists($path)) {
@@ -184,11 +187,11 @@ WpStarter\Foundation\Application::getInstance()
             \$schedule->command("test:{$this->id}")
                 ->after(function() use (\$fs) {
                     \$logfile = {$logfile};
-                    \$fs->append(\$logfile, "after\\n");
+                    \$fs->append(\$logfile, "background:after\\n");
                 })
                 ->before(function() use (\$fs) {
                     \$logfile = {$logfile};
-                    \$fs->append(\$logfile, "before\\n");
+                    \$fs->append(\$logfile, "background:before\\n");
                 });
         });
     });

@@ -2,6 +2,7 @@
 
 namespace WpStarter\Tests\Console;
 
+use WpStarter\Console\Application;
 use WpStarter\Console\Command;
 use WpStarter\Console\Scheduling\CacheEventMutex;
 use WpStarter\Console\Scheduling\CacheSchedulingMutex;
@@ -30,11 +31,6 @@ class ConsoleEventSchedulerTest extends TestCase
         $container->instance(SchedulingMutex::class, m::mock(CacheSchedulingMutex::class));
 
         $container->instance(Schedule::class, $this->schedule = new Schedule(m::mock(EventMutex::class)));
-    }
-
-    protected function tearDown(): void
-    {
-        m::close();
     }
 
     public function testMutexCanReceiveCustomStore()
@@ -92,39 +88,55 @@ class ConsoleEventSchedulerTest extends TestCase
 
     public function testCommandCreatesNewArtisanCommand()
     {
-        $escape = '\\' === DIRECTORY_SEPARATOR ? '"' : '\'';
-
         $schedule = $this->schedule;
         $schedule->command('queue:listen');
         $schedule->command('queue:listen --tries=3');
         $schedule->command('queue:listen', ['--tries' => 3]);
 
         $events = $schedule->events();
-        $binary = $escape.PHP_BINARY.$escape;
-        $artisan = $escape.'artisan'.$escape;
-        $this->assertEquals($binary.' '.$artisan.' queue:listen', $events[0]->command);
-        $this->assertEquals($binary.' '.$artisan.' queue:listen --tries=3', $events[1]->command);
-        $this->assertEquals($binary.' '.$artisan.' queue:listen --tries=3', $events[2]->command);
+        $phpBinary = Application::phpBinary();
+        $artisanBinary = Application::artisanBinary();
+        $this->assertEquals($phpBinary.' '.$artisanBinary.' queue:listen', $events[0]->command);
+        $this->assertEquals($phpBinary.' '.$artisanBinary.' queue:listen --tries=3', $events[1]->command);
+        $this->assertEquals($phpBinary.' '.$artisanBinary.' queue:listen --tries=3', $events[2]->command);
     }
 
     public function testCreateNewArtisanCommandUsingCommandClass()
     {
-        $escape = '\\' === DIRECTORY_SEPARATOR ? '"' : '\'';
-
         $schedule = $this->schedule;
         $schedule->command(ConsoleCommandStub::class, ['--force']);
 
         $events = $schedule->events();
-        $binary = $escape.PHP_BINARY.$escape;
-        $artisan = $escape.'artisan'.$escape;
-        $this->assertEquals($binary.' '.$artisan.' foo:bar --force', $events[0]->command);
+        $phpBinary = Application::phpBinary();
+        $artisanBinary = Application::artisanBinary();
+        $this->assertEquals($phpBinary.' '.$artisanBinary.' foo:bar --force', $events[0]->command);
+    }
+
+    public function testCreateNewArtisanCommandUsingCommandClassObject()
+    {
+        $command = new class extends Command
+        {
+            protected $signature = 'foo:bar';
+
+            public function handle()
+            {
+            }
+        };
+
+        $schedule = $this->schedule;
+        $schedule->command($command, ['--force']);
+
+        $events = $schedule->events();
+        $phpBinary = Application::phpBinary();
+        $artisanBinary = Application::artisanBinary();
+        $this->assertEquals($phpBinary.' '.$artisanBinary.' foo:bar --force', $events[0]->command);
     }
 
     public function testItUsesCommandDescriptionAsEventDescription()
     {
         $schedule = $this->schedule;
         $event = $schedule->command(ConsoleCommandStub::class);
-        $this->assertEquals('This is a description about the command', $event->description);
+        $this->assertSame('This is a description about the command', $event->description);
     }
 
     public function testItShouldBePossibleToOverwriteTheDescription()
@@ -132,7 +144,7 @@ class ConsoleEventSchedulerTest extends TestCase
         $schedule = $this->schedule;
         $event = $schedule->command(ConsoleCommandStub::class)
             ->description('This is an alternative description');
-        $this->assertEquals('This is an alternative description', $event->description);
+        $this->assertSame('This is an alternative description', $event->description);
     }
 
     public function testCallCreatesNewJobWithTimezone()

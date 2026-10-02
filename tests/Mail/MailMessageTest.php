@@ -2,19 +2,16 @@
 
 namespace WpStarter\Tests\Mail;
 
+use WpStarter\Contracts\Mail\Attachable;
+use WpStarter\Mail\Attachment;
 use WpStarter\Mail\Message;
-use Mockery as m;
+use WpStarter\Support\Str;
 use PHPUnit\Framework\TestCase;
-use stdClass;
-use Swift_Mime_Message;
+use Symfony\Component\Mime\Address;
+use Symfony\Component\Mime\Email;
 
 class MailMessageTest extends TestCase
 {
-    /**
-     * @var \Mockery::mock
-     */
-    protected $swift;
-
     /**
      * @var \WpStarter\Mail\Message
      */
@@ -24,100 +21,224 @@ class MailMessageTest extends TestCase
     {
         parent::setUp();
 
-        $this->swift = m::mock(Swift_Mime_Message::class);
-        $this->message = new Message($this->swift);
+        $this->message = new Message(new Email());
     }
 
-    protected function tearDown(): void
+    public function testFromMethod(): void
     {
-        m::close();
+        $this->assertSame($this->message, $this->message->from('foo@bar.baz', 'Foo'));
+        $this->assertEquals(new Address('foo@bar.baz', 'Foo'), $this->message->getSymfonyMessage()->getFrom()[0]);
     }
 
-    public function testFromMethod()
+    public function testSenderMethod(): void
     {
-        $this->swift->shouldReceive('setFrom')->once()->with('foo@bar.baz', 'Foo');
-        $this->assertInstanceOf(Message::class, $this->message->from('foo@bar.baz', 'Foo'));
+        $this->assertSame($this->message, $this->message->sender('foo@bar.baz', 'Foo'));
+        $this->assertEquals(new Address('foo@bar.baz', 'Foo'), $this->message->getSymfonyMessage()->getSender());
     }
 
-    public function testSenderMethod()
+    public function testReturnPathMethod(): void
     {
-        $this->swift->shouldReceive('setSender')->once()->with('foo@bar.baz', 'Foo');
-        $this->assertInstanceOf(Message::class, $this->message->sender('foo@bar.baz', 'Foo'));
+        $this->assertSame($this->message, $this->message->returnPath('foo@bar.baz'));
+        $this->assertEquals(new Address('foo@bar.baz'), $this->message->getSymfonyMessage()->getReturnPath());
     }
 
-    public function testReturnPathMethod()
+    public function testToMethod(): void
     {
-        $this->swift->shouldReceive('setReturnPath')->once()->with('foo@bar.baz');
-        $this->assertInstanceOf(Message::class, $this->message->returnPath('foo@bar.baz'));
+        $this->assertSame($this->message, $this->message->to('foo@bar.baz', 'Foo'));
+        $this->assertEquals(new Address('foo@bar.baz', 'Foo'), $this->message->getSymfonyMessage()->getTo()[0]);
+
+        $this->assertSame($this->message, $this->message->to(['bar@bar.baz' => 'Bar']));
+        $this->assertEquals(new Address('bar@bar.baz', 'Bar'), $this->message->getSymfonyMessage()->getTo()[0]);
     }
 
-    public function testToMethod()
+    public function testToMethodWithOverride(): void
     {
-        $this->swift->shouldReceive('addTo')->once()->with('foo@bar.baz', 'Foo');
-        $this->assertInstanceOf(Message::class, $this->message->to('foo@bar.baz', 'Foo', false));
+        $this->assertSame($this->message, $this->message->to('foo@bar.baz', 'Foo', true));
+        $this->assertEquals(new Address('foo@bar.baz', 'Foo'), $this->message->getSymfonyMessage()->getTo()[0]);
     }
 
-    public function testToMethodWithOverride()
+    public function testCcMethod(): void
     {
-        $this->swift->shouldReceive('setTo')->once()->with('foo@bar.baz', 'Foo');
-        $this->assertInstanceOf(Message::class, $this->message->to('foo@bar.baz', 'Foo', true));
+        $this->assertSame($this->message, $this->message->cc('foo@bar.baz', 'Foo'));
+        $this->assertEquals(new Address('foo@bar.baz', 'Foo'), $this->message->getSymfonyMessage()->getCc()[0]);
     }
 
-    public function testCcMethod()
+    public function testBccMethod(): void
     {
-        $this->swift->shouldReceive('addCc')->once()->with('foo@bar.baz', 'Foo');
-        $this->assertInstanceOf(Message::class, $this->message->cc('foo@bar.baz', 'Foo'));
+        $this->assertSame($this->message, $this->message->bcc('foo@bar.baz', 'Foo'));
+        $this->assertEquals(new Address('foo@bar.baz', 'Foo'), $this->message->getSymfonyMessage()->getBcc()[0]);
     }
 
-    public function testBccMethod()
+    public function testReplyToMethod(): void
     {
-        $this->swift->shouldReceive('addBcc')->once()->with('foo@bar.baz', 'Foo');
-        $this->assertInstanceOf(Message::class, $this->message->bcc('foo@bar.baz', 'Foo'));
+        $this->assertSame($this->message, $this->message->replyTo('foo@bar.baz', 'Foo'));
+        $this->assertEquals(new Address('foo@bar.baz', 'Foo'), $this->message->getSymfonyMessage()->getReplyTo()[0]);
     }
 
-    public function testReplyToMethod()
+    public function testSubjectMethod(): void
     {
-        $this->swift->shouldReceive('addReplyTo')->once()->with('foo@bar.baz', 'Foo');
-        $this->assertInstanceOf(Message::class, $this->message->replyTo('foo@bar.baz', 'Foo'));
+        $this->assertSame($this->message, $this->message->subject('foo'));
+        $this->assertSame('foo', $this->message->getSymfonyMessage()->getSubject());
     }
 
-    public function testSubjectMethod()
+    public function testPriorityMethod(): void
     {
-        $this->swift->shouldReceive('setSubject')->once()->with('foo');
-        $this->assertInstanceOf(Message::class, $this->message->subject('foo'));
+        $this->assertSame($this->message, $this->message->priority(1));
+        $this->assertEquals(1, $this->message->getSymfonyMessage()->getPriority());
     }
 
-    public function testPriorityMethod()
+    public function testBasicAttachment(): void
     {
-        $this->swift->shouldReceive('setPriority')->once()->with(1);
-        $this->assertInstanceOf(Message::class, $this->message->priority(1));
+        file_put_contents($path = __DIR__.'/foo.jpg', 'expected attachment body');
+
+        $this->message->attach($path, ['as' => 'bar.jpg', 'mime' => 'image/png']);
+
+        $attachment = $this->message->getSymfonyMessage()->getAttachments()[0];
+        $headers = $attachment->getPreparedHeaders()->toArray();
+        $this->assertSame('expected attachment body', $attachment->getBody());
+        $this->assertSame('Content-Type: image/png; name=bar.jpg', $headers[0]);
+        $this->assertSame('Content-Transfer-Encoding: base64', $headers[1]);
+        $this->assertSame('Content-Disposition: attachment; name=bar.jpg; filename=bar.jpg', $headers[2]);
+
+        unlink($path);
     }
 
-    public function testGetSwiftMessageMethod()
+    public function testDataAttachment(): void
     {
-        $this->assertInstanceOf(Swift_Mime_Message::class, $this->message->getSwiftMessage());
+        $this->message->attachData('expected attachment body', 'foo.jpg', ['mime' => 'image/png']);
+
+        $attachment = $this->message->getSymfonyMessage()->getAttachments()[0];
+        $headers = $attachment->getPreparedHeaders()->toArray();
+        $this->assertSame('expected attachment body', $attachment->getBody());
+        $this->assertSame('Content-Type: image/png; name=foo.jpg', $headers[0]);
+        $this->assertSame('Content-Transfer-Encoding: base64', $headers[1]);
+        $this->assertSame('Content-Disposition: attachment; name=foo.jpg; filename=foo.jpg', $headers[2]);
     }
 
-    public function testBasicAttachment()
+    public function testItAttachesFilesViaAttachableContractFromPath(): void
     {
-        $swift = m::mock(stdClass::class);
-        $message = $this->getMockBuilder(Message::class)->onlyMethods(['createAttachmentFromPath'])->setConstructorArgs([$swift])->getMock();
-        $attachment = m::mock(stdClass::class);
-        $message->expects($this->once())->method('createAttachmentFromPath')->with($this->equalTo('foo.jpg'))->willReturn($attachment);
-        $swift->shouldReceive('attach')->once()->with($attachment);
-        $attachment->shouldReceive('setContentType')->once()->with('image/jpeg');
-        $attachment->shouldReceive('setFilename')->once()->with('bar.jpg');
-        $message->attach('foo.jpg', ['mime' => 'image/jpeg', 'as' => 'bar.jpg']);
+        file_put_contents($path = __DIR__.'/foo.jpg', 'expected attachment body');
+
+        $this->message->attach(new class() implements Attachable
+        {
+            public function toMailAttachment()
+            {
+                return Attachment::fromPath(__DIR__.'/foo.jpg')
+                    ->as('bar.jpg')
+                    ->withMime('image/png');
+            }
+        });
+
+        $attachment = $this->message->getSymfonyMessage()->getAttachments()[0];
+        $headers = $attachment->getPreparedHeaders()->toArray();
+        $this->assertSame('expected attachment body', $attachment->getBody());
+        $this->assertSame('Content-Type: image/png; name=bar.jpg', $headers[0]);
+        $this->assertSame('Content-Transfer-Encoding: base64', $headers[1]);
+        $this->assertSame('Content-Disposition: attachment; name=bar.jpg; filename=bar.jpg', $headers[2]);
+
+        unlink($path);
     }
 
-    public function testDataAttachment()
+    public function testItAttachesFilesViaAttachableContractFromData(): void
     {
-        $swift = m::mock(stdClass::class);
-        $message = $this->getMockBuilder(Message::class)->onlyMethods(['createAttachmentFromData'])->setConstructorArgs([$swift])->getMock();
-        $attachment = m::mock(stdClass::class);
-        $message->expects($this->once())->method('createAttachmentFromData')->with($this->equalTo('foo'), $this->equalTo('name'))->willReturn($attachment);
-        $swift->shouldReceive('attach')->once()->with($attachment);
-        $attachment->shouldReceive('setContentType')->once()->with('image/jpeg');
-        $message->attachData('foo', 'name', ['mime' => 'image/jpeg']);
+        $this->message->attach(new class() implements Attachable
+        {
+            public function toMailAttachment()
+            {
+                return Attachment::fromData(fn () => 'expected attachment body', 'foo.jpg')
+                    ->withMime('image/png');
+            }
+        });
+
+        $attachment = $this->message->getSymfonyMessage()->getAttachments()[0];
+        $headers = $attachment->getPreparedHeaders()->toArray();
+        $this->assertSame('expected attachment body', $attachment->getBody());
+        $this->assertSame('Content-Type: image/png; name=foo.jpg', $headers[0]);
+        $this->assertSame('Content-Transfer-Encoding: base64', $headers[1]);
+        $this->assertSame('Content-Disposition: attachment; name=foo.jpg; filename=foo.jpg', $headers[2]);
+    }
+
+    public function testEmbedPath(): void
+    {
+        file_put_contents($path = __DIR__.'/foo.jpg', 'bar');
+
+        $cid = $this->message->embed($path);
+
+        $this->assertStringStartsWith('cid:', $cid);
+        $contentId = Str::after($cid, 'cid:');
+        $attachment = $this->message->getSymfonyMessage()->getAttachments()[0];
+        $headers = $attachment->getPreparedHeaders()->toArray();
+        $this->assertSame('bar', $attachment->getBody());
+        $this->assertSame($contentId, $attachment->getContentId());
+        $this->assertStringContainsString('Content-Type: image/jpeg', $headers[0]);
+        $this->assertSame('Content-Transfer-Encoding: base64', $headers[1]);
+        $this->assertStringContainsString('Content-Disposition: inline', $headers[2]);
+
+        unlink($path);
+    }
+
+    public function testDataEmbed(): void
+    {
+        $cid = $this->message->embedData('bar', 'foo.jpg', 'image/png');
+
+        $attachment = $this->message->getSymfonyMessage()->getAttachments()[0];
+        $headers = $attachment->getPreparedHeaders()->toArray();
+        $this->assertStringStartsWith('cid:', $cid);
+        $contentId = Str::after($cid, 'cid:');
+        $this->assertSame($contentId, $attachment->getContentId());
+        $this->assertSame('bar', $attachment->getBody());
+        $this->assertSame('Content-Type: image/png; name=foo.jpg', $headers[0]);
+        $this->assertSame('Content-Transfer-Encoding: base64', $headers[1]);
+        $this->assertSame('Content-Disposition: inline; name=foo.jpg; filename=foo.jpg', $headers[2]);
+    }
+
+    public function testItEmbedsFilesViaAttachableContractFromPath(): void
+    {
+        file_put_contents($path = __DIR__.'/foo.jpg', 'bar');
+
+        $cid = $this->message->embed(new class() implements Attachable
+        {
+            public function toMailAttachment()
+            {
+                return Attachment::fromPath(__DIR__.'/foo.jpg')->as('baz')->withMime('image/png');
+            }
+        });
+
+        $this->assertStringStartsWith('cid:', $cid);
+        $contentId = Str::after($cid, 'cid:');
+        $attachment = $this->message->getSymfonyMessage()->getAttachments()[0];
+        $headers = $attachment->getPreparedHeaders()->toArray();
+        $this->assertSame($contentId, $attachment->getContentId());
+        $this->assertSame('bar', $attachment->getBody());
+        $this->assertSame('Content-Type: image/png; name=baz', $headers[0]);
+        $this->assertSame('Content-Transfer-Encoding: base64', $headers[1]);
+        $this->assertSame('Content-Disposition: inline; name=baz; filename=baz', $headers[2]);
+
+        unlink($path);
+    }
+
+    public function testItGeneratesARandomNameWhenAttachableHasNone(): void
+    {
+        file_put_contents($path = __DIR__.'/foo.jpg', 'bar');
+
+        $cid = $this->message->embed(new class() implements Attachable
+        {
+            public function toMailAttachment()
+            {
+                return Attachment::fromPath(__DIR__.'/foo.jpg');
+            }
+        });
+
+        $this->assertStringStartsWith('cid:', $cid);
+        $contentId = Str::after($cid, 'cid:');
+        $attachment = $this->message->getSymfonyMessage()->getAttachments()[0];
+        $this->assertSame($contentId, $attachment->getContentId());
+        $headers = $attachment->getPreparedHeaders()->toArray();
+        $this->assertSame('bar', $attachment->getBody());
+        $this->assertStringContainsString('Content-Type: image/jpeg', $headers[0]);
+        $this->assertSame('Content-Transfer-Encoding: base64', $headers[1]);
+        $this->assertStringContainsString('Content-Disposition: inline', $headers[2]);
+
+        unlink($path);
     }
 }

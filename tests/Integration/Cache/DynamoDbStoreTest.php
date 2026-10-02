@@ -7,19 +7,12 @@ use Aws\Exception\AwsException;
 use WpStarter\Contracts\Cache\Repository;
 use WpStarter\Support\Facades\Cache;
 use WpStarter\Support\Str;
+use Orchestra\Testbench\Attributes\RequiresEnv;
 use Orchestra\Testbench\TestCase;
 
+#[RequiresEnv('DYNAMODB_CACHE_TABLE')]
 class DynamoDbStoreTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        if (! ws_env('DYNAMODB_CACHE_TABLE')) {
-            $this->markTestSkipped('DynamoDB not configured.');
-        }
-
-        parent::setUp();
-    }
-
     public function testItemsCanBeStoredAndRetrieved()
     {
         Cache::driver('dynamodb')->put('name', 'Taylor', 10);
@@ -72,9 +65,9 @@ class DynamoDbStoreTest extends TestCase
      * @param  \WpStarter\Foundation\Application  $app
      * @return void
      */
-    protected function getEnvironmentSetUp($app)
+    protected function defineEnvironment($app)
     {
-        if (! ws_env('DYNAMODB_CACHE_TABLE')) {
+        if (! env('DYNAMODB_CACHE_TABLE')) {
             $this->markTestSkipped('DynamoDB not configured.');
         }
 

@@ -3,13 +3,10 @@
 namespace WpStarter\Tests\Integration\Database\MySql;
 
 use WpStarter\Tests\Integration\Database\DatabaseTestCase;
+use Orchestra\Testbench\Attributes\RequiresDatabase;
 
+#[RequiresDatabase('mysql')]
 abstract class MySqlTestCase extends DatabaseTestCase
 {
-    protected function defineDatabaseMigrations()
-    {
-        if ($this->driver !== 'mysql') {
-            $this->markTestSkipped('Test requires a MySQL connection.');
-        }
-    }
+    //
 }

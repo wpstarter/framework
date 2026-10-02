@@ -2,10 +2,15 @@
 
 namespace WpStarter\Database\Eloquent;
 
+use WpStarter\Database\Eloquent\Collection as EloquentCollection;
+use WpStarter\Support\Collection as BaseCollection;
+
 /**
- * @method static static|\WpStarter\Database\Eloquent\Builder|\WpStarter\Database\Query\Builder withTrashed(bool $withTrashed = true)
- * @method static static|\WpStarter\Database\Eloquent\Builder|\WpStarter\Database\Query\Builder onlyTrashed()
- * @method static static|\WpStarter\Database\Eloquent\Builder|\WpStarter\Database\Query\Builder withoutTrashed()
+ * @method static \WpStarter\Database\Eloquent\Builder<static> withTrashed(bool $withTrashed = true)
+ * @method static \WpStarter\Database\Eloquent\Builder<static> onlyTrashed()
+ * @method static \WpStarter\Database\Eloquent\Builder<static> withoutTrashed()
+ * @method static static restoreOrCreate(array<string, mixed> $attributes = [], array<string, mixed> $values = [])
+ * @method static static createOrRestore(array<string, mixed> $attributes = [], array<string, mixed> $values = [])
  */
 trait SoftDeletes
 {
@@ -45,15 +50,67 @@ trait SoftDeletes
      */
     public function forceDelete()
     {
+        if ($this->fireModelEvent('forceDeleting') === false) {
+            return false;
+        }
+
         $this->forceDeleting = true;
 
-        return ws_tap($this->delete(), function ($deleted) {
+        return tap($this->delete(), function ($deleted) {
             $this->forceDeleting = false;
 
             if ($deleted) {
                 $this->fireModelEvent('forceDeleted', false);
             }
         });
+    }
+
+    /**
+     * Force a hard delete on a soft deleted model without raising any events.
+     *
+     * @return bool|null
+     */
+    public function forceDeleteQuietly()
+    {
+        return static::withoutEvents(fn () => $this->forceDelete());
+    }
+
+    /**
+     * Destroy the models for the given IDs.
+     *
+     * @param  \WpStarter\Support\Collection|array|int|string  $ids
+     * @return int
+     */
+    public static function forceDestroy($ids)
+    {
+        if ($ids instanceof EloquentCollection) {
+            $ids = $ids->modelKeys();
+        }
+
+        if ($ids instanceof BaseCollection) {
+            $ids = $ids->all();
+        }
+
+        $ids = is_array($ids) ? $ids : func_get_args();
+
+        if (count($ids) === 0) {
+            return 0;
+        }
+
+        // We will actually pull the models from the database table and call delete on
+        // each of them individually so that their events get fired properly with a
+        // correct set of attributes in case the developers wants to check these.
+        $key = ($instance = new static)->getKeyName();
+
+        $count = 0;
+
+        foreach ($instance->withTrashed()->whereIn($key, $ids)->get() as $model) {
+            if ($model->forceDelete()) {
+                $count++;
+            }
+        }
+
+        return $count;
     }
 
     /**
@@ -64,7 +121,7 @@ trait SoftDeletes
     protected function performDeleteOnModel()
     {
         if ($this->forceDeleting) {
-            return ws_tap($this->setKeysForSaveQuery($this->newModelQuery())->forceDelete(), function () {
+            return tap($this->setKeysForSaveQuery($this->newModelQuery())->forceDelete(), function () {
                 $this->exists = false;
             });
         }
@@ -87,7 +144,7 @@ trait SoftDeletes
 
         $this->{$this->getDeletedAtColumn()} = $time;
 
-        if ($this->timestamps && ! is_null($this->getUpdatedAtColumn())) {
+        if ($this->usesTimestamps() && ! is_null($this->getUpdatedAtColumn())) {
             $this->{$this->getUpdatedAtColumn()} = $time;
 
             $columns[$this->getUpdatedAtColumn()] = $this->fromDateTime($time);
@@ -103,7 +160,7 @@ trait SoftDeletes
     /**
      * Restore a soft-deleted model instance.
      *
-     * @return bool|null
+     * @return bool
      */
     public function restore()
     {
@@ -129,6 +186,16 @@ trait SoftDeletes
     }
 
     /**
+     * Restore a soft-deleted model instance without raising any events.
+     *
+     * @return bool
+     */
+    public function restoreQuietly()
+    {
+        return static::withoutEvents(fn () => $this->restore());
+    }
+
+    /**
      * Determine if the model instance has been soft-deleted.
      *
      * @return bool
@@ -141,7 +208,7 @@ trait SoftDeletes
     /**
      * Register a "softDeleted" model event callback with the dispatcher.
      *
-     * @param  \Closure|string  $callback
+     * @param  \WpStarter\Events\QueuedClosure|callable|class-string  $callback
      * @return void
      */
     public static function softDeleted($callback)
@@ -152,7 +219,7 @@ trait SoftDeletes
     /**
      * Register a "restoring" model event callback with the dispatcher.
      *
-     * @param  \Closure|string  $callback
+     * @param  \WpStarter\Events\QueuedClosure|callable|class-string  $callback
      * @return void
      */
     public static function restoring($callback)
@@ -163,7 +230,7 @@ trait SoftDeletes
     /**
      * Register a "restored" model event callback with the dispatcher.
      *
-     * @param  \Closure|string  $callback
+     * @param  \WpStarter\Events\QueuedClosure|callable|class-string  $callback
      * @return void
      */
     public static function restored($callback)
@@ -172,9 +239,20 @@ trait SoftDeletes
     }
 
     /**
+     * Register a "forceDeleting" model event callback with the dispatcher.
+     *
+     * @param  \WpStarter\Events\QueuedClosure|callable|class-string  $callback
+     * @return void
+     */
+    public static function forceDeleting($callback)
+    {
+        static::registerModelEvent('forceDeleting', $callback);
+    }
+
+    /**
      * Register a "forceDeleted" model event callback with the dispatcher.
      *
-     * @param  \Closure|string  $callback
+     * @param  \WpStarter\Events\QueuedClosure|callable|class-string  $callback
      * @return void
      */
     public static function forceDeleted($callback)
@@ -199,11 +277,11 @@ trait SoftDeletes
      */
     public function getDeletedAtColumn()
     {
-        return defined('static::DELETED_AT') ? static::DELETED_AT : 'deleted_at';
+        return defined(static::class.'::DELETED_AT') ? static::DELETED_AT : 'deleted_at';
     }
 
     /**
-     * Get the fully qualified "deleted at" column.
+     * Get the fully-qualified "deleted at" column.
      *
      * @return string
      */

@@ -2,6 +2,9 @@
 
 namespace WpStarter\Tests\View\Blade;
 
+use WpStarter\Contracts\View\ViewCompilationException;
+use PHPUnit\Framework\Attributes\DataProvider;
+
 class BladeForeachStatementsTest extends AbstractBladeTestCase
 {
     public function testForeachStatementsAreCompiled()
@@ -82,13 +85,37 @@ tag info
         $expected = '<?php $__currentLoopData = $tasks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $task): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>';
         $this->assertEquals($expected, $this->compiler->compileString($string));
 
-        $string = "@foreach(ws_resolve('App\\\\DataProviders\\\\'.\$provider)->data() as \$key => \$value)
+        $string = "@foreach(resolve('App\\\\DataProviders\\\\'.\$provider)->data() as \$key => \$value)
     <input {{ \$foo ? 'bar': 'baz' }}>
 @endforeach";
-        $expected = "<?php \$__currentLoopData = ws_resolve('App\\\\DataProviders\\\\'.\$provider)->data(); \$__env->addLoop(\$__currentLoopData); foreach(\$__currentLoopData as \$key => \$value): \$__env->incrementLoopIndices(); \$loop = \$__env->getLastLoop(); ?>
-    <input <?php echo ws_e(\$foo ? 'bar': 'baz'); ?>>
+        $expected = "<?php \$__currentLoopData = resolve('App\\\\DataProviders\\\\'.\$provider)->data(); \$__env->addLoop(\$__currentLoopData); foreach(\$__currentLoopData as \$key => \$value): \$__env->incrementLoopIndices(); \$loop = \$__env->getLastLoop(); ?>
+    <input <?php echo e(\$foo ? 'bar': 'baz'); ?>>
 <?php endforeach; \$__env->popLoop(); \$loop = \$__env->getLastLoop(); ?>";
 
         $this->assertEquals($expected, $this->compiler->compileString($string));
+    }
+
+    #[DataProvider('invalidForeachStatementsDataProvider')]
+    public function testForeachStatementsThrowHumanizedMessageWhenInvalidStatement($initialStatement)
+    {
+        $this->expectException(ViewCompilationException::class);
+        $this->expectExceptionMessage('Malformed @foreach statement.');
+        $string = "$initialStatement
+test
+@endforeach";
+        $this->compiler->compileString($string);
+    }
+
+    public static function invalidForeachStatementsDataProvider()
+    {
+        return [
+            ['@foreach'],
+            ['@foreach()'],
+            ['@foreach ()'],
+            ['@foreach($test)'],
+            ['@foreach($test as)'],
+            ['@foreach(as)'],
+            ['@foreach ( as )'],
+        ];
     }
 }

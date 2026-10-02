@@ -2,6 +2,8 @@
 
 namespace WpStarter\Support;
 
+use Throwable;
+
 class Timebox
 {
     /**
@@ -14,20 +16,34 @@ class Timebox
     /**
      * Invoke the given callback within the specified timebox minimum.
      *
-     * @param  callable  $callback
+     * @template TCallReturnType
+     *
+     * @param  (callable($this): TCallReturnType)  $callback
      * @param  int  $microseconds
-     * @return mixed
+     * @return TCallReturnType
+     *
+     * @throws \Throwable
      */
     public function call(callable $callback, int $microseconds)
     {
+        $exception = null;
+
         $start = microtime(true);
 
-        $result = $callback($this);
+        try {
+            $result = $callback($this);
+        } catch (Throwable $caught) {
+            $exception = $caught;
+        }
 
-        $remainder = $microseconds - ((microtime(true) - $start) * 1000000);
+        $remainder = (int) ($microseconds - ((microtime(true) - $start) * 1_000_000));
 
         if (! $this->earlyReturn && $remainder > 0) {
             $this->usleep($remainder);
+        }
+
+        if ($exception) {
+            throw $exception;
         }
 
         return $result;
@@ -60,11 +76,11 @@ class Timebox
     /**
      * Sleep for the specified number of microseconds.
      *
-     * @param  $microseconds
+     * @param  int  $microseconds
      * @return void
      */
-    protected function usleep($microseconds)
+    protected function usleep(int $microseconds)
     {
-        usleep($microseconds);
+        Sleep::usleep($microseconds);
     }
 }

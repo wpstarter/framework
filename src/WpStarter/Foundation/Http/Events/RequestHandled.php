@@ -23,7 +23,6 @@ class RequestHandled
      *
      * @param  \WpStarter\Http\Request  $request
      * @param  \WpStarter\Http\Response  $response
-     * @return void
      */
     public function __construct($request, $response)
     {

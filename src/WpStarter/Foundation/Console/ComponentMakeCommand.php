@@ -2,13 +2,19 @@
 
 namespace WpStarter\Foundation\Console;
 
+use WpStarter\Console\Concerns\CreatesMatchingTest;
 use WpStarter\Console\GeneratorCommand;
 use WpStarter\Foundation\Inspiring;
+use WpStarter\Support\Collection;
 use WpStarter\Support\Str;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputOption;
 
+#[AsCommand(name: 'make:component')]
 class ComponentMakeCommand extends GeneratorCommand
 {
+    use CreatesMatchingTest;
+
     /**
      * The console command name.
      *
@@ -37,8 +43,12 @@ class ComponentMakeCommand extends GeneratorCommand
      */
     public function handle()
     {
+        if ($this->option('view')) {
+            return $this->writeView();
+        }
+
         if (parent::handle() === false && ! $this->option('force')) {
-            return false;
+            return;
         }
 
         if (! $this->option('inline')) {
@@ -53,8 +63,14 @@ class ComponentMakeCommand extends GeneratorCommand
      */
     protected function writeView()
     {
+        $separator = '/';
+
+        if (windows_os()) {
+            $separator = '\\';
+        }
+
         $path = $this->viewPath(
-            str_replace('.', '/', 'components.'.$this->getView()).'.blade.php'
+            str_replace('.', $separator, $this->getView()).'.blade.php'
         );
 
         if (! $this->files->isDirectory(dirname($path))) {
@@ -62,7 +78,7 @@ class ComponentMakeCommand extends GeneratorCommand
         }
 
         if ($this->files->exists($path) && ! $this->option('force')) {
-            $this->error('View already exists!');
+            $this->components->error('View already exists.');
 
             return;
         }
@@ -70,9 +86,11 @@ class ComponentMakeCommand extends GeneratorCommand
         file_put_contents(
             $path,
             '<div>
-    <!-- '.Inspiring::quote().' -->
+    <!-- '.Inspiring::quotes()->random().' -->
 </div>'
         );
+
+        $this->components->info(sprintf('%s [%s] created successfully.', 'View', $path));
     }
 
     /**
@@ -86,31 +104,40 @@ class ComponentMakeCommand extends GeneratorCommand
         if ($this->option('inline')) {
             return str_replace(
                 ['DummyView', '{{ view }}'],
-                "<<<'blade'\n<div>\n    <!-- ".Inspiring::quote()." -->\n</div>\nblade",
+                "<<<'blade'\n<div>\n    <!-- ".Inspiring::quotes()->random()." -->\n</div>\nblade",
                 parent::buildClass($name)
             );
         }
 
         return str_replace(
             ['DummyView', '{{ view }}'],
-            'view(\'components.'.$this->getView().'\')',
+            'view(\''.$this->getView().'\')',
             parent::buildClass($name)
         );
     }
 
     /**
-     * Get the view name relative to the components directory.
+     * Get the view name relative to the view path.
      *
      * @return string view
      */
     protected function getView()
     {
-        $name = str_replace('\\', '/', $this->argument('name'));
+        $segments = explode('/', str_replace('\\', '/', $this->argument('name')));
 
-        return ws_collect(explode('/', $name))
-            ->map(function ($part) {
-                return Str::kebab($part);
-            })
+        $name = array_pop($segments);
+
+        $path = is_string($this->option('path'))
+            ? explode('/', trim($this->option('path'), '/'))
+            : [
+                'components',
+                ...$segments,
+            ];
+
+        $path[] = $name;
+
+        return (new Collection($path))
+            ->map(fn ($segment) => Str::kebab($segment))
             ->implode('.');
     }
 
@@ -133,8 +160,8 @@ class ComponentMakeCommand extends GeneratorCommand
     protected function resolveStubPath($stub)
     {
         return file_exists($customPath = $this->laravel->basePath(trim($stub, '/')))
-                        ? $customPath
-                        : __DIR__.$stub;
+            ? $customPath
+            : __DIR__.$stub;
     }
 
     /**
@@ -156,8 +183,10 @@ class ComponentMakeCommand extends GeneratorCommand
     protected function getOptions()
     {
         return [
-            ['force', null, InputOption::VALUE_NONE, 'Create the class even if the component already exists'],
             ['inline', null, InputOption::VALUE_NONE, 'Create a component that renders an inline view'],
+            ['view', null, InputOption::VALUE_NONE, 'Create an anonymous component with only a view'],
+            ['path', null, InputOption::VALUE_REQUIRED, 'The location where the component view should be created'],
+            ['force', 'f', InputOption::VALUE_NONE, 'Create the class even if the component already exists'],
         ];
     }
 }

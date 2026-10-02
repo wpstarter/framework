@@ -4,14 +4,17 @@ namespace WpStarter\Database\Console\Seeds;
 
 use WpStarter\Console\Command;
 use WpStarter\Console\ConfirmableTrait;
+use WpStarter\Console\Prohibitable;
 use WpStarter\Database\ConnectionResolverInterface as Resolver;
 use WpStarter\Database\Eloquent\Model;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 
+#[AsCommand(name: 'db:seed')]
 class SeedCommand extends Command
 {
-    use ConfirmableTrait;
+    use ConfirmableTrait, Prohibitable;
 
     /**
      * The console command name.
@@ -38,7 +41,6 @@ class SeedCommand extends Command
      * Create a new database seed command instance.
      *
      * @param  \WpStarter\Database\ConnectionResolverInterface  $resolver
-     * @return void
      */
     public function __construct(Resolver $resolver)
     {
@@ -54,9 +56,12 @@ class SeedCommand extends Command
      */
     public function handle()
     {
-        if (! $this->confirmToProceed()) {
-            return 1;
+        if ($this->isProhibited() ||
+            ! $this->confirmToProceed()) {
+            return Command::FAILURE;
         }
+
+        $this->components->info('Seeding database.');
 
         $previousConnection = $this->resolver->getDefaultConnection();
 
@@ -70,8 +75,6 @@ class SeedCommand extends Command
             $this->resolver->setDefaultConnection($previousConnection);
         }
 
-        $this->info('Database seeding completed successfully.');
-
         return 0;
     }
 
@@ -84,7 +87,7 @@ class SeedCommand extends Command
     {
         $class = $this->input->getArgument('class') ?? $this->input->getOption('class');
 
-        if (strpos($class, '\\') === false) {
+        if (! str_contains($class, '\\')) {
             $class = 'Database\\Seeders\\'.$class;
         }
 
@@ -94,8 +97,8 @@ class SeedCommand extends Command
         }
 
         return $this->laravel->make($class)
-                        ->setContainer($this->laravel)
-                        ->setCommand($this);
+            ->setContainer($this->laravel)
+            ->setCommand($this);
     }
 
     /**

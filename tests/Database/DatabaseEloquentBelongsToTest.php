@@ -6,20 +6,15 @@ use WpStarter\Database\Eloquent\Builder;
 use WpStarter\Database\Eloquent\Collection;
 use WpStarter\Database\Eloquent\Model;
 use WpStarter\Database\Eloquent\Relations\BelongsTo;
+use WpStarter\Tests\Database\Fixtures\Enums\Bar;
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
-use stdClass;
 
 class DatabaseEloquentBelongsToTest extends TestCase
 {
     protected $builder;
 
     protected $related;
-
-    protected function tearDown(): void
-    {
-        m::close();
-    }
 
     public function testBelongsToWithDefault()
     {
@@ -78,17 +73,21 @@ class DatabaseEloquentBelongsToTest extends TestCase
 
     public function testIdsInEagerConstraintsCanBeZero()
     {
-        $keys = ['foreign.value', 0];
-
-        if (version_compare(PHP_VERSION, '8.0.0-dev', '>=')) {
-            sort($keys);
-        }
-
         $relation = $this->getRelation();
         $relation->getRelated()->shouldReceive('getKeyName')->andReturn('id');
         $relation->getRelated()->shouldReceive('getKeyType')->andReturn('int');
-        $relation->getQuery()->shouldReceive('whereIntegerInRaw')->once()->with('relation.id', $keys);
+        $relation->getQuery()->shouldReceive('whereIntegerInRaw')->once()->with('relation.id', [0, 'foreign.value']);
         $models = [new EloquentBelongsToModelStub, new EloquentBelongsToModelStubWithZeroId];
+        $relation->addEagerConstraints($models);
+    }
+
+    public function testIdsInEagerConstraintsCanBeBackedEnum()
+    {
+        $relation = $this->getRelation();
+        $relation->getRelated()->shouldReceive('getKeyName')->andReturn('id');
+        $relation->getRelated()->shouldReceive('getKeyType')->andReturn('int');
+        $relation->getQuery()->shouldReceive('whereIntegerInRaw')->once()->with('relation.id', [5, 'foreign.value']);
+        $models = [new EloquentBelongsToModelStub, new EloquentBelongsToModelStubWithBackedEnumCast];
         $relation->addEagerConstraints($models);
     }
 
@@ -105,18 +104,36 @@ class DatabaseEloquentBelongsToTest extends TestCase
     public function testModelsAreProperlyMatchedToParents()
     {
         $relation = $this->getRelation();
-        $result1 = m::mock(stdClass::class);
-        $result1->shouldReceive('getAttribute')->with('id')->andReturn(1);
-        $result2 = m::mock(stdClass::class);
-        $result2->shouldReceive('getAttribute')->with('id')->andReturn(2);
-        $result3 = m::mock(stdClass::class);
-        $result3->shouldReceive('getAttribute')->with('id')->andReturn(new class
+
+        $result1 = new class extends Model
         {
+            protected $attributes = ['id' => 1];
+        };
+
+        $result2 = new class extends Model
+        {
+            protected $attributes = ['id' => 2];
+        };
+
+        $result3 = new class extends Model
+        {
+            protected $attributes = ['id' => 3];
+
             public function __toString()
             {
                 return '3';
             }
-        });
+        };
+
+        $result4 = new class extends Model
+        {
+            protected $casts = [
+                'id' => Bar::class,
+            ];
+
+            protected $attributes = ['id' => 5];
+        };
+
         $model1 = new EloquentBelongsToModelStub;
         $model1->foreign_key = 1;
         $model2 = new EloquentBelongsToModelStub;
@@ -129,11 +146,18 @@ class DatabaseEloquentBelongsToTest extends TestCase
                 return '3';
             }
         };
-        $models = $relation->match([$model1, $model2, $model3], new Collection([$result1, $result2, $result3]), 'foo');
+        $model4 = new EloquentBelongsToModelStub;
+        $model4->foreign_key = 5;
+        $models = $relation->match(
+            [$model1, $model2, $model3, $model4],
+            new Collection([$result1, $result2, $result3, $result4]),
+            'foo'
+        );
 
         $this->assertEquals(1, $models[0]->foo->getAttribute('id'));
         $this->assertEquals(2, $models[1]->foo->getAttribute('id'));
-        $this->assertEquals('3', $models[2]->foo->getAttribute('id'));
+        $this->assertSame('3', (string) $models[2]->foo->getAttribute('id'));
+        $this->assertEquals(5, $models[3]->foo->getAttribute('id')->value);
     }
 
     public function testAssociateMethodSetsForeignKeyOnModel()
@@ -375,6 +399,7 @@ class DatabaseEloquentBelongsToTest extends TestCase
         $this->related->shouldReceive('getKeyType')->andReturn($keyType);
         $this->related->shouldReceive('getKeyName')->andReturn('id');
         $this->related->shouldReceive('getTable')->andReturn('relation');
+        $this->related->shouldReceive('qualifyColumn')->andReturnUsing(fn (string $column) => "relation.{$column}");
         $this->builder->shouldReceive('getModel')->andReturn($this->related);
         $parent = $parent ?: new EloquentBelongsToModelStub;
 
@@ -400,4 +425,15 @@ class EloquentBelongsToModelStubWithZeroId extends Model
 class MissingEloquentBelongsToModelStub extends Model
 {
     public $foreign_key;
+}
+
+class EloquentBelongsToModelStubWithBackedEnumCast extends Model
+{
+    protected $casts = [
+        'foreign_key' => Bar::class,
+    ];
+
+    public $attributes = [
+        'foreign_key' => 5,
+    ];
 }

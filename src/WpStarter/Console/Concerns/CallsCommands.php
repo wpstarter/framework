@@ -2,6 +2,7 @@
 
 namespace WpStarter\Console\Concerns;
 
+use WpStarter\Support\Collection;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -53,7 +54,7 @@ trait CallsCommands
     }
 
     /**
-     * Run the given the console command.
+     * Run the given console command.
      *
      * @param  \Symfony\Component\Console\Command\Command|string  $command
      * @param  array  $arguments
@@ -64,9 +65,13 @@ trait CallsCommands
     {
         $arguments['command'] = $command;
 
-        return $this->resolveCommand($command)->run(
+        $result = $this->resolveCommand($command)->run(
             $this->createInputFromArguments($arguments), $output
         );
+
+        $this->restorePrompts();
+
+        return $result;
     }
 
     /**
@@ -77,7 +82,7 @@ trait CallsCommands
      */
     protected function createInputFromArguments(array $arguments)
     {
-        return ws_tap(new ArrayInput(array_merge($this->context(), $arguments)), function ($input) {
+        return tap(new ArrayInput(array_merge($this->context(), $arguments)), function ($input) {
             if ($input->getParameterOption('--no-interaction')) {
                 $input->setInteractive(false);
             }
@@ -87,18 +92,20 @@ trait CallsCommands
     /**
      * Get all of the context passed to the command.
      *
-     * @return array
+     * @return array{'--ansi'?: bool, '--no-ansi'?: bool, '--no-interaction'?: bool, '--quiet'?: bool, '--verbose'?: bool}
      */
     protected function context()
     {
-        return ws_collect($this->option())->only([
-            'ansi',
-            'no-ansi',
-            'no-interaction',
-            'quiet',
-            'verbose',
-        ])->filter()->mapWithKeys(function ($value, $key) {
-            return ["--{$key}" => $value];
-        })->all();
+        return (new Collection($this->option()))
+            ->only([
+                'ansi',
+                'no-ansi',
+                'no-interaction',
+                'quiet',
+                'verbose',
+            ])
+            ->filter()
+            ->mapWithKeys(fn ($value, $key) => ["--{$key}" => $value])
+            ->all();
     }
 }

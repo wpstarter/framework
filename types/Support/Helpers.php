@@ -1,0 +1,107 @@
+<?php
+
+use function PHPStan\Testing\assertType;
+
+/** @var bool|float|int|string|null $value */
+if (filled($value)) {
+    assertType('bool|float|int|non-empty-string', $value);
+} else {
+    assertType('string|null', $value);
+}
+
+if (blank($value)) {
+    assertType('string|null', $value);
+} else {
+    assertType('bool|float|int|non-empty-string', $value);
+}
+
+assertType('User', object_get(new User(), null));
+assertType('User', object_get(new User(), ''));
+assertType('mixed', object_get(new User(), 'name'));
+
+assertType('1', once(fn () => 1));
+assertType('null', once(function () { /** @phpstan-ignore function.void (testing void) */
+}));
+
+assertType('WpStarter\Support\Optional', optional());
+assertType('null', optional(null, fn () => 1));
+assertType('1', optional('foo', function ($value) {
+    assertType("'foo'", $value);
+
+    return 1;
+}));
+
+assertType('1', retry(5, fn () => 1));
+
+assertType('object', str());
+assertType('WpStarter\Support\Stringable', str('foo'));
+
+assertType('User', tap(new User(), function ($user) {
+    assertType('User', $user);
+}));
+assertType('WpStarter\Support\HigherOrderTapProxy', tap(new User()));
+
+function testThrowIf(float|int $foo, ?DateTime $bar = null): void
+{
+    rescue(fn () => assertType('never', throw_if(true, Exception::class)));
+    assertType('false', throw_if(false, Exception::class));
+    assertType('false', throw_if(empty($foo)));
+    throw_if(is_float($foo));
+    assertType('int', $foo);
+    throw_if($foo == false);
+    assertType('int<min, -1>|int<1, max>', $foo);
+
+    // Truthy/falsey argument
+    throw_if($bar);
+    assertType('null', $bar);
+    assertType('null', throw_if(null, Exception::class));
+    assertType("''", throw_if('', Exception::class));
+    rescue(fn () => assertType('never', throw_if('foo', Exception::class)));
+}
+
+function testThrowUnless(float|int $foo, ?DateTime $bar = null): void
+{
+    assertType('true', throw_unless(true, Exception::class));
+    rescue(fn () => assertType('never', throw_unless(false, Exception::class)));
+    assertType('true', throw_unless(empty($foo)));
+    throw_unless(is_int($foo));
+    assertType('int', $foo);
+    throw_unless($foo == false);
+    assertType('0', $foo);
+    throw_unless($bar instanceof DateTime);
+    assertType('DateTime', $bar);
+
+    // Truthy/falsey argument
+    rescue(fn () => assertType('never', throw_unless(null, Exception::class)));
+    rescue(fn () => assertType('never', throw_unless('', Exception::class)));
+    assertType("'foo'", throw_unless('foo', Exception::class));
+}
+
+assertType('1', transform('filled', fn () => 1, true));
+assertType('1', transform(['filled'], fn () => 1));
+assertType('null', transform('', fn () => 1));
+assertType('true', transform('', fn () => 1, true));
+assertType('true', transform('', fn () => 1, fn () => true));
+
+assertType('User', with(new User()));
+assertType('bool', with(new User())->save());
+assertType('10', with(new User(), function ($user) {
+    assertType('User', $user);
+
+    return 10;
+}));
+
+assertType('SupportLazyClass', lazy(SupportLazyClass::class, function (SupportLazyClass $instance) {
+    return [];
+}));
+assertType('SupportLazyClass', proxy(SupportLazyClass::class, function (SupportLazyClass $proxy) {
+    return new SupportLazyClass();
+}));
+assertType('SupportLazyClass', lazy(fn (SupportLazyClass $instance) => []));
+assertType('SupportLazyClass', proxy(fn (SupportLazyClass $proxy) => new SupportLazyClass));
+assertType('SupportLazyClass', proxy(fn (): SupportLazyClass => new SupportLazyClass));
+
+class SupportLazyClass
+{
+    //
+}

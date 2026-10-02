@@ -2,26 +2,33 @@
 
 namespace WpStarter\Mail;
 
+use WpStarter\Contracts\Mail\Attachable;
+use WpStarter\Support\Collection;
 use WpStarter\Support\Traits\ForwardsCalls;
-use Swift_Attachment;
-use Swift_Image;
+use InvalidArgumentException;
+use Symfony\Component\Mime\Address;
+use Symfony\Component\Mime\Email;
+use Symfony\Component\Mime\Part\DataPart;
+use Symfony\Component\Mime\Part\File;
 
 /**
- * @mixin \Swift_Message
+ * @mixin \Symfony\Component\Mime\Email
  */
 class Message
 {
     use ForwardsCalls;
 
     /**
-     * The Swift Message instance.
+     * The Symfony Email instance.
      *
-     * @var \Swift_Message
+     * @var \Symfony\Component\Mime\Email
      */
-    protected $swift;
+    protected $message;
 
     /**
      * CIDs of files embedded in the message.
+     *
+     * @deprecated Will be removed in a future Laravel version.
      *
      * @var array
      */
@@ -30,12 +37,11 @@ class Message
     /**
      * Create a new message instance.
      *
-     * @param  \Swift_Message  $swift
-     * @return void
+     * @param  \Symfony\Component\Mime\Email  $message
      */
-    public function __construct($swift)
+    public function __construct(Email $message)
     {
-        $this->swift = $swift;
+        $this->message = $message;
     }
 
     /**
@@ -47,7 +53,9 @@ class Message
      */
     public function from($address, $name = null)
     {
-        $this->swift->setFrom($address, $name);
+        is_array($address)
+            ? $this->message->from(...$this->ensureAddressesAreSafe($address))
+            : $this->message->from($this->createAddress($address, (string) $name));
 
         return $this;
     }
@@ -61,7 +69,9 @@ class Message
      */
     public function sender($address, $name = null)
     {
-        $this->swift->setSender($address, $name);
+        is_array($address)
+            ? $this->message->sender(...$this->ensureAddressesAreSafe($address))
+            : $this->message->sender($this->createAddress($address, (string) $name));
 
         return $this;
     }
@@ -74,7 +84,9 @@ class Message
      */
     public function returnPath($address)
     {
-        $this->swift->setReturnPath($address);
+        $this->ensureAddressIsSafe($address);
+
+        $this->message->returnPath($address);
 
         return $this;
     }
@@ -90,12 +102,30 @@ class Message
     public function to($address, $name = null, $override = false)
     {
         if ($override) {
-            $this->swift->setTo($address, $name);
+            is_array($address)
+                ? $this->message->to(...$this->ensureAddressesAreSafe($address))
+                : $this->message->to($this->createAddress($address, (string) $name));
 
             return $this;
         }
 
         return $this->addAddresses($address, $name, 'To');
+    }
+
+    /**
+     * Remove all "to" addresses from the message.
+     *
+     * @return $this
+     */
+    public function forgetTo()
+    {
+        if ($header = $this->message->getHeaders()->get('To')) {
+            $this->addAddressDebugHeader('X-To', $this->message->getTo());
+
+            $header->setAddresses([]);
+        }
+
+        return $this;
     }
 
     /**
@@ -109,12 +139,30 @@ class Message
     public function cc($address, $name = null, $override = false)
     {
         if ($override) {
-            $this->swift->setCc($address, $name);
+            is_array($address)
+                ? $this->message->cc(...$this->ensureAddressesAreSafe($address))
+                : $this->message->cc($this->createAddress($address, (string) $name));
 
             return $this;
         }
 
         return $this->addAddresses($address, $name, 'Cc');
+    }
+
+    /**
+     * Remove all carbon copy addresses from the message.
+     *
+     * @return $this
+     */
+    public function forgetCc()
+    {
+        if ($header = $this->message->getHeaders()->get('Cc')) {
+            $this->addAddressDebugHeader('X-Cc', $this->message->getCC());
+
+            $header->setAddresses([]);
+        }
+
+        return $this;
     }
 
     /**
@@ -128,12 +176,30 @@ class Message
     public function bcc($address, $name = null, $override = false)
     {
         if ($override) {
-            $this->swift->setBcc($address, $name);
+            is_array($address)
+                ? $this->message->bcc(...$this->ensureAddressesAreSafe($address))
+                : $this->message->bcc($this->createAddress($address, (string) $name));
 
             return $this;
         }
 
         return $this->addAddresses($address, $name, 'Bcc');
+    }
+
+    /**
+     * Remove all of the blind carbon copy addresses from the message.
+     *
+     * @return $this
+     */
+    public function forgetBcc()
+    {
+        if ($header = $this->message->getHeaders()->get('Bcc')) {
+            $this->addAddressDebugHeader('X-Bcc', $this->message->getBcc());
+
+            $header->setAddresses([]);
+        }
+
+        return $this;
     }
 
     /**
@@ -159,10 +225,87 @@ class Message
     protected function addAddresses($address, $name, $type)
     {
         if (is_array($address)) {
-            $this->swift->{"set{$type}"}($address, $name);
+            $type = lcfirst($type);
+
+            $addresses = (new Collection($address))->map(function ($address, $key) {
+                if (is_string($key) && is_string($address)) {
+                    return $this->createAddress($key, $address);
+                }
+
+                if (is_array($address)) {
+                    return $this->createAddress($address['email'] ?? $address['address'], $address['name'] ?? null);
+                }
+
+                if (is_null($address)) {
+                    return $this->createAddress($key);
+                }
+
+                return $this->ensureAddressIsSafe($address);
+            })->all();
+
+            $this->message->{"{$type}"}(...$addresses);
         } else {
-            $this->swift->{"add{$type}"}($address, $name);
+            $this->message->{"add{$type}"}($this->createAddress($address, (string) $name));
         }
+
+        return $this;
+    }
+
+    /**
+     * Create a safe Symfony address instance.
+     *
+     * @param  string  $address
+     * @param  string|null  $name
+     * @return \Symfony\Component\Mime\Address
+     */
+    protected function createAddress($address, $name = null)
+    {
+        $this->ensureAddressIsSafe($address);
+
+        return new Address($address, (string) $name);
+    }
+
+    /**
+     * Ensure the given address cannot inject additional headers or commands.
+     *
+     * @param  mixed  $address
+     * @return mixed
+     */
+    protected function ensureAddressIsSafe($address)
+    {
+        $addressString = $address instanceof Address ? $address->getAddress() : $address;
+
+        if (is_string($addressString) && preg_match('/[\r\n]/', $addressString) > 0) {
+            throw new InvalidArgumentException('Email addresses may not contain line break characters.');
+        }
+
+        return $address;
+    }
+
+    /**
+     * Ensure the given addresses cannot inject additional headers or commands.
+     *
+     * @param  array  $addresses
+     * @return array
+     */
+    protected function ensureAddressesAreSafe(array $addresses)
+    {
+        return array_map(fn ($address) => $this->ensureAddressIsSafe($address), $addresses);
+    }
+
+    /**
+     * Add an address debug header for a list of recipients.
+     *
+     * @param  string  $header
+     * @param  \Symfony\Component\Mime\Address[]  $addresses
+     * @return $this
+     */
+    protected function addAddressDebugHeader(string $header, array $addresses)
+    {
+        $this->message->getHeaders()->addTextHeader(
+            $header,
+            implode(', ', array_map(fn ($a) => $a->toString(), $addresses)),
+        );
 
         return $this;
     }
@@ -175,7 +318,7 @@ class Message
      */
     public function subject($subject)
     {
-        $this->swift->setSubject($subject);
+        $this->message->subject($subject);
 
         return $this;
     }
@@ -188,7 +331,7 @@ class Message
      */
     public function priority($level)
     {
-        $this->swift->setPriority($level);
+        $this->message->priority($level);
 
         return $this;
     }
@@ -196,127 +339,109 @@ class Message
     /**
      * Attach a file to the message.
      *
-     * @param  string  $file
+     * @param  string|\WpStarter\Contracts\Mail\Attachable|\WpStarter\Mail\Attachment  $file
      * @param  array  $options
      * @return $this
      */
     public function attach($file, array $options = [])
     {
-        $attachment = $this->createAttachmentFromPath($file);
+        if ($file instanceof Attachable) {
+            $file = $file->toMailAttachment();
+        }
 
-        return $this->prepAttachment($attachment, $options);
-    }
+        if ($file instanceof Attachment) {
+            return $file->attachTo($this);
+        }
 
-    /**
-     * Create a Swift Attachment instance.
-     *
-     * @param  string  $file
-     * @return \Swift_Mime_Attachment
-     */
-    protected function createAttachmentFromPath($file)
-    {
-        return Swift_Attachment::fromPath($file);
+        $this->message->attachFromPath($file, $options['as'] ?? null, $options['mime'] ?? null);
+
+        return $this;
     }
 
     /**
      * Attach in-memory data as an attachment.
      *
-     * @param  string  $data
+     * @param  string|resource  $data
      * @param  string  $name
      * @param  array  $options
      * @return $this
      */
     public function attachData($data, $name, array $options = [])
     {
-        $attachment = $this->createAttachmentFromData($data, $name);
+        $this->message->attach($data, $name, $options['mime'] ?? null);
 
-        return $this->prepAttachment($attachment, $options);
-    }
-
-    /**
-     * Create a Swift Attachment instance from data.
-     *
-     * @param  string  $data
-     * @param  string  $name
-     * @return \Swift_Attachment
-     */
-    protected function createAttachmentFromData($data, $name)
-    {
-        return new Swift_Attachment($data, $name);
+        return $this;
     }
 
     /**
      * Embed a file in the message and get the CID.
      *
-     * @param  string  $file
+     * @param  string|\WpStarter\Contracts\Mail\Attachable|\WpStarter\Mail\Attachment  $file
      * @return string
      */
     public function embed($file)
     {
-        if (isset($this->embeddedFiles[$file])) {
-            return $this->embeddedFiles[$file];
+        if ($file instanceof Attachable) {
+            $file = $file->toMailAttachment();
         }
 
-        return $this->embeddedFiles[$file] = $this->swift->embed(
-            Swift_Image::fromPath($file)
+        if ($file instanceof Attachment) {
+            return $file->attachWith(
+                function ($path) use ($file) {
+                    $part = (new DataPart(new File($path), $file->as, $file->mime))->asInline();
+
+                    $this->message->addPart($part);
+
+                    return "cid:{$part->getContentId()}";
+                },
+                function ($data) use ($file) {
+                    $this->message->addPart(
+                        $part = $part = (new DataPart($data(), $file->as, $file->mime))->asInline()
+                    );
+
+                    return "cid:{$part->getContentId()}";
+                }
+            );
+        }
+
+        $fileObject = new File($file);
+
+        $this->message->addPart(
+            $part = (new DataPart($fileObject, $fileObject->getFilename()))->asInline()
         );
+
+        return "cid:{$part->getContentId()}";
     }
 
     /**
      * Embed in-memory data in the message and get the CID.
      *
-     * @param  string  $data
+     * @param  string|resource  $data
      * @param  string  $name
      * @param  string|null  $contentType
      * @return string
      */
     public function embedData($data, $name, $contentType = null)
     {
-        $image = new Swift_Image($data, $name, $contentType);
+        $part = (new DataPart($data, $name, $contentType))->asInline();
 
-        return $this->swift->embed($image);
+        $this->message->addPart($part);
+
+        return "cid:{$part->getContentId()}";
     }
 
     /**
-     * Prepare and attach the given attachment.
+     * Get the underlying Symfony Email instance.
      *
-     * @param  \Swift_Attachment  $attachment
-     * @param  array  $options
-     * @return $this
+     * @return \Symfony\Component\Mime\Email
      */
-    protected function prepAttachment($attachment, $options = [])
+    public function getSymfonyMessage()
     {
-        // First we will check for a MIME type on the message, which instructs the
-        // mail client on what type of attachment the file is so that it may be
-        // downloaded correctly by the user. The MIME option is not required.
-        if (isset($options['mime'])) {
-            $attachment->setContentType($options['mime']);
-        }
-
-        // If an alternative name was given as an option, we will set that on this
-        // attachment so that it will be downloaded with the desired names from
-        // the developer, otherwise the default file names will get assigned.
-        if (isset($options['as'])) {
-            $attachment->setFilename($options['as']);
-        }
-
-        $this->swift->attach($attachment);
-
-        return $this;
+        return $this->message;
     }
 
     /**
-     * Get the underlying Swift Message instance.
-     *
-     * @return \Swift_Message
-     */
-    public function getSwiftMessage()
-    {
-        return $this->swift;
-    }
-
-    /**
-     * Dynamically pass missing methods to the Swift instance.
+     * Dynamically pass missing methods to the Symfony instance.
      *
      * @param  string  $method
      * @param  array  $parameters
@@ -324,6 +449,6 @@ class Message
      */
     public function __call($method, $parameters)
     {
-        return $this->forwardCallTo($this->swift, $method, $parameters);
+        return $this->forwardDecoratedCallTo($this->message, $method, $parameters);
     }
 }

@@ -6,38 +6,27 @@ use WpStarter\Bus\Queueable;
 use WpStarter\Contracts\Encryption\DecryptException;
 use WpStarter\Contracts\Queue\ShouldBeEncrypted;
 use WpStarter\Contracts\Queue\ShouldQueue;
-use WpStarter\Database\Schema\Blueprint;
 use WpStarter\Foundation\Bus\Dispatchable;
+use WpStarter\Foundation\Testing\DatabaseMigrations;
 use WpStarter\Support\Facades\Bus;
 use WpStarter\Support\Facades\DB;
 use WpStarter\Support\Facades\Queue;
-use WpStarter\Support\Facades\Schema;
 use WpStarter\Support\Str;
 use WpStarter\Tests\Integration\Database\DatabaseTestCase;
+use Orchestra\Testbench\Attributes\WithMigration;
 
+#[WithMigration]
+#[WithMigration('queue')]
 class JobEncryptionTest extends DatabaseTestCase
 {
-    protected function getEnvironmentSetUp($app)
+    use DatabaseMigrations;
+
+    protected function defineEnvironment($app)
     {
-        parent::getEnvironmentSetUp($app);
+        parent::defineEnvironment($app);
 
         $app['config']->set('app.key', Str::random(32));
         $app['config']->set('queue.default', 'database');
-    }
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        Schema::create('jobs', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->string('queue')->index();
-            $table->longText('payload');
-            $table->unsignedTinyInteger('attempts');
-            $table->unsignedInteger('reserved_at')->nullable();
-            $table->unsignedInteger('available_at');
-            $table->unsignedInteger('created_at');
-        });
     }
 
     protected function tearDown(): void
@@ -53,7 +42,7 @@ class JobEncryptionTest extends DatabaseTestCase
         Bus::dispatch(new JobEncryptionTestEncryptedJob);
 
         $this->assertNotEmpty(
-            ws_decrypt(json_decode(DB::table('jobs')->first()->payload)->data->command)
+            decrypt(json_decode(DB::table('jobs')->first()->payload)->data->command)
         );
     }
 
@@ -68,7 +57,7 @@ class JobEncryptionTest extends DatabaseTestCase
             unserialize(json_decode(DB::table('jobs')->first()->payload)->data->command)
         );
 
-        ws_decrypt(json_decode(DB::table('jobs')->first()->payload)->data->command);
+        decrypt(json_decode(DB::table('jobs')->first()->payload)->data->command);
     }
 
     public function testQueueCanProcessEncryptedJob()

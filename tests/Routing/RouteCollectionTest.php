@@ -8,6 +8,7 @@ use WpStarter\Routing\Route;
 use WpStarter\Routing\RouteCollection;
 use LogicException;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class RouteCollectionTest extends TestCase
@@ -63,6 +64,24 @@ class RouteCollectionTest extends TestCase
         ]));
 
         $this->assertSame($action, $routeIndex->getAction());
+    }
+
+    public function testRouteCollectionCanRetrieveByMethod()
+    {
+        $this->routeCollection->add($routeIndex = new Route('GET', 'foo/index', $action = [
+            'uses' => 'FooController@index',
+            'as' => 'route_name',
+        ]));
+
+        $this->assertCount(1, $this->routeCollection->get('GET'));
+        $this->assertCount(0, $this->routeCollection->get('GET.foo/index'));
+        $this->assertSame($routeIndex, $this->routeCollection->get('GET')['foo/index']);
+
+        $this->routeCollection->add($routeShow = new Route('GET', 'bar/show', [
+            'uses' => 'BarController@show',
+            'as' => 'bar_show',
+        ]));
+        $this->assertCount(2, $this->routeCollection->get('GET'));
     }
 
     public function testRouteCollectionCanGetIterator()
@@ -268,6 +287,7 @@ class RouteCollectionTest extends TestCase
     public function testRouteCollectionDontMatchNonMatchingDoubleSlashes()
     {
         $this->expectException(NotFoundHttpException::class);
+        $this->expectExceptionMessage('The route foo could not be found.');
 
         $this->routeCollection->add(new Route('GET', 'foo', [
             'uses' => 'FooController@index',
@@ -280,5 +300,63 @@ class RouteCollectionTest extends TestCase
             'REQUEST_URI', '//foo'
         );
         $this->routeCollection->match($request);
+    }
+
+    public function testRouteCollectionRequestMethodNotAllowed()
+    {
+        $this->expectException(MethodNotAllowedHttpException::class);
+        $this->expectExceptionMessage('The POST method is not supported for route users. Supported methods: GET, HEAD.');
+
+        $this->routeCollection->add(
+            new Route('GET', 'users', ['uses' => 'UsersController@index', 'as' => 'users'])
+        );
+
+        $request = Request::create('users', 'POST');
+
+        $this->routeCollection->match($request);
+    }
+
+    public function testHasNameRouteMethod()
+    {
+        $this->routeCollection->add(
+            new Route('GET', 'users', ['uses' => 'UsersController@index', 'as' => 'users'])
+        );
+        $this->routeCollection->add(
+            new Route('GET', 'posts/{post}', ['uses' => 'PostController@show', 'as' => 'posts'])
+        );
+
+        $this->routeCollection->add(
+            new Route('GET', 'books/{book}', ['uses' => 'BookController@show'])
+        );
+
+        $this->assertTrue($this->routeCollection->hasNamedRoute('users'));
+        $this->assertTrue($this->routeCollection->hasNamedRoute('posts'));
+        $this->assertFalse($this->routeCollection->hasNamedRoute('article'));
+        $this->assertFalse($this->routeCollection->hasNamedRoute('books'));
+    }
+
+    public function testToSymfonyRouteCollection()
+    {
+        $this->routeCollection->add(
+            new Route('GET', 'users', ['uses' => 'UsersController@index', 'as' => 'users'])
+        );
+
+        $this->assertInstanceOf("\Symfony\Component\Routing\RouteCollection", $this->routeCollection->toSymfonyRouteCollection());
+    }
+
+    public function testOverlappingRoutesMatchesFirstRoute()
+    {
+        $this->routeCollection->add(
+            new Route('GET', 'users/{id}/{other}', ['uses' => 'UsersController@other', 'as' => 'first'])
+        );
+
+        $this->routeCollection->add(
+            new Route('GET', 'users/{id}/show', ['uses' => 'UsersController@show', 'as' => 'second'])
+        );
+
+        $request = Request::create('users/1/show', 'GET');
+
+        $this->assertCount(2, $this->routeCollection->getRoutes());
+        $this->assertEquals('first', $this->routeCollection->match($request)->getName());
     }
 }

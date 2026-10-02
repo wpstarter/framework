@@ -43,6 +43,13 @@ class ParallelTesting
     protected $setUpTestCaseCallbacks = [];
 
     /**
+     * All of the registered "setUp" test database callbacks prior to the migrations.
+     *
+     * @var array
+     */
+    protected $setUpTestDatabaseBeforeMigratingCallbacks = [];
+
+    /**
      * All of the registered "setUp" test database callbacks.
      *
      * @var array
@@ -67,7 +74,6 @@ class ParallelTesting
      * Create a new parallel testing instance.
      *
      * @param  \WpStarter\Contracts\Container\Container  $container
-     * @return void
      */
     public function __construct(Container $container)
     {
@@ -77,7 +83,7 @@ class ParallelTesting
     /**
      * Set a callback that should be used when resolving options.
      *
-     * @param  \Closure|null  $callback
+     * @param  \Closure|null  $resolver
      * @return void
      */
     public function resolveOptionsUsing($resolver)
@@ -88,7 +94,7 @@ class ParallelTesting
     /**
      * Set a callback that should be used when resolving the unique process token.
      *
-     * @param  \Closure|null  $callback
+     * @param  \Closure|null  $resolver
      * @return void
      */
     public function resolveTokenUsing($resolver)
@@ -116,6 +122,17 @@ class ParallelTesting
     public function setUpTestCase($callback)
     {
         $this->setUpTestCaseCallbacks[] = $callback;
+    }
+
+    /**
+     * Register a "setUp" test database callback that runs prior to the migrations.
+     *
+     * @param  callable  $callback
+     * @return void
+     */
+    public function setUpTestDatabaseBeforeMigrating($callback)
+    {
+        $this->setUpTestDatabaseBeforeMigratingCallbacks[] = $callback;
     }
 
     /**
@@ -179,6 +196,24 @@ class ParallelTesting
             foreach ($this->setUpTestCaseCallbacks as $callback) {
                 $this->container->call($callback, [
                     'testCase' => $testCase,
+                    'token' => $this->token(),
+                ]);
+            }
+        });
+    }
+
+    /**
+     * Call all of the "setUp" test database callbacks that run prior to migrations.
+     *
+     * @param  string  $database
+     * @return void
+     */
+    public function callSetUpTestDatabaseBeforeMigratingCallbacks($database)
+    {
+        $this->whenRunningInParallel(function () use ($database) {
+            foreach ($this->setUpTestDatabaseBeforeMigratingCallbacks as $callback) {
+                $this->container->call($callback, [
+                    'database' => $database,
                     'token' => $this->token(),
                 ]);
             }
@@ -251,7 +286,7 @@ class ParallelTesting
             return $_SERVER[$option] ?? false;
         };
 
-        return call_user_func($optionsResolver, $option);
+        return $optionsResolver($option);
     }
 
     /**
@@ -261,7 +296,7 @@ class ParallelTesting
      */
     public function token()
     {
-        return $token = $this->tokenResolver
+        return $this->tokenResolver
             ? call_user_func($this->tokenResolver)
             : ($_SERVER['TEST_TOKEN'] ?? false);
     }

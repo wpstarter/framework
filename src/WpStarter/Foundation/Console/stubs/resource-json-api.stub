@@ -1,0 +1,23 @@
+<?php
+
+namespace {{ namespace }};
+
+use WpStarter\Http\Request;
+use WpStarter\Http\Resources\JsonApi\JsonApiResource;
+
+class {{ class }} extends JsonApiResource
+{
+    /**
+     * The resource's attributes.
+     */
+    public $attributes = [
+        // ...
+    ];
+
+    /**
+     * The resource's relationships.
+     */
+    public $relationships = [
+        // ...
+    ];
+}

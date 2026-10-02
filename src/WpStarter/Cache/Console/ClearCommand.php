@@ -5,9 +5,11 @@ namespace WpStarter\Cache\Console;
 use WpStarter\Cache\CacheManager;
 use WpStarter\Console\Command;
 use WpStarter\Filesystem\Filesystem;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 
+#[AsCommand(name: 'cache:clear')]
 class ClearCommand extends Command
 {
     /**
@@ -43,7 +45,6 @@ class ClearCommand extends Command
      *
      * @param  \WpStarter\Cache\CacheManager  $cache
      * @param  \WpStarter\Filesystem\Filesystem  $files
-     * @return void
      */
     public function __construct(CacheManager $cache, Filesystem $files)
     {
@@ -56,7 +57,7 @@ class ClearCommand extends Command
     /**
      * Execute the console command.
      *
-     * @return void
+     * @return int
      */
     public function handle()
     {
@@ -69,14 +70,18 @@ class ClearCommand extends Command
         $this->flushFacades();
 
         if (! $successful) {
-            return $this->error('Failed to clear cache. Make sure you have the appropriate permissions.');
+            $this->components->error('Failed to clear cache. Make sure you have the appropriate permissions.');
+
+            return self::FAILURE;
         }
 
         $this->laravel['events']->dispatch(
             'cache:cleared', [$this->argument('store'), $this->tags()]
         );
 
-        $this->info('Application cache cleared!');
+        $this->components->info('Application cache cleared successfully.');
+
+        return self::SUCCESS;
     }
 
     /**
@@ -86,7 +91,7 @@ class ClearCommand extends Command
      */
     public function flushFacades()
     {
-        if (! $this->files->exists($storagePath = ws_storage_path('framework/cache'))) {
+        if (! $this->files->exists($storagePath = storage_path('framework/cache'))) {
             return;
         }
 

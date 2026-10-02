@@ -10,7 +10,7 @@ interface Mailable
      * Send the message using the given mailer.
      *
      * @param  \WpStarter\Contracts\Mail\Factory|\WpStarter\Contracts\Mail\Mailer  $mailer
-     * @return void
+     * @return \WpStarter\Mail\SentMessage|null
      */
     public function send($mailer);
 
@@ -23,7 +23,7 @@ interface Mailable
     public function queue(Queue $queue);
 
     /**
-     * Deliver the queued message after the given delay.
+     * Deliver the queued message after (n) seconds.
      *
      * @param  \DateTimeInterface|\DateInterval|int  $delay
      * @param  \WpStarter\Contracts\Queue\Factory  $queue

@@ -28,7 +28,7 @@ class ViewException extends ErrorException
      * Render the exception into an HTTP response.
      *
      * @param  \WpStarter\Http\Request  $request
-     * @return \WpStarter\Http\Response
+     * @return \WpStarter\Http\Response|null
      */
     public function render($request)
     {

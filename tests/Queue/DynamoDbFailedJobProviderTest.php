@@ -14,11 +14,6 @@ use PHPUnit\Framework\TestCase;
 
 class DynamoDbFailedJobProviderTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        m::close();
-    }
-
     public function testCanProperlyLogFailedJob()
     {
         $uuid = Str::orderedUuid();
@@ -27,7 +22,7 @@ class DynamoDbFailedJobProviderTest extends TestCase
             return $uuid;
         });
 
-        Carbon::setTestNow($now = CarbonImmutable::now());
+        $now = CarbonImmutable::now();
 
         $exception = new Exception('Something went wrong.');
 
@@ -43,7 +38,7 @@ class DynamoDbFailedJobProviderTest extends TestCase
                 'payload' => ['S' => json_encode(['uuid' => (string) $uuid])],
                 'exception' => ['S' => (string) $exception],
                 'failed_at' => ['N' => (string) $now->getTimestamp()],
-                'expires_at' => ['N' => (string) $now->addDays(3)->getTimestamp()],
+                'expires_at' => ['N' => (string) $now->addDays(7)->getTimestamp()],
             ],
         ]);
 

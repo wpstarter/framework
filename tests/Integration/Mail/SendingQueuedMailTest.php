@@ -7,16 +7,15 @@ use WpStarter\Mail\SendQueuedMailable;
 use WpStarter\Queue\Middleware\RateLimited;
 use WpStarter\Support\Facades\Mail;
 use WpStarter\Support\Facades\Queue;
-use WpStarter\Support\Facades\View;
 use Orchestra\Testbench\TestCase;
 
 class SendingQueuedMailTest extends TestCase
 {
-    protected function getEnvironmentSetUp($app)
+    protected function defineEnvironment($app)
     {
         $app['config']->set('mail.driver', 'array');
 
-        View::addLocation(__DIR__.'/Fixtures');
+        $app['view']->addLocation(__DIR__.'/Fixtures');
     }
 
     public function testMailIsSentWithDefaultLocale()
@@ -27,6 +26,19 @@ class SendingQueuedMailTest extends TestCase
 
         Queue::assertPushed(SendQueuedMailable::class, function ($job) {
             return $job->middleware[0] instanceof RateLimited;
+        });
+    }
+
+    public function testMailIsSentWithDelay()
+    {
+        Queue::fake();
+
+        $delay = now()->addMinutes(10);
+
+        Mail::to('test@mail.com')->later($delay, new SendingQueuedMailTestMail);
+
+        Queue::assertPushed(SendQueuedMailable::class, function ($job) use ($delay) {
+            return $job->delay === $delay;
         });
     }
 }

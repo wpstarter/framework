@@ -2,6 +2,7 @@
 
 namespace WpStarter\Tests\Integration\Database;
 
+use Closure;
 use WpStarter\Broadcasting\BroadcastEvent;
 use WpStarter\Contracts\Broadcasting\Broadcaster;
 use WpStarter\Contracts\Broadcasting\Factory as BroadcastingFactory;
@@ -17,7 +18,7 @@ use Mockery as m;
 
 class DatabaseEloquentBroadcastingTest extends DatabaseTestCase
 {
-    protected function defineDatabaseMigrationsAfterDatabaseRefreshed()
+    protected function afterRefreshingDatabase()
     {
         Schema::create('test_eloquent_broadcasting_users', function (Blueprint $table) {
             $table->increments('id');
@@ -47,7 +48,7 @@ class DatabaseEloquentBroadcastingTest extends DatabaseTestCase
     {
         $model = new TestEloquentBroadcastUser;
 
-        $this->assertEquals('WpStarter.Tests.Integration.Database.TestEloquentBroadcastUser.{testEloquentBroadcastUser}', $model->broadcastChannelRoute());
+        $this->assertSame('WpStarter.Tests.Integration.Database.TestEloquentBroadcastUser.{testEloquentBroadcastUser}', $model->broadcastChannelRoute());
     }
 
     public function testBroadcastingOnModelTrashing()
@@ -191,7 +192,7 @@ class DatabaseEloquentBroadcastingTest extends DatabaseTestCase
         });
     }
 
-    private function assertHandldedBroadcastableEvent(BroadcastableModelEventOccurred $event, \Closure $closure)
+    private function assertHandldedBroadcastableEvent(BroadcastableModelEventOccurred $event, Closure $closure)
     {
         $broadcaster = m::mock(Broadcaster::class);
         $broadcaster->shouldReceive('broadcast')->once()

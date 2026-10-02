@@ -2,11 +2,6 @@
 
 namespace WpStarter\Tests\Cache;
 
-use PHPUnit\Framework\Constraint\LogicalNot;
-use PHPUnit\Framework\Constraint\ObjectHasAttribute;
-use PHPUnit\Framework\Exception;
-use PHPUnit\Framework\ExpectationFailedException;
-use PHPUnit\Framework\InvalidArgumentException;
 use WpStarter\Cache\ArrayStore;
 use WpStarter\Support\Carbon;
 use PHPUnit\Framework\TestCase;
@@ -14,12 +9,33 @@ use stdClass;
 
 class CacheArrayStoreTest extends TestCase
 {
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow(null);
+
+        parent::tearDown();
+    }
+
     public function testItemsCanBeSetAndRetrieved()
     {
         $store = new ArrayStore;
         $result = $store->put('foo', 'bar', 10);
         $this->assertTrue($result);
         $this->assertSame('bar', $store->get('foo'));
+    }
+
+    public function testCacheTtl(): void
+    {
+        $store = new ArrayStore();
+
+        Carbon::setTestNow('2000-01-01 00:00:00.500'); // 500 milliseconds past
+        $store->put('hello', 'world', 1);
+
+        Carbon::setTestNow('2000-01-01 00:00:01.499'); // progress 0.999 seconds
+        $this->assertSame('world', $store->get('hello'));
+
+        Carbon::setTestNow('2000-01-01 00:00:01.500'); // progress 0.001 seconds. 1 second since putting into cache.
+        $this->assertNull($store->get('hello'));
     }
 
     public function testMultipleItemsCanBeSetAndRetrieved()
@@ -43,6 +59,7 @@ class CacheArrayStoreTest extends TestCase
     public function testItemsCanExpire()
     {
         Carbon::setTestNow(Carbon::now());
+
         $store = new ArrayStore;
 
         $store->put('foo', 'bar', 10);
@@ -50,7 +67,6 @@ class CacheArrayStoreTest extends TestCase
         $result = $store->get('foo');
 
         $this->assertNull($result);
-        Carbon::setTestNow(null);
     }
 
     public function testStoreItemForeverProperlyStoresInArray()
@@ -70,19 +86,53 @@ class CacheArrayStoreTest extends TestCase
         $result = $store->increment('foo');
         $this->assertEquals(2, $result);
         $this->assertEquals(2, $store->get('foo'));
+
+        $result = $store->increment('foo', 2);
+        $this->assertEquals(4, $result);
+        $this->assertEquals(4, $store->get('foo'));
+    }
+
+    public function testValuesGetCastedByIncrementOrDecrement()
+    {
+        $store = new ArrayStore;
+        $store->put('foo', '1', 10);
+        $result = $store->increment('foo');
+        $this->assertEquals(2, $result);
+        $this->assertEquals(2, $store->get('foo'));
+
+        $store->put('bar', '1', 10);
+        $result = $store->decrement('bar');
+        $this->assertEquals(0, $result);
+        $this->assertEquals(0, $store->get('bar'));
+    }
+
+    public function testIncrementNonNumericValues()
+    {
+        $store = new ArrayStore;
+        $store->put('foo', 'I am string', 10);
+        $result = $store->increment('foo');
+        $this->assertEquals(1, $result);
+        $this->assertEquals(1, $store->get('foo'));
     }
 
     public function testNonExistingKeysCanBeIncremented()
     {
+        Carbon::setTestNow(Carbon::now());
+
         $store = new ArrayStore;
         $result = $store->increment('foo');
         $this->assertEquals(1, $result);
+        $this->assertEquals(1, $store->get('foo'));
+
+        // Will be there forever
+        Carbon::setTestNow(Carbon::now()->addYears(10));
         $this->assertEquals(1, $store->get('foo'));
     }
 
     public function testExpiredKeysAreIncrementedLikeNonExistingKeys()
     {
         Carbon::setTestNow(Carbon::now());
+
         $store = new ArrayStore;
 
         $store->put('foo', 999, 10);
@@ -90,7 +140,6 @@ class CacheArrayStoreTest extends TestCase
         $result = $store->increment('foo');
 
         $this->assertEquals(1, $result);
-        Carbon::setTestNow(null);
     }
 
     public function testValuesCanBeDecremented()
@@ -100,6 +149,10 @@ class CacheArrayStoreTest extends TestCase
         $result = $store->decrement('foo');
         $this->assertEquals(0, $result);
         $this->assertEquals(0, $store->get('foo'));
+
+        $result = $store->decrement('foo', 2);
+        $this->assertEquals(-2, $result);
+        $this->assertEquals(-2, $store->get('foo'));
     }
 
     public function testItemsCanBeRemoved()
@@ -140,6 +193,7 @@ class CacheArrayStoreTest extends TestCase
     public function testCanAcquireLockAgainAfterExpiry()
     {
         Carbon::setTestNow(Carbon::now());
+
         $store = new ArrayStore;
         $lock = $store->lock('foo', 10);
         $lock->acquire();
@@ -151,6 +205,7 @@ class CacheArrayStoreTest extends TestCase
     public function testLockExpirationLowerBoundary()
     {
         Carbon::setTestNow(Carbon::now());
+
         $store = new ArrayStore;
         $lock = $store->lock('foo', 10);
         $lock->acquire();
@@ -161,7 +216,6 @@ class CacheArrayStoreTest extends TestCase
 
     public function testLockWithNoExpirationNeverExpires()
     {
-        Carbon::setTestNow(Carbon::now());
         $store = new ArrayStore;
         $lock = $store->lock('foo');
         $lock->acquire();
@@ -210,7 +264,10 @@ class CacheArrayStoreTest extends TestCase
         $store->put('object', $object, 10);
         $object->bar = true;
 
-        $this->assertObjectNotHasAttribute('bar', $store->get('object'));
+        $retrievedObject = $store->get('object');
+
+        $this->assertTrue($retrievedObject->foo);
+        $this->assertFalse(property_exists($retrievedObject, 'bar'));
     }
 
     public function testValuesAreStoredByReferenceIfSerializationIsDisabled()
@@ -222,7 +279,10 @@ class CacheArrayStoreTest extends TestCase
         $store->put('object', $object, 10);
         $object->bar = true;
 
-        $this->assertObjectHasAttribute('bar', $store->get('object'));
+        $retrievedObject = $store->get('object');
+
+        $this->assertTrue($retrievedObject->foo);
+        $this->assertTrue($retrievedObject->bar);
     }
 
     public function testReleasingLockAfterAlreadyForceReleasedByAnotherOwnerFails()
@@ -236,61 +296,87 @@ class CacheArrayStoreTest extends TestCase
         $this->assertFalse($wannabeOwner->release());
     }
 
-    /**
-     * Asserts that an object has a specified attribute.
-     *
-     * @param object $object
-     *
-     * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
-     * @throws Exception
-     * @throws ExpectationFailedException
-     *
-     * @deprecated https://github.com/sebastianbergmann/phpunit/issues/4601
-     */
-    public static function assertObjectHasAttribute(string $attributeName, $object, string $message = ''): void
+    public function testOwnerStatusCanBeCheckedAfterRestoringLock()
     {
-        if (!(bool) preg_match('/[^\x00-\x1f\x7f-\x9f]+/', $attributeName)) {
-            throw InvalidArgumentException::create(1, 'valid attribute name');
-        }
+        $store = new ArrayStore;
+        $firstLock = $store->lock('foo', 10);
 
-        if (!is_object($object)) {
-            throw InvalidArgumentException::create(2, 'object');
-        }
+        $this->assertTrue($firstLock->get());
+        $owner = $firstLock->owner();
 
-        static::assertThat(
-            $object,
-            new ObjectHasAttribute($attributeName),
-            $message,
-        );
+        $secondLock = $store->restoreLock('foo', $owner);
+        $this->assertTrue($secondLock->isOwnedByCurrentProcess());
     }
 
-    /**
-     * Asserts that an object does not have a specified attribute.
-     *
-     * @param object $object
-     *
-     * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
-     * @throws Exception
-     * @throws ExpectationFailedException
-     *
-     * @deprecated https://github.com/sebastianbergmann/phpunit/issues/4601
-     */
-    public static function assertObjectNotHasAttribute(string $attributeName, $object, string $message = ''): void
+    public function testOtherOwnerDoesNotOwnLockAfterRestore()
     {
-        if (!(bool) preg_match('/[^\x00-\x1f\x7f-\x9f]+/', $attributeName)) {
-            throw InvalidArgumentException::create(1, 'valid attribute name');
-        }
+        $store = new ArrayStore;
+        $firstLock = $store->lock('foo', 10);
 
-        if (!is_object($object)) {
-            throw InvalidArgumentException::create(2, 'object');
-        }
+        $this->assertTrue($firstLock->get());
 
-        static::assertThat(
-            $object,
-            new LogicalNot(
-                new ObjectHasAttribute($attributeName),
-            ),
-            $message,
+        $secondLock = $store->restoreLock('foo', 'other_owner');
+
+        $this->assertFalse($secondLock->isOwnedByCurrentProcess());
+    }
+
+    public function testExpiredLockCannotBeRefreshedByPreviousOwner()
+    {
+        Carbon::setTestNow(Carbon::now());
+
+        $store = new ArrayStore;
+        $lock = $store->lock('foo', 10);
+        $this->assertTrue($lock->get());
+
+        Carbon::setTestNow(Carbon::now()->addSeconds(10)->addSecond());
+
+        $this->assertFalse($lock->refresh(20));
+    }
+
+    public function testRestoringNonExistingLockDoesNotOwnAnything()
+    {
+        $store = new ArrayStore;
+        $firstLock = $store->restoreLock('foo', 'owner');
+
+        $this->assertFalse($firstLock->isOwnedByCurrentProcess());
+    }
+
+    public function testCanGetAll()
+    {
+        Carbon::setTestNow(Carbon::now());
+
+        $store = new ArrayStore(false);
+        $store->put('foo', 'bar', 10);
+
+        $this->assertEquals([
+            'foo' => ['value' => 'bar', 'expiresAt' => Carbon::now()->addSeconds(10)->getPreciseTimestamp(3) / 1000],
+        ], $store->all());
+    }
+
+    public function testCanGetAllWhenSerialized()
+    {
+        Carbon::setTestNow(Carbon::now());
+
+        $store = new ArrayStore(true);
+        $store->put('foo', 'bar', 10);
+        $this->assertEquals([
+            'foo' => ['value' => 'bar', 'expiresAt' => $expiresAt = (Carbon::now()->addSeconds(10)->getPreciseTimestamp(3) / 1000)],
+        ], $store->all());
+
+        // Now let's put a serializable value in there
+        $store->forget('foo');
+        $store->put('foo', Carbon::now(), 10);
+
+        $this->assertEquals([
+            'foo' => [
+                'value' => Carbon::now(),
+                'expiresAt' => $expiresAt,
+            ],
+        ], $store->all());
+
+        $this->assertEquals(
+            serialize(Carbon::now()),
+            $store->all(false)['foo']['value']
         );
     }
 }

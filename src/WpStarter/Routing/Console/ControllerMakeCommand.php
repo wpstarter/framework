@@ -5,8 +5,16 @@ namespace WpStarter\Routing\Console;
 use WpStarter\Console\Concerns\CreatesMatchingTest;
 use WpStarter\Console\GeneratorCommand;
 use InvalidArgumentException;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 
+use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\select;
+use function Laravel\Prompts\suggest;
+
+#[AsCommand(name: 'make:controller')]
 class ControllerMakeCommand extends GeneratorCommand
 {
     use CreatesMatchingTest;
@@ -44,11 +52,15 @@ class ControllerMakeCommand extends GeneratorCommand
         if ($type = $this->option('type')) {
             $stub = "/stubs/controller.{$type}.stub";
         } elseif ($this->option('parent')) {
-            $stub = '/stubs/controller.nested.stub';
+            $stub = $this->option('singleton')
+                ? '/stubs/controller.nested.singleton.stub'
+                : '/stubs/controller.nested.stub';
         } elseif ($this->option('model')) {
             $stub = '/stubs/controller.model.stub';
         } elseif ($this->option('invokable')) {
             $stub = '/stubs/controller.invokable.stub';
+        } elseif ($this->option('singleton')) {
+            $stub = '/stubs/controller.singleton.stub';
         } elseif ($this->option('resource')) {
             $stub = '/stubs/controller.stub';
         }
@@ -59,7 +71,7 @@ class ControllerMakeCommand extends GeneratorCommand
             $stub = str_replace('.stub', '.api.stub', $stub);
         }
 
-        $stub = $stub ?? '/stubs/controller.plain.stub';
+        $stub ??= '/stubs/controller.plain.stub';
 
         return $this->resolveStubPath($stub);
     }
@@ -73,8 +85,8 @@ class ControllerMakeCommand extends GeneratorCommand
     protected function resolveStubPath($stub)
     {
         return file_exists($customPath = $this->laravel->basePath(trim($stub, '/')))
-                        ? $customPath
-                        : __DIR__.$stub;
+            ? $customPath
+            : __DIR__.$stub;
     }
 
     /**
@@ -98,6 +110,7 @@ class ControllerMakeCommand extends GeneratorCommand
      */
     protected function buildClass($name)
     {
+        $rootNamespace = $this->rootNamespace();
         $controllerNamespace = $this->getNamespace($name);
 
         $replace = [];
@@ -110,7 +123,18 @@ class ControllerMakeCommand extends GeneratorCommand
             $replace = $this->buildModelReplacements($replace);
         }
 
-        $replace["use {$controllerNamespace}\Controller;\n"] = '';
+        if ($this->option('creatable')) {
+            $replace['abort(404);'] = '//';
+        }
+
+        $baseControllerExists = file_exists($this->getPath("{$rootNamespace}Http\Controllers\Controller"));
+
+        if ($baseControllerExists) {
+            $replace["use {$controllerNamespace}\Controller;\n"] = '';
+        } else {
+            $replace[' extends Controller'] = '';
+            $replace["use {$rootNamespace}Http\Controllers\Controller;\n"] = '';
+        }
 
         return str_replace(
             array_keys($replace), array_values($replace), parent::buildClass($name)
@@ -126,22 +150,21 @@ class ControllerMakeCommand extends GeneratorCommand
     {
         $parentModelClass = $this->parseModel($this->option('parent'));
 
-        if (! class_exists($parentModelClass)) {
-            if ($this->confirm("A {$parentModelClass} model does not exist. Do you want to generate it?", true)) {
-                $this->call('make:model', ['name' => $parentModelClass]);
-            }
+        if (! class_exists($parentModelClass) &&
+            confirm("A {$parentModelClass} model does not exist. Do you want to generate it?", default: true)) {
+            $this->call('make:model', ['name' => $parentModelClass]);
         }
 
         return [
             'ParentDummyFullModelClass' => $parentModelClass,
             '{{ namespacedParentModel }}' => $parentModelClass,
             '{{namespacedParentModel}}' => $parentModelClass,
-            'ParentDummyModelClass' => ws_class_basename($parentModelClass),
-            '{{ parentModel }}' => ws_class_basename($parentModelClass),
-            '{{parentModel}}' => ws_class_basename($parentModelClass),
-            'ParentDummyModelVariable' => lcfirst(ws_class_basename($parentModelClass)),
-            '{{ parentModelVariable }}' => lcfirst(ws_class_basename($parentModelClass)),
-            '{{parentModelVariable}}' => lcfirst(ws_class_basename($parentModelClass)),
+            'ParentDummyModelClass' => class_basename($parentModelClass),
+            '{{ parentModel }}' => class_basename($parentModelClass),
+            '{{parentModel}}' => class_basename($parentModelClass),
+            'ParentDummyModelVariable' => lcfirst(class_basename($parentModelClass)),
+            '{{ parentModelVariable }}' => lcfirst(class_basename($parentModelClass)),
+            '{{parentModelVariable}}' => lcfirst(class_basename($parentModelClass)),
         ];
     }
 
@@ -155,10 +178,8 @@ class ControllerMakeCommand extends GeneratorCommand
     {
         $modelClass = $this->parseModel($this->option('model'));
 
-        if (! class_exists($modelClass)) {
-            if ($this->confirm("A {$modelClass} model does not exist. Do you want to generate it?", true)) {
-                $this->call('make:model', ['name' => $modelClass]);
-            }
+        if (! class_exists($modelClass) && confirm("A {$modelClass} model does not exist. Do you want to generate it?", default: true)) {
+            $this->call('make:model', ['name' => $modelClass]);
         }
 
         $replace = $this->buildFormRequestReplacements($replace, $modelClass);
@@ -167,12 +188,12 @@ class ControllerMakeCommand extends GeneratorCommand
             'DummyFullModelClass' => $modelClass,
             '{{ namespacedModel }}' => $modelClass,
             '{{namespacedModel}}' => $modelClass,
-            'DummyModelClass' => ws_class_basename($modelClass),
-            '{{ model }}' => ws_class_basename($modelClass),
-            '{{model}}' => ws_class_basename($modelClass),
-            'DummyModelVariable' => lcfirst(ws_class_basename($modelClass)),
-            '{{ modelVariable }}' => lcfirst(ws_class_basename($modelClass)),
-            '{{modelVariable}}' => lcfirst(ws_class_basename($modelClass)),
+            'DummyModelClass' => class_basename($modelClass),
+            '{{ model }}' => class_basename($modelClass),
+            '{{model}}' => class_basename($modelClass),
+            'DummyModelVariable' => lcfirst(class_basename($modelClass)),
+            '{{ modelVariable }}' => lcfirst(class_basename($modelClass)),
+            '{{modelVariable}}' => lcfirst(class_basename($modelClass)),
         ]);
     }
 
@@ -186,7 +207,7 @@ class ControllerMakeCommand extends GeneratorCommand
      */
     protected function parseModel($model)
     {
-        if (preg_match('([^A-Za-z0-9_/\\\\])', $model)) {
+        if (preg_match('/[^A-Za-z0-9_\/\\\\]/', $model)) {
             throw new InvalidArgumentException('Model name contains invalid characters.');
         }
 
@@ -237,20 +258,20 @@ class ControllerMakeCommand extends GeneratorCommand
     /**
      * Generate the form requests for the given model and classes.
      *
-     * @param  string  $modelName
+     * @param  string  $modelClass
      * @param  string  $storeRequestClass
      * @param  string  $updateRequestClass
      * @return array
      */
     protected function generateFormRequests($modelClass, $storeRequestClass, $updateRequestClass)
     {
-        $storeRequestClass = 'Store'.ws_class_basename($modelClass).'Request';
+        $storeRequestClass = 'Store'.class_basename($modelClass).'Request';
 
         $this->call('make:request', [
             'name' => $storeRequestClass,
         ]);
 
-        $updateRequestClass = 'Update'.ws_class_basename($modelClass).'Request';
+        $updateRequestClass = 'Update'.class_basename($modelClass).'Request';
 
         $this->call('make:request', [
             'name' => $updateRequestClass,
@@ -267,14 +288,53 @@ class ControllerMakeCommand extends GeneratorCommand
     protected function getOptions()
     {
         return [
-            ['api', null, InputOption::VALUE_NONE, 'Exclude the create and edit methods from the controller.'],
-            ['type', null, InputOption::VALUE_REQUIRED, 'Manually specify the controller stub file to use.'],
+            ['api', null, InputOption::VALUE_NONE, 'Exclude the create and edit methods from the controller'],
+            ['type', null, InputOption::VALUE_REQUIRED, 'Manually specify the controller stub file to use'],
             ['force', null, InputOption::VALUE_NONE, 'Create the class even if the controller already exists'],
-            ['invokable', 'i', InputOption::VALUE_NONE, 'Generate a single method, invokable controller class.'],
-            ['model', 'm', InputOption::VALUE_OPTIONAL, 'Generate a resource controller for the given model.'],
-            ['parent', 'p', InputOption::VALUE_OPTIONAL, 'Generate a nested resource controller class.'],
-            ['resource', 'r', InputOption::VALUE_NONE, 'Generate a resource controller class.'],
-            ['requests', 'R', InputOption::VALUE_NONE, 'Generate FormRequest classes for store and update.'],
+            ['invokable', 'i', InputOption::VALUE_NONE, 'Generate a single method, invokable controller class'],
+            ['model', 'm', InputOption::VALUE_OPTIONAL, 'Generate a resource controller for the given model'],
+            ['parent', 'p', InputOption::VALUE_OPTIONAL, 'Generate a nested resource controller class'],
+            ['resource', 'r', InputOption::VALUE_NONE, 'Generate a resource controller class'],
+            ['requests', 'R', InputOption::VALUE_NONE, 'Generate FormRequest classes for store and update'],
+            ['singleton', 's', InputOption::VALUE_NONE, 'Generate a singleton resource controller class'],
+            ['creatable', null, InputOption::VALUE_NONE, 'Indicate that a singleton resource should be creatable'],
         ];
+    }
+
+    /**
+     * Interact further with the user if they were prompted for missing arguments.
+     *
+     * @param  \Symfony\Component\Console\Input\InputInterface  $input
+     * @param  \Symfony\Component\Console\Output\OutputInterface  $output
+     * @return void
+     */
+    protected function afterPromptingForMissingArguments(InputInterface $input, OutputInterface $output)
+    {
+        if ($this->didReceiveOptions($input)) {
+            return;
+        }
+
+        $type = select('Which type of controller would you like?', [
+            'empty' => 'Empty',
+            'resource' => 'Resource',
+            'singleton' => 'Singleton',
+            'api' => 'API',
+            'invokable' => 'Invokable',
+        ]);
+
+        if ($type !== 'empty') {
+            $input->setOption($type, true);
+        }
+
+        if (in_array($type, ['api', 'resource', 'singleton'])) {
+            $model = suggest(
+                "What model is this $type controller for? (Optional)",
+                $this->findAvailableModels()
+            );
+
+            if ($model) {
+                $input->setOption('model', $model);
+            }
+        }
     }
 }

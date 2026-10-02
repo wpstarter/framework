@@ -2,18 +2,25 @@
 
 namespace WpStarter\Console\Scheduling;
 
+use WpStarter\Console\Application;
 use WpStarter\Console\Command;
 use WpStarter\Support\Carbon;
+use WpStarter\Support\ProcessUtils;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\Process;
 
+#[AsCommand(name: 'schedule:work')]
 class ScheduleWorkCommand extends Command
 {
     /**
-     * The console command name.
+     * The name and signature of the console command.
      *
      * @var string
      */
-    protected $name = 'schedule:work';
+    protected $signature = 'schedule:work
+        {--run-output-file= : The file to direct <info>schedule:run</info> output to}
+        {--whisper : Do not output message indicating that no jobs were ready to run}';
 
     /**
      * The console command description.
@@ -25,24 +32,33 @@ class ScheduleWorkCommand extends Command
     /**
      * Execute the console command.
      *
-     * @return void
+     * @return never
      */
     public function handle()
     {
-        $this->info('Schedule worker started successfully.');
+        $this->components->info(
+            'Running scheduled tasks.',
+            $this->getLaravel()->environment('local') ? OutputInterface::VERBOSITY_NORMAL : OutputInterface::VERBOSITY_VERBOSE
+        );
 
-        [$lastExecutionStartedAt, $keyOfLastExecutionWithOutput, $executions] = [null, null, []];
+        [$lastExecutionStartedAt, $executions] = [Carbon::now()->subMinutes(10), []];
+
+        $command = Application::formatCommandString('schedule:run');
+
+        if ($this->option('whisper')) {
+            $command .= ' --whisper';
+        }
+
+        if ($this->option('run-output-file')) {
+            $command .= ' >> '.ProcessUtils::escapeArgument($this->option('run-output-file')).' 2>&1';
+        }
 
         while (true) {
             usleep(100 * 1000);
 
             if (Carbon::now()->second === 0 &&
                 ! Carbon::now()->startOfMinute()->equalTo($lastExecutionStartedAt)) {
-                $executions[] = $execution = new Process([
-                    PHP_BINARY,
-                    defined('ARTISAN_BINARY') ? ARTISAN_BINARY : 'artisan',
-                    'schedule:run',
-                ]);
+                $executions[] = $execution = Process::fromShellCommandline($command, base_path());
 
                 $execution->start();
 
@@ -50,18 +66,10 @@ class ScheduleWorkCommand extends Command
             }
 
             foreach ($executions as $key => $execution) {
-                $output = trim($execution->getIncrementalOutput()).
-                          trim($execution->getIncrementalErrorOutput());
+                $output = $execution->getIncrementalOutput().
+                    $execution->getIncrementalErrorOutput();
 
-                if (! empty($output)) {
-                    if ($key !== $keyOfLastExecutionWithOutput) {
-                        $this->info(PHP_EOL.'['.date('c').'] Execution #'.($key + 1).' output:');
-
-                        $keyOfLastExecutionWithOutput = $key;
-                    }
-
-                    $this->output->writeln($output);
-                }
+                $this->output->write(ltrim($output, "\n"));
 
                 if (! $execution->isRunning()) {
                     unset($executions[$key]);

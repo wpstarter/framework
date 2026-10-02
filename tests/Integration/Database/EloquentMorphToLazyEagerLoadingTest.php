@@ -10,7 +10,7 @@ use WpStarter\Tests\Integration\Database\DatabaseTestCase;
 
 class EloquentMorphToLazyEagerLoadingTest extends DatabaseTestCase
 {
-    protected function defineDatabaseMigrationsAfterDatabaseRefreshed()
+    protected function afterRefreshingDatabase()
     {
         Schema::create('users', function (Blueprint $table) {
             $table->increments('id');
@@ -33,7 +33,7 @@ class EloquentMorphToLazyEagerLoadingTest extends DatabaseTestCase
 
         $user = User::create();
 
-        $post = ws_tap((new Post)->user()->associate($user))->save();
+        $post = tap((new Post)->user()->associate($user))->save();
 
         $video = Video::create();
 

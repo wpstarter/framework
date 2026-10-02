@@ -5,15 +5,20 @@ namespace WpStarter\Tests\Integration\Queue;
 use Exception;
 use WpStarter\Bus\Dispatcher;
 use WpStarter\Bus\Queueable;
+use WpStarter\Contracts\Debug\ExceptionHandler;
 use WpStarter\Contracts\Queue\Job;
 use WpStarter\Foundation\Testing\Concerns\InteractsWithRedis;
 use WpStarter\Queue\CallQueuedHandler;
 use WpStarter\Queue\InteractsWithQueue;
 use WpStarter\Queue\Middleware\ThrottlesExceptionsWithRedis;
+use WpStarter\Support\Carbon;
 use WpStarter\Support\Str;
 use Mockery as m;
 use Orchestra\Testbench\TestCase;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
+use RuntimeException;
 
+#[RequiresPhpExtension('redis')]
 class ThrottlesExceptionsWithRedisTest extends TestCase
 {
     use InteractsWithRedis;
@@ -23,15 +28,15 @@ class ThrottlesExceptionsWithRedisTest extends TestCase
         parent::setUp();
 
         $this->setUpRedis();
+
+        Carbon::setTestNow(now());
     }
 
     protected function tearDown(): void
     {
-        parent::tearDown();
-
         $this->tearDownRedis();
 
-        m::close();
+        parent::tearDown();
     }
 
     public function testCircuitIsOpenedForJobErrors()
@@ -115,6 +120,36 @@ class ThrottlesExceptionsWithRedisTest extends TestCase
 
         $this->assertTrue($class::$handled);
     }
+
+    public function testReportingExceptions()
+    {
+        $this->spy(ExceptionHandler::class)
+            ->shouldReceive('report')
+            ->twice()
+            ->with(m::type(RuntimeException::class));
+
+        $job = new class
+        {
+            public function release()
+            {
+                return $this;
+            }
+        };
+        $next = function () {
+            throw new RuntimeException('Whoops!');
+        };
+
+        $middleware = new ThrottlesExceptionsWithRedis();
+
+        $middleware->report();
+        $middleware->handle($job, $next);
+
+        $middleware->report(fn () => true);
+        $middleware->handle($job, $next);
+
+        $middleware->report(fn () => false);
+        $middleware->handle($job, $next);
+    }
 }
 
 class CircuitBreakerWithRedisTestJob
@@ -122,6 +157,8 @@ class CircuitBreakerWithRedisTestJob
     use InteractsWithQueue, Queueable;
 
     public static $handled = false;
+
+    public $key;
 
     public function __construct($key)
     {
@@ -137,7 +174,7 @@ class CircuitBreakerWithRedisTestJob
 
     public function middleware()
     {
-        return [(new ThrottlesExceptionsWithRedis(2, 10))->by($this->key)];
+        return [(new ThrottlesExceptionsWithRedis(2, 10 * 60))->by($this->key)];
     }
 }
 
@@ -146,6 +183,8 @@ class CircuitBreakerWithRedisSuccessfulJob
     use InteractsWithQueue, Queueable;
 
     public static $handled = false;
+
+    public $key;
 
     public function __construct($key)
     {
@@ -159,6 +198,6 @@ class CircuitBreakerWithRedisSuccessfulJob
 
     public function middleware()
     {
-        return [(new ThrottlesExceptionsWithRedis(2, 10))->by($this->key)];
+        return [(new ThrottlesExceptionsWithRedis(2, 10 * 60))->by($this->key)];
     }
 }

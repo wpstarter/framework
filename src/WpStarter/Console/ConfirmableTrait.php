@@ -2,6 +2,8 @@
 
 namespace WpStarter\Console;
 
+use function Laravel\Prompts\confirm;
+
 trait ConfirmableTrait
 {
     /**
@@ -9,27 +11,29 @@ trait ConfirmableTrait
      *
      * This method only asks for confirmation in production.
      *
+     * @template TReturn of bool = bool
+     *
      * @param  string  $warning
-     * @param  \Closure|bool|null  $callback
-     * @return bool
+     * @param  (\Closure(): TReturn)|TReturn|null  $callback
+     * @return (TReturn is false ? true : bool)
      */
-    public function confirmToProceed($warning = 'Application In Production!', $callback = null)
+    public function confirmToProceed($warning = 'Application In Production', $callback = null)
     {
         $callback = is_null($callback) ? $this->getDefaultConfirmCallback() : $callback;
 
-        $shouldConfirm = ws_value($callback);
+        $shouldConfirm = value($callback);
 
         if ($shouldConfirm) {
             if ($this->hasOption('force') && $this->option('force')) {
                 return true;
             }
 
-            $this->alert($warning);
+            $this->components->alert($warning);
 
-            $confirmed = $this->confirm('Do you really wish to run this command?');
+            $confirmed = confirm('Are you sure you want to run this command?', default: false);
 
             if (! $confirmed) {
-                $this->comment('Command Canceled!');
+                $this->components->warn('Command cancelled.');
 
                 return false;
             }
@@ -41,7 +45,7 @@ trait ConfirmableTrait
     /**
      * Get the default confirmation callback.
      *
-     * @return \Closure
+     * @return \Closure(): bool
      */
     protected function getDefaultConfirmCallback()
     {

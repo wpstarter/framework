@@ -4,6 +4,7 @@ namespace WpStarter\Tests\Integration\Routing;
 
 use WpStarter\Contracts\Routing\UrlRoutable;
 use WpStarter\Http\Request;
+use WpStarter\Routing\Exceptions\InvalidSignatureException;
 use WpStarter\Routing\Middleware\ValidateSignature;
 use WpStarter\Support\Carbon;
 use WpStarter\Support\Facades\Route;
@@ -13,6 +14,11 @@ use Orchestra\Testbench\TestCase;
 
 class UrlSigningTest extends TestCase
 {
+    protected function defineEnvironment($app): void
+    {
+        $app['config']->set(['app.key' => 'AckfSECXIvnK5r28GVIWUAxmbBSjTsmF']);
+    }
+
     public function testSigningUrl()
     {
         Route::get('/foo/{id}', function (Request $request, $id) {
@@ -20,7 +26,12 @@ class UrlSigningTest extends TestCase
         })->name('foo');
 
         $this->assertIsString($url = URL::signedRoute('foo', ['id' => 1]));
-        $this->assertSame('valid', $this->get($url)->original);
+
+        tap($this->get($url), function ($response) {
+            $this->assertSame('valid', $response->original);
+
+            $this->assertIsString($response->baseRequest->query('signature'));
+        });
     }
 
     public function testSigningUrlWithCustomRouteSlug()
@@ -33,8 +44,38 @@ class UrlSigningTest extends TestCase
         $model->routable = 'routable-slug';
 
         $this->assertIsString($url = URL::signedRoute('foo', ['post' => $model]));
-        $this->assertSame('valid', $this->get($url)->original['valid']);
-        $this->assertSame('routable-slug', $this->get($url)->original['slug']);
+
+        tap($this->get($url), function ($response) {
+            $this->assertSame('valid', $response->original['valid']);
+            $this->assertSame('routable-slug', $response->original['slug']);
+
+            $this->assertSame('routable-slug', $response->baseRequest->route('post'));
+        });
+    }
+
+    public function testSigningUrlWithPercentSignInRouteSlug()
+    {
+        Route::get('/foo/{post:slug}', function (Request $request, $slug) {
+            return ['slug' => $slug, 'valid' => $request->hasValidSignature() ? 'valid' : 'invalid'];
+        })->name('foo');
+
+        $model = new RoutableInterfaceStub;
+        $model->slug = '%66oo';
+
+        // The percent sign has to be escaped in the generated URL. Otherwise the router
+        // decodes "%66" back into an "f" when matching the URL and binds a different
+        // model than the one the URL was generated for...
+        $this->assertSame(
+            '/foo/%2566oo',
+            parse_url($url = URL::signedRoute('foo', ['post' => $model]), PHP_URL_PATH)
+        );
+
+        tap($this->get($url), function ($response) {
+            $this->assertSame('valid', $response->original['valid']);
+            $this->assertSame('%66oo', $response->original['slug']);
+
+            $this->assertSame('%66oo', $response->baseRequest->route('post'));
+        });
     }
 
     public function testTemporarySignedUrls()
@@ -44,7 +85,7 @@ class UrlSigningTest extends TestCase
         })->name('foo');
 
         Carbon::setTestNow(Carbon::create(2018, 1, 1));
-        $this->assertIsString($url = URL::temporarySignedRoute('foo', ws_now()->addMinutes(5), ['id' => 1]));
+        $this->assertIsString($url = URL::temporarySignedRoute('foo', now()->addMinutes(5), ['id' => 1]));
         $this->assertSame('valid', $this->get($url)->original);
 
         Carbon::setTestNow(Carbon::create(2018, 1, 1)->addMinutes(10));
@@ -60,7 +101,7 @@ class UrlSigningTest extends TestCase
             return $request->hasValidSignature() ? 'valid' : 'invalid';
         })->name('foo');
 
-        URL::temporarySignedRoute('foo', ws_now()->addMinutes(5), ['id' => 1, 'expires' => 253402300799]);
+        URL::temporarySignedRoute('foo', now()->addMinutes(5), ['id' => 1, 'expires' => 253402300799]);
     }
 
     public function testSignedUrlWithUrlWithoutSignatureParameter()
@@ -126,7 +167,7 @@ class UrlSigningTest extends TestCase
     {
         Route::get('/foo/{id}', function (Request $request, $id) {
             return $request->hasValidSignature()
-                && intval($id) === 1
+                && (int) $id === 1
                 && $request->has('paramEmpty')
                 && $request->has('paramEmptyString')
                 && $request->query('paramWithValue') === 'value'
@@ -142,6 +183,58 @@ class UrlSigningTest extends TestCase
         $this->assertSame('valid', $this->get($url)->original);
     }
 
+    public function testExceptedParametersCanBeAddedInAnyOrder()
+    {
+        Route::get('/foo/{id}', function (Request $request, $id) {
+            return $request->hasValidSignatureWhileIgnoring(['one', 'two', 'three']) ? 'valid' : 'invalid';
+        })->name('foo');
+
+        $this->assertIsString($url = URL::signedRoute('foo', ['id' => 1,
+            'bar' => 'baz',
+        ]));
+
+        $this->assertSame('valid', $this->get($url.'&one=value&two=another-value')->original);
+        $this->assertSame('valid', $this->get($url.'&two=value&one=&three')->original);
+    }
+
+    public function testUnusualExceptedParametersWorksAsExpected()
+    {
+        $this->withoutExceptionHandling();
+        Route::get('/foo/{id}', function (Request $request, $id) {
+            return $request->hasValidSignatureWhileIgnoring(['']) ? 'valid' : 'invalid';
+        })->name('foo');
+
+        $this->assertIsString($url = URL::signedRoute('foo', ['id' => 1,
+            'bar' => 'baz',
+        ]));
+
+        $this->assertSame('valid', $this->get($url)->original);
+
+        Route::get('/foo/{id}', function (Request $request, $id) {
+            return $request->hasValidSignatureWhileIgnoring(['*', '[a-z]+']) ? 'valid' : 'invalid';
+        })->name('foo');
+
+        $this->assertIsString($url = URL::signedRoute('foo', ['id' => 1,
+            'bar' => 'baz',
+        ]));
+
+        $this->assertSame('valid', $this->get($url.'&*=value&[a-z]+=value')->original);
+    }
+
+    public function testExceptedParameterCanBeAPrefixOrSuffixOfAnotherParameter()
+    {
+        Route::get('/foo/{id}', function (Request $request, $id) {
+            return $request->hasValidSignatureWhileIgnoring(['pre', 'fix']) ? 'valid' : 'invalid';
+        })->name('foo');
+
+        $this->assertIsString($url = URL::signedRoute('foo', ['id' => 1,
+            'prefix' => 'value',
+            'suffix' => 'value',
+        ]));
+
+        $this->assertSame('valid', $this->get($url.'&pre=fix&fix=suff')->original);
+    }
+
     public function testSignedMiddleware()
     {
         Route::get('/foo/{id}', function (Request $request, $id) {
@@ -149,7 +242,7 @@ class UrlSigningTest extends TestCase
         })->name('foo')->middleware(ValidateSignature::class);
 
         Carbon::setTestNow(Carbon::create(2018, 1, 1));
-        $this->assertIsString($url = URL::temporarySignedRoute('foo', ws_now()->addMinutes(5), ['id' => 1]));
+        $this->assertIsString($url = URL::temporarySignedRoute('foo', now()->addMinutes(5), ['id' => 1]));
         $this->assertSame('valid', $this->get($url)->original);
     }
 
@@ -160,7 +253,7 @@ class UrlSigningTest extends TestCase
         })->name('foo')->middleware(ValidateSignature::class);
 
         Carbon::setTestNow(Carbon::create(2018, 1, 1));
-        $this->assertIsString($url = URL::temporarySignedRoute('foo', ws_now()->addMinutes(5), ['id' => 1]));
+        $this->assertIsString($url = URL::temporarySignedRoute('foo', now()->addMinutes(5), ['id' => 1]));
         Carbon::setTestNow(Carbon::create(2018, 1, 1)->addMinutes(10));
 
         $response = $this->get($url);
@@ -192,11 +285,135 @@ class UrlSigningTest extends TestCase
         $response = $this->get('/foo/relative');
         $response->assertStatus(403);
     }
+
+    public function testSignedMiddlewareIgnoringParameter()
+    {
+        Route::get('/foo/{id}', function (Request $request, $id) {
+        })->name('foo')->middleware('signed:relative');
+
+        $this->assertIsString($url = URL::signedRoute('foo', ['id' => 1]).'&ignore=me');
+        $request = Request::create($url);
+        $middleware = $this->createValidateSignatureMiddleware(['ignore']);
+
+        try {
+            $middleware->handle($request, function ($request) {
+                $this->assertTrue($request->hasValidSignatureWhileIgnoring(['ignore']));
+            });
+        } catch (InvalidSignatureException $exception) {
+            $this->fail($exception->getMessage());
+        }
+    }
+
+    public function testSignedMiddlewareIgnoringParameterViaArgumentsWithRelative()
+    {
+        Route::get('/foo/{id}', function (Request $request, $id) {
+        })->name('foo')->middleware('signed:relative,ignore');
+
+        $this->assertIsString('https://fake.test'.URL::signedRoute('foo', ['id' => 1, 'ignore' => 'me'], null, false));
+
+        $response = $this->get('/foo/1');
+        $response->assertStatus(403);
+    }
+
+    public function testSignedMiddlewareCanGloballyIgnoreParameters()
+    {
+        ValidateSignature::except(['globally_ignore']);
+
+        Route::get('/foo/{id}', function (Request $request, $id) {
+        })->name('foo')->middleware('signed:relative');
+
+        $this->assertIsString($url = URL::signedRoute('foo', ['id' => 1]).'&globally_ignore=me');
+        $request = Request::create($url);
+        $middleware = $this->createValidateSignatureMiddleware(['ignore']);
+
+        try {
+            $middleware->handle($request, function ($request) {
+                $this->assertTrue($request->hasValidSignatureWhileIgnoring(['globally_ignore']));
+            });
+        } catch (InvalidSignatureException $exception) {
+            $this->fail($exception->getMessage());
+        }
+    }
+
+    public function testSignedMiddlewareIgnoringParameterViaArgumentsWithoutRelative()
+    {
+        Route::get('/foo/{id}', function (Request $request, $id) {
+        })->name('foo')->middleware('signed:ignore');
+
+        $this->assertIsString($url = 'https://fake.test'.URL::signedRoute('foo', ['id' => 1, 'ignore' => 'me'], null, false));
+
+        $response = $this->get('/foo/1');
+        $response->assertStatus(403);
+    }
+
+    public function testSignedMiddlewareIgnoringParameterViaClassAndArguments()
+    {
+        Route::get('/foo/{id}', function (Request $request, $id) {
+        })->name('foo')->middleware(IgnoreParameterMiddleware::relative('test'));
+
+        $this->assertIsString($url = 'https://fake.test'.URL::signedRoute('foo', ['id' => 1, 'ignore' => 'me', 'test' => 'bar'], null, false));
+
+        $response = $this->get('/foo/1');
+        $response->assertStatus(403);
+    }
+
+    public function testItCanGenerateMiddlewareDefinitionViaStaticMethod()
+    {
+        $signature = (string) ValidateSignature::relative();
+        $this->assertSame('WpStarter\Routing\Middleware\ValidateSignature:relative', $signature);
+
+        $signature = (string) ValidateSignature::absolute();
+        $this->assertSame('WpStarter\Routing\Middleware\ValidateSignature', $signature);
+
+        $signature = (string) ValidateSignature::relative(['foo', 'bar']);
+        $this->assertSame('WpStarter\Routing\Middleware\ValidateSignature:relative,foo,bar', $signature);
+
+        $signature = (string) ValidateSignature::absolute(['foo', 'bar']);
+        $this->assertSame('WpStarter\Routing\Middleware\ValidateSignature:foo,bar', $signature);
+    }
+
+    public function testUrlsSignedByPreviousAppKeysAreValidWhenAddedAsPreviousKeys()
+    {
+        Route::get('/foo/{id}', function (Request $request, $id) {
+            return $request->hasValidSignature() ? 'valid' : 'invalid';
+        })->name('foo');
+
+        config(['app.key' => 'oldest-key']);
+        $oldestURL = URL::signedRoute('foo', ['id' => 1]);
+
+        config(['app.key' => 'old-key']);
+        $oldURL = URL::signedRoute('foo', ['id' => 1]);
+
+        config(['app.key' => 'new-key']);
+        $newUrl = URL::signedRoute('foo', ['id' => 1]);
+
+        tap($this->get($oldestURL), fn ($response) => $this->assertSame('invalid', $response->original));
+        tap($this->get($oldURL), fn ($response) => $this->assertSame('invalid', $response->original));
+        tap($this->get($newUrl), fn ($response) => $this->assertSame('valid', $response->original));
+
+        config(['app.previous_keys' => ['old-key', 'oldest-key']]);
+
+        tap($this->get($oldestURL), fn ($response) => $this->assertSame('valid', $response->original));
+        tap($this->get($oldURL), fn ($response) => $this->assertSame('valid', $response->original));
+        tap($this->get($newUrl), fn ($response) => $this->assertSame('valid', $response->original));
+    }
+
+    protected function createValidateSignatureMiddleware(array $ignore)
+    {
+        return new class($ignore) extends ValidateSignature
+        {
+            public function __construct(array $ignore)
+            {
+                $this->ignore = $ignore;
+            }
+        };
+    }
 }
 
 class RoutableInterfaceStub implements UrlRoutable
 {
     public $key;
+    public $routable;
     public $slug = 'routable-slug';
 
     public function getRouteKey()
@@ -218,4 +435,9 @@ class RoutableInterfaceStub implements UrlRoutable
     {
         //
     }
+}
+
+class IgnoreParameterMiddleware extends ValidateSignature
+{
+    protected $ignore = ['ignore'];
 }

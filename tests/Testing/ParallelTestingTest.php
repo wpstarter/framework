@@ -4,6 +4,7 @@ namespace WpStarter\Tests\Testing;
 
 use WpStarter\Container\Container;
 use WpStarter\Testing\ParallelTesting;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class ParallelTestingTest extends TestCase
@@ -17,10 +18,8 @@ class ParallelTestingTest extends TestCase
         $_SERVER['LARAVEL_PARALLEL_TESTING'] = 1;
     }
 
-    /**
-     * @dataProvider callbacks
-     */
-    public function testCallbacks($callback)
+    #[DataProvider('callbacks')]
+    public function testCallbacks($callback): void
     {
         $parallelTesting = new ParallelTesting(Container::getInstance());
         $caller = 'call'.ucfirst($callback).'Callbacks';
@@ -36,7 +35,7 @@ class ParallelTestingTest extends TestCase
                 $this->assertNull($testCase);
             }
 
-            $this->assertSame('1', $token);
+            $this->assertSame('1', (string) $token);
             $state = true;
         });
 
@@ -51,7 +50,7 @@ class ParallelTestingTest extends TestCase
         $this->assertTrue($state);
     }
 
-    public function testOptions()
+    public function testOptions(): void
     {
         $parallelTesting = new ParallelTesting(Container::getInstance());
 
@@ -73,7 +72,7 @@ class ParallelTestingTest extends TestCase
         $this->assertTrue($parallelTesting->option('without_databases'));
     }
 
-    public function testToken()
+    public function testToken(): void
     {
         $parallelTesting = new ParallelTesting(Container::getInstance());
 
@@ -83,26 +82,27 @@ class ParallelTestingTest extends TestCase
             return '1';
         });
 
-        $this->assertSame('1', $parallelTesting->token());
+        $this->assertSame('1', (string) $parallelTesting->token());
     }
 
-    public function callbacks()
+    public static function callbacks()
     {
         return [
             ['setUpProcess'],
             ['setUpTestCase'],
             ['setUpTestDatabase'],
+            ['setUpTestDatabaseBeforeMigrating'],
             ['tearDownTestCase'],
             ['tearDownProcess'],
         ];
     }
 
-    public function tearDown(): void
+    protected function tearDown(): void
     {
-        parent::tearDown();
-
         Container::setInstance(null);
 
         unset($_SERVER['LARAVEL_PARALLEL_TESTING']);
+
+        parent::tearDown();
     }
 }

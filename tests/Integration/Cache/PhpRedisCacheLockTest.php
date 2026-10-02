@@ -3,8 +3,11 @@
 namespace WpStarter\Tests\Integration\Cache;
 
 use WpStarter\Foundation\Testing\Concerns\InteractsWithRedis;
+use WpStarter\Redis\Connections\PhpRedisClusterConnection;
+use WpStarter\Redis\Connections\PhpRedisConnection;
 use WpStarter\Support\Facades\Cache;
 use Orchestra\Testbench\TestCase;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use Redis;
 
 class PhpRedisCacheLockTest extends TestCase
@@ -16,13 +19,19 @@ class PhpRedisCacheLockTest extends TestCase
         parent::setUp();
 
         $this->setUpRedis();
+
+        $connection = $this->app['redis']->connection();
+        $this->markTestSkippedUnless(
+            $connection instanceof PhpRedisConnection || $connection instanceof PhpRedisClusterConnection,
+            'This test is for phpredis only',
+        );
     }
 
     protected function tearDown(): void
     {
-        parent::tearDown();
-
         $this->tearDownRedis();
+
+        parent::tearDown();
     }
 
     public function testRedisLockCanBeAcquiredAndReleasedWithoutSerializationAndCompression()
@@ -138,9 +147,7 @@ class PhpRedisCacheLockTest extends TestCase
         $this->assertNull($store->lockConnection()->get($store->getPrefix().'foo'));
     }
 
-    /**
-     * @requires extension lzf
-     */
+    #[RequiresPhpExtension('lzf')]
     public function testRedisLockCanBeAcquiredAndReleasedWithLzfCompression()
     {
         if (! defined('Redis::COMPRESSION_LZF')) {
@@ -167,9 +174,7 @@ class PhpRedisCacheLockTest extends TestCase
         $this->assertNull($store->lockConnection()->get($store->getPrefix().'foo'));
     }
 
-    /**
-     * @requires extension zstd
-     */
+    #[RequiresPhpExtension('zstd')]
     public function testRedisLockCanBeAcquiredAndReleasedWithZstdCompression()
     {
         if (! defined('Redis::COMPRESSION_ZSTD')) {
@@ -196,15 +201,6 @@ class PhpRedisCacheLockTest extends TestCase
         $lock->release();
         $this->assertNull($store->lockConnection()->get($store->getPrefix().'foo'));
 
-        $client->setOption(Redis::OPT_COMPRESSION_LEVEL, Redis::COMPRESSION_ZSTD_MIN);
-        $store->lock('foo')->forceRelease();
-        $this->assertNull($store->lockConnection()->get($store->getPrefix().'foo'));
-        $lock = $store->lock('foo', 10);
-        $this->assertTrue($lock->get());
-        $this->assertFalse($store->lock('foo', 10)->get());
-        $lock->release();
-        $this->assertNull($store->lockConnection()->get($store->getPrefix().'foo'));
-
         $client->setOption(Redis::OPT_COMPRESSION_LEVEL, Redis::COMPRESSION_ZSTD_MAX);
         $store->lock('foo')->forceRelease();
         $this->assertNull($store->lockConnection()->get($store->getPrefix().'foo'));
@@ -215,16 +211,13 @@ class PhpRedisCacheLockTest extends TestCase
         $this->assertNull($store->lockConnection()->get($store->getPrefix().'foo'));
     }
 
-    /**
-     * @requires extension lz4
-     */
+    #[RequiresPhpExtension('lz4')]
     public function testRedisLockCanBeAcquiredAndReleasedWithLz4Compression()
     {
         if (! defined('Redis::COMPRESSION_LZ4')) {
             $this->markTestSkipped('Redis extension is not configured to support the lz4 compression.');
         }
 
-        $this->app['config']->set('database.redis.client', 'phpredis');
         $this->app['config']->set('cache.stores.redis.connection', 'default');
         $this->app['config']->set('cache.stores.redis.lock_connection', 'default');
 
@@ -263,9 +256,7 @@ class PhpRedisCacheLockTest extends TestCase
         $this->assertNull($store->lockConnection()->get($store->getPrefix().'foo'));
     }
 
-    /**
-     * @requires extension Lzf
-     */
+    #[RequiresPhpExtension('lzf')]
     public function testRedisLockCanBeAcquiredAndReleasedWithSerializationAndCompression()
     {
         if (! defined('Redis::COMPRESSION_LZF')) {

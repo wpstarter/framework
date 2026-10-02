@@ -3,7 +3,7 @@
 namespace WpStarter\View\Compilers\Concerns;
 
 use Closure;
-use WpStarter\Support\Str;
+use WpStarter\Support\Stringable;
 
 trait CompilesEchos
 {
@@ -116,7 +116,7 @@ trait CompilesEchos
 
             return $matches[1]
                 ? $matches[0]
-                : "<?php echo ws_e({$this->wrapInEchoHandler($matches[2])}); ?>{$whitespace}";
+                : "<?php echo e({$this->wrapInEchoHandler($matches[2])}); ?>{$whitespace}";
         };
 
         return preg_replace_callback($pattern, $callback, $value);
@@ -130,7 +130,7 @@ trait CompilesEchos
      */
     protected function addBladeCompilerVariable($result)
     {
-        return "<?php \$__bladeCompiler = ws_app('blade.compiler'); ?>" .$result;
+        return "<?php \$__bladeCompiler = app('blade.compiler'); ?>".$result;
     }
 
     /**
@@ -141,9 +141,9 @@ trait CompilesEchos
      */
     protected function wrapInEchoHandler($value)
     {
-        $value = Str::of($value)
+        $value = (new Stringable($value))
             ->trim()
-            ->when(Str::endsWith($value, ';'), function ($str) {
+            ->when(str_ends_with($value, ';'), function ($str) {
                 return $str->beforeLast(';');
             });
 
@@ -160,6 +160,10 @@ trait CompilesEchos
     {
         if (is_object($value) && isset($this->echoHandlers[get_class($value)])) {
             return call_user_func($this->echoHandlers[get_class($value)], $value);
+        }
+
+        if (is_iterable($value) && isset($this->echoHandlers['iterable'])) {
+            return call_user_func($this->echoHandlers['iterable'], $value);
         }
 
         return $value;

@@ -2,21 +2,26 @@
 
 namespace WpStarter\Tests\Integration\Support;
 
+use WpStarter\Auth\AuthManager;
+use WpStarter\Foundation\Application;
+use WpStarter\Support\Collection;
 use WpStarter\Support\Facades\Auth;
+use WpStarter\Support\Facades\Facade;
 use Orchestra\Testbench\TestCase;
+use ReflectionClass;
 
 class FacadesTest extends TestCase
 {
     protected function tearDown(): void
     {
-        parent::tearDown();
-
         unset($_SERVER['__laravel.authResolved']);
+
+        parent::tearDown();
     }
 
     public function testFacadeResolvedCanResolveCallback()
     {
-        Auth::resolved(function () {
+        Auth::resolved(function (AuthManager $auth, Application $app) {
             $_SERVER['__laravel.authResolved'] = true;
         });
 
@@ -33,10 +38,25 @@ class FacadesTest extends TestCase
 
         $this->assertFalse(isset($_SERVER['__laravel.authResolved']));
 
-        Auth::resolved(function () {
+        Auth::resolved(function (AuthManager $auth, Application $app) {
             $_SERVER['__laravel.authResolved'] = true;
         });
 
         $this->assertTrue(isset($_SERVER['__laravel.authResolved']));
+    }
+
+    public function testDefaultAliases()
+    {
+        $defaultAliases = Facade::defaultAliases();
+
+        $this->assertInstanceOf(Collection::class, $defaultAliases);
+
+        foreach ($defaultAliases as $alias => $abstract) {
+            $this->assertTrue(class_exists($alias));
+            $this->assertTrue(class_exists($abstract));
+
+            $reflection = new ReflectionClass($alias);
+            $this->assertSame($abstract, $reflection->getName());
+        }
     }
 }

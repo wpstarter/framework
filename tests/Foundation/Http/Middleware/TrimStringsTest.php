@@ -1,6 +1,6 @@
 <?php
 
-namespace WpStarter\Tests\Foundation\Bootstrap\Http\Middleware;
+namespace WpStarter\Tests\Foundation\Http\Middleware;
 
 use WpStarter\Foundation\Http\Middleware\TrimStrings;
 use WpStarter\Http\Request;
@@ -26,6 +26,34 @@ class TrimStringsTest extends TestCase
             $this->assertSame('456', $request->get('xyz'));
             $this->assertSame('  789  ', $request->get('foo'));
             $this->assertSame('  010  ', $request->get('bar'));
+        });
+    }
+
+    public function testTrimStringsNBSP()
+    {
+        $middleware = new TrimStrings;
+        $symfonyRequest = new SymfonyRequest([
+            // Here has some NBSP, but it still display to space.
+            // Please note, do not edit in browser
+            'abc' => '   123    ',
+            'zwnbsp' => '﻿  ha  ﻿﻿',
+            'xyz' => 'だ',
+            'foo' => 'ム',
+            'bar' => '   だ    ',
+            'baz' => '   ム    ',
+            'binary' => " \xE9  ",
+        ]);
+        $symfonyRequest->server->set('REQUEST_METHOD', 'GET');
+        $request = Request::createFromBase($symfonyRequest);
+
+        $middleware->handle($request, function (Request $request) {
+            $this->assertSame('123', $request->get('abc'));
+            $this->assertSame('ha', $request->get('zwnbsp'));
+            $this->assertSame('だ', $request->get('xyz'));
+            $this->assertSame('ム', $request->get('foo'));
+            $this->assertSame('だ', $request->get('bar'));
+            $this->assertSame('ム', $request->get('baz'));
+            $this->assertSame("\xE9", $request->get('binary'));
         });
     }
 }

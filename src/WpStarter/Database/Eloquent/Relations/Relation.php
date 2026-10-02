@@ -3,45 +3,57 @@
 namespace WpStarter\Database\Eloquent\Relations;
 
 use Closure;
+use WpStarter\Contracts\Database\Eloquent\Builder as BuilderContract;
 use WpStarter\Database\Eloquent\Builder;
-use WpStarter\Database\Eloquent\Collection;
-use WpStarter\Database\Eloquent\Contracts\Model;
+use WpStarter\Database\Eloquent\Collection as EloquentCollection;
+use WpStarter\Database\Eloquent\Model;
 use WpStarter\Database\Eloquent\ModelNotFoundException;
 use WpStarter\Database\MultipleRecordsFoundException;
 use WpStarter\Database\Query\Expression;
-use WpStarter\Support\Arr;
+use WpStarter\Support\Collection as BaseCollection;
 use WpStarter\Support\Traits\ForwardsCalls;
 use WpStarter\Support\Traits\Macroable;
 
 /**
- * @mixin \WpStarter\Database\Eloquent\Builder
+ * @template TRelatedModel of \WpStarter\Database\Eloquent\Model
+ * @template TDeclaringModel of \WpStarter\Database\Eloquent\Model
+ * @template TResult
+ *
+ * @mixin \WpStarter\Database\Eloquent\Builder<TRelatedModel>
  */
-abstract class Relation
+abstract class Relation implements BuilderContract
 {
     use ForwardsCalls, Macroable {
-        __call as macroCall;
+        Macroable::__call as macroCall;
     }
 
     /**
      * The Eloquent query builder instance.
      *
-     * @var \WpStarter\Database\Eloquent\Builder
+     * @var \WpStarter\Database\Eloquent\Builder<TRelatedModel>
      */
     protected $query;
 
     /**
      * The parent model instance.
      *
-     * @var \WpStarter\Database\Eloquent\Model
+     * @var TDeclaringModel
      */
     protected $parent;
 
     /**
      * The related model instance.
      *
-     * @var \WpStarter\Database\Eloquent\Model
+     * @var TRelatedModel
      */
     protected $related;
+
+    /**
+     * Indicates whether the eagerly loaded relation should implicitly return an empty collection.
+     *
+     * @var bool
+     */
+    protected $eagerKeysWereEmpty = false;
 
     /**
      * Indicates if the relation is adding constraints.
@@ -51,9 +63,9 @@ abstract class Relation
     protected static $constraints = true;
 
     /**
-     * An array to map class names to their morph names in the database.
+     * An array to map morph names to their class names in the database.
      *
-     * @var array
+     * @var array<string, class-string<\WpStarter\Database\Eloquent\Model>>
      */
     public static $morphMap = [];
 
@@ -74,9 +86,8 @@ abstract class Relation
     /**
      * Create a new relation instance.
      *
-     * @param  \WpStarter\Database\Eloquent\Builder  $query
-     * @param  \WpStarter\Database\Eloquent\Model  $parent
-     * @return void
+     * @param  \WpStarter\Database\Eloquent\Builder<TRelatedModel>  $query
+     * @param  TDeclaringModel  $parent
      */
     public function __construct(Builder $query, Model $parent)
     {
@@ -90,8 +101,10 @@ abstract class Relation
     /**
      * Run a callback with constraints disabled on the relation.
      *
-     * @param  \Closure  $callback
-     * @return mixed
+     * @template TReturn of mixed
+     *
+     * @param  Closure(): TReturn  $callback
+     * @return TReturn
      */
     public static function noConstraints(Closure $callback)
     {
@@ -119,7 +132,7 @@ abstract class Relation
     /**
      * Set the constraints for an eager load of the relation.
      *
-     * @param  array  $models
+     * @param  array<int, TDeclaringModel>  $models
      * @return void
      */
     abstract public function addEagerConstraints(array $models);
@@ -127,58 +140,62 @@ abstract class Relation
     /**
      * Initialize the relation on a set of models.
      *
-     * @param  array  $models
+     * @param  array<int, TDeclaringModel>  $models
      * @param  string  $relation
-     * @return array
+     * @return array<int, TDeclaringModel>
      */
     abstract public function initRelation(array $models, $relation);
 
     /**
      * Match the eagerly loaded results to their parents.
      *
-     * @param  array  $models
-     * @param  \WpStarter\Database\Eloquent\Collection  $results
+     * @param  array<int, TDeclaringModel>  $models
+     * @param  \WpStarter\Database\Eloquent\Collection<int, TRelatedModel>  $results
      * @param  string  $relation
-     * @return array
+     * @return array<int, TDeclaringModel>
      */
-    abstract public function match(array $models, Collection $results, $relation);
+    abstract public function match(array $models, EloquentCollection $results, $relation);
 
     /**
      * Get the results of the relationship.
      *
-     * @return mixed
+     * @return TResult
      */
     abstract public function getResults();
 
     /**
      * Get the relationship for eager loading.
      *
-     * @return \WpStarter\Database\Eloquent\Collection
+     * @return \WpStarter\Database\Eloquent\Collection<int, TRelatedModel>
      */
     public function getEager()
     {
-        return $this->get();
+        return $this->eagerKeysWereEmpty
+            ? $this->related->newCollection()
+            : $this->get();
     }
 
     /**
      * Execute the query and get the first result if it's the sole matching record.
      *
      * @param  array|string  $columns
-     * @return \WpStarter\Database\Eloquent\Model
+     * @return TRelatedModel
      *
-     * @throws \WpStarter\Database\Eloquent\ModelNotFoundException
+     * @throws \WpStarter\Database\Eloquent\ModelNotFoundException<TRelatedModel>
      * @throws \WpStarter\Database\MultipleRecordsFoundException
      */
     public function sole($columns = ['*'])
     {
-        $result = $this->take(2)->get($columns);
+        $result = $this->limit(2)->get($columns);
 
-        if ($result->isEmpty()) {
+        $count = $result->count();
+
+        if ($count === 0) {
             throw (new ModelNotFoundException)->setModel(get_class($this->related));
         }
 
-        if ($result->count() > 1) {
-            throw new MultipleRecordsFoundException;
+        if ($count > 1) {
+            throw new MultipleRecordsFoundException($count);
         }
 
         return $result->first();
@@ -188,7 +205,7 @@ abstract class Relation
      * Execute the query as a "select" statement.
      *
      * @param  array  $columns
-     * @return \WpStarter\Database\Eloquent\Collection
+     * @return \WpStarter\Database\Eloquent\Collection<int, TRelatedModel>
      */
     public function get($columns = ['*'])
     {
@@ -225,9 +242,9 @@ abstract class Relation
     /**
      * Add the constraints for a relationship count query.
      *
-     * @param  \WpStarter\Database\Eloquent\Builder  $query
-     * @param  \WpStarter\Database\Eloquent\Builder  $parentQuery
-     * @return \WpStarter\Database\Eloquent\Builder
+     * @param  \WpStarter\Database\Eloquent\Builder<TRelatedModel>  $query
+     * @param  \WpStarter\Database\Eloquent\Builder<TDeclaringModel>  $parentQuery
+     * @return \WpStarter\Database\Eloquent\Builder<TRelatedModel>
      */
     public function getRelationExistenceCountQuery(Builder $query, Builder $parentQuery)
     {
@@ -241,10 +258,10 @@ abstract class Relation
      *
      * Essentially, these queries compare on column names like whereColumn.
      *
-     * @param  \WpStarter\Database\Eloquent\Builder  $query
-     * @param  \WpStarter\Database\Eloquent\Builder  $parentQuery
-     * @param  array|mixed  $columns
-     * @return \WpStarter\Database\Eloquent\Builder
+     * @param  \WpStarter\Database\Eloquent\Builder<TRelatedModel>  $query
+     * @param  \WpStarter\Database\Eloquent\Builder<TDeclaringModel>  $parentQuery
+     * @param  mixed  $columns
+     * @return \WpStarter\Database\Eloquent\Builder<TRelatedModel>
      */
     public function getRelationExistenceQuery(Builder $query, Builder $parentQuery, $columns = ['*'])
     {
@@ -267,13 +284,13 @@ abstract class Relation
     /**
      * Get all of the primary keys for an array of models.
      *
-     * @param  array  $models
+     * @param  array<int, TDeclaringModel>  $models
      * @param  string|null  $key
-     * @return array
+     * @return array<int, int|string|null>
      */
     protected function getKeys(array $models, $key = null)
     {
-        return ws_collect($models)->map(function ($value) use ($key) {
+        return (new BaseCollection($models))->map(function ($value) use ($key) {
             return $key ? $value->getAttribute($key) : $value->getKey();
         })->values()->unique(null, true)->sort()->all();
     }
@@ -281,7 +298,7 @@ abstract class Relation
     /**
      * Get the query builder that will contain the relationship constraints.
      *
-     * @return \WpStarter\Database\Eloquent\Builder
+     * @return \WpStarter\Database\Eloquent\Builder<TRelatedModel>
      */
     protected function getRelationQuery()
     {
@@ -291,7 +308,7 @@ abstract class Relation
     /**
      * Get the underlying query for the relation.
      *
-     * @return \WpStarter\Database\Eloquent\Builder
+     * @return \WpStarter\Database\Eloquent\Builder<TRelatedModel>
      */
     public function getQuery()
     {
@@ -309,9 +326,19 @@ abstract class Relation
     }
 
     /**
+     * Get a base query builder instance.
+     *
+     * @return \WpStarter\Database\Query\Builder
+     */
+    public function toBase()
+    {
+        return $this->query->toBase();
+    }
+
+    /**
      * Get the parent model of the relation.
      *
-     * @return \WpStarter\Database\Eloquent\Model
+     * @return TDeclaringModel
      */
     public function getParent()
     {
@@ -319,7 +346,7 @@ abstract class Relation
     }
 
     /**
-     * Get the fully qualified parent key name.
+     * Get the fully-qualified parent key name.
      *
      * @return string
      */
@@ -331,7 +358,7 @@ abstract class Relation
     /**
      * Get the related model of the relation.
      *
-     * @return \WpStarter\Database\Eloquent\Model
+     * @return TRelatedModel
      */
     public function getRelated()
     {
@@ -369,6 +396,24 @@ abstract class Relation
     }
 
     /**
+     * Add a whereIn eager constraint for the given set of model keys to be loaded.
+     *
+     * @param  string  $whereIn
+     * @param  string  $key
+     * @param  array  $modelKeys
+     * @param  \WpStarter\Database\Eloquent\Builder<TRelatedModel>|null  $query
+     * @return void
+     */
+    protected function whereInEager(string $whereIn, string $key, array $modelKeys, ?Builder $query = null)
+    {
+        ($query ?? $this->query)->{$whereIn}($key, $modelKeys);
+
+        if ($modelKeys === []) {
+            $this->eagerKeysWereEmpty = true;
+        }
+    }
+
+    /**
      * Get the name of the "where in" method for eager loading.
      *
      * @param  \WpStarter\Database\Eloquent\Model  $model
@@ -377,10 +422,10 @@ abstract class Relation
      */
     protected function whereInMethod(Model $model, $key)
     {
-        return $model->getKeyName() === ws_last(explode('.', $key))
-                    && in_array($model->getKeyType(), ['int', 'integer'])
-                        ? 'whereIntegerInRaw'
-                        : 'whereIn';
+        return $model->getKeyName() === last(explode('.', $key))
+            && in_array($model->getKeyType(), ['int', 'integer'])
+                ? 'whereIntegerInRaw'
+                : 'whereIn';
     }
 
     /**
@@ -407,7 +452,7 @@ abstract class Relation
     /**
      * Define the morph map for polymorphic relations and require all morphed models to be explicitly mapped.
      *
-     * @param  array  $map
+     * @param  array<array-key, class-string<\WpStarter\Database\Eloquent\Model>>  $map
      * @param  bool  $merge
      * @return array
      */
@@ -421,9 +466,9 @@ abstract class Relation
     /**
      * Set or get the morph map for polymorphic relations.
      *
-     * @param  array|null  $map
+     * @param  array<array-key, class-string<\WpStarter\Database\Eloquent\Model>>|null  $map
      * @param  bool  $merge
-     * @return array
+     * @return array<string, class-string<\WpStarter\Database\Eloquent\Model>>
      */
     public static function morphMap(?array $map = null, $merge = true)
     {
@@ -431,7 +476,8 @@ abstract class Relation
 
         if (is_array($map)) {
             static::$morphMap = $merge && static::$morphMap
-                            ? $map + static::$morphMap : $map;
+                ? $map + static::$morphMap
+                : $map;
         }
 
         return static::$morphMap;
@@ -440,12 +486,12 @@ abstract class Relation
     /**
      * Builds a table-keyed array from model class names.
      *
-     * @param  string[]|null  $models
-     * @return array|null
+     * @param  array<array-key, class-string<\WpStarter\Database\Eloquent\Model>>|null  $models
+     * @return array<string, class-string<\WpStarter\Database\Eloquent\Model>>|null
      */
     protected static function buildMorphMapFromModels(?array $models = null)
     {
-        if (is_null($models) || Arr::isAssoc($models)) {
+        if (is_null($models) || ! array_is_list($models)) {
             return $models;
         }
 
@@ -458,11 +504,22 @@ abstract class Relation
      * Get the model associated with a custom polymorphic type.
      *
      * @param  string  $alias
-     * @return string|null
+     * @return class-string<\WpStarter\Database\Eloquent\Model>|null
      */
     public static function getMorphedModel($alias)
     {
         return static::$morphMap[$alias] ?? null;
+    }
+
+    /**
+     * Get the alias associated with a custom polymorphic class.
+     *
+     * @param  class-string<\WpStarter\Database\Eloquent\Model>  $className
+     * @return int|string
+     */
+    public static function getMorphAlias(string $className)
+    {
+        return array_search($className, static::$morphMap, strict: true) ?: $className;
     }
 
     /**

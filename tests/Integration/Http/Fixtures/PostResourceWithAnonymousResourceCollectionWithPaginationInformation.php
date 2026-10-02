@@ -15,11 +15,11 @@ class PostResourceWithAnonymousResourceCollectionWithPaginationInformation exten
      * Create a new anonymous resource collection.
      *
      * @param  mixed  $resource
-     * @return AnonymousResourceCollectionWithPaginationInformation
+     * @return \WpStarter\Tests\Integration\Http\Fixtures\AnonymousResourceCollectionWithPaginationInformation
      */
     public static function collection($resource)
     {
-        return ws_tap(new AnonymousResourceCollectionWithPaginationInformation($resource, static::class), function ($collection) {
+        return tap(new AnonymousResourceCollectionWithPaginationInformation($resource, static::class), function ($collection) {
             if (property_exists(static::class, 'preserveKeys')) {
                 $collection->preserveKeys = (new static([]))->preserveKeys === true;
             }

@@ -43,11 +43,6 @@ class RedisManagerExtensionTest extends TestCase
         });
     }
 
-    protected function tearDown(): void
-    {
-        m::close();
-    }
-
     public function testUsingCustomRedisConnectorWithSingleRedisInstance()
     {
         $this->assertSame(
@@ -62,7 +57,7 @@ class RedisManagerExtensionTest extends TestCase
         );
     }
 
-    public function test_parse_connection_configuration_for_cluster()
+    public function testParseConnectionConfigurationForCluster()
     {
         $name = 'my-cluster';
         $config = [
@@ -98,7 +93,7 @@ class FakeRedisConnector implements Connector
      *
      * @param  array  $config
      * @param  array  $options
-     * @return \WpStarter\Contracts\Redis\Connection
+     * @return string
      */
     public function connect(array $config, array $options)
     {
@@ -111,7 +106,7 @@ class FakeRedisConnector implements Connector
      * @param  array  $config
      * @param  array  $clusterOptions
      * @param  array  $options
-     * @return \WpStarter\Contracts\Redis\Connection
+     * @return string
      */
     public function connectToCluster(array $config, array $clusterOptions, array $options)
     {

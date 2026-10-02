@@ -2,6 +2,8 @@
 
 namespace WpStarter\Tests\Notifications;
 
+use WpStarter\Contracts\Mail\Attachable;
+use WpStarter\Mail\Attachment;
 use WpStarter\Notifications\Messages\MailMessage;
 use PHPUnit\Framework\TestCase;
 
@@ -73,7 +75,7 @@ class NotificationMailMessageTest extends TestCase
 
         $message = new MailMessage;
         $message->cc('test@example.com')
-                ->cc('test@example.com', 'Test');
+            ->cc('test@example.com', 'Test');
 
         $this->assertSame([['test@example.com', null], ['test@example.com', 'Test']], $message->cc);
 
@@ -81,6 +83,16 @@ class NotificationMailMessageTest extends TestCase
         $message->cc(['test@example.com', 'Test' => 'test@example.com']);
 
         $this->assertSame([['test@example.com', null], ['test@example.com', 'Test']], $message->cc);
+
+        $message = new MailMessage;
+        $message->cc('test@example.com', 'Test')
+            ->cc(['test@example.com', 'test2@example.com']);
+
+        $this->assertSame([
+            ['test@example.com', 'Test'],
+            ['test@example.com', null],
+            ['test2@example.com', null],
+        ], $message->cc);
     }
 
     public function testBccIsSetCorrectly()
@@ -92,7 +104,7 @@ class NotificationMailMessageTest extends TestCase
 
         $message = new MailMessage;
         $message->bcc('test@example.com')
-                ->bcc('test@example.com', 'Test');
+            ->bcc('test@example.com', 'Test');
 
         $this->assertSame([['test@example.com', null], ['test@example.com', 'Test']], $message->bcc);
 
@@ -100,6 +112,16 @@ class NotificationMailMessageTest extends TestCase
         $message->bcc(['test@example.com', 'Test' => 'test@example.com']);
 
         $this->assertSame([['test@example.com', null], ['test@example.com', 'Test']], $message->bcc);
+
+        $message = new MailMessage;
+        $message->bcc('test@example.com', 'Test')
+            ->bcc(['test@example.com', 'test2@example.com']);
+
+        $this->assertSame([
+            ['test@example.com', 'Test'],
+            ['test@example.com', null],
+            ['test2@example.com', null],
+        ], $message->bcc);
     }
 
     public function testReplyToIsSetCorrectly()
@@ -111,7 +133,7 @@ class NotificationMailMessageTest extends TestCase
 
         $message = new MailMessage;
         $message->replyTo('test@example.com')
-                ->replyTo('test@example.com', 'Test');
+            ->replyTo('test@example.com', 'Test');
 
         $this->assertSame([['test@example.com', null], ['test@example.com', 'Test']], $message->replyTo);
 
@@ -119,6 +141,36 @@ class NotificationMailMessageTest extends TestCase
         $message->replyTo(['test@example.com', 'Test' => 'test@example.com']);
 
         $this->assertSame([['test@example.com', null], ['test@example.com', 'Test']], $message->replyTo);
+
+        $message = new MailMessage;
+        $message->replyTo('test@example.com', 'Test')
+            ->replyTo(['test@example.com', 'test2@example.com']);
+
+        $this->assertSame([
+            ['test@example.com', 'Test'],
+            ['test@example.com', null],
+            ['test2@example.com', null],
+        ], $message->replyTo);
+    }
+
+    public function testMetadataIsSetCorrectly()
+    {
+        $message = new MailMessage;
+        $message->metadata('origin', 'test-suite');
+        $message->metadata('user_id', 1);
+
+        $this->assertArrayHasKey('origin', $message->metadata);
+        $this->assertSame('test-suite', $message->metadata['origin']);
+        $this->assertArrayHasKey('user_id', $message->metadata);
+        $this->assertSame(1, $message->metadata['user_id']);
+    }
+
+    public function testTagIsSetCorrectly()
+    {
+        $message = new MailMessage;
+        $message->tag('test');
+
+        $this->assertContains('test', $message->tags);
     }
 
     public function testCallbackIsSetCorrectly()
@@ -128,7 +180,7 @@ class NotificationMailMessageTest extends TestCase
         };
 
         $message = new MailMessage;
-        $message->withSwiftMessage($callback);
+        $message->withSymfonyMessage($callback);
 
         $this->assertSame([$callback], $message->callbacks);
     }
@@ -249,5 +301,92 @@ class NotificationMailMessageTest extends TestCase
         $message = new MailMessage;
         $message->unless('truthy', $callback, $default);
         $this->assertSame([['truthy@example.com', null]], $message->cc);
+    }
+
+    public function testItAttachesFilesViaAttachableContractFromPath()
+    {
+        $message = new MailMessage;
+
+        $message->attach(new class() implements Attachable
+        {
+            public function toMailAttachment()
+            {
+                return Attachment::fromPath('/foo.jpg')->as('bar')->withMime('image/png');
+            }
+        });
+
+        $this->assertSame([
+            'file' => '/foo.jpg',
+            'options' => [
+                'as' => 'bar',
+                'mime' => 'image/png',
+            ],
+        ], $message->attachments[0]);
+    }
+
+    public function testItAttachesFilesViaAttachableContractFromData()
+    {
+        $mailMessage = new MailMessage();
+
+        $mailMessage->attach(new class() implements Attachable
+        {
+            public function toMailAttachment()
+            {
+                return Attachment::fromData(fn () => 'bar', 'foo.jpg')->withMime('image/png');
+            }
+        });
+
+        $this->assertSame([
+            'data' => 'bar',
+            'name' => 'foo.jpg',
+            'options' => [
+                'mime' => 'image/png',
+            ],
+        ], $mailMessage->rawAttachments[0]);
+    }
+
+    public function testItAttachesManyFiles()
+    {
+        $mailMessage = new MailMessage();
+        $attachable = new class() implements Attachable
+        {
+            public function toMailAttachment()
+            {
+                return Attachment::fromData(fn () => 'bar', 'foo.jpg')->withMime('image/png');
+            }
+        };
+
+        $mailMessage->attachMany([
+            $attachable,
+            '/path/to/forge.svg',
+            '/path/to/vapor.svg' => [
+                'as' => 'Logo.svg',
+                'mime' => 'image/svg+xml',
+            ],
+        ]);
+
+        $this->assertSame([
+            [
+                'data' => 'bar',
+                'name' => 'foo.jpg',
+                'options' => [
+                    'mime' => 'image/png',
+                ],
+            ],
+        ], $mailMessage->rawAttachments);
+
+        $this->assertSame([
+            [
+                'file' => '/path/to/forge.svg',
+                'options' => [],
+            ],
+            [
+                'file' => '/path/to/vapor.svg',
+                'options' => [
+                    'as' => 'Logo.svg',
+                    'mime' => 'image/svg+xml',
+                ],
+            ],
+        ], $mailMessage->attachments);
     }
 }

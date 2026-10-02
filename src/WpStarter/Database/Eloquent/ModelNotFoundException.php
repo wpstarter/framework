@@ -5,33 +5,39 @@ namespace WpStarter\Database\Eloquent;
 use WpStarter\Database\RecordsNotFoundException;
 use WpStarter\Support\Arr;
 
+use function WpStarter\Support\enum_value;
+
+/**
+ * @template TModel of \WpStarter\Database\Eloquent\Model
+ */
 class ModelNotFoundException extends RecordsNotFoundException
 {
     /**
      * Name of the affected Eloquent model.
      *
-     * @var string
+     * @var class-string<TModel>
      */
     protected $model;
 
     /**
      * The affected model IDs.
      *
-     * @var int|array
+     * @var array<int, int|string>
      */
     protected $ids;
 
     /**
      * Set the affected Eloquent model and instance ids.
      *
-     * @param  string  $model
-     * @param  int|array  $ids
+     * @param  class-string<TModel>  $model
+     * @param  array<int, int|string>|int|string  $ids
      * @return $this
      */
     public function setModel($model, $ids = [])
     {
         $this->model = $model;
-        $this->ids = Arr::wrap($ids);
+
+        $this->ids = array_map(enum_value(...), Arr::wrap($ids));
 
         $this->message = "No query results for model [{$model}]";
 
@@ -47,7 +53,7 @@ class ModelNotFoundException extends RecordsNotFoundException
     /**
      * Get the affected Eloquent model.
      *
-     * @return string
+     * @return class-string<TModel>
      */
     public function getModel()
     {
@@ -57,7 +63,7 @@ class ModelNotFoundException extends RecordsNotFoundException
     /**
      * Get the affected Eloquent model IDs.
      *
-     * @return int|array
+     * @return array<int, int|string>
      */
     public function getIds()
     {

@@ -26,7 +26,6 @@ class ResponseReceived
      *
      * @param  \WpStarter\Http\Client\Request  $request
      * @param  \WpStarter\Http\Client\Response  $response
-     * @return void
      */
     public function __construct(Request $request, Response $response)
     {

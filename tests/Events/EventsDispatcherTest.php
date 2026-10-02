@@ -2,6 +2,7 @@
 
 namespace WpStarter\Tests\Events;
 
+use Error;
 use Exception;
 use WpStarter\Container\Container;
 use WpStarter\Events\Dispatcher;
@@ -10,11 +11,6 @@ use PHPUnit\Framework\TestCase;
 
 class EventsDispatcherTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        m::close();
-    }
-
     public function testBasicEventExecution()
     {
         unset($_SERVER['__event.test']);
@@ -34,6 +30,145 @@ class EventsDispatcherTest extends TestCase
 
         $d->dispatch('foo', ['bar']);
         $this->assertSame('barbar', $_SERVER['__event.test']);
+    }
+
+    public function testDeferEventExecution()
+    {
+        unset($_SERVER['__event.test']);
+        $d = new Dispatcher;
+        $d->listen('foo', function ($foo) {
+            $_SERVER['__event.test'] = $foo;
+        });
+
+        $result = $d->defer(function () use ($d) {
+            $d->dispatch('foo', ['bar']);
+            $this->assertArrayNotHasKey('__event.test', $_SERVER);
+
+            return 'callback_result';
+        });
+
+        $this->assertEquals('callback_result', $result);
+        $this->assertSame('bar', $_SERVER['__event.test']);
+    }
+
+    public function testDeferMultipleEvents()
+    {
+        $_SERVER['__event.test'] = [];
+        $d = new Dispatcher;
+        $d->listen('foo', function ($value) {
+            $_SERVER['__event.test'][] = $value;
+        });
+        $d->listen('bar', function ($value) {
+            $_SERVER['__event.test'][] = $value;
+        });
+        $d->defer(function () use ($d) {
+            $d->dispatch('foo', ['foo']);
+            $d->dispatch('bar', ['bar']);
+            $this->assertSame([], $_SERVER['__event.test']);
+        });
+
+        $this->assertSame(['foo', 'bar'], $_SERVER['__event.test']);
+    }
+
+    public function testDeferNestedEvents()
+    {
+        $_SERVER['__event.test'] = [];
+        $d = new Dispatcher;
+        $d->listen('foo', function ($foo) {
+            $_SERVER['__event.test'][] = $foo;
+        });
+
+        $d->defer(function () use ($d) {
+            $d->dispatch('foo', ['outer1']);
+
+            $d->defer(function () use ($d) {
+                $d->dispatch('foo', ['inner']);
+                $this->assertSame([], $_SERVER['__event.test']);
+            });
+
+            $this->assertSame(['inner'], $_SERVER['__event.test']);
+            $d->dispatch('foo', ['outer2']);
+        });
+
+        $this->assertSame(['inner', 'outer1', 'outer2'], $_SERVER['__event.test']);
+    }
+
+    public function testDeferSpecificEvents()
+    {
+        $_SERVER['__event.test'] = [];
+        $d = new Dispatcher;
+
+        $d->listen('foo', function ($foo) {
+            $_SERVER['__event.test'][] = $foo;
+        });
+
+        $d->listen('bar', function ($bar) {
+            $_SERVER['__event.test'][] = $bar;
+        });
+
+        $d->defer(function () use ($d) {
+            $d->dispatch('foo', ['deferred']);
+            $d->dispatch('bar', ['immediate']);
+
+            $this->assertSame(['immediate'], $_SERVER['__event.test']);
+        }, ['foo']);
+
+        $this->assertSame(['immediate', 'deferred'], $_SERVER['__event.test']);
+    }
+
+    public function testDeferSpecificNestedEvents()
+    {
+        $_SERVER['__event.test'] = [];
+        $d = new Dispatcher;
+
+        $d->listen('foo', function ($foo) {
+            $_SERVER['__event.test'][] = $foo;
+        });
+
+        $d->listen('bar', function ($bar) {
+            $_SERVER['__event.test'][] = $bar;
+        });
+
+        $d->defer(function () use ($d) {
+            $d->dispatch('foo', ['outer-deferred']);
+            $d->dispatch('bar', ['outer-immediate']);
+
+            $this->assertSame(['outer-immediate'], $_SERVER['__event.test']);
+
+            $d->defer(function () use ($d) {
+                $d->dispatch('foo', ['inner-deferred']);
+                $d->dispatch('bar', ['inner-immediate']);
+
+                $this->assertSame(['outer-immediate', 'inner-immediate'], $_SERVER['__event.test']);
+            }, ['foo']);
+
+            $this->assertSame(['outer-immediate', 'inner-immediate', 'inner-deferred'], $_SERVER['__event.test']);
+        }, ['foo']);
+
+        $this->assertSame(['outer-immediate', 'inner-immediate', 'inner-deferred', 'outer-deferred'], $_SERVER['__event.test']);
+    }
+
+    public function testDeferSpecificObjectEvents()
+    {
+        $_SERVER['__event.test'] = [];
+        $d = new Dispatcher;
+
+        $d->listen(DeferTestEvent::class, function () {
+            $_SERVER['__event.test'][] = 'DeferTestEvent';
+        });
+
+        $d->listen(ImmediateTestEvent::class, function () {
+            $_SERVER['__event.test'][] = 'ImmediateTestEvent';
+        });
+
+        $d->defer(function () use ($d) {
+            $d->dispatch(new DeferTestEvent());
+            $d->dispatch(new ImmediateTestEvent());
+
+            $this->assertSame(['ImmediateTestEvent'], $_SERVER['__event.test']);
+        }, [DeferTestEvent::class]);
+
+        $this->assertSame(['ImmediateTestEvent', 'DeferTestEvent'], $_SERVER['__event.test']);
     }
 
     public function testHaltingEventExecution()
@@ -178,6 +313,20 @@ class EventsDispatcherTest extends TestCase
         $this->assertSame('taylor otwell', $_SERVER['__event.test']);
     }
 
+    public function testPushMethodCanAcceptObjectAsPayload()
+    {
+        unset($_SERVER['__event.test']);
+        $d = new Dispatcher;
+        $d->push(ExampleEvent::class, $e = new ExampleEvent);
+        $d->listen(ExampleEvent::class, function ($payload) {
+            $_SERVER['__event.test'] = $payload;
+        });
+
+        $d->flush(ExampleEvent::class);
+
+        $this->assertSame($e, $_SERVER['__event.test']);
+    }
+
     public function testWildcardListeners()
     {
         unset($_SERVER['__event.test']);
@@ -278,6 +427,16 @@ class EventsDispatcherTest extends TestCase
         $d->dispatch('foo');
 
         $this->assertFalse(isset($_SERVER['__event.test']));
+    }
+
+    public function testHasWildcardListeners()
+    {
+        $d = new Dispatcher;
+        $d->listen('foo', 'listener1');
+        $this->assertFalse($d->hasWildcardListeners('foo'));
+
+        $d->listen('foo*', 'listener1');
+        $this->assertTrue($d->hasWildcardListeners('foo'));
     }
 
     public function testListenersCanBeFound()
@@ -423,6 +582,209 @@ class EventsDispatcherTest extends TestCase
         $this->assertEquals(4, TestListener::$counter);
         TestListener::$counter = 0;
     }
+
+    public function testGetListeners()
+    {
+        $d = new Dispatcher;
+        $d->listen(ExampleEvent::class, 'Listener1');
+        $d->listen(ExampleEvent::class, 'Listener2');
+        $listeners = $d->getListeners(ExampleEvent::class);
+        $this->assertCount(2, $listeners);
+
+        $d->listen(ExampleEvent::class, 'Listener3');
+        $listeners = $d->getListeners(ExampleEvent::class);
+        $this->assertCount(3, $listeners);
+    }
+
+    public function testListenersObjectsCreationOrder()
+    {
+        $_SERVER['__event.test'] = [];
+        $d = new Dispatcher;
+        $d->listen(TestEvent::class, TestListener1::class);
+        $d->listen(TestEvent::class, TestListener2::class);
+        $d->listen(TestEvent::class, TestListener3::class);
+
+        // Attaching events does not make any objects.
+        $this->assertEquals([], $_SERVER['__event.test']);
+
+        $d->dispatch(TestEvent::class);
+
+        // Dispatching event does not make an object of the event class.
+        $this->assertEquals([
+            'cons-1',
+            'handle-1',
+            'cons-2',
+            'handle-2',
+            'cons-3',
+            'handle-3',
+        ], $_SERVER['__event.test']);
+
+        $d->dispatch(TestEvent::class);
+
+        // Event Objects are re-resolved on each dispatch. (No memoization)
+        $this->assertEquals([
+            'cons-1',
+            'handle-1',
+            'cons-2',
+            'handle-2',
+            'cons-3',
+            'handle-3',
+            'cons-1',
+            'handle-1',
+            'cons-2',
+            'handle-2',
+            'cons-3',
+            'handle-3',
+        ], $_SERVER['__event.test']);
+
+        unset($_SERVER['__event.test']);
+    }
+
+    public function test_Listener_object_creation_is_lazy()
+    {
+        $d = new Dispatcher;
+        $d->listen(TestEvent::class, TestListener1::class);
+        $d->listen(TestEvent::class, TestListener2Falser::class);
+        $d->listen(TestEvent::class, TestListener3::class);
+        $d->listen(ExampleEvent::class, TestListener2::class);
+
+        $_SERVER['__event.test'] = [];
+        $d->dispatch(ExampleEvent::class);
+
+        // It only resolves relevant listeners not all.
+        $this->assertEquals(['cons-2', 'handle-2'], $_SERVER['__event.test']);
+
+        $_SERVER['__event.test'] = [];
+        $d->dispatch(TestEvent::class);
+
+        $this->assertEquals([
+            'cons-1',
+            'handle-1',
+            'cons-2-falser',
+            'handle-2-falser',
+        ], $_SERVER['__event.test']);
+
+        unset($_SERVER['__event.test']);
+
+        $d = new Dispatcher;
+        $d->listen(TestEvent::class, TestListener1::class);
+        $d->listen(TestEvent::class, TestListener2Falser::class);
+        $d->listen(TestEvent::class, TestListener3::class);
+
+        $_SERVER['__event.test'] = [];
+        $d->dispatch(TestEvent::class, halt: true);
+
+        $this->assertEquals([
+            'cons-1',
+            'handle-1',
+        ], $_SERVER['__event.test']);
+
+        unset($_SERVER['__event.test']);
+    }
+
+    public function testInvokeIsCalled()
+    {
+        // Only "handle" is called when both "handle" and "__invoke" exist on listener.
+        $_SERVER['__event.test'] = [];
+        $d = new Dispatcher;
+        $d->listen('myEvent', TestListenerInvokeyHandler::class);
+        $d->dispatch('myEvent');
+        $this->assertEquals(['__construct', 'handle'], $_SERVER['__event.test']);
+
+        // "__invoke" is called when there is no handle.
+        $_SERVER['__event.test'] = [];
+        $d = new Dispatcher;
+        $d->listen('myEvent', TestListenerInvokey::class);
+        $d->listen('myEvent', TestListenerInvokeyHandler::class);
+        $d->dispatch('myEvent', 'somePayload');
+        $this->assertEquals(['__construct', '__invoke_somePayload'], $_SERVER['__event.test']);
+
+        // It falls back to __invoke if the referenced method is not found.
+        $_SERVER['__event.test'] = [];
+        $d = new Dispatcher;
+        $d->listen('myEvent', [TestListenerInvokey::class, 'someAbsentMethod']);
+        $d->dispatch('myEvent', 'somePayload');
+        $this->assertEquals(['__construct', '__invoke_somePayload'], $_SERVER['__event.test']);
+
+        // It throws an "Error" when there is no method to be called.
+        $d = new Dispatcher;
+        $d->listen('myEvent', TestListenerLean::class);
+
+        $this->expectException(Error::class);
+        $this->expectExceptionMessage('Call to undefined method '.TestListenerLean::class.'::__invoke()');
+
+        $d->dispatch('myEvent', 'somePayload');
+
+        unset($_SERVER['__event.test']);
+    }
+
+    public function testEventDispatchesUsingNamedArguments()
+    {
+        $container = new Container;
+        $events = m::mock(Dispatcher::class);
+        $container->instance('events', $events);
+
+        $originalContainer = Container::getInstance();
+        Container::setInstance($container);
+
+        try {
+            $events->shouldReceive('dispatch')
+                ->once()
+                ->with(m::on(function ($event) {
+                    $this->assertInstanceOf(DispatchableNamedArgumentsEvent::class, $event);
+                    $this->assertSame('first-value', $event->first);
+                    $this->assertSame('second-value', $event->second);
+
+                    return true;
+                }))
+                ->andReturn(['dispatched']);
+
+            $this->assertSame(
+                ['dispatched'],
+                DispatchableNamedArgumentsEvent::dispatch(second: 'second-value', first: 'first-value')
+            );
+        } finally {
+            Container::setInstance($originalContainer);
+        }
+    }
+}
+
+class TestListenerLean
+{
+    //
+}
+
+class TestListenerInvokeyHandler
+{
+    public function __construct()
+    {
+        $_SERVER['__event.test'][] = '__construct';
+    }
+
+    public function __invoke()
+    {
+        $_SERVER['__event.test'][] = '__invoke';
+    }
+
+    public function handle()
+    {
+        $_SERVER['__event.test'][] = 'handle';
+    }
+}
+
+class TestListenerInvokey
+{
+    public function __construct()
+    {
+        $_SERVER['__event.test'][] = '__construct';
+    }
+
+    public function __invoke($payload)
+    {
+        $_SERVER['__event.test'][] = '__invoke_'.$payload;
+
+        return false;
+    }
 }
 
 class ExampleEvent
@@ -460,5 +822,90 @@ class TestListener
     public function handle()
     {
         self::$counter++;
+    }
+}
+
+class TestEvent
+{
+    public function __construct()
+    {
+        $_SERVER['__event.test'][] = 'cons-event-1';
+    }
+}
+
+class TestListener1
+{
+    public function __construct()
+    {
+        $_SERVER['__event.test'][] = 'cons-1';
+    }
+
+    public function handle()
+    {
+        $_SERVER['__event.test'][] = 'handle-1';
+
+        return 'resp-1';
+    }
+}
+
+class TestListener2
+{
+    public function __construct()
+    {
+        $_SERVER['__event.test'][] = 'cons-2';
+    }
+
+    public function handle()
+    {
+        $_SERVER['__event.test'][] = 'handle-2';
+
+        return 'resp-2';
+    }
+}
+
+class TestListener2Falser
+{
+    public function __construct()
+    {
+        $_SERVER['__event.test'][] = 'cons-2-falser';
+    }
+
+    public function handle()
+    {
+        $_SERVER['__event.test'][] = 'handle-2-falser';
+
+        return false;
+    }
+}
+
+class TestListener3
+{
+    public function __construct()
+    {
+        $_SERVER['__event.test'][] = 'cons-3';
+    }
+
+    public function handle()
+    {
+        $_SERVER['__event.test'][] = 'handle-3';
+    }
+}
+
+class DeferTestEvent
+{
+}
+
+class ImmediateTestEvent
+{
+}
+
+class DispatchableNamedArgumentsEvent
+{
+    use \WpStarter\Foundation\Events\Dispatchable;
+
+    public function __construct(
+        public string $first,
+        public string $second,
+    ) {
     }
 }

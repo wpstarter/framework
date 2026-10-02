@@ -5,107 +5,33 @@ namespace WpStarter\Console\Scheduling;
 use Closure;
 use Cron\CronExpression;
 use GuzzleHttp\Client as HttpClient;
+use GuzzleHttp\ClientInterface as HttpClientInterface;
 use GuzzleHttp\Exception\TransferException;
+use WpStarter\Console\Application;
 use WpStarter\Contracts\Container\Container;
 use WpStarter\Contracts\Debug\ExceptionHandler;
 use WpStarter\Contracts\Mail\Mailer;
+use WpStarter\Log\Context\Repository;
 use WpStarter\Support\Arr;
 use WpStarter\Support\Facades\Date;
-use WpStarter\Support\Reflector;
 use WpStarter\Support\Stringable;
 use WpStarter\Support\Traits\Macroable;
 use WpStarter\Support\Traits\ReflectsClosures;
+use WpStarter\Support\Traits\Tappable;
 use Psr\Http\Client\ClientExceptionInterface;
 use Symfony\Component\Process\Process;
 use Throwable;
 
 class Event
 {
-    use Macroable, ManagesFrequencies, ReflectsClosures;
+    use Macroable, ManagesAttributes, ManagesFrequencies, ReflectsClosures, Tappable;
 
     /**
      * The command string.
      *
-     * @var string
+     * @var string|null
      */
     public $command;
-
-    /**
-     * The cron expression representing the event's frequency.
-     *
-     * @var string
-     */
-    public $expression = '* * * * *';
-
-    /**
-     * The timezone the date should be evaluated on.
-     *
-     * @var \DateTimeZone|string
-     */
-    public $timezone;
-
-    /**
-     * The user the command should run as.
-     *
-     * @var string
-     */
-    public $user;
-
-    /**
-     * The list of environments the command should run under.
-     *
-     * @var array
-     */
-    public $environments = [];
-
-    /**
-     * Indicates if the command should run in maintenance mode.
-     *
-     * @var bool
-     */
-    public $evenInMaintenanceMode = false;
-
-    /**
-     * Indicates if the command should not overlap itself.
-     *
-     * @var bool
-     */
-    public $withoutOverlapping = false;
-
-    /**
-     * Indicates if the command should only be allowed to run on one server for each cron expression.
-     *
-     * @var bool
-     */
-    public $onOneServer = false;
-
-    /**
-     * The amount of time the mutex should be valid.
-     *
-     * @var int
-     */
-    public $expiresAt = 1440;
-
-    /**
-     * Indicates if the command should run in the background.
-     *
-     * @var bool
-     */
-    public $runInBackground = false;
-
-    /**
-     * The array of filter callbacks.
-     *
-     * @var array
-     */
-    protected $filters = [];
-
-    /**
-     * The array of reject callbacks.
-     *
-     * @var array
-     */
-    protected $rejects = [];
 
     /**
      * The location that output should be sent to.
@@ -136,18 +62,27 @@ class Event
     protected $afterCallbacks = [];
 
     /**
-     * The human readable description of the event.
-     *
-     * @var string
-     */
-    public $description;
-
-    /**
      * The event mutex implementation.
      *
      * @var \WpStarter\Console\Scheduling\EventMutex
      */
     public $mutex;
+
+    /**
+     * The mutex name resolver callback.
+     *
+     * @var \Closure|null
+     */
+    public $mutexNameResolver;
+
+    /**
+     * The last time the event was checked for eligibility to run.
+     *
+     * Utilized by sub-minute repeated events.
+     *
+     * @var \WpStarter\Support\Carbon|null
+     */
+    protected $lastChecked;
 
     /**
      * The exit status code of the command.
@@ -162,7 +97,6 @@ class Event
      * @param  \WpStarter\Console\Scheduling\EventMutex  $mutex
      * @param  string  $command
      * @param  \DateTimeZone|string|null  $timezone
-     * @return void
      */
     public function __construct(EventMutex $mutex, $command, $timezone = null)
     {
@@ -188,66 +122,108 @@ class Event
      *
      * @param  \WpStarter\Contracts\Container\Container  $container
      * @return void
+     *
+     * @throws \Throwable
      */
     public function run(Container $container)
     {
-        if ($this->withoutOverlapping &&
-            ! $this->mutex->create($this)) {
+        if ($this->shouldSkipDueToOverlapping()) {
             return;
         }
 
-        $this->runInBackground
-                    ? $this->runCommandInBackground($container)
-                    : $this->runCommandInForeground($container);
-    }
+        $exitCode = $this->start($container);
 
-    /**
-     * Get the mutex name for the scheduled command.
-     *
-     * @return string
-     */
-    public function mutexName()
-    {
-        return 'framework'.DIRECTORY_SEPARATOR.'schedule-'.sha1($this->expression.$this->command);
-    }
-
-    /**
-     * Run the command in the foreground.
-     *
-     * @param  \WpStarter\Contracts\Container\Container  $container
-     * @return void
-     */
-    protected function runCommandInForeground(Container $container)
-    {
-        try {
-            $this->callBeforeCallbacks($container);
-
-            $this->exitCode = Process::fromShellCommandline(
-                $this->buildCommand(), ws_base_path(), null, null, null
-            )->run();
-
-            $this->callAfterCallbacks($container);
-        } finally {
-            $this->removeMutex();
+        if (! $this->runInBackground) {
+            $this->finish($container, $exitCode);
         }
     }
 
     /**
-     * Run the command in the background.
+     * Determine if the event should skip because another process is overlapping.
+     *
+     * @return bool
+     */
+    public function shouldSkipDueToOverlapping()
+    {
+        return $this->withoutOverlapping && ! $this->mutex->create($this);
+    }
+
+    /**
+     * Determine if the event has been configured to repeat multiple times per minute.
+     *
+     * @return bool
+     */
+    public function isRepeatable()
+    {
+        return ! is_null($this->repeatSeconds);
+    }
+
+    /**
+     * Determine if the event is ready to repeat.
+     *
+     * @return bool
+     */
+    public function shouldRepeatNow()
+    {
+        return $this->isRepeatable()
+            && $this->lastChecked?->diffInSeconds() >= $this->repeatSeconds;
+    }
+
+    /**
+     * Run the command process.
      *
      * @param  \WpStarter\Contracts\Container\Container  $container
-     * @return void
+     * @return int
+     *
+     * @throws \Throwable
      */
-    protected function runCommandInBackground(Container $container)
+    protected function start($container)
     {
         try {
             $this->callBeforeCallbacks($container);
 
-            Process::fromShellCommandline($this->buildCommand(), ws_base_path(), null, null, null)->run();
+            return $this->execute($container);
         } catch (Throwable $exception) {
             $this->removeMutex();
 
             throw $exception;
+        }
+    }
+
+    /**
+     * Run the command process.
+     *
+     * @param  \WpStarter\Contracts\Container\Container  $container
+     * @return int
+     */
+    protected function execute($container)
+    {
+        $context = json_encode($container[Repository::class]->dehydrate());
+
+        return Process::fromShellCommandline(
+            $this->buildCommand(), base_path(), ['__LARAVEL_CONTEXT' => $context], null, null
+        )->run(
+            laravel_cloud()
+                ? fn ($type, $line) => fwrite($type === 'out' ? STDOUT : STDERR, $line)
+                : fn () => true
+        );
+    }
+
+    /**
+     * Mark the command process as finished and run callbacks/cleanup.
+     *
+     * @param  \WpStarter\Contracts\Container\Container  $container
+     * @param  int  $exitCode
+     * @return void
+     */
+    public function finish(Container $container, $exitCode)
+    {
+        $this->exitCode = (int) $exitCode;
+
+        try {
+            $this->callAfterCallbacks($container);
+        } finally {
+            $this->removeMutex();
         }
     }
 
@@ -274,24 +250,6 @@ class Event
     {
         foreach ($this->afterCallbacks as $callback) {
             $container->call($callback);
-        }
-    }
-
-    /**
-     * Call all of the "after" callbacks for the event.
-     *
-     * @param  \WpStarter\Contracts\Container\Container  $container
-     * @param  int  $exitCode
-     * @return void
-     */
-    public function callAfterCallbacksWithExitCode(Container $container, $exitCode)
-    {
-        $this->exitCode = (int) $exitCode;
-
-        try {
-            $this->callAfterCallbacks($container);
-        } finally {
-            $this->removeMutex();
         }
     }
 
@@ -366,6 +324,8 @@ class Event
      */
     public function filtersPass($app)
     {
+        $this->lastChecked = Date::now();
+
         foreach ($this->filters as $callback) {
             if (! $app->call($callback)) {
                 return false;
@@ -423,13 +383,13 @@ class Event
     /**
      * E-mail the results of the scheduled operation.
      *
-     * @param  array|mixed  $addresses
+     * @param  mixed  $addresses
      * @param  bool  $onlyIfOutputExists
      * @return $this
      *
      * @throws \LogicException
      */
-    public function emailOutputTo($addresses, $onlyIfOutputExists = false)
+    public function emailOutputTo($addresses, $onlyIfOutputExists = true)
     {
         $this->ensureOutputIsBeingCaptured();
 
@@ -443,7 +403,7 @@ class Event
     /**
      * E-mail the results of the scheduled operation if it produces output.
      *
-     * @param  array|mixed  $addresses
+     * @param  mixed  $addresses
      * @return $this
      *
      * @throws \LogicException
@@ -456,7 +416,7 @@ class Event
     /**
      * E-mail the results of the scheduled operation if it fails.
      *
-     * @param  array|mixed  $addresses
+     * @param  mixed  $addresses
      * @return $this
      */
     public function emailOutputOnFailure($addresses)
@@ -478,7 +438,7 @@ class Event
     protected function ensureOutputIsBeingCaptured()
     {
         if (is_null($this->output) || $this->output == $this->getDefaultOutput()) {
-            $this->sendOutputTo(ws_storage_path('logs/schedule-'.sha1($this->mutexName()).'.log'));
+            $this->sendOutputTo(storage_path('logs/schedule-'.sha1($this->mutexName()).'.log'));
         }
     }
 
@@ -490,7 +450,7 @@ class Event
      * @param  bool  $onlyIfOutputExists
      * @return void
      */
-    protected function emailOutput(Mailer $mailer, $addresses, $onlyIfOutputExists = false)
+    protected function emailOutput(Mailer $mailer, $addresses, $onlyIfOutputExists = true)
     {
         $text = is_file($this->output) ? file_get_contents($this->output) : '';
 
@@ -575,6 +535,18 @@ class Event
     }
 
     /**
+     * Register a callback to ping a given URL if the operation succeeds and if the given condition is true.
+     *
+     * @param  bool  $value
+     * @param  string  $url
+     * @return $this
+     */
+    public function pingOnSuccessIf($value, $url)
+    {
+        return $value ? $this->onSuccess($this->pingCallback($url)) : $this;
+    }
+
+    /**
      * Register a callback to ping a given URL if the operation fails.
      *
      * @param  string  $url
@@ -586,6 +558,18 @@ class Event
     }
 
     /**
+     * Register a callback to ping a given URL if the operation fails and if the given condition is true.
+     *
+     * @param  bool  $value
+     * @param  string  $url
+     * @return $this
+     */
+    public function pingOnFailureIf($value, $url)
+    {
+        return $value ? $this->onFailure($this->pingCallback($url)) : $this;
+    }
+
+    /**
      * Get the callback that pings the given URL.
      *
      * @param  string  $url
@@ -593,9 +577,9 @@ class Event
      */
     protected function pingCallback($url)
     {
-        return function (Container $container, HttpClient $http) use ($url) {
+        return function (Container $container) use ($url) {
             try {
-                $http->request('GET', $url);
+                $this->getHttpClient($container)->request('GET', $url);
             } catch (ClientExceptionInterface|TransferException $e) {
                 $container->make(ExceptionHandler::class)->report($e);
             }
@@ -603,112 +587,22 @@ class Event
     }
 
     /**
-     * State that the command should run in the background.
+     * Get the Guzzle HTTP client to use to send pings.
      *
-     * @return $this
+     * @param  \WpStarter\Contracts\Container\Container  $container
+     * @return \GuzzleHttp\ClientInterface
      */
-    public function runInBackground()
+    protected function getHttpClient(Container $container)
     {
-        $this->runInBackground = true;
-
-        return $this;
-    }
-
-    /**
-     * Set which user the command should run as.
-     *
-     * @param  string  $user
-     * @return $this
-     */
-    public function user($user)
-    {
-        $this->user = $user;
-
-        return $this;
-    }
-
-    /**
-     * Limit the environments the command should run in.
-     *
-     * @param  array|mixed  $environments
-     * @return $this
-     */
-    public function environments($environments)
-    {
-        $this->environments = is_array($environments) ? $environments : func_get_args();
-
-        return $this;
-    }
-
-    /**
-     * State that the command should run even in maintenance mode.
-     *
-     * @return $this
-     */
-    public function evenInMaintenanceMode()
-    {
-        $this->evenInMaintenanceMode = true;
-
-        return $this;
-    }
-
-    /**
-     * Do not allow the event to overlap each other.
-     *
-     * @param  int  $expiresAt
-     * @return $this
-     */
-    public function withoutOverlapping($expiresAt = 1440)
-    {
-        $this->withoutOverlapping = true;
-
-        $this->expiresAt = $expiresAt;
-
-        return $this->skip(function () {
-            return $this->mutex->exists($this);
-        });
-    }
-
-    /**
-     * Allow the event to only run on one server for each cron expression.
-     *
-     * @return $this
-     */
-    public function onOneServer()
-    {
-        $this->onOneServer = true;
-
-        return $this;
-    }
-
-    /**
-     * Register a callback to further filter the schedule.
-     *
-     * @param  \Closure|bool  $callback
-     * @return $this
-     */
-    public function when($callback)
-    {
-        $this->filters[] = Reflector::isCallable($callback) ? $callback : function () use ($callback) {
-            return $callback;
+        return match (true) {
+            $container->bound(HttpClientInterface::class) => $container->make(HttpClientInterface::class),
+            $container->bound(HttpClient::class) => $container->make(HttpClient::class),
+            default => new HttpClient([
+                'connect_timeout' => 10,
+                'crypto_method' => STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT,
+                'timeout' => 30,
+            ]),
         };
-
-        return $this;
-    }
-
-    /**
-     * Register a callback to further filter the schedule.
-     *
-     * @param  \Closure|bool  $callback
-     * @return $this
-     */
-    public function skip($callback)
-    {
-        $this->rejects[] = Reflector::isCallable($callback) ? $callback : function () use ($callback) {
-            return $callback;
-        };
-
-        return $this;
     }
 
     /**
@@ -783,7 +677,7 @@ class Event
         }
 
         return $this->then(function (Container $container) use ($callback) {
-            if (0 === $this->exitCode) {
+            if ($this->exitCode === 0) {
                 $container->call($callback);
             }
         });
@@ -818,7 +712,7 @@ class Event
         }
 
         return $this->then(function (Container $container) use ($callback) {
-            if (0 !== $this->exitCode) {
+            if ($this->exitCode !== 0) {
                 $container->call($callback);
             }
         });
@@ -851,33 +745,9 @@ class Event
             $output = $this->output && is_file($this->output) ? file_get_contents($this->output) : '';
 
             return $onlyIfOutputExists && empty($output)
-                            ? null
-                            : $container->call($callback, ['output' => new Stringable($output)]);
+                ? null
+                : $container->call($callback, ['output' => new Stringable($output)]);
         };
-    }
-
-    /**
-     * Set the human-friendly description of the event.
-     *
-     * @param  string  $description
-     * @return $this
-     */
-    public function name($description)
-    {
-        return $this->description($description);
-    }
-
-    /**
-     * Set the human-friendly description of the event.
-     *
-     * @param  string  $description
-     * @return $this
-     */
-    public function description($description)
-    {
-        $this->description = $description;
-
-        return $this;
     }
 
     /**
@@ -932,6 +802,36 @@ class Event
     }
 
     /**
+     * Get the mutex name for the scheduled command.
+     *
+     * @return string
+     */
+    public function mutexName()
+    {
+        $mutexNameResolver = $this->mutexNameResolver;
+
+        if (! is_null($mutexNameResolver) && is_callable($mutexNameResolver)) {
+            return $mutexNameResolver($this);
+        }
+
+        return 'framework'.DIRECTORY_SEPARATOR.'schedule-'.
+            sha1($this->expression.$this->normalizeCommand($this->command ?? ''));
+    }
+
+    /**
+     * Set the mutex name or name resolver callback.
+     *
+     * @param  \Closure|string  $mutexName
+     * @return $this
+     */
+    public function createMutexNameUsing(Closure|string $mutexName)
+    {
+        $this->mutexNameResolver = is_string($mutexName) ? fn () => $mutexName : $mutexName;
+
+        return $this;
+    }
+
+    /**
      * Delete the mutex for the event.
      *
      * @return void
@@ -941,5 +841,22 @@ class Event
         if ($this->withoutOverlapping) {
             $this->mutex->forget($this);
         }
+    }
+
+    /**
+     * Format the given command string with a normalized PHP binary path.
+     *
+     * @param  string  $command
+     * @return string
+     */
+    public static function normalizeCommand($command)
+    {
+        return str_replace([
+            Application::phpBinary(),
+            Application::artisanBinary(),
+        ], [
+            'php',
+            preg_replace("#['\"]#", '', Application::artisanBinary()),
+        ], $command);
     }
 }

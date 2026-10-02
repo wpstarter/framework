@@ -4,7 +4,9 @@ namespace WpStarter\Foundation\Console;
 
 use WpStarter\Console\Command;
 use WpStarter\Filesystem\Filesystem;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'config:clear')]
 class ConfigClearCommand extends Command
 {
     /**
@@ -32,7 +34,6 @@ class ConfigClearCommand extends Command
      * Create a new config clear command instance.
      *
      * @param  \WpStarter\Filesystem\Filesystem  $files
-     * @return void
      */
     public function __construct(Filesystem $files)
     {
@@ -50,6 +51,6 @@ class ConfigClearCommand extends Command
     {
         $this->files->delete($this->laravel->getCachedConfigPath());
 
-        $this->info('Configuration cache cleared!');
+        $this->components->info('Configuration cache cleared successfully.');
     }
 }

@@ -7,7 +7,7 @@
       "branch-alias": {
         "dev-master": "1.0-dev"
       },
-      "wpstarter": {
+      "laravel": {
         "providers": "foo",
         "aliases": {
           "Foo": "Foo\\Facade"
@@ -21,7 +21,7 @@
   {
     "name": "vendor_a/package_b",
     "extra": {
-      "wpstarter": {
+      "laravel": {
         "providers": [
           "bar",
           "baz"
@@ -39,7 +39,7 @@
   {
     "name": "vendor_a/package_d",
     "extra": {
-      "wpstarter": {
+      "laravel": {
         "providers": [
           "bazinga"
         ]
@@ -49,7 +49,7 @@
   {
     "name": "vendor_a/package_e",
     "extra": {
-      "wpstarter": {
+      "laravel": {
         "providers": [
           "pennypennypenny"
         ]

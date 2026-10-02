@@ -4,7 +4,8 @@ namespace WpStarter\Tests\View\Blade;
 
 use Exception;
 use WpStarter\Support\Fluent;
-use WpStarter\Support\Str;
+use WpStarter\Support\Stringable;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class BladeEchoHandlerTest extends AbstractBladeTestCase
 {
@@ -20,7 +21,7 @@ class BladeEchoHandlerTest extends AbstractBladeTestCase
     public function testBladeHandlerCanInterceptRegularEchos()
     {
         $this->assertSame(
-            "<?php \$__bladeCompiler = ws_app('blade.compiler'); ?><?php echo ws_e(\$__bladeCompiler->applyEchoHandler(\$exampleObject)); ?>",
+            "<?php \$__bladeCompiler = app('blade.compiler'); ?><?php echo e(\$__bladeCompiler->applyEchoHandler(\$exampleObject)); ?>",
             $this->compiler->compileString('{{$exampleObject}}')
         );
     }
@@ -28,7 +29,7 @@ class BladeEchoHandlerTest extends AbstractBladeTestCase
     public function testBladeHandlerCanInterceptRawEchos()
     {
         $this->assertSame(
-            "<?php \$__bladeCompiler = ws_app('blade.compiler'); ?><?php echo \$__bladeCompiler->applyEchoHandler(\$exampleObject); ?>",
+            "<?php \$__bladeCompiler = app('blade.compiler'); ?><?php echo \$__bladeCompiler->applyEchoHandler(\$exampleObject); ?>",
             $this->compiler->compileString('{!!$exampleObject!!}')
         );
     }
@@ -36,7 +37,7 @@ class BladeEchoHandlerTest extends AbstractBladeTestCase
     public function testBladeHandlerCanInterceptEscapedEchos()
     {
         $this->assertSame(
-            "<?php \$__bladeCompiler = ws_app('blade.compiler'); ?><?php echo ws_e(\$__bladeCompiler->applyEchoHandler(\$exampleObject)); ?>",
+            "<?php \$__bladeCompiler = app('blade.compiler'); ?><?php echo e(\$__bladeCompiler->applyEchoHandler(\$exampleObject)); ?>",
             $this->compiler->compileString('{{{$exampleObject}}}')
         );
     }
@@ -44,14 +45,12 @@ class BladeEchoHandlerTest extends AbstractBladeTestCase
     public function testWhitespaceIsPreservedCorrectly()
     {
         $this->assertSame(
-            "<?php \$__bladeCompiler = ws_app('blade.compiler'); ?><?php echo ws_e(\$__bladeCompiler->applyEchoHandler(\$exampleObject)); ?>\n\n",
+            "<?php \$__bladeCompiler = app('blade.compiler'); ?><?php echo e(\$__bladeCompiler->applyEchoHandler(\$exampleObject)); ?>\n\n",
             $this->compiler->compileString("{{\$exampleObject}}\n")
         );
     }
 
-    /**
-     * @dataProvider handlerLogicDataProvider
-     */
+    #[DataProvider('handlerLogicDataProvider')]
     public function testHandlerLogicWorksCorrectly($blade)
     {
         $this->expectException(Exception::class);
@@ -61,16 +60,14 @@ class BladeEchoHandlerTest extends AbstractBladeTestCase
             throw new Exception('The fluent object has been successfully handled!');
         });
 
-        ws_app()->singleton('blade.compiler', function () {
-            return $this->compiler;
-        });
+        app()->instance('blade.compiler', $this->compiler);
 
         $exampleObject = new Fluent();
 
-        eval(Str::of($this->compiler->compileString($blade))->remove(['<?php', '?>']));
+        eval((new Stringable($this->compiler->compileString($blade)))->remove(['<?php', '?>']));
     }
 
-    public function handlerLogicDataProvider()
+    public static function handlerLogicDataProvider()
     {
         return [
             ['{{$exampleObject}}'],
@@ -80,24 +77,44 @@ class BladeEchoHandlerTest extends AbstractBladeTestCase
         ];
     }
 
-    /**
-     * @dataProvider nonStringableDataProvider
-     */
-    public function testHandlerWorksWithNonStringables($blade, $expectedOutput)
+    #[DataProvider('handlerWorksWithIterableDataProvider')]
+    public function testHandlerWorksWithIterables($blade, $closure, $expectedOutput)
     {
-        ws_app()->singleton('blade.compiler', function () {
-            return $this->compiler;
-        });
+        $this->compiler->stringable('iterable', $closure);
+
+        app()->instance('blade.compiler', $this->compiler);
 
         ob_start();
-        eval(Str::of($this->compiler->compileString($blade))->remove(['<?php', '?>']));
+        eval((new Stringable($this->compiler->compileString($blade)))->remove(['<?php', '?>']));
         $output = ob_get_contents();
         ob_end_clean();
 
         $this->assertSame($expectedOutput, $output);
     }
 
-    public function nonStringableDataProvider()
+    public static function handlerWorksWithIterableDataProvider()
+    {
+        return [
+            ['{{[1,"two",3]}}', function (iterable $arr) {
+                return implode(', ', $arr);
+            }, '1, two, 3'],
+        ];
+    }
+
+    #[DataProvider('nonStringableDataProvider')]
+    public function testHandlerWorksWithNonStringables($blade, $expectedOutput)
+    {
+        app()->instance('blade.compiler', $this->compiler);
+
+        ob_start();
+        eval((new Stringable($this->compiler->compileString($blade)))->remove(['<?php', '?>']));
+        $output = ob_get_contents();
+        ob_end_clean();
+
+        $this->assertSame($expectedOutput, $output);
+    }
+
+    public static function nonStringableDataProvider()
     {
         return [
             ['{{"foo" . "bar"}}', 'foobar'],

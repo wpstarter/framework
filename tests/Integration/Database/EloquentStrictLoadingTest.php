@@ -6,7 +6,9 @@ use WpStarter\Database\Eloquent\Collection;
 use WpStarter\Database\Eloquent\Model;
 use WpStarter\Database\LazyLoadingViolationException;
 use WpStarter\Database\Schema\Blueprint;
+use WpStarter\Support\Facades\Event;
 use WpStarter\Support\Facades\Schema;
+use RuntimeException;
 
 class EloquentStrictLoadingTest extends DatabaseTestCase
 {
@@ -17,7 +19,7 @@ class EloquentStrictLoadingTest extends DatabaseTestCase
         Model::preventLazyLoading();
     }
 
-    protected function defineDatabaseMigrationsAfterDatabaseRefreshed()
+    protected function afterRefreshingDatabase()
     {
         Schema::create('test_model1', function (Blueprint $table) {
             $table->increments('id');
@@ -115,10 +117,10 @@ class EloquentStrictLoadingTest extends DatabaseTestCase
 
     public function testStrictModeWithCustomCallbackOnLazyLoading()
     {
-        $this->expectsEvents(ViolatedLazyLoadingEvent::class);
+        Event::fake();
 
         Model::handleLazyLoadingViolationUsing(function ($model, $key) {
-            ws_event(new ViolatedLazyLoadingEvent($model, $key));
+            event(new ViolatedLazyLoadingEvent($model, $key));
         });
 
         EloquentStrictLoadingTestModel1::create();
@@ -128,12 +130,12 @@ class EloquentStrictLoadingTest extends DatabaseTestCase
 
         $models[0]->modelTwos;
 
-        Model::handleLazyLoadingViolationUsing(null);
+        Event::assertDispatched(ViolatedLazyLoadingEvent::class);
     }
 
     public function testStrictModeWithOverriddenHandlerOnLazyLoading()
     {
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Violated');
 
         EloquentStrictLoadingTestModel1WithCustomHandler::create();
@@ -185,7 +187,7 @@ class EloquentStrictLoadingTestModel1WithCustomHandler extends Model
 
     protected function handleLazyLoadingViolation($key)
     {
-        throw new \RuntimeException("Violated {$key}");
+        throw new RuntimeException("Violated {$key}");
     }
 }
 

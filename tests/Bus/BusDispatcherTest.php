@@ -15,11 +15,6 @@ use RuntimeException;
 
 class BusDispatcherTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        m::close();
-    }
-
     public function testCommandsThatShouldQueueIsQueued()
     {
         $container = new Container;
@@ -51,7 +46,7 @@ class BusDispatcherTest extends TestCase
         $container = new Container;
         $dispatcher = new Dispatcher($container, function () {
             $mock = m::mock(Queue::class);
-            $mock->shouldReceive('laterOn')->once()->with('foo', 10, m::type(BusDispatcherTestSpecificQueueAndDelayCommand::class));
+            $mock->shouldReceive('later')->once()->with(10, m::type(BusDispatcherTestSpecificQueueAndDelayCommand::class), '', 'foo');
 
             return $mock;
         });

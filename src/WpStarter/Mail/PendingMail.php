@@ -50,7 +50,6 @@ class PendingMail
      * Create a new mailable mailer instance.
      *
      * @param  \WpStarter\Contracts\Mail\Mailer  $mailer
-     * @return void
      */
     public function __construct(MailerContract $mailer)
     {
@@ -117,11 +116,22 @@ class PendingMail
      * Send a new mailable message instance.
      *
      * @param  \WpStarter\Contracts\Mail\Mailable  $mailable
-     * @return void
+     * @return \WpStarter\Mail\SentMessage|null
      */
     public function send(MailableContract $mailable)
     {
-        $this->mailer->send($this->fill($mailable));
+        return $this->mailer->send($this->fill($mailable));
+    }
+
+    /**
+     * Send a new mailable message instance synchronously.
+     *
+     * @param  \WpStarter\Contracts\Mail\Mailable  $mailable
+     * @return \WpStarter\Mail\SentMessage|null
+     */
+    public function sendNow(MailableContract $mailable)
+    {
+        return $this->mailer->sendNow($this->fill($mailable));
     }
 
     /**
@@ -136,7 +146,7 @@ class PendingMail
     }
 
     /**
-     * Deliver the queued message after the given delay.
+     * Deliver the queued message after (n) seconds.
      *
      * @param  \DateTimeInterface|\DateInterval|int  $delay
      * @param  \WpStarter\Contracts\Mail\Mailable  $mailable
@@ -155,7 +165,7 @@ class PendingMail
      */
     protected function fill(MailableContract $mailable)
     {
-        return ws_tap($mailable->to($this->to)
+        return tap($mailable->to($this->to)
             ->cc($this->cc)
             ->bcc($this->bcc), function (MailableContract $mailable) {
                 if ($this->locale) {

@@ -2,12 +2,14 @@
 
 namespace WpStarter\Queue\Console;
 
-use Carbon\Carbon;
 use WpStarter\Bus\BatchRepository;
 use WpStarter\Bus\DatabaseBatchRepository;
 use WpStarter\Bus\PrunableBatchRepository;
 use WpStarter\Console\Command;
+use WpStarter\Support\Carbon;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'queue:prune-batches')]
 class PruneBatchesCommand extends Command
 {
     /**
@@ -17,7 +19,8 @@ class PruneBatchesCommand extends Command
      */
     protected $signature = 'queue:prune-batches
                 {--hours=24 : The number of hours to retain batch data}
-                {--unfinished= : The number of hours to retain unfinished batch data }';
+                {--unfinished= : The number of hours to retain unfinished batch data }
+                {--cancelled= : The number of hours to retain cancelled batch data }';
 
     /**
      * The console command description.
@@ -41,16 +44,26 @@ class PruneBatchesCommand extends Command
             $count = $repository->prune(Carbon::now()->subHours($this->option('hours')));
         }
 
-        $this->info("{$count} entries deleted!");
+        $this->components->info("{$count} entries deleted.");
 
-        if ($unfinished = $this->option('unfinished')) {
+        if ($this->option('unfinished') !== null) {
             $count = 0;
 
             if ($repository instanceof DatabaseBatchRepository) {
                 $count = $repository->pruneUnfinished(Carbon::now()->subHours($this->option('unfinished')));
             }
 
-            $this->info("{$count} unfinished entries deleted!");
+            $this->components->info("{$count} unfinished entries deleted.");
+        }
+
+        if ($this->option('cancelled') !== null) {
+            $count = 0;
+
+            if ($repository instanceof DatabaseBatchRepository) {
+                $count = $repository->pruneCancelled(Carbon::now()->subHours($this->option('cancelled')));
+            }
+
+            $this->components->info("{$count} cancelled entries deleted.");
         }
     }
 }

@@ -2,29 +2,14 @@
 
 namespace WpStarter\Tests\Integration\Cache;
 
-use WpStarter\Support\Carbon;
 use WpStarter\Support\Facades\Cache;
+use Orchestra\Testbench\Attributes\WithConfig;
 use Orchestra\Testbench\TestCase;
 
+#[WithConfig('cache.default', 'null')]
+#[WithConfig('cache.stores.null', ['driver' => 'null'])]
 class NoLockTest extends TestCase
 {
-    /**
-     * Define environment setup.
-     *
-     * @param  \WpStarter\Foundation\Application  $app
-     * @return void
-     */
-    protected function getEnvironmentSetUp($app)
-    {
-        $app['config']->set('cache.default', 'null');
-
-        $app['config']->set('cache.stores', [
-            'null' => [
-                'driver' => 'null',
-            ],
-        ]);
-    }
-
     public function testLocksCanAlwaysBeAcquiredAndReleased()
     {
         Cache::lock('foo')->forceRelease();
@@ -38,8 +23,6 @@ class NoLockTest extends TestCase
 
     public function testLocksCanBlockForSeconds()
     {
-        Carbon::setTestNow();
-
         Cache::lock('foo')->forceRelease();
         $this->assertSame('taylor', Cache::lock('foo', 10)->block(1, function () {
             return 'taylor';

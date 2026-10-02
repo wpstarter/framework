@@ -9,7 +9,7 @@ use WpStarter\Tests\Integration\Database\DatabaseTestCase;
 
 class EloquentMorphCountLazyEagerLoadingTest extends DatabaseTestCase
 {
-    protected function defineDatabaseMigrationsAfterDatabaseRefreshed()
+    protected function afterRefreshingDatabase()
     {
         Schema::create('likes', function (Blueprint $table) {
             $table->increments('id');
@@ -28,8 +28,8 @@ class EloquentMorphCountLazyEagerLoadingTest extends DatabaseTestCase
 
         $post = Post::create();
 
-        ws_tap((new Like)->post()->associate($post))->save();
-        ws_tap((new Like)->post()->associate($post))->save();
+        tap((new Like)->post()->associate($post))->save();
+        tap((new Like)->post()->associate($post))->save();
 
         (new Comment)->commentable()->associate($post)->save();
     }

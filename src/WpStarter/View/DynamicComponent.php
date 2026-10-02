@@ -2,9 +2,13 @@
 
 namespace WpStarter\View;
 
+use BackedEnum;
 use WpStarter\Container\Container;
+use WpStarter\Support\Collection;
 use WpStarter\Support\Str;
 use WpStarter\View\Compilers\ComponentTagCompiler;
+
+use function WpStarter\Support\enum_value;
 
 class DynamicComponent extends Component
 {
@@ -32,12 +36,11 @@ class DynamicComponent extends Component
     /**
      * Create a new component instance.
      *
-     * @param  string  $component
-     * @return void
+     * @param  \BackedEnum|string  $component
      */
-    public function __construct(string $component)
+    public function __construct(BackedEnum|string $component)
     {
-        $this->component = $component;
+        $this->component = (string) enum_value($component);
     }
 
     /**
@@ -48,7 +51,7 @@ class DynamicComponent extends Component
     public function render()
     {
         $template = <<<'EOF'
-<?php extract(ws_collect($attributes->getAttributes())->mapWithKeys(function ($value, $key) { return [WpStarter\Support\Str::camel(str_replace([':', '.'], ' ', $key)) => $value]; })->all(), EXTR_SKIP); ?>
+<?php extract((new \WpStarter\Support\Collection($attributes->getAttributes()))->mapWithKeys(function ($value, $key) { return [WpStarter\Support\Str::camel(str_replace([':', '.'], ' ', $key)) => $value]; })->all(), EXTR_SKIP); ?>
 {{ props }}
 <x-{{ component }} {{ bindings }} {{ attributes }}>
 {{ slots }}
@@ -93,7 +96,7 @@ EOF;
             return '';
         }
 
-        return '@props('.'[\''.implode('\',\'', ws_collect($bindings)->map(function ($dataKey) {
+        return '@props('.'[\''.implode('\',\'', (new Collection($bindings))->map(function ($dataKey) {
             return Str::camel($dataKey);
         })->all()).'\']'.')';
     }
@@ -106,9 +109,9 @@ EOF;
      */
     protected function compileBindings(array $bindings)
     {
-        return ws_collect($bindings)->map(function ($key) {
-            return ':'.$key.'="$'.Str::camel(str_replace([':', '.'], ' ', $key)).'"';
-        })->implode(' ');
+        return (new Collection($bindings))
+            ->map(fn ($key) => ':'.$key.'="$'.Str::camel(str_replace([':', '.'], ' ', $key)).'"')
+            ->implode(' ');
     }
 
     /**
@@ -119,9 +122,10 @@ EOF;
      */
     protected function compileSlots(array $slots)
     {
-        return ws_collect($slots)->map(function ($slot, $name) {
-            return $name === '__default' ? null : '<x-slot name="'.$name.'" '.((string) $slot->attributes).'>{{ $'.$name.' }}</x-slot>';
-        })->filter()->implode(PHP_EOL);
+        return (new Collection($slots))
+            ->map(fn ($slot, $name) => $name === '__default' ? null : '<x-slot name="'.$name.'" :attributes="$'.$name.'->attributes">{{ $'.$name.' }}</x-slot>')
+            ->filter()
+            ->implode(PHP_EOL);
     }
 
     /**
@@ -147,7 +151,7 @@ EOF;
      */
     protected function bindings(string $class)
     {
-        [$data, $attributes] = $this->compiler()->partitionDataAndAttributes($class, $this->attributes->getAttributes());
+        [$data] = $this->compiler()->partitionDataAndAttributes($class, $this->attributes->getAttributes());
 
         return array_keys($data->all());
     }

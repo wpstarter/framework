@@ -45,17 +45,7 @@ class CallbackSchedulingTest extends TestCase
         $container->instance(SchedulingMutex::class, new CacheSchedulingMutex($cache));
     }
 
-    protected function tearDown(): void
-    {
-        Container::setInstance(null);
-
-        parent::tearDown();
-    }
-
-    /**
-     * @dataProvider executionProvider
-     */
-    public function testExecutionOrder($background)
+    public function testExecutionOrder(): void
     {
         $event = $this->app->make(Schedule::class)
             ->call($this->logger('call'))
@@ -64,16 +54,21 @@ class CallbackSchedulingTest extends TestCase
             ->after($this->logger('after 2'))
             ->before($this->logger('before 2'));
 
-        if ($background) {
-            $event->runInBackground();
-        }
-
         $this->artisan('schedule:run');
 
         $this->assertLogged('before 1', 'before 2', 'call', 'after 1', 'after 2');
     }
 
-    public function testExceptionHandlingInCallback()
+    public function testCallbacksCannotRunInBackground(): void
+    {
+        $this->expectException(RuntimeException::class);
+
+        $this->app->make(Schedule::class)
+            ->call($this->logger('call'))
+            ->runInBackground();
+    }
+
+    public function testExceptionHandlingInCallback(): void
     {
         $event = $this->app->make(Schedule::class)
             ->call($this->logger('call'))
@@ -106,7 +101,7 @@ class CallbackSchedulingTest extends TestCase
 
         $this->artisan('schedule:run');
 
-        // Hooks and execution should happn in correct order
+        // Hooks and execution should happen in correct order
         $this->assertLogged('before', 'call', 'after');
 
         // Our exception should have resulted in a failure event
@@ -116,14 +111,6 @@ class CallbackSchedulingTest extends TestCase
         // been removed (even though an exception was thrown)
         $this->assertTrue($mutexWasCreated);
         $this->assertFalse($event->mutex->exists($event));
-    }
-
-    public function executionProvider()
-    {
-        return [
-            'Foreground' => [false],
-            'Background' => [true],
-        ];
     }
 
     protected function logger($message)

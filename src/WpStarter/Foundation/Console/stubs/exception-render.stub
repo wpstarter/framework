@@ -3,16 +3,15 @@
 namespace {{ namespace }};
 
 use Exception;
+use WpStarter\Http\Request;
+use WpStarter\Http\Response;
 
 class {{ class }} extends Exception
 {
     /**
      * Render the exception as an HTTP response.
-     *
-     * @param  \WpStarter\Http\Request  $request
-     * @return \WpStarter\Http\Response
      */
-    public function render($request)
+    public function render(Request $request): Response
     {
         //
     }

@@ -4,13 +4,16 @@ namespace WpStarter\Database\Console\Migrations;
 
 use WpStarter\Console\Command;
 use WpStarter\Console\ConfirmableTrait;
+use WpStarter\Console\Prohibitable;
 use WpStarter\Contracts\Events\Dispatcher;
 use WpStarter\Database\Events\DatabaseRefreshed;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputOption;
 
+#[AsCommand(name: 'migrate:refresh')]
 class RefreshCommand extends Command
 {
-    use ConfirmableTrait;
+    use ConfirmableTrait, Prohibitable;
 
     /**
      * The console command name.
@@ -33,8 +36,9 @@ class RefreshCommand extends Command
      */
     public function handle()
     {
-        if (! $this->confirmToProceed()) {
-            return 1;
+        if ($this->isProhibited() ||
+            ! $this->confirmToProceed()) {
+            return Command::FAILURE;
         }
 
         // Next we'll gather some of the options so that we can have the right options
@@ -67,7 +71,7 @@ class RefreshCommand extends Command
 
         if ($this->laravel->bound(Dispatcher::class)) {
             $this->laravel[Dispatcher::class]->dispatch(
-                new DatabaseRefreshed
+                new DatabaseRefreshed($database, $this->needsSeeding())
             );
         }
 

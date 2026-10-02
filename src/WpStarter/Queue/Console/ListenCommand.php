@@ -5,7 +5,10 @@ namespace WpStarter\Queue\Console;
 use WpStarter\Console\Command;
 use WpStarter\Queue\Listener;
 use WpStarter\Queue\ListenerOptions;
+use WpStarter\Support\Stringable;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'queue:listen')]
 class ListenCommand extends Command
 {
     /**
@@ -21,9 +24,10 @@ class ListenCommand extends Command
                             {--force : Force the worker to run even in maintenance mode}
                             {--memory=128 : The memory limit in megabytes}
                             {--queue= : The queue to listen on}
-                            {--sleep=3 : Number of seconds to sleep when no job is available}
+                            {--sleep=3 : The number of seconds to sleep when no job is available}
+                            {--rest=0 : The number of seconds to rest between jobs}
                             {--timeout=60 : The number of seconds a child process can run}
-                            {--tries=1 : Number of times to attempt a job before logging it failed}';
+                            {--tries=1 : The number of times to attempt a job before logging it failed}';
 
     /**
      * The console command description.
@@ -43,7 +47,6 @@ class ListenCommand extends Command
      * Create a new queue listen command.
      *
      * @param  \WpStarter\Queue\Listener  $listener
-     * @return void
      */
     public function __construct(Listener $listener)
     {
@@ -65,6 +68,8 @@ class ListenCommand extends Command
         $queue = $this->getQueue(
             $connection = $this->input->getArgument('connection')
         );
+
+        $this->components->info(sprintf('Processing jobs from the [%s] %s.', $queue, (new Stringable('queue'))->plural(explode(',', $queue))));
 
         $this->listener->listen(
             $connection, $queue, $this->gatherOptions()
@@ -94,18 +99,19 @@ class ListenCommand extends Command
     protected function gatherOptions()
     {
         $backoff = $this->hasOption('backoff')
-                ? $this->option('backoff')
-                : $this->option('delay');
+            ? $this->option('backoff')
+            : $this->option('delay');
 
         return new ListenerOptions(
-            $this->option('name'),
-            $this->option('env'),
-            $backoff,
-            $this->option('memory'),
-            $this->option('timeout'),
-            $this->option('sleep'),
-            $this->option('tries'),
-            $this->option('force')
+            name: $this->option('name'),
+            environment: $this->option('env'),
+            backoff: $backoff,
+            memory: $this->option('memory'),
+            timeout: $this->option('timeout'),
+            sleep: $this->option('sleep'),
+            rest: $this->option('rest'),
+            maxTries: $this->option('tries'),
+            force: $this->option('force')
         );
     }
 

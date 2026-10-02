@@ -5,8 +5,14 @@ namespace WpStarter\Foundation\Console;
 use WpStarter\Console\GeneratorCommand;
 use WpStarter\Support\Str;
 use LogicException;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 
+use function Laravel\Prompts\suggest;
+
+#[AsCommand(name: 'make:policy')]
 class PolicyMakeCommand extends GeneratorCommand
 {
     /**
@@ -105,15 +111,15 @@ class PolicyMakeCommand extends GeneratorCommand
     {
         $model = str_replace('/', '\\', $model);
 
-        if (Str::startsWith($model, '\\')) {
+        if (str_starts_with($model, '\\')) {
             $namespacedModel = trim($model, '\\');
         } else {
             $namespacedModel = $this->qualifyModel($model);
         }
 
-        $model = ws_class_basename(trim($model, '\\'));
+        $model = class_basename(trim($model, '\\'));
 
-        $dummyUser = ws_class_basename($this->userProviderModel());
+        $dummyUser = class_basename($this->userProviderModel());
 
         $dummyModel = Str::camel($model) === 'user' ? 'model' : $model;
 
@@ -155,8 +161,8 @@ class PolicyMakeCommand extends GeneratorCommand
     protected function getStub()
     {
         return $this->option('model')
-                    ? $this->resolveStubPath('/stubs/policy.stub')
-                    : $this->resolveStubPath('/stubs/policy.plain.stub');
+            ? $this->resolveStubPath('/stubs/policy.stub')
+            : $this->resolveStubPath('/stubs/policy.plain.stub');
     }
 
     /**
@@ -168,8 +174,8 @@ class PolicyMakeCommand extends GeneratorCommand
     protected function resolveStubPath($stub)
     {
         return file_exists($customPath = $this->laravel->basePath(trim($stub, '/')))
-                        ? $customPath
-                        : __DIR__.$stub;
+            ? $customPath
+            : __DIR__.$stub;
     }
 
     /**
@@ -191,8 +197,32 @@ class PolicyMakeCommand extends GeneratorCommand
     protected function getOptions()
     {
         return [
+            ['force', 'f', InputOption::VALUE_NONE, 'Create the class even if the policy already exists'],
             ['model', 'm', InputOption::VALUE_OPTIONAL, 'The model that the policy applies to'],
             ['guard', 'g', InputOption::VALUE_OPTIONAL, 'The guard that the policy relies on'],
         ];
+    }
+
+    /**
+     * Interact further with the user if they were prompted for missing arguments.
+     *
+     * @param  \Symfony\Component\Console\Input\InputInterface  $input
+     * @param  \Symfony\Component\Console\Output\OutputInterface  $output
+     * @return void
+     */
+    protected function afterPromptingForMissingArguments(InputInterface $input, OutputInterface $output)
+    {
+        if ($this->isReservedName($this->getNameInput()) || $this->didReceiveOptions($input)) {
+            return;
+        }
+
+        $model = suggest(
+            'What model should this policy apply to? (Optional)',
+            $this->findAvailableModels(),
+        );
+
+        if ($model) {
+            $input->setOption('model', $model);
+        }
     }
 }

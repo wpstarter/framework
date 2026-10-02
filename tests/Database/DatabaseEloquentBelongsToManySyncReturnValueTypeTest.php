@@ -61,6 +61,8 @@ class DatabaseEloquentBelongsToManySyncReturnValueTypeTest extends TestCase
         $this->schema()->drop('users');
         $this->schema()->drop('articles');
         $this->schema()->drop('article_user');
+
+        parent::tearDown();
     }
 
     /**
@@ -85,12 +87,12 @@ class DatabaseEloquentBelongsToManySyncReturnValueTypeTest extends TestCase
 
         $changes = $user->articles()->sync($articleIDs);
 
-        ws_collect($changes['attached'])->map(function ($id) {
+        collect($changes['attached'])->map(function ($id) {
             $this->assertSame(gettype($id), (new BelongsToManySyncTestTestArticle)->getKeyType());
         });
 
         $user->articles->each(function (BelongsToManySyncTestTestArticle $article) {
-            $this->assertEquals('0', $article->pivot->visible);
+            $this->assertSame('0', (string) $article->pivot->visible);
         });
     }
 
@@ -103,12 +105,12 @@ class DatabaseEloquentBelongsToManySyncReturnValueTypeTest extends TestCase
 
         $changes = $user->articles()->syncWithPivotValues($articleIDs, ['visible' => true]);
 
-        ws_collect($changes['attached'])->each(function ($id) {
+        collect($changes['attached'])->each(function ($id) {
             $this->assertSame(gettype($id), (new BelongsToManySyncTestTestArticle)->getKeyType());
         });
 
         $user->articles->each(function (BelongsToManySyncTestTestArticle $article) {
-            $this->assertEquals('1', $article->pivot->visible);
+            $this->assertSame('1', (string) $article->pivot->visible);
         });
     }
 

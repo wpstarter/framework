@@ -3,7 +3,10 @@
 namespace WpStarter\Events;
 
 use Closure;
-use WpStarter\Queue\SerializableClosureFactory;
+use WpStarter\Support\Collection;
+use Laravel\SerializableClosure\SerializableClosure;
+
+use function WpStarter\Support\enum_value;
 
 class QueuedClosure
 {
@@ -29,6 +32,20 @@ class QueuedClosure
     public $queue;
 
     /**
+     * The job "group" the job should be sent to.
+     *
+     * @var string|null
+     */
+    public $messageGroup;
+
+    /**
+     * The job deduplicator callback the job should use to generate the deduplication ID.
+     *
+     * @var \Laravel\SerializableClosure\SerializableClosure|null
+     */
+    public $deduplicator;
+
+    /**
      * The number of seconds before the job should be made available.
      *
      * @var \DateTimeInterface|\DateInterval|int|null
@@ -46,7 +63,6 @@ class QueuedClosure
      * Create a new queued closure event listener resolver.
      *
      * @param  \Closure  $closure
-     * @return void
      */
     public function __construct(Closure $closure)
     {
@@ -56,12 +72,12 @@ class QueuedClosure
     /**
      * Set the desired connection for the job.
      *
-     * @param  string|null  $connection
+     * @param  \UnitEnum|string|null  $connection
      * @return $this
      */
     public function onConnection($connection)
     {
-        $this->connection = $connection;
+        $this->connection = enum_value($connection);
 
         return $this;
     }
@@ -69,18 +85,50 @@ class QueuedClosure
     /**
      * Set the desired queue for the job.
      *
-     * @param  string|null  $queue
+     * @param  \UnitEnum|string|null  $queue
      * @return $this
      */
     public function onQueue($queue)
     {
-        $this->queue = $queue;
+        $this->queue = enum_value($queue);
 
         return $this;
     }
 
     /**
-     * Set the desired delay for the job.
+     * Set the desired job "group".
+     *
+     * This feature is only supported by some queues, such as Amazon SQS.
+     *
+     * @param  \UnitEnum|string  $group
+     * @return $this
+     */
+    public function onGroup($group)
+    {
+        $this->messageGroup = enum_value($group);
+
+        return $this;
+    }
+
+    /**
+     * Set the desired job deduplicator callback.
+     *
+     * This feature is only supported by some queues, such as Amazon SQS FIFO.
+     *
+     * @param  callable|null  $deduplicator
+     * @return $this
+     */
+    public function withDeduplicator($deduplicator)
+    {
+        $this->deduplicator = $deduplicator instanceof Closure
+            ? new SerializableClosure($deduplicator)
+            : $deduplicator;
+
+        return $this;
+    }
+
+    /**
+     * Set the desired delay in seconds for the job.
      *
      * @param  \DateTimeInterface|\DateInterval|int|null  $delay
      * @return $this
@@ -113,13 +161,18 @@ class QueuedClosure
     public function resolve()
     {
         return function (...$arguments) {
-            ws_dispatch(new CallQueuedListener(InvokeQueuedClosure::class, 'handle', [
-                'closure' => SerializableClosureFactory::make($this->closure),
+            dispatch(new CallQueuedListener(InvokeQueuedClosure::class, 'handle', [
+                'closure' => new SerializableClosure($this->closure),
                 'arguments' => $arguments,
-                'catch' => ws_collect($this->catchCallbacks)->map(function ($callback) {
-                    return SerializableClosureFactory::make($callback);
-                })->all(),
-            ]))->onConnection($this->connection)->onQueue($this->queue)->delay($this->delay);
+                'catch' => (new Collection($this->catchCallbacks))
+                    ->map(fn ($callback) => new SerializableClosure($callback))
+                    ->all(),
+            ]))
+                ->onConnection($this->connection)
+                ->onQueue($this->queue)
+                ->delay($this->delay)
+                ->onGroup($this->messageGroup)
+                ->withDeduplicator($this->deduplicator);
         };
     }
 }

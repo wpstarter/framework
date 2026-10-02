@@ -1,0 +1,8 @@
+<?php
+
+use WpStarter\Http\Request;
+use WpStarter\Support\Facades\Route;
+
+Route::get('/user', function (Request $request) {
+    return $request->user();
+})->middleware('auth:sanctum');

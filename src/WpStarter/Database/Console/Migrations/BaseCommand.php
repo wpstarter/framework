@@ -3,13 +3,14 @@
 namespace WpStarter\Database\Console\Migrations;
 
 use WpStarter\Console\Command;
+use WpStarter\Support\Collection;
 
 class BaseCommand extends Command
 {
     /**
      * Get all of the migration paths.
      *
-     * @return array
+     * @return string[]
      */
     protected function getMigrationPaths()
     {
@@ -17,10 +18,10 @@ class BaseCommand extends Command
         // use the path relative to the root of the installation folder so our database
         // migrations may be run for any customized path from within the application.
         if ($this->input->hasOption('path') && $this->option('path')) {
-            return ws_collect($this->option('path'))->map(function ($path) {
+            return (new Collection($this->option('path')))->map(function ($path) {
                 return ! $this->usingRealPath()
-                                ? $this->laravel->basePath().'/'.$path
-                                : $path;
+                    ? $this->laravel->basePath().'/'.$path
+                    : $path;
             })->all();
         }
 

@@ -15,29 +15,20 @@ class DatabaseEloquentMorphToTest extends TestCase
 
     protected $related;
 
-    protected function tearDown(): void
-    {
-        m::close();
-    }
-
     public function testLookupDictionaryIsProperlyConstructedForEnums()
     {
-        if (version_compare(PHP_VERSION, '8.1') < 0) {
-            $this->markTestSkipped('PHP 8.1 is required');
+        $relation = $this->getRelation();
+        $relation->addEagerConstraints([
+            $one = (object) ['morph_type' => 'morph_type_2', 'foreign_key' => TestEnum::test],
+        ]);
+        $dictionary = $relation->getDictionary();
+        $relation->getDictionary();
+        $enumKey = TestEnum::test;
+        if (isset($enumKey->value)) {
+            $value = $dictionary['morph_type_2'][$enumKey->value][0]->foreign_key;
+            $this->assertEquals(TestEnum::test, $value);
         } else {
-            $relation = $this->getRelation();
-            $relation->addEagerConstraints([
-                $one = (object) ['morph_type' => 'morph_type_2', 'foreign_key' => TestEnum::test],
-            ]);
-            $dictionary = $relation->getDictionary();
-            $relation->getDictionary();
-            $enumKey = TestEnum::test;
-            if (isset($enumKey->value)) {
-                $value = $dictionary['morph_type_2'][$enumKey->value][0]->foreign_key;
-                $this->assertEquals(TestEnum::test, $value);
-            } else {
-                $this->fail('An enum should contain value property');
-            }
+            $this->fail('An enum should contain value property');
         }
     }
 
@@ -372,6 +363,7 @@ class DatabaseEloquentMorphToTest extends TestCase
         $related = m::mock(Model::class);
         $related->shouldReceive('getKey')->andReturn(1);
         $related->shouldReceive('getTable')->andReturn('relation');
+        $related->shouldReceive('qualifyColumn')->andReturnUsing(fn (string $column) => "relation.{$column}");
         $builder->shouldReceive('getModel')->andReturn($related);
 
         return new MorphTo($builder, $parent, 'foreign_key', 'id', 'morph_type', 'relation');
@@ -384,6 +376,7 @@ class DatabaseEloquentMorphToTest extends TestCase
         $this->related = m::mock(Model::class);
         $this->related->shouldReceive('getKeyName')->andReturn('id');
         $this->related->shouldReceive('getTable')->andReturn('relation');
+        $this->related->shouldReceive('qualifyColumn')->andReturnUsing(fn (string $column) => "relation.{$column}");
         $this->builder->shouldReceive('getModel')->andReturn($this->related);
         $parent = $parent ?: new EloquentMorphToModelStub;
 

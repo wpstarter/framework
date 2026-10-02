@@ -1,0 +1,105 @@
+<?php
+
+namespace WpStarter\Tests\Queue;
+
+use WpStarter\Bus\Queueable;
+use WpStarter\Contracts\Queue\ShouldQueueAfterCommit;
+use WpStarter\Foundation\Bus\Dispatchable;
+use WpStarter\Queue\InteractsWithQueue;
+use PHPUnit\Framework\TestCase;
+
+class BeforeCommitContractTest extends TestCase
+{
+    public function testJobWithoutContractRespectsBeforeCommit()
+    {
+        $job = new class
+        {
+            use Dispatchable, InteractsWithQueue, Queueable;
+
+            public function beforeCommit()
+            {
+                $this->afterCommit = false;
+
+                return $this;
+            }
+        };
+
+        $this->assertFalse($this->shouldDispatchAfterCommit($job));
+    }
+
+    public function testJobWithoutContractRespectsAfterCommit()
+    {
+        $job = new class
+        {
+            use Dispatchable, InteractsWithQueue, Queueable;
+
+            public function afterCommit()
+            {
+                $this->afterCommit = true;
+
+                return $this;
+            }
+        };
+
+        $job->afterCommit();
+
+        $this->assertTrue($this->shouldDispatchAfterCommit($job));
+    }
+
+    public function testJobWithContractDefaultsToAfterCommit()
+    {
+        $job = new class implements ShouldQueueAfterCommit
+        {
+            use Dispatchable, InteractsWithQueue, Queueable;
+        };
+
+        $this->assertTrue($this->shouldDispatchAfterCommit($job));
+    }
+
+    public function testJobWithContractAndAfterCommitFalseRespectsBeforeCommit()
+    {
+        $job = new class implements ShouldQueueAfterCommit
+        {
+            use Dispatchable, InteractsWithQueue, Queueable;
+
+            public function beforeCommit()
+            {
+                $this->afterCommit = false;
+
+                return $this;
+            }
+        };
+
+        $job->beforeCommit();
+
+        $this->assertFalse($this->shouldDispatchAfterCommit($job));
+    }
+
+    public function testJobWithContractAndExplicitAfterCommitTrueStillSchedulesAfterCommit()
+    {
+        $job = new class implements ShouldQueueAfterCommit
+        {
+            use Dispatchable, InteractsWithQueue, Queueable;
+
+            public function afterCommit()
+            {
+                $this->afterCommit = true;
+
+                return $this;
+            }
+        };
+
+        $job->afterCommit();
+
+        $this->assertTrue($this->shouldDispatchAfterCommit($job));
+    }
+
+    protected function shouldDispatchAfterCommit($job)
+    {
+        if ($job instanceof ShouldQueueAfterCommit) {
+            return ! (isset($job->afterCommit) && $job->afterCommit === false);
+        }
+
+        return isset($job->afterCommit) ? $job->afterCommit : false;
+    }
+}

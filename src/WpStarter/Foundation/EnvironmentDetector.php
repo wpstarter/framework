@@ -3,7 +3,6 @@
 namespace WpStarter\Foundation;
 
 use Closure;
-use WpStarter\Support\Str;
 
 class EnvironmentDetector
 {
@@ -66,8 +65,8 @@ class EnvironmentDetector
                 return $args[$i + 1] ?? null;
             }
 
-            if (Str::startsWith($value, '--env')) {
-                return ws_head(array_slice(explode('=', $value), 1));
+            if (str_starts_with($value, '--env=')) {
+                return head(array_slice(explode('=', $value), 1));
             }
         }
     }

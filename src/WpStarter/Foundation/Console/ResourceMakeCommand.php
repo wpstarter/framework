@@ -3,9 +3,10 @@
 namespace WpStarter\Foundation\Console;
 
 use WpStarter\Console\GeneratorCommand;
-use WpStarter\Support\Str;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputOption;
 
+#[AsCommand(name: 'make:resource')]
 class ResourceMakeCommand extends GeneratorCommand
 {
     /**
@@ -50,9 +51,11 @@ class ResourceMakeCommand extends GeneratorCommand
      */
     protected function getStub()
     {
-        return $this->collection()
-                    ? $this->resolveStubPath('/stubs/resource-collection.stub')
-                    : $this->resolveStubPath('/stubs/resource.stub');
+        return match (true) {
+            $this->collection() => $this->resolveStubPath('/stubs/resource-collection.stub'),
+            $this->option('json-api') => $this->resolveStubPath('/stubs/resource-json-api.stub'),
+            default => $this->resolveStubPath('/stubs/resource.stub'),
+        };
     }
 
     /**
@@ -63,7 +66,7 @@ class ResourceMakeCommand extends GeneratorCommand
     protected function collection()
     {
         return $this->option('collection') ||
-               Str::endsWith($this->argument('name'), 'Collection');
+               str_ends_with($this->argument('name'), 'Collection');
     }
 
     /**
@@ -75,8 +78,8 @@ class ResourceMakeCommand extends GeneratorCommand
     protected function resolveStubPath($stub)
     {
         return file_exists($customPath = $this->laravel->basePath(trim($stub, '/')))
-                        ? $customPath
-                        : __DIR__.$stub;
+            ? $customPath
+            : __DIR__.$stub;
     }
 
     /**
@@ -98,6 +101,8 @@ class ResourceMakeCommand extends GeneratorCommand
     protected function getOptions()
     {
         return [
+            ['force', 'f', InputOption::VALUE_NONE, 'Create the class even if the resource already exists'],
+            ['json-api', 'j', InputOption::VALUE_NONE, 'Create a JSON:API resource'],
             ['collection', 'c', InputOption::VALUE_NONE, 'Create a resource collection'],
         ];
     }

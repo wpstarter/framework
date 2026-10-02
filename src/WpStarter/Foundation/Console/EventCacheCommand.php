@@ -4,7 +4,9 @@ namespace WpStarter\Foundation\Console;
 
 use WpStarter\Console\Command;
 use WpStarter\Foundation\Support\Providers\EventServiceProvider;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'event:cache')]
 class EventCacheCommand extends Command
 {
     /**
@@ -24,18 +26,18 @@ class EventCacheCommand extends Command
     /**
      * Execute the console command.
      *
-     * @return mixed
+     * @return void
      */
     public function handle()
     {
-        $this->call('event:clear');
+        $this->callSilent('event:clear');
 
         file_put_contents(
             $this->laravel->getCachedEventsPath(),
             '<?php return '.var_export($this->getEvents(), true).';'
         );
 
-        $this->info('Events cached successfully!');
+        $this->components->info('Events cached successfully.');
     }
 
     /**

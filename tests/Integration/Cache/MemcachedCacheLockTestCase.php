@@ -3,12 +3,10 @@
 namespace WpStarter\Tests\Integration\Cache;
 
 use WpStarter\Contracts\Cache\LockTimeoutException;
-use WpStarter\Support\Carbon;
 use WpStarter\Support\Facades\Cache;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 
-/**
- * @requires extension memcached
- */
+#[RequiresPhpExtension('memcached')]
 class MemcachedCacheLockTestCase extends MemcachedIntegrationTestCase
 {
     public function testMemcachedLocksCanBeAcquiredAndReleased()
@@ -24,8 +22,6 @@ class MemcachedCacheLockTestCase extends MemcachedIntegrationTestCase
 
     public function testMemcachedLocksCanBlockForSeconds()
     {
-        Carbon::setTestNow();
-
         Cache::store('memcached')->lock('foo')->forceRelease();
         $this->assertSame('taylor', Cache::store('memcached')->lock('foo', 10)->block(1, function () {
             return 'taylor';
@@ -46,8 +42,6 @@ class MemcachedCacheLockTestCase extends MemcachedIntegrationTestCase
     public function testLocksThrowTimeoutIfBlockExpires()
     {
         $this->expectException(LockTimeoutException::class);
-
-        Carbon::setTestNow();
 
         Cache::store('memcached')->lock('foo')->release();
         Cache::store('memcached')->lock('foo', 5)->get();
@@ -84,5 +78,31 @@ class MemcachedCacheLockTestCase extends MemcachedIntegrationTestCase
         $secondLock->release();
 
         $this->assertTrue(Cache::store('memcached')->lock('foo')->get());
+    }
+
+    public function testOwnerStatusCanBeCheckedAfterRestoringLock()
+    {
+        Cache::store('memcached')->lock('foo')->forceRelease();
+
+        $firstLock = Cache::store('memcached')->lock('foo', 10);
+        $this->assertTrue($firstLock->get());
+        $owner = $firstLock->owner();
+
+        $secondLock = Cache::store('memcached')->restoreLock('foo', $owner);
+        $this->assertTrue($secondLock->isOwnedByCurrentProcess());
+    }
+
+    public function testOtherOwnerDoesNotOwnLockAfterRestore()
+    {
+        Cache::store('memcached')->lock('foo')->forceRelease();
+
+        $firstLock = Cache::store('memcached')->lock('foo', 10);
+        $this->assertTrue($firstLock->isOwnedBy(null));
+        $this->assertTrue($firstLock->get());
+        $this->assertTrue($firstLock->isOwnedBy($firstLock->owner()));
+
+        $secondLock = Cache::store('memcached')->restoreLock('foo', 'other_owner');
+        $this->assertTrue($secondLock->isOwnedBy($firstLock->owner()));
+        $this->assertFalse($secondLock->isOwnedByCurrentProcess());
     }
 }

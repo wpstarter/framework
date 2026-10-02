@@ -7,6 +7,7 @@ use WpStarter\Container\Container;
 use WpStarter\Support\Facades\DB;
 use WpStarter\Testing\Concerns\TestDatabases;
 use Mockery as m;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 
@@ -34,31 +35,29 @@ class TestDatabasesTest extends TestCase
     {
         DB::shouldReceive('purge')->once();
 
-        ws_config()->shouldReceive('get')
+        config()->shouldReceive('get')
             ->once()
             ->with('database.connections.mysql.url', false)
             ->andReturn(false);
 
-        ws_config()->shouldReceive('set')
+        config()->shouldReceive('set')
             ->once()
             ->with('database.connections.mysql.database', 'my_database_test_1');
 
         $this->switchToDatabase('my_database_test_1');
     }
 
-    /**
-     * @dataProvider databaseUrls
-     */
+    #[DataProvider('databaseUrls')]
     public function testSwitchToDatabaseWithUrl($testDatabase, $url, $testUrl)
     {
         DB::shouldReceive('purge')->once();
 
-        ws_config()->shouldReceive('get')
+        config()->shouldReceive('get')
             ->once()
             ->with('database.connections.mysql.url', false)
             ->andReturn($url);
 
-        ws_config()->shouldReceive('set')
+        config()->shouldReceive('set')
             ->once()
             ->with('database.connections.mysql.url', $testUrl);
 
@@ -73,10 +72,10 @@ class TestDatabasesTest extends TestCase
         };
 
         $method = new ReflectionMethod($instance, 'switchToDatabase');
-        ws_tap($method)->setAccessible(true)->invoke($instance, $database);
+        $method->invoke($instance, $database);
     }
 
-    public function databaseUrls()
+    public static function databaseUrls()
     {
         return [
             [
@@ -97,16 +96,14 @@ class TestDatabasesTest extends TestCase
         ];
     }
 
-    public function tearDown(): void
+    protected function tearDown(): void
     {
-        parent::tearDown();
-
         Container::setInstance(null);
-        DB::clearResolvedInstances();
+        DB::clearResolvedInstance();
         DB::setFacadeApplication(null);
 
         unset($_SERVER['LARAVEL_PARALLEL_TESTING']);
 
-        m::close();
+        parent::tearDown();
     }
 }

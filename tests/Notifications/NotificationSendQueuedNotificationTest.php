@@ -14,11 +14,6 @@ use PHPUnit\Framework\TestCase;
 
 class NotificationSendQueuedNotificationTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        m::close();
-    }
-
     public function testNotificationsCanBeSent()
     {
         $job = new SendQueuedNotifications('notifiables', 'notification');
@@ -51,6 +46,19 @@ class NotificationSendQueuedNotificationTest extends TestCase
         $serialized = serialize($job);
 
         $this->assertStringContainsString($serializedNotifiable, $serialized);
+    }
+
+    public function testNotificationCanSetMaxExceptions()
+    {
+        $notifiable = new NotifiableUser;
+        $notification = new class
+        {
+            public $maxExceptions = 23;
+        };
+
+        $job = new SendQueuedNotifications($notifiable, $notification);
+
+        $this->assertEquals(23, $job->maxExceptions);
     }
 }
 

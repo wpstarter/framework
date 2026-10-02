@@ -19,7 +19,6 @@ class ResourceResponse implements Responsable
      * Create a new resource response.
      *
      * @param  mixed  $resource
-     * @return void
      */
     public function __construct($resource)
     {
@@ -34,7 +33,7 @@ class ResourceResponse implements Responsable
      */
     public function toResponse($request)
     {
-        return ws_tap(ws_response()->json(
+        return tap(response()->json(
             $this->wrap(
                 $this->resource->resolve($request),
                 $this->resource->with($request),
@@ -53,7 +52,7 @@ class ResourceResponse implements Responsable
     /**
      * Wrap the given data if necessary.
      *
-     * @param  array  $data
+     * @param  \WpStarter\Support\Collection|array  $data
      * @param  array  $with
      * @param  array  $additional
      * @return array
@@ -81,6 +80,10 @@ class ResourceResponse implements Responsable
      */
     protected function haveDefaultWrapperAndDataIsUnwrapped($data)
     {
+        if ($this->resource instanceof JsonResource && $this->resource::$forceWrapping) {
+            return $this->wrapper() !== null;
+        }
+
         return $this->wrapper() && ! array_key_exists($this->wrapper(), $data);
     }
 

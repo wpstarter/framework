@@ -6,7 +6,9 @@ use WpStarter\Console\Command;
 use WpStarter\Contracts\Console\Kernel as ConsoleKernelContract;
 use WpStarter\Filesystem\Filesystem;
 use WpStarter\Routing\RouteCollection;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'route:cache')]
 class RouteCacheCommand extends Command
 {
     /**
@@ -34,7 +36,6 @@ class RouteCacheCommand extends Command
      * Create a new route command instance.
      *
      * @param  \WpStarter\Filesystem\Filesystem  $files
-     * @return void
      */
     public function __construct(Filesystem $files)
     {
@@ -50,12 +51,12 @@ class RouteCacheCommand extends Command
      */
     public function handle()
     {
-        $this->call('route:clear');
+        $this->callSilent('route:clear');
 
         $routes = $this->getFreshApplicationRoutes();
 
         if (count($routes) === 0) {
-            return $this->error("Your application doesn't have any routes.");
+            return $this->components->error("Your application doesn't have any routes.");
         }
 
         foreach ($routes as $route) {
@@ -66,7 +67,7 @@ class RouteCacheCommand extends Command
             $this->laravel->getCachedRoutesPath(), $this->buildRouteCacheFile($routes)
         );
 
-        $this->info('Routes cached successfully!');
+        $this->components->info('Routes cached successfully.');
     }
 
     /**
@@ -76,7 +77,7 @@ class RouteCacheCommand extends Command
      */
     protected function getFreshApplicationRoutes()
     {
-        return ws_tap($this->getFreshApplication()['router']->getRoutes(), function ($routes) {
+        return tap($this->getFreshApplication()['router']->getRoutes(), function ($routes) {
             $routes->refreshNameLookups();
             $routes->refreshActionLookups();
         });
@@ -89,7 +90,7 @@ class RouteCacheCommand extends Command
      */
     protected function getFreshApplication()
     {
-        return ws_tap(require $this->laravel->bootstrapPath().'/app.php', function ($app) {
+        return tap(require $this->laravel->bootstrapPath('app.php'), function ($app) {
             $app->make(ConsoleKernelContract::class)->bootstrap();
         });
     }

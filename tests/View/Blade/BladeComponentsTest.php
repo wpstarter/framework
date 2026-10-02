@@ -2,6 +2,10 @@
 
 namespace WpStarter\Tests\View\Blade;
 
+use WpStarter\View\Component;
+use WpStarter\View\ComponentAttributeBag;
+use Mockery as m;
+
 class BladeComponentsTest extends AbstractBladeTestCase
 {
     public function testComponentsAreCompiled()
@@ -12,11 +16,12 @@ class BladeComponentsTest extends AbstractBladeTestCase
 
     public function testClassComponentsAreCompiled()
     {
-        $this->assertSame('<?php if (isset($component)) { $__componentOriginal35bda42cbf6f9717b161c4f893644ac7a48b0d98 = $component; } ?>
-<?php $component = $__env->getContainer()->make(Test::class, ["foo" => "bar"]); ?>
+        $this->assertSame(str_replace("\r\n", "\n", '<?php if (isset($component)) { $__componentOriginal2dda3d2f2f9b76bd400bf03f0b84e87f = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal2dda3d2f2f9b76bd400bf03f0b84e87f = $attributes; } ?>
+<?php $component = WpStarter\Tests\View\Blade\ComponentStub::class::resolve(["foo" => "bar"] + (isset($attributes) && $attributes instanceof WpStarter\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName(\'test\'); ?>
 <?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>', $this->compiler->compileString('@component(\'Test::class\', \'test\', ["foo" => "bar"])'));
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>'), $this->compiler->compileString('@component(\'WpStarter\Tests\View\Blade\ComponentStub::class\', \'test\', ["foo" => "bar"])'));
     }
 
     public function testEndComponentsAreCompiled()
@@ -30,12 +35,16 @@ class BladeComponentsTest extends AbstractBladeTestCase
     {
         $this->compiler->newComponentHash('foo');
 
-        $this->assertSame('<?php echo $__env->renderComponent(); ?>
+        $this->assertSame(str_replace("\r\n", "\n", '<?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
-<?php if (isset($__componentOriginal0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33)): ?>
-<?php $component = $__componentOriginal0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33; ?>
-<?php unset($__componentOriginal0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33); ?>
-<?php endif; ?>', $this->compiler->compileString('@endcomponentClass'));
+<?php if (isset($__attributesOriginal79aef92e83454121ab6e5f64077e7d8a)): ?>
+<?php $attributes = $__attributesOriginal79aef92e83454121ab6e5f64077e7d8a; ?>
+<?php unset($__attributesOriginal79aef92e83454121ab6e5f64077e7d8a); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal79aef92e83454121ab6e5f64077e7d8a)): ?>
+<?php $component = $__componentOriginal79aef92e83454121ab6e5f64077e7d8a; ?>
+<?php unset($__componentOriginal79aef92e83454121ab6e5f64077e7d8a); ?>
+<?php endif; ?>'), $this->compiler->compileString('@endcomponentClass'));
     }
 
     public function testSlotsAreCompiled()
@@ -47,5 +56,30 @@ class BladeComponentsTest extends AbstractBladeTestCase
     public function testEndSlotsAreCompiled()
     {
         $this->assertSame('<?php $__env->endSlot(); ?>', $this->compiler->compileString('@endslot'));
+    }
+
+    public function testPropsAreExtractedFromParentAttributesCorrectlyForClassComponents()
+    {
+        $attributes = new ComponentAttributeBag(['foo' => 'baz', 'other' => 'ok']);
+
+        $component = m::mock(Component::class);
+        $component->shouldReceive('withName', 'test');
+        $component->shouldReceive('shouldRender')->andReturn(false);
+
+        Component::resolveComponentsUsing(fn () => $component);
+
+        $template = $this->compiler->compileString('@component(\'WpStarter\Tests\View\Blade\ComponentStub::class\', \'test\', ["foo" => "bar"])');
+
+        ob_start();
+        eval(" ?> $template <?php endif; ");
+        ob_get_clean();
+    }
+}
+
+class ComponentStub extends Component
+{
+    public function render()
+    {
+        return '';
     }
 }

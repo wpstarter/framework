@@ -9,20 +9,12 @@ class PasswordReset
     use SerializesModels;
 
     /**
-     * The user.
-     *
-     * @var \WpStarter\Contracts\Auth\Authenticatable
-     */
-    public $user;
-
-    /**
      * Create a new event instance.
      *
-     * @param  \WpStarter\Contracts\Auth\Authenticatable  $user
-     * @return void
+     * @param  \WpStarter\Contracts\Auth\Authenticatable  $user  The user.
      */
-    public function __construct($user)
-    {
-        $this->user = $user;
+    public function __construct(
+        public $user,
+    ) {
     }
 }

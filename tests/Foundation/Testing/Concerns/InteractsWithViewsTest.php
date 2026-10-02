@@ -1,8 +1,9 @@
 <?php
 
-namespace WpStarter\Tests\Foundation\Bootstrap\Testing\Concerns;
+namespace WpStarter\Tests\Foundation\Testing\Concerns;
 
 use WpStarter\Foundation\Testing\Concerns\InteractsWithViews;
+use WpStarter\Testing\TestComponent;
 use WpStarter\View\Component;
 use Orchestra\Testbench\TestCase;
 
@@ -14,7 +15,7 @@ class InteractsWithViewsTest extends TestCase
     {
         $string = (string) $this->blade('@if(true)test @endif');
 
-        $this->assertEquals('test ', $string);
+        $this->assertSame('test ', $string);
     }
 
     public function testComponentCanAccessPublicProperties()
@@ -36,8 +37,25 @@ class InteractsWithViewsTest extends TestCase
 
         $component = $this->component(get_class($exampleComponent));
 
-        $this->assertEquals('bar', $component->foo);
-        $this->assertEquals('hello', $component->speak());
+        $this->assertSame('bar', $component->foo);
+        $this->assertSame('hello', $component->speak());
         $component->assertSee('content');
+    }
+
+    public function testComponentMacroable()
+    {
+        TestComponent::macro('foo', fn (): string => 'bar');
+
+        $exampleComponent = new class extends Component
+        {
+            public function render()
+            {
+                return 'rendered content';
+            }
+        };
+
+        $component = $this->component(get_class($exampleComponent));
+
+        $this->assertSame('bar', $component->foo());
     }
 }

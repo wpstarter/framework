@@ -2,6 +2,7 @@
 
 namespace WpStarter\Foundation\Bus;
 
+use Closure;
 use WpStarter\Contracts\Bus\Dispatcher;
 use WpStarter\Support\Fluent;
 
@@ -10,38 +11,55 @@ trait Dispatchable
     /**
      * Dispatch the job with the given arguments.
      *
+     * @param  mixed  ...$arguments
      * @return \WpStarter\Foundation\Bus\PendingDispatch
      */
     public static function dispatch(...$arguments)
     {
-        return new PendingDispatch(new static(...$arguments));
+        return static::newPendingDispatch(new static(...$arguments));
     }
 
     /**
      * Dispatch the job with the given arguments if the given truth test passes.
      *
-     * @param  bool  $boolean
+     * @param  bool|\Closure  $boolean
      * @param  mixed  ...$arguments
      * @return \WpStarter\Foundation\Bus\PendingDispatch|\WpStarter\Support\Fluent
      */
     public static function dispatchIf($boolean, ...$arguments)
     {
-        return $boolean
-            ? new PendingDispatch(new static(...$arguments))
+        if ($boolean instanceof Closure) {
+            $dispatchable = new static(...$arguments);
+
+            return value($boolean, $dispatchable)
+                ? static::newPendingDispatch($dispatchable)
+                : new Fluent;
+        }
+
+        return value($boolean)
+            ? static::newPendingDispatch(new static(...$arguments))
             : new Fluent;
     }
 
     /**
      * Dispatch the job with the given arguments unless the given truth test passes.
      *
-     * @param  bool  $boolean
+     * @param  bool|\Closure  $boolean
      * @param  mixed  ...$arguments
      * @return \WpStarter\Foundation\Bus\PendingDispatch|\WpStarter\Support\Fluent
      */
     public static function dispatchUnless($boolean, ...$arguments)
     {
-        return ! $boolean
-            ? new PendingDispatch(new static(...$arguments))
+        if ($boolean instanceof Closure) {
+            $dispatchable = new static(...$arguments);
+
+            return ! value($boolean, $dispatchable)
+                ? static::newPendingDispatch($dispatchable)
+                : new Fluent;
+        }
+
+        return ! value($boolean)
+            ? static::newPendingDispatch(new static(...$arguments))
             : new Fluent;
     }
 
@@ -50,33 +68,23 @@ trait Dispatchable
      *
      * Queueable jobs will be dispatched to the "sync" queue.
      *
+     * @param  mixed  ...$arguments
      * @return mixed
      */
     public static function dispatchSync(...$arguments)
     {
-        return ws_app(Dispatcher::class)->dispatchSync(new static(...$arguments));
-    }
-
-    /**
-     * Dispatch a command to its appropriate handler in the current process.
-     *
-     * @return mixed
-     *
-     * @deprecated Will be removed in a future Laravel version.
-     */
-    public static function dispatchNow(...$arguments)
-    {
-        return ws_app(Dispatcher::class)->dispatchNow(new static(...$arguments));
+        return app(Dispatcher::class)->dispatchSync(new static(...$arguments));
     }
 
     /**
      * Dispatch a command to its appropriate handler after the current process.
      *
+     * @param  mixed  ...$arguments
      * @return mixed
      */
     public static function dispatchAfterResponse(...$arguments)
     {
-        return ws_app(Dispatcher::class)->dispatchAfterResponse(new static(...$arguments));
+        return self::dispatch(...$arguments)->afterResponse();
     }
 
     /**
@@ -88,5 +96,16 @@ trait Dispatchable
     public static function withChain($chain)
     {
         return new PendingChain(static::class, $chain);
+    }
+
+    /**
+     * Create a new pending job dispatch instance.
+     *
+     * @param  mixed  $job
+     * @return \WpStarter\Foundation\Bus\PendingDispatch
+     */
+    protected static function newPendingDispatch($job)
+    {
+        return new PendingDispatch($job);
     }
 }

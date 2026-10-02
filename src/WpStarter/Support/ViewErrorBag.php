@@ -4,16 +4,17 @@ namespace WpStarter\Support;
 
 use Countable;
 use WpStarter\Contracts\Support\MessageBag as MessageBagContract;
+use Stringable;
 
 /**
  * @mixin \WpStarter\Contracts\Support\MessageBag
  */
-class ViewErrorBag implements Countable
+class ViewErrorBag implements Countable, Stringable
 {
     /**
      * The array of the view error bags.
      *
-     * @var array
+     * @var array<string, \WpStarter\Contracts\Support\MessageBag>
      */
     protected $bags = [];
 
@@ -42,7 +43,7 @@ class ViewErrorBag implements Countable
     /**
      * Get all the bags.
      *
-     * @return array
+     * @return array<string, \WpStarter\Contracts\Support\MessageBag>
      */
     public function getBags()
     {
@@ -78,8 +79,7 @@ class ViewErrorBag implements Countable
      *
      * @return int
      */
-    #[\ReturnTypeWillChange]
-    public function count()
+    public function count(): int
     {
         return $this->getBag('default')->count();
     }

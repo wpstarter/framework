@@ -4,7 +4,9 @@ namespace WpStarter\Foundation\Console;
 
 use WpStarter\Console\Command;
 use WpStarter\Filesystem\Filesystem;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'route:clear')]
 class RouteClearCommand extends Command
 {
     /**
@@ -32,7 +34,6 @@ class RouteClearCommand extends Command
      * Create a new route clear command instance.
      *
      * @param  \WpStarter\Filesystem\Filesystem  $files
-     * @return void
      */
     public function __construct(Filesystem $files)
     {
@@ -50,6 +51,6 @@ class RouteClearCommand extends Command
     {
         $this->files->delete($this->laravel->getCachedRoutesPath());
 
-        $this->info('Route cache cleared!');
+        $this->components->info('Route cache cleared successfully.');
     }
 }

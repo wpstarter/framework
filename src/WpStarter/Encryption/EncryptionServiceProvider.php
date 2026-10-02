@@ -5,7 +5,6 @@ namespace WpStarter\Encryption;
 use WpStarter\Support\ServiceProvider;
 use WpStarter\Support\Str;
 use Laravel\SerializableClosure\SerializableClosure;
-use Opis\Closure\SerializableClosure as OpisSerializableClosure;
 
 class EncryptionServiceProvider extends ServiceProvider
 {
@@ -17,7 +16,6 @@ class EncryptionServiceProvider extends ServiceProvider
     public function register()
     {
         $this->registerEncrypter();
-        $this->registerOpisSecurityKey();
         $this->registerSerializableClosureSecurityKey();
     }
 
@@ -31,28 +29,12 @@ class EncryptionServiceProvider extends ServiceProvider
         $this->app->singleton('encrypter', function ($app) {
             $config = $app->make('config')->get('app');
 
-            return new Encrypter($this->parseKey($config), $config['cipher']);
+            return (new Encrypter($this->parseKey($config), $config['cipher']))
+                ->previousKeys(array_map(
+                    fn ($key) => $this->parseKey(['key' => $key]),
+                    $config['previous_keys'] ?? []
+                ));
         });
-    }
-
-    /**
-     * Configure Opis Closure signing for security.
-     *
-     * @return void
-     *
-     * @deprecated Will be removed in a future Laravel version.
-     */
-    protected function registerOpisSecurityKey()
-    {
-        if (\PHP_VERSION_ID < 80100) {
-            $config = $this->app->make('config')->get('app');
-
-            if (! class_exists(OpisSerializableClosure::class) || empty($config['key'])) {
-                return;
-            }
-
-            OpisSerializableClosure::setSecretKey($this->parseKey($config));
-        }
     }
 
     /**
@@ -96,7 +78,7 @@ class EncryptionServiceProvider extends ServiceProvider
      */
     protected function key(array $config)
     {
-        return ws_tap($config['key'], function ($key) {
+        return tap($config['key'], function ($key) {
             if (empty($key)) {
                 throw new MissingAppKeyException;
             }

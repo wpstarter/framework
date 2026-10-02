@@ -2,16 +2,26 @@
 
 namespace WpStarter\Bus;
 
+use Carbon\CarbonImmutable;
 use WpStarter\Container\Container;
+use WpStarter\Support\Str;
+use WpStarter\Support\Testing\Fakes\BatchFake;
 
 trait Batchable
 {
     /**
      * The batch ID (if applicable).
      *
-     * @var string
+     * @var string|null
      */
     public $batchId;
+
+    /**
+     * The fake batch, if applicable.
+     *
+     * @var \WpStarter\Support\Testing\Fakes\BatchFake
+     */
+    private $fakeBatch;
 
     /**
      * Get the batch instance for the job, if applicable.
@@ -20,8 +30,12 @@ trait Batchable
      */
     public function batch()
     {
+        if ($this->fakeBatch) {
+            return $this->fakeBatch;
+        }
+
         if ($this->batchId) {
-            return Container::getInstance()->make(BatchRepository::class)->find($this->batchId);
+            return Container::getInstance()->make(BatchRepository::class)?->find($this->batchId);
         }
     }
 
@@ -48,5 +62,47 @@ trait Batchable
         $this->batchId = $batchId;
 
         return $this;
+    }
+
+    /**
+     * Indicate that the job should use a fake batch.
+     *
+     * @param  string  $id
+     * @param  string  $name
+     * @param  int  $totalJobs
+     * @param  int  $pendingJobs
+     * @param  int  $failedJobs
+     * @param  array  $failedJobIds
+     * @param  array  $options
+     * @param  \Carbon\CarbonImmutable|null  $createdAt
+     * @param  \Carbon\CarbonImmutable|null  $cancelledAt
+     * @param  \Carbon\CarbonImmutable|null  $finishedAt
+     * @return array{0: $this, 1: \WpStarter\Support\Testing\Fakes\BatchFake}
+     */
+    public function withFakeBatch(string $id = '',
+                                  string $name = '',
+                                  int $totalJobs = 0,
+                                  int $pendingJobs = 0,
+                                  int $failedJobs = 0,
+                                  array $failedJobIds = [],
+                                  array $options = [],
+                                  ?CarbonImmutable $createdAt = null,
+                                  ?CarbonImmutable $cancelledAt = null,
+                                  ?CarbonImmutable $finishedAt = null)
+    {
+        $this->fakeBatch = new BatchFake(
+            empty($id) ? (string) Str::uuid() : $id,
+            $name,
+            $totalJobs,
+            $pendingJobs,
+            $failedJobs,
+            $failedJobIds,
+            $options,
+            $createdAt ?? CarbonImmutable::now(),
+            $cancelledAt,
+            $finishedAt,
+        );
+
+        return [$this, $this->fakeBatch];
     }
 }

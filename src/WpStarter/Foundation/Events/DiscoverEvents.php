@@ -2,6 +2,8 @@
 
 namespace WpStarter\Foundation\Events;
 
+use WpStarter\Support\Arr;
+use WpStarter\Support\Collection;
 use WpStarter\Support\Reflector;
 use WpStarter\Support\Str;
 use ReflectionClass;
@@ -13,16 +15,27 @@ use Symfony\Component\Finder\Finder;
 class DiscoverEvents
 {
     /**
+     * The callback to be used to guess class names.
+     *
+     * @var (callable(SplFileInfo, string): class-string)|null
+     */
+    public static $guessClassNamesUsingCallback;
+
+    /**
      * Get all of the events and listeners by searching the given listener directory.
      *
-     * @param  string  $listenerPath
+     * @param  array<int, string>|string  $listenerPath
      * @param  string  $basePath
      * @return array
      */
     public static function within($listenerPath, $basePath)
     {
-        $listeners = ws_collect(static::getListenerEvents(
-            (new Finder)->files()->in($listenerPath), $basePath
+        if (Arr::wrap($listenerPath) === []) {
+            return [];
+        }
+
+        $listeners = new Collection(static::getListenerEvents(
+            Finder::create()->files()->in($listenerPath), $basePath
         ));
 
         $discoveredEvents = [];
@@ -43,7 +56,7 @@ class DiscoverEvents
     /**
      * Get all of the listeners and their corresponding events.
      *
-     * @param  iterable  $listeners
+     * @param  iterable<string, SplFileInfo>  $listeners
      * @param  string  $basePath
      * @return array
      */
@@ -56,7 +69,7 @@ class DiscoverEvents
                 $listener = new ReflectionClass(
                     static::classFromFile($listener, $basePath)
                 );
-            } catch (ReflectionException $e) {
+            } catch (ReflectionException) {
                 continue;
             }
 
@@ -65,7 +78,7 @@ class DiscoverEvents
             }
 
             foreach ($listener->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
-                if (! Str::is('handle*', $method->name) ||
+                if ((! Str::is('handle*', $method->name) && ! Str::is('__invoke', $method->name)) ||
                     ! isset($method->getParameters()[0])) {
                     continue;
                 }
@@ -83,16 +96,31 @@ class DiscoverEvents
      *
      * @param  \SplFileInfo  $file
      * @param  string  $basePath
-     * @return string
+     * @return class-string
      */
     protected static function classFromFile(SplFileInfo $file, $basePath)
     {
+        if (static::$guessClassNamesUsingCallback) {
+            return call_user_func(static::$guessClassNamesUsingCallback, $file, $basePath);
+        }
+
         $class = trim(Str::replaceFirst($basePath, '', $file->getRealPath()), DIRECTORY_SEPARATOR);
 
-        return str_replace(
-            [DIRECTORY_SEPARATOR, ucfirst(basename(ws_app()->path())).'\\'],
-            ['\\', ws_app()->getNamespace()],
+        return ucfirst(Str::camel(str_replace(
+            [DIRECTORY_SEPARATOR, ucfirst(basename(app()->path())).'\\'],
+            ['\\', app()->getNamespace()],
             ucfirst(Str::replaceLast('.php', '', $class))
-        );
+        )));
+    }
+
+    /**
+     * Specify a callback to be used to guess class names.
+     *
+     * @param  callable(SplFileInfo, string): class-string  $callback
+     * @return void
+     */
+    public static function guessClassNamesUsing(callable $callback)
+    {
+        static::$guessClassNamesUsingCallback = $callback;
     }
 }

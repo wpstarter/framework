@@ -2,50 +2,11 @@
 
 namespace WpStarter\Database\Schema;
 
+use WpStarter\Database\Concerns\ParsesSearchPath;
+
 class PostgresBuilder extends Builder
 {
-    /**
-     * Create a database in the schema.
-     *
-     * @param  string  $name
-     * @return bool
-     */
-    public function createDatabase($name)
-    {
-        return $this->connection->statement(
-            $this->grammar->compileCreateDatabase($name, $this->connection)
-        );
-    }
-
-    /**
-     * Drop a database from the schema if the database exists.
-     *
-     * @param  string  $name
-     * @return bool
-     */
-    public function dropDatabaseIfExists($name)
-    {
-        return $this->connection->statement(
-            $this->grammar->compileDropDatabaseIfExists($name)
-        );
-    }
-
-    /**
-     * Determine if the given table exists.
-     *
-     * @param  string  $table
-     * @return bool
-     */
-    public function hasTable($table)
-    {
-        [$schema, $table] = $this->parseSchemaAndTable($table);
-
-        $table = $this->connection->getTablePrefix().$table;
-
-        return count($this->connection->select(
-            $this->grammar->compileTableExists(), [$schema, $table]
-        )) > 0;
-    }
+    use ParsesSearchPath;
 
     /**
      * Drop all tables from the database.
@@ -58,13 +19,9 @@ class PostgresBuilder extends Builder
 
         $excludedTables = $this->connection->getConfig('dont_drop') ?? ['spatial_ref_sys'];
 
-        foreach ($this->getAllTables() as $row) {
-            $row = (array) $row;
-
-            $table = reset($row);
-
-            if (! in_array($table, $excludedTables)) {
-                $tables[] = $table;
+        foreach ($this->getTables($this->getCurrentSchemaListing()) as $table) {
+            if (empty(array_intersect([$table['name'], $table['schema_qualified_name']], $excludedTables))) {
+                $tables[] = $table['schema_qualified_name'];
             }
         }
 
@@ -84,13 +41,7 @@ class PostgresBuilder extends Builder
      */
     public function dropAllViews()
     {
-        $views = [];
-
-        foreach ($this->getAllViews() as $row) {
-            $row = (array) $row;
-
-            $views[] = reset($row);
-        }
+        $views = array_column($this->getViews($this->getCurrentSchemaListing()), 'schema_qualified_name');
 
         if (empty($views)) {
             return;
@@ -109,95 +60,41 @@ class PostgresBuilder extends Builder
     public function dropAllTypes()
     {
         $types = [];
+        $domains = [];
 
-        foreach ($this->getAllTypes() as $row) {
-            $row = (array) $row;
-
-            $types[] = reset($row);
-        }
-
-        if (empty($types)) {
-            return;
-        }
-
-        $this->connection->statement(
-            $this->grammar->compileDropAllTypes($types)
-        );
-    }
-
-    /**
-     * Get all of the table names for the database.
-     *
-     * @return array
-     */
-    public function getAllTables()
-    {
-        return $this->connection->select(
-            $this->grammar->compileGetAllTables((array) $this->connection->getConfig('schema'))
-        );
-    }
-
-    /**
-     * Get all of the view names for the database.
-     *
-     * @return array
-     */
-    public function getAllViews()
-    {
-        return $this->connection->select(
-            $this->grammar->compileGetAllViews((array) $this->connection->getConfig('schema'))
-        );
-    }
-
-    /**
-     * Get all of the type names for the database.
-     *
-     * @return array
-     */
-    public function getAllTypes()
-    {
-        return $this->connection->select(
-            $this->grammar->compileGetAllTypes()
-        );
-    }
-
-    /**
-     * Get the column listing for a given table.
-     *
-     * @param  string  $table
-     * @return array
-     */
-    public function getColumnListing($table)
-    {
-        [$schema, $table] = $this->parseSchemaAndTable($table);
-
-        $table = $this->connection->getTablePrefix().$table;
-
-        $results = $this->connection->select(
-            $this->grammar->compileColumnListing(), [$schema, $table]
-        );
-
-        return $this->connection->getPostProcessor()->processColumnListing($results);
-    }
-
-    /**
-     * Parse the table name and extract the schema and table.
-     *
-     * @param  string  $table
-     * @return array
-     */
-    protected function parseSchemaAndTable($table)
-    {
-        $table = explode('.', $table);
-
-        if (is_array($schema = $this->connection->getConfig('schema'))) {
-            if (in_array($table[0], $schema)) {
-                return [array_shift($table), implode('.', $table)];
+        foreach ($this->getTypes($this->getCurrentSchemaListing()) as $type) {
+            if (! $type['implicit']) {
+                if ($type['type'] === 'domain') {
+                    $domains[] = $type['schema_qualified_name'];
+                } else {
+                    $types[] = $type['schema_qualified_name'];
+                }
             }
-
-            $schema = ws_head($schema);
         }
 
-        return [$schema ?: 'public', implode('.', $table)];
+        if (! empty($types)) {
+            $this->connection->statement($this->grammar->compileDropAllTypes($types));
+        }
+
+        if (! empty($domains)) {
+            $this->connection->statement($this->grammar->compileDropAllDomains($domains));
+        }
+    }
+
+    /**
+     * Get the current schemas for the connection.
+     *
+     * @return string[]
+     */
+    public function getCurrentSchemaListing()
+    {
+        return array_map(
+            fn ($schema) => $schema === '$user' ? $this->connection->getConfig('username') : $schema,
+            $this->parseSearchPath(
+                $this->connection->getConfig('search_path')
+                    ?: $this->connection->getConfig('schema')
+                    ?: 'public'
+            )
+        );
     }
 }

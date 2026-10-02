@@ -7,20 +7,12 @@ use WpStarter\Bus\Batch;
 class BatchDispatched
 {
     /**
-     * The batch instance.
-     *
-     * @var \WpStarter\Bus\Batch
-     */
-    public $batch;
-
-    /**
      * Create a new event instance.
      *
-     * @param  \WpStarter\Bus\Batch  $batch
-     * @return void
+     * @param  \WpStarter\Bus\Batch  $batch  The batch instance.
      */
-    public function __construct(Batch $batch)
-    {
-        $this->batch = $batch;
+    public function __construct(
+        public Batch $batch,
+    ) {
     }
 }

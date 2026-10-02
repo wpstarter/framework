@@ -7,7 +7,6 @@ use WpStarter\Contracts\Events\Dispatcher;
 use WpStarter\Contracts\Support\Arrayable;
 use WpStarter\Contracts\View\Factory as FactoryContract;
 use WpStarter\Support\Arr;
-use WpStarter\Support\Str;
 use WpStarter\Support\Traits\Macroable;
 use WpStarter\View\Engines\EngineResolver;
 use InvalidArgumentException;
@@ -17,6 +16,7 @@ class Factory implements FactoryContract
     use Macroable,
         Concerns\ManagesComponents,
         Concerns\ManagesEvents,
+        Concerns\ManagesFragments,
         Concerns\ManagesLayouts,
         Concerns\ManagesLoops,
         Concerns\ManagesStacks,
@@ -91,12 +91,25 @@ class Factory implements FactoryContract
     protected $renderedOnce = [];
 
     /**
+     * The cached array of engines for paths.
+     *
+     * @var array
+     */
+    protected $pathEngineCache = [];
+
+    /**
+     * The cache of normalized names for views.
+     *
+     * @var array
+     */
+    protected $normalizedNameCache = [];
+
+    /**
      * Create a new view factory instance.
      *
      * @param  \WpStarter\View\Engines\EngineResolver  $engines
      * @param  \WpStarter\View\ViewFinderInterface  $finder
      * @param  \WpStarter\Contracts\Events\Dispatcher  $events
-     * @return void
      */
     public function __construct(EngineResolver $engines, ViewFinderInterface $finder, Dispatcher $events)
     {
@@ -119,7 +132,7 @@ class Factory implements FactoryContract
     {
         $data = array_merge($mergeData, $this->parseData($data));
 
-        return ws_tap($this->viewInstance($path, $path, $data), function ($view) {
+        return tap($this->viewInstance($path, $path, $data), function ($view) {
             $this->callCreator($view);
         });
     }
@@ -143,7 +156,7 @@ class Factory implements FactoryContract
         // the caller for rendering or performing other view manipulations on this.
         $data = array_merge($mergeData, $this->parseData($data));
 
-        return ws_tap($this->viewInstance($view, $path, $data), function ($view) {
+        return tap($this->viewInstance($view, $path, $data), function ($view) {
             $this->callCreator($view);
         });
     }
@@ -231,9 +244,9 @@ class Factory implements FactoryContract
         // view. Alternatively, the "empty view" could be a raw string that begins
         // with "raw|" for convenience and to let this know that it is a string.
         else {
-            $result = Str::startsWith($empty, 'raw|')
-                        ? substr($empty, 4)
-                        : $this->make($empty)->render();
+            $result = str_starts_with($empty, 'raw|')
+                ? substr($empty, 4)
+                : $this->make($empty)->render();
         }
 
         return $result;
@@ -247,7 +260,7 @@ class Factory implements FactoryContract
      */
     protected function normalizeName($name)
     {
-        return ViewName::normalize($name);
+        return $this->normalizedNameCache[$name] ??= ViewName::normalize($name);
     }
 
     /**
@@ -284,7 +297,7 @@ class Factory implements FactoryContract
     {
         try {
             $this->finder->find($view);
-        } catch (InvalidArgumentException $e) {
+        } catch (InvalidArgumentException) {
             return false;
         }
 
@@ -301,13 +314,17 @@ class Factory implements FactoryContract
      */
     public function getEngineFromPath($path)
     {
+        if (isset($this->pathEngineCache[$path])) {
+            return $this->engines->resolve($this->pathEngineCache[$path]);
+        }
+
         if (! $extension = $this->getExtension($path)) {
             throw new InvalidArgumentException("Unrecognized extension in file: {$path}.");
         }
 
-        $engine = $this->extensions[$extension];
-
-        return $this->engines->resolve($engine);
+        return $this->engines->resolve(
+            $this->pathEngineCache[$path] = $this->extensions[$extension]
+        );
     }
 
     /**
@@ -321,7 +338,7 @@ class Factory implements FactoryContract
         $extensions = array_keys($this->extensions);
 
         return Arr::first($extensions, function ($value) use ($path) {
-            return Str::endsWith($path, '.'.$value);
+            return str_ends_with($path, '.'.$value);
         });
     }
 
@@ -329,7 +346,7 @@ class Factory implements FactoryContract
      * Add a piece of shared data to the environment.
      *
      * @param  array|string  $key
-     * @param  mixed|null  $value
+     * @param  mixed  $value
      * @return mixed
      */
     public function share($key, $value = null)
@@ -407,6 +424,17 @@ class Factory implements FactoryContract
     }
 
     /**
+     * Prepend a location to the array of view locations.
+     *
+     * @param  string  $location
+     * @return void
+     */
+    public function prependLocation($location)
+    {
+        $this->finder->prependLocation($location);
+    }
+
+    /**
      * Add a new namespace to the loader.
      *
      * @param  string  $namespace
@@ -467,6 +495,8 @@ class Factory implements FactoryContract
         unset($this->extensions[$extension]);
 
         $this->extensions = array_merge([$extension => $engine], $this->extensions);
+
+        $this->pathEngineCache = [];
     }
 
     /**
@@ -482,6 +512,7 @@ class Factory implements FactoryContract
         $this->flushSections();
         $this->flushStacks();
         $this->flushComponents();
+        $this->flushFragments();
     }
 
     /**

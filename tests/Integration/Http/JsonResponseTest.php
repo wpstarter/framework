@@ -5,6 +5,7 @@ namespace WpStarter\Tests\Integration\Http;
 use WpStarter\Contracts\Support\Jsonable;
 use WpStarter\Http\JsonResponse;
 use WpStarter\Support\Facades\Route;
+use JsonSerializable;
 use Orchestra\Testbench\TestCase;
 
 class JsonResponseTest extends TestCase
@@ -15,7 +16,7 @@ class JsonResponseTest extends TestCase
         $this->expectExceptionMessage('Malformed UTF-8 characters, possibly incorrectly encoded');
 
         Route::get('/response', function () {
-            return new JsonResponse(new class implements \JsonSerializable
+            return new JsonResponse(new class implements JsonSerializable
             {
                 public function jsonSerialize(): string
                 {

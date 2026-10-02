@@ -1,0 +1,328 @@
+<?php
+
+namespace WpStarter\Tests\Integration\Database;
+
+use WpStarter\Bus\Queueable;
+use WpStarter\Contracts\Queue\ShouldQueue;
+use WpStarter\Foundation\Auth\User;
+use WpStarter\Foundation\Bus\Dispatchable;
+use WpStarter\Queue\InteractsWithQueue;
+use WpStarter\Support\Facades\DB;
+use Orchestra\Testbench\Concerns\WithLaravelMigrations;
+use Orchestra\Testbench\Factories\UserFactory;
+
+trait EloquentTransactionWithAfterCommitTests
+{
+    use WithLaravelMigrations;
+
+    protected function setUpEloquentTransactionWithAfterCommitTests(): void
+    {
+        User::unguard();
+    }
+
+    protected function tearDownEloquentTransactionWithAfterCommitTests(): void
+    {
+        User::reguard();
+    }
+
+    public function testObserverIsCalledOnTestsWithAfterCommit()
+    {
+        User::observe($observer = EloquentTransactionWithAfterCommitTestsUserObserver::resetting());
+
+        $user1 = User::create(UserFactory::new()->raw());
+
+        $this->assertTrue($user1->exists);
+        $this->assertEquals(1, $observer::$calledTimes, 'Failed to assert the observer was called once.');
+    }
+
+    public function testObserverCalledWithAfterCommitWhenInsideTransaction()
+    {
+        User::observe($observer = EloquentTransactionWithAfterCommitTestsUserObserver::resetting());
+
+        $user1 = DB::transaction(fn () => User::create(UserFactory::new()->raw()));
+
+        $this->assertTrue($user1->exists);
+        $this->assertEquals(1, $observer::$calledTimes, 'Failed to assert the observer was called once.');
+    }
+
+    public function testObserverCalledWithAfterCommitWhenInsideTransactionWithDispatchSync()
+    {
+        User::observe($observer = EloquentTransactionWithAfterCommitTestsUserObserverUsingDispatchSync::resetting());
+
+        $user1 = DB::transaction(fn () => User::create(UserFactory::new()->raw()));
+
+        $this->assertTrue($user1->exists);
+        $this->assertEquals(1, $observer::$calledTimes, 'Failed to assert the observer was called once.');
+
+        $this->assertDatabaseHas('password_reset_tokens', [
+            'email' => $user1->email,
+            'token' => sha1($user1->email),
+        ]);
+    }
+
+    public function testObserverIsCalledOnTestsWithAfterCommitWhenUsingSavepoint()
+    {
+        User::observe($observer = EloquentTransactionWithAfterCommitTestsUserObserver::resetting());
+
+        $user1 = User::createOrFirst(UserFactory::new()->raw());
+
+        $this->assertTrue($user1->exists);
+        $this->assertEquals(1, $observer::$calledTimes, 'Failed to assert the observer was called once.');
+    }
+
+    public function testObserverIsCalledOnTestsWithAfterCommitWhenUsingSavepointAndInsideTransaction()
+    {
+        User::observe($observer = EloquentTransactionWithAfterCommitTestsUserObserver::resetting());
+
+        $user1 = DB::transaction(fn () => User::createOrFirst(UserFactory::new()->raw()));
+
+        $this->assertTrue($user1->exists);
+        $this->assertEquals(1, $observer::$calledTimes, 'Failed to assert the observer was called once.');
+    }
+
+    public function testObserverIsCalledEvenWhenDeeplyNestingTransactions()
+    {
+        User::observe($observer = EloquentTransactionWithAfterCommitTestsUserObserver::resetting());
+
+        $user1 = DB::transaction(function () use ($observer) {
+            return tap(DB::transaction(function () use ($observer) {
+                return tap(DB::transaction(function () use ($observer) {
+                    return tap(User::createOrFirst(UserFactory::new()->raw()), function () use ($observer) {
+                        $this->assertEquals(0, $observer::$calledTimes, 'Should not have been called');
+                    });
+                }), function () use ($observer) {
+                    $this->assertEquals(0, $observer::$calledTimes, 'Should not have been called');
+                });
+            }), function () use ($observer) {
+                $this->assertEquals(0, $observer::$calledTimes, 'Should not have been called');
+            });
+        });
+
+        $this->assertTrue($user1->exists);
+        $this->assertEquals(1, $observer::$calledTimes, 'Failed to assert the observer was called once.');
+    }
+
+    public function testAfterCommitObserverCreatingEventFiresImmediately()
+    {
+        User::observe($observer = EloquentTransactionWithAfterCommitTestsCreatingObserver::resetting());
+
+        DB::transaction(function () use ($observer) {
+            User::create(UserFactory::new()->raw());
+
+            $this->assertTrue($observer::$creatingCalled, 'creating should fire immediately inside the transaction');
+            $this->assertFalse($observer::$createdCalled, 'created should not fire until after commit');
+        });
+
+        $this->assertTrue($observer::$createdCalled, 'created should fire after commit');
+    }
+
+    public function testAfterCommitObserverUpdatingEventFiresImmediately()
+    {
+        User::observe($observer = EloquentTransactionWithAfterCommitTestsUpdatingObserver::resetting());
+
+        $user = User::create(UserFactory::new()->raw());
+
+        DB::transaction(function () use ($user, $observer) {
+            $user->update(['name' => 'Updated Name']);
+
+            $this->assertTrue($observer::$updatingCalled, 'updating should fire immediately inside the transaction');
+            $this->assertFalse($observer::$updatedCalled, 'updated should not fire until after commit');
+        });
+
+        $this->assertTrue($observer::$updatedCalled, 'updated should fire after commit');
+    }
+
+    public function testAfterCommitObserverCreatingCanCancelOperation()
+    {
+        User::observe($observer = EloquentTransactionWithAfterCommitTestsCancellingObserver::resetting());
+
+        $user = DB::transaction(fn () => User::create(UserFactory::new()->raw()));
+
+        $this->assertFalse($user->exists, 'Model should not be persisted when creating returns false');
+        $this->assertTrue($observer::$creatingCalled, 'creating should have been called');
+        $this->assertFalse($observer::$createdCalled, 'created should not fire when creating was cancelled');
+    }
+
+    public function testTransactionCallbackExceptions()
+    {
+        [$firstObject, $secondObject] = [
+            new EloquentTransactionWithAfterCommitTestsTestObjectForTransactions(),
+            new EloquentTransactionWithAfterCommitTestsTestObjectForTransactions(),
+        ];
+
+        $rootTransactionLevel = DB::transactionLevel();
+
+        // After commit callbacks may fail with an exception. When they do, the rest of the callbacks are not
+        // executed. It's important that the transaction would already be committed by that point, so the
+        // transaction level should be modified before executing any callbacks. Also, exceptions in the
+        // callbacks should not affect the connection's transaction level.
+        $this->assertThrows(function () use ($rootTransactionLevel, $secondObject, $firstObject) {
+            DB::transaction(function () use ($rootTransactionLevel, $firstObject, $secondObject) {
+                DB::transaction(function () use ($rootTransactionLevel, $firstObject) {
+                    $this->assertSame($rootTransactionLevel + 2, DB::transactionLevel());
+
+                    DB::afterCommit(function () use ($rootTransactionLevel, $firstObject) {
+                        $this->assertSame($rootTransactionLevel, DB::transactionLevel());
+
+                        $firstObject->handle();
+                    });
+                });
+
+                $this->assertSame($rootTransactionLevel + 1, DB::transactionLevel());
+
+                DB::afterCommit(fn () => throw new \RuntimeException());
+                DB::afterCommit(fn () => $secondObject->handle());
+            });
+        }, \RuntimeException::class);
+
+        $this->assertSame($rootTransactionLevel, DB::transactionLevel());
+
+        $this->assertTrue($firstObject->ran);
+        $this->assertFalse($secondObject->ran);
+        $this->assertEquals(1, $firstObject->runs);
+    }
+}
+
+class EloquentTransactionWithAfterCommitTestsUserObserver
+{
+    public static $calledTimes = 0;
+
+    public $afterCommit = true;
+
+    public static function resetting()
+    {
+        static::$calledTimes = 0;
+
+        return new static();
+    }
+
+    public function created($user)
+    {
+        static::$calledTimes++;
+    }
+}
+
+class EloquentTransactionWithAfterCommitTestsUserObserverUsingDispatchSync extends EloquentTransactionWithAfterCommitTestsUserObserver
+{
+    public function created($user)
+    {
+        dispatch_sync(new EloquentTransactionWithAfterCommitTestsJob($user->email));
+
+        parent::created($user);
+    }
+}
+
+class EloquentTransactionWithAfterCommitTestsJob implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable;
+
+    public function __construct(public string $email)
+    {
+        // ...
+    }
+
+    public function handle(): void
+    {
+        DB::transaction(function () {
+            DB::table('password_reset_tokens')->insert([
+                ['email' => $this->email, 'token' => sha1($this->email), 'created_at' => now()],
+            ]);
+        });
+    }
+}
+
+class EloquentTransactionWithAfterCommitTestsTestObjectForTransactions
+{
+    public $ran = false;
+
+    public $runs = 0;
+
+    public function handle()
+    {
+        $this->ran = true;
+        $this->runs++;
+    }
+}
+
+class EloquentTransactionWithAfterCommitTestsCreatingObserver
+{
+    public static $creatingCalled = false;
+
+    public static $createdCalled = false;
+
+    public $afterCommit = true;
+
+    public static function resetting()
+    {
+        static::$creatingCalled = false;
+        static::$createdCalled = false;
+
+        return new static();
+    }
+
+    public function creating($user)
+    {
+        static::$creatingCalled = true;
+    }
+
+    public function created($user)
+    {
+        static::$createdCalled = true;
+    }
+}
+
+class EloquentTransactionWithAfterCommitTestsUpdatingObserver
+{
+    public static $updatingCalled = false;
+
+    public static $updatedCalled = false;
+
+    public $afterCommit = true;
+
+    public static function resetting()
+    {
+        static::$updatingCalled = false;
+        static::$updatedCalled = false;
+
+        return new static();
+    }
+
+    public function updating($user)
+    {
+        static::$updatingCalled = true;
+    }
+
+    public function updated($user)
+    {
+        static::$updatedCalled = true;
+    }
+}
+
+class EloquentTransactionWithAfterCommitTestsCancellingObserver
+{
+    public static $creatingCalled = false;
+
+    public static $createdCalled = false;
+
+    public $afterCommit = true;
+
+    public static function resetting()
+    {
+        static::$creatingCalled = false;
+        static::$createdCalled = false;
+
+        return new static();
+    }
+
+    public function creating($user)
+    {
+        static::$creatingCalled = true;
+
+        return false;
+    }
+
+    public function created($user)
+    {
+        static::$createdCalled = true;
+    }
+}

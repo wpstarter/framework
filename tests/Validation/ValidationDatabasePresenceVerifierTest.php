@@ -11,11 +11,6 @@ use stdClass;
 
 class ValidationDatabasePresenceVerifierTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        m::close();
-    }
-
     public function testBasicCount()
     {
         $verifier = new DatabasePresenceVerifier($db = m::mock(ConnectionResolverInterface::class));
@@ -59,5 +54,19 @@ class ValidationDatabasePresenceVerifierTest extends TestCase
         $builder->shouldReceive('count')->once()->andReturn(100);
 
         $this->assertEquals(100, $verifier->getCount('table', 'column', 'value', null, null, $extra));
+    }
+
+    public function testGetCountWithValidExcludeId()
+    {
+        $verifier = new DatabasePresenceVerifier($db = m::mock(ConnectionResolverInterface::class));
+        $verifier->setConnection('connection');
+        $db->shouldReceive('connection')->once()->with('connection')->andReturn($conn = m::mock(stdClass::class));
+        $conn->shouldReceive('table')->once()->with('table')->andReturn($builder = m::mock(stdClass::class));
+        $builder->shouldReceive('useWritePdo')->once()->andReturn($builder);
+        $builder->shouldReceive('where')->with('column', '=', 'value')->andReturn($builder);
+        $builder->shouldReceive('where')->with('id', '<>', 123)->andReturn($builder);
+        $builder->shouldReceive('count')->once()->andReturn(100);
+
+        $this->assertEquals(100, $verifier->getCount('table', 'column', 'value', 123, 'id', []));
     }
 }

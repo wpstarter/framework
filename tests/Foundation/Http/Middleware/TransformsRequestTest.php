@@ -1,10 +1,9 @@
 <?php
 
-namespace WpStarter\Tests\Foundation\Bootstrap\Http\Middleware;
+namespace WpStarter\Tests\Foundation\Http\Middleware;
 
 use WpStarter\Foundation\Http\Middleware\TransformsRequest;
 use WpStarter\Http\Request;
-use WpStarter\Support\Str;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 
@@ -114,11 +113,11 @@ class ManipulateArrayInput extends TransformsRequest
 {
     protected function transform($key, $value)
     {
-        if (Str::contains($key, 'beers')) {
+        if (str_contains($key, 'beers')) {
             $value++;
         }
 
-        if (Str::contains($key, 'age')) {
+        if (str_contains($key, 'age')) {
             $value--;
         }
 

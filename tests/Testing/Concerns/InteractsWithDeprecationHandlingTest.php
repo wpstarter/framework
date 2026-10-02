@@ -3,6 +3,7 @@
 namespace WpStarter\Tests\Testing\Concerns;
 
 use ErrorException;
+use WpStarter\Foundation\Bootstrap\HandleExceptions;
 use WpStarter\Foundation\Testing\Concerns\InteractsWithDeprecationHandling;
 use PHPUnit\Framework\TestCase;
 
@@ -10,17 +11,24 @@ class InteractsWithDeprecationHandlingTest extends TestCase
 {
     use InteractsWithDeprecationHandling;
 
-    protected $original;
-
     protected $deprecationsFound = false;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
 
-        $this->original = set_error_handler(function () {
+        set_error_handler(function () {
             $this->deprecationsFound = true;
         });
+    }
+
+    protected function tearDown(): void
+    {
+        $this->deprecationsFound = false;
+
+        HandleExceptions::flushHandlersState($this);
+
+        parent::tearDown();
     }
 
     public function testWithDeprecationHandling()
@@ -40,15 +48,5 @@ class InteractsWithDeprecationHandlingTest extends TestCase
         $this->expectExceptionMessage('Something is deprecated');
 
         trigger_error('Something is deprecated', E_USER_DEPRECATED);
-    }
-
-    public function tearDown(): void
-    {
-        set_error_handler($this->original);
-
-        $this->originalDeprecationHandler = null;
-        $this->deprecationsFound = false;
-
-        parent::tearDown();
     }
 }

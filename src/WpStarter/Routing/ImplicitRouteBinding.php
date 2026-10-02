@@ -4,7 +4,7 @@ namespace WpStarter\Routing;
 
 use WpStarter\Contracts\Routing\UrlRoutable;
 use WpStarter\Database\Eloquent\ModelNotFoundException;
-use WpStarter\Database\Eloquent\SoftDeletes;
+use WpStarter\Routing\Exceptions\BackedEnumCaseNotFoundException;
 use WpStarter\Support\Reflector;
 use WpStarter\Support\Str;
 
@@ -17,13 +17,16 @@ class ImplicitRouteBinding
      * @param  \WpStarter\Routing\Route  $route
      * @return void
      *
-     * @throws \WpStarter\Database\Eloquent\ModelNotFoundException
+     * @throws \WpStarter\Database\Eloquent\ModelNotFoundException<\WpStarter\Database\Eloquent\Model>
+     * @throws \WpStarter\Routing\Exceptions\BackedEnumCaseNotFoundException
      */
     public static function resolveForRoute($container, $route)
     {
         $parameters = $route->parameters();
 
-        foreach ($route->signatureParameters(UrlRoutable::class) as $parameter) {
+        $route = static::resolveBackedEnumsForRoute($route, $parameters);
+
+        foreach ($route->signatureParameters(['subClass' => UrlRoutable::class]) as $parameter) {
             if (! $parameterName = static::getParameterName($parameter->getName(), $parameters)) {
                 continue;
             }
@@ -38,14 +41,16 @@ class ImplicitRouteBinding
 
             $parent = $route->parentOfParameter($parameterName);
 
-            $routeBindingMethod = $route->allowsTrashedBindings() && in_array(SoftDeletes::class, ws_class_uses_recursive($instance))
-                        ? 'resolveSoftDeletableRouteBinding'
-                        : 'resolveRouteBinding';
+            $routeBindingMethod = $route->allowsTrashedBindings() && $instance::isSoftDeletable()
+                ? 'resolveSoftDeletableRouteBinding'
+                : 'resolveRouteBinding';
 
-            if ($parent instanceof UrlRoutable && ($route->enforcesScopedBindings() || array_key_exists($parameterName, $route->bindingFields()))) {
-                $childRouteBindingMethod = $route->allowsTrashedBindings() && in_array(SoftDeletes::class, ws_class_uses_recursive($instance))
-                            ? 'resolveSoftDeletableChildRouteBinding'
-                            : 'resolveChildRouteBinding';
+            if ($parent instanceof UrlRoutable &&
+                ! $route->preventsScopedBindings() &&
+                ($route->enforcesScopedBindings() || array_key_exists($parameterName, $route->bindingFields()))) {
+                $childRouteBindingMethod = $route->allowsTrashedBindings() && $instance::isSoftDeletable()
+                    ? 'resolveSoftDeletableChildRouteBinding'
+                    : 'resolveChildRouteBinding';
 
                 if (! $model = $parent->{$childRouteBindingMethod}(
                     $parameterName, $parameterValue, $route->bindingFieldFor($parameterName)
@@ -58,6 +63,44 @@ class ImplicitRouteBinding
 
             $route->setParameter($parameterName, $model);
         }
+    }
+
+    /**
+     * Resolve the Backed Enums route bindings for the route.
+     *
+     * @param  \WpStarter\Routing\Route  $route
+     * @param  array  $parameters
+     * @return \WpStarter\Routing\Route
+     *
+     * @throws \WpStarter\Routing\Exceptions\BackedEnumCaseNotFoundException
+     */
+    protected static function resolveBackedEnumsForRoute($route, $parameters)
+    {
+        foreach ($route->signatureParameters(['backedEnum' => true]) as $parameter) {
+            if (! $parameterName = static::getParameterName($parameter->getName(), $parameters)) {
+                continue;
+            }
+
+            $parameterValue = $parameters[$parameterName];
+
+            if ($parameterValue === null) {
+                continue;
+            }
+
+            $backedEnumClass = $parameter->getType()?->getName();
+
+            $backedEnum = $parameterValue instanceof $backedEnumClass
+                ? $parameterValue
+                : $backedEnumClass::tryFrom((string) $parameterValue);
+
+            if (is_null($backedEnum)) {
+                throw new BackedEnumCaseNotFoundException($backedEnumClass, $parameterValue);
+            }
+
+            $route->setParameter($parameterName, $backedEnum);
+        }
+
+        return $route;
     }
 
     /**

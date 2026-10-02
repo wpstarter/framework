@@ -3,10 +3,18 @@
 namespace WpStarter\Testing;
 
 use WpStarter\Console\OutputStyle;
+use WpStarter\Console\PromptValidationException;
 use WpStarter\Contracts\Console\Kernel;
 use WpStarter\Contracts\Container\Container;
 use WpStarter\Contracts\Support\Arrayable;
 use WpStarter\Support\Arr;
+use WpStarter\Support\Collection;
+use WpStarter\Support\Traits\Conditionable;
+use WpStarter\Support\Traits\Macroable;
+use WpStarter\Support\Traits\Tappable;
+use Laravel\Prompts\Note as PromptsNote;
+use Laravel\Prompts\Prompt as BasePrompt;
+use Laravel\Prompts\Table as PromptsTable;
 use Mockery;
 use Mockery\Exception\NoMatchingExpectationException;
 use PHPUnit\Framework\TestCase as PHPUnitTestCase;
@@ -14,9 +22,13 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
+use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Console\Question\ChoiceQuestion;
 
 class PendingCommand
 {
+    use Conditionable, Macroable, Tappable;
+
     /**
      * The test being run.
      *
@@ -73,7 +85,6 @@ class PendingCommand
      * @param  \WpStarter\Contracts\Container\Container  $app
      * @param  string  $command
      * @param  array  $parameters
-     * @return void
      */
     public function __construct(PHPUnitTestCase $test, Container $app, $command, $parameters)
     {
@@ -129,13 +140,35 @@ class PendingCommand
     }
 
     /**
-     * Specify output that should be printed when the command runs.
+     * Specify an expected search question with an expected search string, followed by an expected choice question with expected answers.
      *
-     * @param  string  $output
+     * @param  string  $question
+     * @param  string|array  $answer
+     * @param  string  $search
+     * @param  array  $answers
      * @return $this
      */
-    public function expectsOutput($output)
+    public function expectsSearch($question, $answer, $search, $answers)
     {
+        return $this
+            ->expectsQuestion($question, $search)
+            ->expectsChoice($question, $answer, $answers);
+    }
+
+    /**
+     * Specify output that should be printed when the command runs.
+     *
+     * @param  string|null  $output
+     * @return $this
+     */
+    public function expectsOutput($output = null)
+    {
+        if ($output === null) {
+            $this->test->expectsOutput = true;
+
+            return $this;
+        }
+
         $this->test->expectedOutput[] = $output;
 
         return $this;
@@ -144,12 +177,44 @@ class PendingCommand
     /**
      * Specify output that should never be printed when the command runs.
      *
-     * @param  string  $output
+     * @param  string|null  $output
      * @return $this
      */
-    public function doesntExpectOutput($output)
+    public function doesntExpectOutput($output = null)
     {
+        if ($output === null) {
+            $this->test->expectsOutput = false;
+
+            return $this;
+        }
+
         $this->test->unexpectedOutput[$output] = false;
+
+        return $this;
+    }
+
+    /**
+     * Specify that the given string should be contained in the command output.
+     *
+     * @param  string  $string
+     * @return $this
+     */
+    public function expectsOutputToContain($string)
+    {
+        $this->test->expectedOutputSubstrings[] = $string;
+
+        return $this;
+    }
+
+    /**
+     * Specify that the given string shouldn't be contained in the command output.
+     *
+     * @param  string  $string
+     * @return $this
+     */
+    public function doesntExpectOutputToContain($string)
+    {
+        $this->test->unexpectedOutputSubstrings[$string] = false;
 
         return $this;
     }
@@ -188,6 +253,122 @@ class PendingCommand
     }
 
     /**
+     * Specify that the given Prompts info message should be contained in the command output.
+     *
+     * @return $this
+     */
+    public function expectsPromptsInfo(string $message)
+    {
+        $this->expectOutputToContainPrompt(
+            new PromptsNote($message, 'info')
+        );
+
+        return $this;
+    }
+
+    /**
+     * Specify that the given Prompts warning message should be contained in the command output.
+     *
+     * @return $this
+     */
+    public function expectsPromptsWarning(string $message)
+    {
+        $this->expectOutputToContainPrompt(
+            new PromptsNote($message, 'warning')
+        );
+
+        return $this;
+    }
+
+    /**
+     * Specify that the given Prompts error message should be contained in the command output.
+     *
+     * @return $this
+     */
+    public function expectsPromptsError(string $message)
+    {
+        $this->expectOutputToContainPrompt(
+            new PromptsNote($message, 'error')
+        );
+
+        return $this;
+    }
+
+    /**
+     * Specify that the given Prompts alert message should be contained in the command output.
+     *
+     * @return $this
+     */
+    public function expectsPromptsAlert(string $message)
+    {
+        $this->expectOutputToContainPrompt(
+            new PromptsNote($message, 'alert')
+        );
+
+        return $this;
+    }
+
+    /**
+     * Specify that the given Prompts intro message should be contained in the command output.
+     *
+     * @return $this
+     */
+    public function expectsPromptsIntro(string $message)
+    {
+        $this->expectOutputToContainPrompt(
+            new PromptsNote($message, 'intro')
+        );
+
+        return $this;
+    }
+
+    /**
+     * Specify that the given Prompts outro message should be contained in the command output.
+     *
+     * @return $this
+     */
+    public function expectsPromptsOutro(string $message)
+    {
+        $this->expectOutputToContainPrompt(
+            new PromptsNote($message, 'outro')
+        );
+
+        return $this;
+    }
+
+    /**
+     * Specify a Prompts table that should be printed when the command runs.
+     *
+     * @param  array<int, string|array<int, string>>|Collection<int, string|array<int, string>>  $headers
+     * @param  array<int, array<int, string>>|Collection<int, array<int, string>>|null  $rows
+     * @return $this
+     *
+     * @phpstan-param ($rows is null ? list<list<string>>|Collection<int, list<string>> : list<string|list<string>>|Collection<int, string|list<string>>) $headers
+     */
+    public function expectsPromptsTable(array|Collection $headers, array|Collection|null $rows)
+    {
+        $this->expectOutputToContainPrompt(
+            new PromptsTable($headers, $rows)
+        );
+
+        return $this;
+    }
+
+    /**
+     * Render the given prompt and add the output to the expectations.
+     *
+     * @return void
+     */
+    protected function expectOutputToContainPrompt(BasePrompt $prompt)
+    {
+        $prompt->setOutput($output = new BufferedOutput);
+
+        $prompt->display();
+
+        $this->expectsOutputToContain(trim($output->fetch()));
+    }
+
+    /**
      * Assert that the command has the given exit code.
      *
      * @param  int  $exitCode
@@ -221,6 +402,16 @@ class PendingCommand
     public function assertSuccessful()
     {
         return $this->assertExitCode(Command::SUCCESS);
+    }
+
+    /**
+     * Assert that the command has the success exit code.
+     *
+     * @return $this
+     */
+    public function assertOk()
+    {
+        return $this->assertSuccessful();
     }
 
     /**
@@ -264,6 +455,8 @@ class PendingCommand
             }
 
             throw $e;
+        } catch (PromptValidationException) {
+            $exitCode = Command::FAILURE;
         }
 
         if ($this->expectedExitCode !== null) {
@@ -281,7 +474,30 @@ class PendingCommand
         $this->verifyExpectations();
         $this->flushExpectations();
 
+        $this->app->offsetUnset(OutputStyle::class);
+
         return $exitCode;
+    }
+
+    /**
+     * Debug the command.
+     *
+     * @return never
+     */
+    public function dd()
+    {
+        $consoleOutput = new OutputStyle(new ArrayInput($this->parameters), new ConsoleOutput());
+        $exitCode = $this->app->make(Kernel::class)->call($this->command, $this->parameters, $consoleOutput);
+
+        $streamOutput = $consoleOutput->getOutput()->getStream();
+        $output = stream_get_contents($streamOutput);
+
+        fclose($streamOutput);
+
+        dd([
+            'exitCode' => $exitCode,
+            'output' => $output,
+        ]);
     }
 
     /**
@@ -311,7 +527,15 @@ class PendingCommand
             $this->test->fail('Output "'.Arr::first($this->test->expectedOutput).'" was not printed.');
         }
 
+        if (count($this->test->expectedOutputSubstrings)) {
+            $this->test->fail('Output does not contain "'.Arr::first($this->test->expectedOutputSubstrings).'".');
+        }
+
         if ($output = array_search(true, $this->test->unexpectedOutput)) {
+            $this->test->fail('Output "'.$output.'" was printed.');
+        }
+
+        if ($output = array_search(true, $this->test->unexpectedOutputSubstrings)) {
             $this->test->fail('Output "'.$output.'" was printed.');
         }
     }
@@ -324,7 +548,7 @@ class PendingCommand
     protected function mockConsoleOutput()
     {
         $mock = Mockery::mock(OutputStyle::class.'[askQuestion]', [
-            (new ArrayInput($this->parameters)), $this->createABufferedOutputMock(),
+            new ArrayInput($this->parameters), $this->createABufferedOutputMock(),
         ]);
 
         foreach ($this->test->expectedQuestions as $i => $question) {
@@ -333,7 +557,9 @@ class PendingCommand
                 ->ordered()
                 ->with(Mockery::on(function ($argument) use ($question) {
                     if (isset($this->test->expectedChoices[$question[0]])) {
-                        $this->test->expectedChoices[$question[0]]['actual'] = $argument->getAutocompleterValues();
+                        $this->test->expectedChoices[$question[0]]['actual'] = $argument instanceof ChoiceQuestion && ! array_is_list($this->test->expectedChoices[$question[0]]['expected'])
+                            ? $argument->getChoices()
+                            : $argument->getAutocompleterValues();
                     }
 
                     return $argument->getQuestion() == $question[0];
@@ -360,8 +586,20 @@ class PendingCommand
     private function createABufferedOutputMock()
     {
         $mock = Mockery::mock(BufferedOutput::class.'[doWrite]')
-                ->shouldAllowMockingProtectedMethods()
-                ->shouldIgnoreMissing();
+            ->shouldAllowMockingProtectedMethods()
+            ->shouldIgnoreMissing();
+
+        if ($this->test->expectsOutput === false) {
+            $mock->shouldReceive('doWrite')->never();
+
+            return $mock;
+        }
+
+        if ($this->test->expectsOutput === true
+            && count($this->test->expectedOutput) === 0
+            && count($this->test->expectedOutputSubstrings) === 0) {
+            $mock->shouldReceive('doWrite')->atLeast()->once();
+        }
 
         foreach ($this->test->expectedOutput as $i => $output) {
             $mock->shouldReceive('doWrite')
@@ -373,12 +611,34 @@ class PendingCommand
                 });
         }
 
+        foreach ($this->test->expectedOutputSubstrings as $i => $text) {
+            $mock->shouldReceive('doWrite')
+                ->atLeast()
+                ->times(0)
+                ->withArgs(fn ($output) => str_contains($output, $text))
+                ->andReturnUsing(function () use ($i) {
+                    unset($this->test->expectedOutputSubstrings[$i]);
+                });
+        }
+
         foreach ($this->test->unexpectedOutput as $output => $displayed) {
             $mock->shouldReceive('doWrite')
+                ->atLeast()
+                ->times(0)
                 ->ordered()
                 ->with($output, Mockery::any())
                 ->andReturnUsing(function () use ($output) {
                     $this->test->unexpectedOutput[$output] = true;
+                });
+        }
+
+        foreach ($this->test->unexpectedOutputSubstrings as $text => $displayed) {
+            $mock->shouldReceive('doWrite')
+                ->atLeast()
+                ->times(0)
+                ->withArgs(fn ($output) => str_contains($output, $text))
+                ->andReturnUsing(function () use ($text) {
+                    $this->test->unexpectedOutputSubstrings[$text] = true;
                 });
         }
 
@@ -393,7 +653,9 @@ class PendingCommand
     protected function flushExpectations()
     {
         $this->test->expectedOutput = [];
+        $this->test->expectedOutputSubstrings = [];
         $this->test->unexpectedOutput = [];
+        $this->test->unexpectedOutputSubstrings = [];
         $this->test->expectedTables = [];
         $this->test->expectedQuestions = [];
         $this->test->expectedChoices = [];

@@ -116,7 +116,7 @@ trait BroadcastsEvents
         }
 
         if (! empty($this->broadcastOn($event)) || ! empty($channels)) {
-            return ws_broadcast($instance->onChannels(Arr::wrap($channels)));
+            return broadcast($instance->onChannels(Arr::wrap($channels)));
         }
     }
 
@@ -128,18 +128,18 @@ trait BroadcastsEvents
      */
     public function newBroadcastableModelEvent($event)
     {
-        return ws_tap($this->newBroadcastableEvent($event), function ($event) {
+        return tap($this->newBroadcastableEvent($event), function ($event) {
             $event->connection = property_exists($this, 'broadcastConnection')
-                            ? $this->broadcastConnection
-                            : $this->broadcastConnection();
+                ? $this->broadcastConnection
+                : $this->broadcastConnection();
 
             $event->queue = property_exists($this, 'broadcastQueue')
-                            ? $this->broadcastQueue
-                            : $this->broadcastQueue();
+                ? $this->broadcastQueue
+                : $this->broadcastQueue();
 
             $event->afterCommit = property_exists($this, 'broadcastAfterCommit')
-                            ? $this->broadcastAfterCommit
-                            : $this->broadcastAfterCommit();
+                ? $this->broadcastAfterCommit
+                : $this->broadcastAfterCommit();
         });
     }
 
@@ -149,7 +149,7 @@ trait BroadcastsEvents
      * @param  string  $event
      * @return \WpStarter\Database\Eloquent\BroadcastableModelEventOccurred
      */
-    protected function newBroadcastableEvent($event)
+    protected function newBroadcastableEvent(string $event)
     {
         return new BroadcastableModelEventOccurred($this, $event);
     }

@@ -3,20 +3,23 @@
 use WpStarter\Support\Arr;
 use WpStarter\Support\Collection;
 
-if (! function_exists('ws_collect')) {
+if (! function_exists('collect')) {
     /**
      * Create a collection from the given value.
      *
-     * @param  mixed  $value
-     * @return \WpStarter\Support\Collection
+     * @template TKey of array-key
+     * @template TValue
+     *
+     * @param  \WpStarter\Contracts\Support\Arrayable<TKey, TValue>|iterable<TKey, TValue>|null  $value
+     * @return \WpStarter\Support\Collection<TKey, TValue>
      */
-    function ws_collect($value = null)
+    function collect($value = []): Collection
     {
         return new Collection($value);
     }
 }
 
-if (! function_exists('ws_data_fill')) {
+if (! function_exists('data_fill')) {
     /**
      * Fill in data where it's missing.
      *
@@ -25,13 +28,43 @@ if (! function_exists('ws_data_fill')) {
      * @param  mixed  $value
      * @return mixed
      */
-    function ws_data_fill(&$target, $key, $value)
+    function data_fill(&$target, $key, $value)
     {
-        return ws_data_set($target, $key, $value, false);
+        return data_set($target, $key, $value, false);
     }
 }
 
-if (! function_exists('ws_data_get')) {
+if (! function_exists('data_has')) {
+    /**
+     * Determine if a key / property exists on an array or object using "dot" notation.
+     *
+     * @param  mixed  $target
+     * @param  string|array|int|null  $key
+     * @return bool
+     */
+    function data_has($target, $key): bool
+    {
+        if (is_null($key) || $key === []) {
+            return false;
+        }
+
+        $key = is_array($key) ? $key : explode('.', $key);
+
+        foreach ($key as $segment) {
+            if (Arr::accessible($target) && Arr::exists($target, $segment)) {
+                $target = $target[$segment];
+            } elseif (is_object($target) && property_exists($target, $segment)) {
+                $target = $target->{$segment};
+            } else {
+                return false;
+            }
+        }
+
+        return true;
+    }
+}
+
+if (! function_exists('data_get')) {
     /**
      * Get an item from an array or object using "dot" notation.
      *
@@ -40,7 +73,7 @@ if (! function_exists('ws_data_get')) {
      * @param  mixed  $default
      * @return mixed
      */
-    function ws_data_get($target, $key, $default = null)
+    function data_get($target, $key, $default = null)
     {
         if (is_null($key)) {
             return $target;
@@ -58,25 +91,34 @@ if (! function_exists('ws_data_get')) {
             if ($segment === '*') {
                 if ($target instanceof Collection) {
                     $target = $target->all();
-                } elseif (! is_array($target)) {
-                    return ws_value($default);
+                } elseif (! is_iterable($target)) {
+                    return value($default);
                 }
 
                 $result = [];
 
                 foreach ($target as $item) {
-                    $result[] = ws_data_get($item, $key);
+                    $result[] = data_get($item, $key);
                 }
 
                 return in_array('*', $key) ? Arr::collapse($result) : $result;
             }
+
+            $segment = match ($segment) {
+                '\*' => '*',
+                '\{first}' => '{first}',
+                '{first}' => array_key_first(Arr::from($target)),
+                '\{last}' => '{last}',
+                '{last}' => array_key_last(Arr::from($target)),
+                default => $segment,
+            };
 
             if (Arr::accessible($target) && Arr::exists($target, $segment)) {
                 $target = $target[$segment];
             } elseif (is_object($target) && isset($target->{$segment})) {
                 $target = $target->{$segment};
             } else {
-                return ws_value($default);
+                return value($default);
             }
         }
 
@@ -84,7 +126,7 @@ if (! function_exists('ws_data_get')) {
     }
 }
 
-if (! function_exists('ws_data_set')) {
+if (! function_exists('data_set')) {
     /**
      * Set an item on an array or object using dot notation.
      *
@@ -94,7 +136,7 @@ if (! function_exists('ws_data_set')) {
      * @param  bool  $overwrite
      * @return mixed
      */
-    function ws_data_set(&$target, $key, $value, $overwrite = true)
+    function data_set(&$target, $key, $value, $overwrite = true)
     {
         $segments = is_array($key) ? $key : explode('.', $key);
 
@@ -105,7 +147,7 @@ if (! function_exists('ws_data_set')) {
 
             if ($segments) {
                 foreach ($target as &$inner) {
-                    ws_data_set($inner, $segments, $value, $overwrite);
+                    data_set($inner, $segments, $value, $overwrite);
                 }
             } elseif ($overwrite) {
                 foreach ($target as &$inner) {
@@ -118,7 +160,7 @@ if (! function_exists('ws_data_set')) {
                     $target[$segment] = [];
                 }
 
-                ws_data_set($target[$segment], $segments, $value, $overwrite);
+                data_set($target[$segment], $segments, $value, $overwrite);
             } elseif ($overwrite || ! Arr::exists($target, $segment)) {
                 $target[$segment] = $value;
             }
@@ -128,7 +170,7 @@ if (! function_exists('ws_data_set')) {
                     $target->{$segment} = [];
                 }
 
-                ws_data_set($target->{$segment}, $segments, $value, $overwrite);
+                data_set($target->{$segment}, $segments, $value, $overwrite);
             } elseif ($overwrite || ! isset($target->{$segment})) {
                 $target->{$segment} = $value;
             }
@@ -136,7 +178,7 @@ if (! function_exists('ws_data_set')) {
             $target = [];
 
             if ($segments) {
-                ws_data_set($target[$segment], $segments, $value, $overwrite);
+                data_set($target[$segment], $segments, $value, $overwrite);
             } elseif ($overwrite) {
                 $target[$segment] = $value;
             }
@@ -146,41 +188,106 @@ if (! function_exists('ws_data_set')) {
     }
 }
 
-if (! function_exists('ws_head')) {
+if (! function_exists('data_forget')) {
+    /**
+     * Remove / unset an item from an array or object using "dot" notation.
+     *
+     * @param  mixed  $target
+     * @param  string|array|int|null  $key
+     * @return mixed
+     */
+    function data_forget(&$target, $key)
+    {
+        $segments = is_array($key) ? $key : explode('.', $key);
+
+        if (($segment = array_shift($segments)) === '*' && Arr::accessible($target)) {
+            if ($segments) {
+                foreach ($target as &$inner) {
+                    data_forget($inner, $segments);
+                }
+            }
+        } elseif (Arr::accessible($target)) {
+            if ($segments && Arr::exists($target, $segment)) {
+                data_forget($target[$segment], $segments);
+            } else {
+                Arr::forget($target, $segment);
+            }
+        } elseif (is_object($target)) {
+            if ($segments && isset($target->{$segment})) {
+                data_forget($target->{$segment}, $segments);
+            } elseif (isset($target->{$segment})) {
+                unset($target->{$segment});
+            }
+        }
+
+        return $target;
+    }
+}
+
+if (! function_exists('head')) {
     /**
      * Get the first element of an array. Useful for method chaining.
      *
      * @param  array  $array
      * @return mixed
      */
-    function ws_head($array)
+    function head($array)
     {
-        return reset($array);
+        return empty($array) ? false : array_first($array);
     }
 }
 
-if (! function_exists('ws_last')) {
+if (! function_exists('last')) {
     /**
      * Get the last element from an array.
      *
      * @param  array  $array
      * @return mixed
      */
-    function ws_last($array)
+    function last($array)
     {
-        return end($array);
+        return empty($array) ? false : array_last($array);
     }
 }
 
-if (! function_exists('ws_value')) {
+if (! function_exists('value')) {
     /**
      * Return the default value of the given value.
      *
-     * @param  mixed  $value
-     * @return mixed
+     * @template TValue
+     * @template TArgs
+     *
+     * @param  TValue|\Closure(TArgs): TValue  $value
+     * @param  TArgs  ...$args
+     * @return TValue
      */
-    function ws_value($value, ...$args)
+    function value($value, ...$args)
     {
         return $value instanceof Closure ? $value(...$args) : $value;
+    }
+}
+
+if (! function_exists('when')) {
+    /**
+     * Return a value if the given condition is true.
+     *
+     * @template TValue
+     * @template TArgs
+     * @template TDefault
+     *
+     * @param  mixed  $condition
+     * @param  TValue|\Closure(TArgs): TValue  $value
+     * @param  TDefault|\Closure(): TDefault  $default
+     * @return ($condition is true|positive-int|non-falsy-string|non-empty-array ? TValue : ($condition is callable ? TValue|TDefault : TDefault))
+     */
+    function when($condition, $value, $default = null)
+    {
+        $condition = $condition instanceof Closure ? $condition() : $condition;
+
+        if ($condition) {
+            return value($value, $condition);
+        }
+
+        return value($default, $condition);
     }
 }

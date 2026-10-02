@@ -4,9 +4,12 @@ namespace WpStarter\Database\Console;
 
 use WpStarter\Console\Command;
 use WpStarter\Support\ConfigurationUrlParser;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 use UnexpectedValueException;
 
+#[AsCommand(name: 'db')]
 class DbCommand extends Command
 {
     /**
@@ -34,13 +37,29 @@ class DbCommand extends Command
     {
         $connection = $this->getConnection();
 
-        (new Process(
-            array_merge([$this->getCommand($connection)], $this->commandArguments($connection)),
-            null,
-            $this->commandEnvironment($connection)
-        ))->setTimeout(null)->setTty(true)->mustRun(function ($type, $buffer) {
-            $this->output->write($buffer);
-        });
+        if (! isset($connection['host']) && $connection['driver'] !== 'sqlite') {
+            $this->components->error('No host specified for this database connection.');
+            $this->line('  Use the <options=bold>[--read]</> and <options=bold>[--write]</> options to specify a read or write connection.');
+            $this->newLine();
+
+            return Command::FAILURE;
+        }
+
+        try {
+            (new Process(
+                array_merge([$command = $this->getCommand($connection)], $this->commandArguments($connection)),
+                null,
+                $this->commandEnvironment($connection)
+            ))->setTimeout(null)->setTty(true)->mustRun(function ($type, $buffer) {
+                $this->output->write($buffer);
+            });
+        } catch (ProcessFailedException $e) {
+            throw_unless($e->getProcess()->getExitCode() === 127, $e);
+
+            $this->error("{$command} not found in path.");
+
+            return Command::FAILURE;
+        }
 
         return 0;
     }
@@ -123,7 +142,7 @@ class DbCommand extends Command
     {
         return [
             'mysql' => 'mysql',
-            'wp'    => 'mysql',
+            'mariadb' => 'mariadb',
             'pgsql' => 'psql',
             'sqlite' => 'sqlite3',
             'sqlsrv' => 'sqlcmd',
@@ -138,24 +157,30 @@ class DbCommand extends Command
      */
     protected function getMysqlArguments(array $connection)
     {
+        $optionalArguments = [
+            'password' => '--password='.$connection['password'],
+            'unix_socket' => '--socket='.($connection['unix_socket'] ?? ''),
+            'charset' => '--default-character-set='.($connection['charset'] ?? ''),
+        ];
+
+        if (! $connection['password']) {
+            unset($optionalArguments['password']);
+        }
+
         return array_merge([
             '--host='.$connection['host'],
             '--port='.$connection['port'],
             '--user='.$connection['username'],
-        ], $this->getOptionalArguments([
-            'password' => '--password='.$connection['password'],
-            'unix_socket' => '--socket='.($connection['unix_socket'] ?? ''),
-            'charset' => '--default-character-set='.($connection['charset'] ?? ''),
-        ], $connection), [$connection['database']]);
+        ], $this->getOptionalArguments($optionalArguments, $connection), [$connection['database']]);
     }
 
     /**
-     * Get the arguments for the MySQL CLI.
+     * Get the arguments for the MariaDB CLI.
      *
      * @param  array  $connection
      * @return array
      */
-    protected function getWpArguments(array $connection)
+    protected function getMariaDbArguments(array $connection)
     {
         return $this->getMysqlArguments($connection);
     }
@@ -196,6 +221,7 @@ class DbCommand extends Command
             'password' => ['-P', $connection['password']],
             'host' => ['-S', 'tcp:'.$connection['host']
                         .($connection['port'] ? ','.$connection['port'] : ''), ],
+            'trust_server_certificate' => ['-C'],
         ], $connection));
     }
 

@@ -11,17 +11,9 @@ use WpStarter\Queue\CallQueuedHandler;
 use WpStarter\Queue\InteractsWithQueue;
 use WpStarter\Queue\Middleware\WithoutOverlapping;
 use Mockery as m;
-use Orchestra\Testbench\TestCase;
 
-class WithoutOverlappingJobsTest extends TestCase
+class WithoutOverlappingJobsTest extends QueueTestCase
 {
-    protected function tearDown(): void
-    {
-        parent::tearDown();
-
-        m::close();
-    }
-
     public function testNonOverlappingJobsAreExecuted()
     {
         OverlappingTestJob::$handled = false;
@@ -112,6 +104,98 @@ class WithoutOverlappingJobsTest extends TestCase
 
         $this->assertFalse(SkipOverlappingTestJob::$handled);
     }
+
+    public function testCanShareKeyAcrossJobs()
+    {
+        OverlappingTestJobWithSharedKeyOne::$handled = false;
+        $instance = new CallQueuedHandler(new Dispatcher($this->app), $this->app);
+
+        $lockKey = (new WithoutOverlapping)->shared()->getLockKey(new OverlappingTestJobWithSharedKeyTwo);
+        $this->app->get(Cache::class)->lock($lockKey, 10)->acquire();
+
+        $job = m::mock(Job::class);
+
+        $job->shouldReceive('release')->once();
+        $job->shouldReceive('hasFailed')->andReturn(false);
+        $job->shouldReceive('isReleased')->andReturn(true);
+        $job->shouldReceive('isDeletedOrReleased')->andReturn(true);
+
+        $instance->call($job, [
+            'command' => serialize(new OverlappingTestJobWithSharedKeyOne),
+        ]);
+
+        $this->assertFalse(OverlappingTestJob::$handled);
+    }
+
+    public function testGetLock()
+    {
+        $job = new OverlappingTestJob;
+
+        $this->assertSame(
+            'laravel-queue-overlap:WpStarter\\Tests\\Integration\\Queue\\OverlappingTestJob:key',
+            (new WithoutOverlapping('key'))->getLockKey($job)
+        );
+
+        $this->assertSame(
+            'laravel-queue-overlap:key',
+            (new WithoutOverlapping('key'))->shared()->getLockKey($job)
+        );
+
+        $this->assertSame(
+            'prefix:WpStarter\\Tests\\Integration\\Queue\\OverlappingTestJob:key',
+            (new WithoutOverlapping('key'))->withPrefix('prefix:')->getLockKey($job)
+        );
+
+        $this->assertSame(
+            'prefix:key',
+            (new WithoutOverlapping('key'))->withPrefix('prefix:')->shared()->getLockKey($job)
+        );
+    }
+
+    public function testGetLockUsesDisplayName()
+    {
+        $job = new OverlappingTestJobWithDisplayName;
+
+        $this->assertSame(
+            'laravel-queue-overlap:'.hash('xxh128', 'App\\Actions\\WithoutOverlappingTestAction').':key',
+            (new WithoutOverlapping('key'))->getLockKey($job)
+        );
+
+        $this->assertSame(
+            'laravel-queue-overlap:key',
+            (new WithoutOverlapping('key'))->shared()->getLockKey($job)
+        );
+
+        $this->assertSame(
+            'prefix:'.hash('xxh128', 'App\\Actions\\WithoutOverlappingTestAction').':key',
+            (new WithoutOverlapping('key'))->withPrefix('prefix:')->getLockKey($job)
+        );
+
+        $this->assertSame(
+            'prefix:key',
+            (new WithoutOverlapping('key'))->withPrefix('prefix:')->shared()->getLockKey($job)
+        );
+
+        $this->assertSame(
+            'prefix:'.hash('xxh128', 'App\\Actions\\WithoutOverlappingTestAction').':unit',
+            (new WithoutOverlapping(UnitCategory::unit))->withPrefix('prefix:')->getLockKey($job)
+        );
+
+        $this->assertSame(
+            'prefix:unit',
+            (new WithoutOverlapping(UnitCategory::unit))->withPrefix('prefix:')->shared()->getLockKey($job)
+        );
+
+        $this->assertSame(
+            'prefix:'.hash('xxh128', 'App\\Actions\\WithoutOverlappingTestAction').':backed',
+            (new WithoutOverlapping(BackedCategory::backed))->withPrefix('prefix:')->getLockKey($job)
+        );
+
+        $this->assertSame(
+            'prefix:backed',
+            (new WithoutOverlapping(BackedCategory::backed))->withPrefix('prefix:')->shared()->getLockKey($job)
+        );
+    }
 }
 
 class OverlappingTestJob
@@ -147,4 +231,56 @@ class FailedOverlappingTestJob extends OverlappingTestJob
 
         throw new Exception;
     }
+}
+
+class OverlappingTestJobWithSharedKeyOne
+{
+    use InteractsWithQueue, Queueable;
+
+    public static $handled = false;
+
+    public function handle()
+    {
+        static::$handled = true;
+    }
+
+    public function middleware()
+    {
+        return [(new WithoutOverlapping)->shared()];
+    }
+}
+
+class OverlappingTestJobWithSharedKeyTwo
+{
+    use InteractsWithQueue, Queueable;
+
+    public static $handled = false;
+
+    public function handle()
+    {
+        static::$handled = true;
+    }
+
+    public function middleware()
+    {
+        return [(new WithoutOverlapping)->shared()];
+    }
+}
+
+class OverlappingTestJobWithDisplayName extends OverlappingTestJob
+{
+    public function displayName(): string
+    {
+        return 'App\\Actions\\WithoutOverlappingTestAction';
+    }
+}
+
+enum UnitCategory
+{
+    case unit;
+}
+
+enum BackedCategory: string
+{
+    case backed = 'backed';
 }

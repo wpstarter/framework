@@ -18,14 +18,14 @@ class ResetPassword extends Notification
     /**
      * The callback that should be used to create the reset password URL.
      *
-     * @var \Closure|null
+     * @var (\Closure(mixed, string): string)|null
      */
     public static $createUrlCallback;
 
     /**
      * The callback that should be used to build the mail message.
      *
-     * @var \Closure|null
+     * @var (\Closure(mixed, string): \WpStarter\Notifications\Messages\MailMessage|\WpStarter\Contracts\Mail\Mailable)|null
      */
     public static $toMailCallback;
 
@@ -33,9 +33,8 @@ class ResetPassword extends Notification
      * Create a notification instance.
      *
      * @param  string  $token
-     * @return void
      */
-    public function __construct($token)
+    public function __construct(#[\SensitiveParameter] $token)
     {
         $this->token = $token;
     }
@@ -78,7 +77,7 @@ class ResetPassword extends Notification
             ->subject(Lang::get('Reset Password Notification'))
             ->line(Lang::get('You are receiving this email because we received a password reset request for your account.'))
             ->action(Lang::get('Reset Password'), $url)
-            ->line(Lang::get('This password reset link will expire in :count minutes.', ['count' => ws_config('auth.passwords.'.ws_config('auth.defaults.passwords').'.expire')]))
+            ->line(Lang::get('This password reset link will expire in :count minutes.', ['count' => config('auth.passwords.'.config('auth.defaults.passwords').'.expire')]))
             ->line(Lang::get('If you did not request a password reset, no further action is required.'));
     }
 
@@ -94,7 +93,7 @@ class ResetPassword extends Notification
             return call_user_func(static::$createUrlCallback, $notifiable, $this->token);
         }
 
-        return ws_url(ws_route('password.reset', [
+        return url(route('password.reset', [
             'token' => $this->token,
             'email' => $notifiable->getEmailForPasswordReset(),
         ], false));
@@ -103,7 +102,7 @@ class ResetPassword extends Notification
     /**
      * Set a callback that should be used when creating the reset password button URL.
      *
-     * @param  \Closure  $callback
+     * @param  \Closure(mixed, string): string  $callback
      * @return void
      */
     public static function createUrlUsing($callback)
@@ -114,7 +113,7 @@ class ResetPassword extends Notification
     /**
      * Set a callback that should be used when building the notification mail message.
      *
-     * @param  \Closure  $callback
+     * @param  \Closure(mixed, string): (\WpStarter\Notifications\Messages\MailMessage|\WpStarter\Contracts\Mail\Mailable)  $callback
      * @return void
      */
     public static function toMailUsing($callback)

@@ -16,7 +16,7 @@ class JoinClause extends Builder
     /**
      * The table the join clause is joining to.
      *
-     * @var string
+     * @var \WpStarter\Contracts\Database\Query\Expression|string
      */
     public $table;
 
@@ -54,7 +54,6 @@ class JoinClause extends Builder
      * @param  \WpStarter\Database\Query\Builder  $parentQuery
      * @param  string  $type
      * @param  string  $table
-     * @return void
      */
     public function __construct(Builder $parentQuery, $type, $table)
     {
@@ -82,9 +81,9 @@ class JoinClause extends Builder
      *
      * on `contacts`.`user_id` = `users`.`id` and `contacts`.`info_id` = `info`.`id`
      *
-     * @param  \Closure|string  $first
+     * @param  \Closure|\WpStarter\Contracts\Database\Query\Expression|string  $first
      * @param  string|null  $operator
-     * @param  \WpStarter\Database\Query\Expression|string|null  $second
+     * @param  \WpStarter\Contracts\Database\Query\Expression|string|null  $second
      * @param  string  $boolean
      * @return $this
      *
@@ -102,9 +101,9 @@ class JoinClause extends Builder
     /**
      * Add an "or on" clause to the join.
      *
-     * @param  \Closure|string  $first
+     * @param  \Closure|\WpStarter\Contracts\Database\Query\Expression|string  $first
      * @param  string|null  $operator
-     * @param  \WpStarter\Database\Query\Expression|string|null  $second
+     * @param  \WpStarter\Contracts\Database\Query\Expression|string|null  $second
      * @return \WpStarter\Database\Query\JoinClause
      */
     public function orOn($first, $operator = null, $second = null)

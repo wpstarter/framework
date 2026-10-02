@@ -2,6 +2,8 @@
 
 namespace WpStarter\Http\Testing;
 
+use LogicException;
+
 class FileFactory
 {
     /**
@@ -18,7 +20,7 @@ class FileFactory
             return $this->createWithContent($name, $kilobytes);
         }
 
-        return ws_tap(new File($name, tmpfile()), function ($file) use ($kilobytes, $mimeType) {
+        return tap(new File($name, tmpfile()), function ($file) use ($kilobytes, $mimeType) {
             $file->sizeToReport = $kilobytes * 1024;
             $file->mimeTypeToReport = $mimeType;
         });
@@ -37,7 +39,7 @@ class FileFactory
 
         fwrite($tmpfile, $content);
 
-        return ws_tap(new File($name, $tmpfile), function ($file) use ($tmpfile) {
+        return tap(new File($name, $tmpfile), function ($file) use ($tmpfile) {
             $file->sizeToReport = fstat($tmpfile)['size'];
         });
     }
@@ -49,6 +51,8 @@ class FileFactory
      * @param  int  $width
      * @param  int  $height
      * @return \WpStarter\Http\Testing\File
+     *
+     * @throws \LogicException
      */
     public function image($name, $width = 10, $height = 10)
     {
@@ -64,10 +68,16 @@ class FileFactory
      * @param  int  $height
      * @param  string  $extension
      * @return resource
+     *
+     * @throws \LogicException
      */
     protected function generateImage($width, $height, $extension)
     {
-        return ws_tap(tmpfile(), function ($temp) use ($width, $height, $extension) {
+        if (! function_exists('imagecreatetruecolor')) {
+            throw new LogicException('GD extension is not installed.');
+        }
+
+        return tap(tmpfile(), function ($temp) use ($width, $height, $extension) {
             ob_start();
 
             $extension = in_array($extension, ['jpeg', 'png', 'gif', 'webp', 'wbmp', 'bmp'])
@@ -76,7 +86,13 @@ class FileFactory
 
             $image = imagecreatetruecolor($width, $height);
 
-            call_user_func("image{$extension}", $image);
+            if (! function_exists($functionName = "image{$extension}")) {
+                ob_get_clean();
+
+                throw new LogicException("{$functionName} function is not defined and image cannot be generated.");
+            }
+
+            call_user_func($functionName, $image);
 
             fwrite($temp, ob_get_clean());
         });

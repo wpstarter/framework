@@ -4,7 +4,7 @@ namespace WpStarter\Http\Client;
 
 use ArrayAccess;
 use WpStarter\Support\Arr;
-use WpStarter\Support\Str;
+use WpStarter\Support\Collection;
 use WpStarter\Support\Traits\Macroable;
 use LogicException;
 
@@ -27,10 +27,16 @@ class Request implements ArrayAccess
     protected $data;
 
     /**
+     * The attribute data passed when building the PendingRequest.
+     *
+     * @var array<array-key, mixed>
+     */
+    protected $attributes = [];
+
+    /**
      * Create a new request instance.
      *
      * @param  \Psr\Http\Message\RequestInterface  $request
-     * @return void
      */
     public function __construct($request)
     {
@@ -147,7 +153,7 @@ class Request implements ArrayAccess
             return false;
         }
 
-        return ws_collect($this->data)->reject(function ($file) use ($name, $value, $filename) {
+        return (new Collection($this->data))->reject(function ($file) use ($name, $value, $filename) {
             return $file['name'] != $name ||
                 ($value && $file['contents'] != $value) ||
                 ($filename && $file['filename'] != $filename);
@@ -187,14 +193,14 @@ class Request implements ArrayAccess
     }
 
     /**
-     * Get the JSON decoded body of the request.
+     * Get the decoded JSON body of the request.
      *
      * @return array
      */
     protected function json()
     {
         if (! $this->data) {
-            $this->data = json_decode($this->body(), true);
+            $this->data = json_decode($this->body(), true) ?? [];
         }
 
         return $this->data;
@@ -218,7 +224,7 @@ class Request implements ArrayAccess
     public function isJson()
     {
         return $this->hasHeader('Content-Type') &&
-               Str::contains($this->header('Content-Type')[0], 'json');
+               str_contains($this->header('Content-Type')[0], 'json');
     }
 
     /**
@@ -229,7 +235,7 @@ class Request implements ArrayAccess
     public function isMultipart()
     {
         return $this->hasHeader('Content-Type') &&
-               Str::contains($this->header('Content-Type')[0], 'multipart');
+               str_contains($this->header('Content-Type')[0], 'multipart');
     }
 
     /**
@@ -241,6 +247,29 @@ class Request implements ArrayAccess
     public function withData(array $data)
     {
         $this->data = $data;
+
+        return $this;
+    }
+
+    /**
+     * Get the attribute data from the request.
+     *
+     * @return array<array-key, mixed>
+     */
+    public function attributes()
+    {
+        return $this->attributes;
+    }
+
+    /**
+     * Set the request's attribute data.
+     *
+     * @param  array<array-key, mixed>  $attributes
+     * @return $this
+     */
+    public function setRequestAttributes($attributes)
+    {
+        $this->attributes = $attributes;
 
         return $this;
     }
@@ -261,8 +290,7 @@ class Request implements ArrayAccess
      * @param  string  $offset
      * @return bool
      */
-    #[\ReturnTypeWillChange]
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         return isset($this->data()[$offset]);
     }
@@ -273,8 +301,7 @@ class Request implements ArrayAccess
      * @param  string  $offset
      * @return mixed
      */
-    #[\ReturnTypeWillChange]
-    public function offsetGet($offset)
+    public function offsetGet($offset): mixed
     {
         return $this->data()[$offset];
     }
@@ -288,8 +315,7 @@ class Request implements ArrayAccess
      *
      * @throws \LogicException
      */
-    #[\ReturnTypeWillChange]
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         throw new LogicException('Request data may not be mutated using array access.');
     }
@@ -302,8 +328,7 @@ class Request implements ArrayAccess
      *
      * @throws \LogicException
      */
-    #[\ReturnTypeWillChange]
-    public function offsetUnset($offset)
+    public function offsetUnset($offset): void
     {
         throw new LogicException('Request data may not be mutated using array access.');
     }

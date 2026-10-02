@@ -25,11 +25,9 @@ class RedisConnectionTest extends TestCase
 
     protected function tearDown(): void
     {
-        parent::tearDown();
-
         $this->tearDownRedis();
 
-        m::close();
+        parent::tearDown();
     }
 
     public function testItSetsValuesWithExpiry()
@@ -709,7 +707,7 @@ class RedisConnectionTest extends TestCase
 
                 foreach ($returnedMembers as $member) {
                     $this->assertContains($member, $members);
-                    array_push($result, $member);
+                    $result[] = $member;
                 }
             } while ($iterator > 0);
 
@@ -803,8 +801,8 @@ class RedisConnectionTest extends TestCase
             'phpredis' => $this->redis['phpredis']->connection(),
         ];
 
-        $host = ws_env('REDIS_HOST', '127.0.0.1');
-        $port = ws_env('REDIS_PORT', 6379);
+        $host = env('REDIS_HOST', '127.0.0.1');
+        $port = env('REDIS_PORT', 6379);
 
         $connections[] = (new RedisManager(new Application, 'phpredis', [
             'cluster' => false,
@@ -894,21 +892,6 @@ class RedisConnectionTest extends TestCase
                         'compression' => Redis::COMPRESSION_ZSTD,
                         'compression_level' => Redis::COMPRESSION_ZSTD_DEFAULT,
                         'name' => 'compression_zstd_default',
-                    ],
-                    'timeout' => 0.5,
-                ],
-            ]))->connection();
-
-            $connections['compression_zstd_min'] = (new RedisManager(new Application, 'phpredis', [
-                'cluster' => false,
-                'default' => [
-                    'host' => $host,
-                    'port' => $port,
-                    'database' => 12,
-                    'options' => [
-                        'compression' => Redis::COMPRESSION_ZSTD,
-                        'compression_level' => Redis::COMPRESSION_ZSTD_MIN,
-                        'name' => 'compression_zstd_min',
                     ],
                     'timeout' => 0.5,
                 ],

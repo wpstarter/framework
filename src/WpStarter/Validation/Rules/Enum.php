@@ -2,23 +2,52 @@
 
 namespace WpStarter\Validation\Rules;
 
+use WpStarter\Contracts\Support\Arrayable;
 use WpStarter\Contracts\Validation\Rule;
+use WpStarter\Contracts\Validation\ValidatorAwareRule;
+use WpStarter\Support\Arr;
+use WpStarter\Support\Traits\Conditionable;
+use Stringable;
 use TypeError;
 
-class Enum implements Rule
+use function WpStarter\Support\enum_value;
+
+class Enum implements Rule, ValidatorAwareRule, Stringable
 {
+    use Conditionable;
+
     /**
      * The type of the enum.
      *
-     * @var string
+     * @var class-string<\UnitEnum>
      */
     protected $type;
 
     /**
+     * The current validator instance.
+     *
+     * @var \WpStarter\Validation\Validator
+     */
+    protected $validator;
+
+    /**
+     * The cases that should be considered valid.
+     *
+     * @var array
+     */
+    protected $only = [];
+
+    /**
+     * The cases that should be considered invalid.
+     *
+     * @var array
+     */
+    protected $except = [];
+
+    /**
      * Create a new rule instance.
      *
-     * @param  string  $type
-     * @return void
+     * @param  class-string<\UnitEnum>  $type
      */
     public function __construct($type)
     {
@@ -34,15 +63,62 @@ class Enum implements Rule
      */
     public function passes($attribute, $value)
     {
-        if (is_null($value) || ! function_exists('enum_exists') || ! enum_exists($this->type) || ! method_exists($this->type, 'tryFrom')) {
+        if ($value instanceof $this->type) {
+            return $this->isDesirable($value);
+        }
+
+        if (is_null($value) || ! enum_exists($this->type) || ! method_exists($this->type, 'tryFrom')) {
             return false;
         }
 
         try {
-            return ! is_null($this->type::tryFrom($value));
-        } catch (TypeError $e) {
+            $value = $this->type::tryFrom($value);
+
+            return ! is_null($value) && $this->isDesirable($value);
+        } catch (TypeError) {
             return false;
         }
+    }
+
+    /**
+     * Specify the cases that should be considered valid.
+     *
+     * @param  \UnitEnum[]|\UnitEnum|\WpStarter\Contracts\Support\Arrayable<array-key, \UnitEnum>  $values
+     * @return $this
+     */
+    public function only($values)
+    {
+        $this->only = $values instanceof Arrayable ? $values->toArray() : Arr::wrap($values);
+
+        return $this;
+    }
+
+    /**
+     * Specify the cases that should be considered invalid.
+     *
+     * @param  \UnitEnum[]|\UnitEnum|\WpStarter\Contracts\Support\Arrayable<array-key, \UnitEnum>  $values
+     * @return $this
+     */
+    public function except($values)
+    {
+        $this->except = $values instanceof Arrayable ? $values->toArray() : Arr::wrap($values);
+
+        return $this;
+    }
+
+    /**
+     * Determine if the given case is a valid case based on the only / except values.
+     *
+     * @param  mixed  $value
+     * @return bool
+     */
+    protected function isDesirable($value)
+    {
+        return match (true) {
+            ! empty($this->only) => in_array(needle: $value, haystack: $this->only, strict: true),
+            ! empty($this->except) => ! in_array(needle: $value, haystack: $this->except, strict: true),
+            default => true,
+        };
     }
 
     /**
@@ -52,10 +128,43 @@ class Enum implements Rule
      */
     public function message()
     {
-        $message = ws_trans('validation.enum');
+        $message = $this->validator->getTranslator()->get('validation.enum');
 
         return $message === 'validation.enum'
             ? ['The selected :attribute is invalid.']
             : $message;
+    }
+
+    /**
+     * Set the current validator.
+     *
+     * @param  \WpStarter\Validation\Validator  $validator
+     * @return $this
+     */
+    public function setValidator($validator)
+    {
+        $this->validator = $validator;
+
+        return $this;
+    }
+
+    /**
+     * Convert the rule to a validation string.
+     *
+     * @return string
+     */
+    public function __toString()
+    {
+        $cases = ! empty($this->only)
+            ? $this->only
+            : array_filter($this->type::cases(), fn ($case) => ! in_array($case, $this->except, true));
+
+        $values = array_map(function ($case) {
+            $value = enum_value($case);
+
+            return '"'.str_replace('"', '""', (string) $value).'"';
+        }, $cases);
+
+        return 'in:'.implode(',', $values);
     }
 }

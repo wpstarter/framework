@@ -3,6 +3,7 @@
 namespace WpStarter\Tests\Integration\Database\EloquentMorphManyTest;
 
 use WpStarter\Database\Eloquent\Model;
+use WpStarter\Database\Eloquent\Relations\MorphOne;
 use WpStarter\Database\Schema\Blueprint;
 use WpStarter\Support\Carbon;
 use WpStarter\Support\Facades\Schema;
@@ -11,7 +12,7 @@ use WpStarter\Tests\Integration\Database\DatabaseTestCase;
 
 class EloquentMorphManyTest extends DatabaseTestCase
 {
-    protected function defineDatabaseMigrationsAfterDatabaseRefreshed()
+    protected function afterRefreshingDatabase()
     {
         Schema::create('posts', function (Blueprint $table) {
             $table->increments('id');
@@ -26,8 +27,6 @@ class EloquentMorphManyTest extends DatabaseTestCase
             $table->string('commentable_type');
             $table->timestamps();
         });
-
-        Carbon::setTestNow(null);
     }
 
     public function testUpdateModelWithDefaultWithCount()
@@ -43,13 +42,32 @@ class EloquentMorphManyTest extends DatabaseTestCase
     {
         $post = Post::create(['title' => 'foo']);
 
-        $comment = ws_tap((new Comment(['name' => 'foo']))->commentable()->associate($post))->save();
+        $comment = tap((new Comment(['name' => 'foo']))->commentable()->associate($post))->save();
 
         (new Comment(['name' => 'bar']))->commentable()->associate($comment)->save();
 
         $comments = Comment::has('replies')->get();
 
         $this->assertEquals([1], $comments->pluck('id')->all());
+    }
+
+    public function testCanMorphOne()
+    {
+        $post = Post::create(['title' => 'Your favorite book by C.S. Lewis']);
+
+        Carbon::setTestNow('1990-02-02 12:00:00');
+        $oldestComment = tap((new Comment(['name' => 'The Allegory Of Love']))->commentable()->associate($post))->save();
+
+        Carbon::setTestNow('2000-07-02 09:00:00');
+        tap((new Comment(['name' => 'The Screwtape Letters']))->commentable()->associate($post))->save();
+
+        Carbon::setTestNow('2022-01-01 00:00:00');
+        $latestComment = tap((new Comment(['name' => 'The Silver Chair']))->commentable()->associate($post))->save();
+
+        $this->assertInstanceOf(MorphOne::class, $post->comments()->one());
+
+        $this->assertEquals($latestComment->id, $post->latestComment->id);
+        $this->assertEquals($oldestComment->id, $post->oldestComment->id);
     }
 }
 
@@ -63,6 +81,16 @@ class Post extends Model
     public function comments()
     {
         return $this->morphMany(Comment::class, 'commentable');
+    }
+
+    public function latestComment(): MorphOne
+    {
+        return $this->comments()->one()->latestOfMany();
+    }
+
+    public function oldestComment(): MorphOne
+    {
+        return $this->comments()->one()->oldestOfMany();
     }
 }
 

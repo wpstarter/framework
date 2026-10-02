@@ -6,6 +6,7 @@ use WpStarter\Auth\AuthenticationException;
 use WpStarter\Auth\AuthManager;
 use WpStarter\Auth\EloquentUserProvider;
 use WpStarter\Auth\Middleware\Authenticate;
+use WpStarter\Auth\Middleware\AuthenticateWithBasicAuth;
 use WpStarter\Auth\RequestGuard;
 use WpStarter\Config\Repository as Config;
 use WpStarter\Container\Container;
@@ -31,9 +32,33 @@ class AuthenticateMiddlewareTest extends TestCase
 
     protected function tearDown(): void
     {
-        m::close();
-
         Container::setInstance(null);
+
+        parent::tearDown();
+    }
+
+    public function testItCanGenerateDefinitionViaStaticMethod()
+    {
+        $signature = Authenticate::using('foo');
+        $this->assertSame('WpStarter\Auth\Middleware\Authenticate:foo', $signature);
+
+        $signature = Authenticate::using('foo', 'bar');
+        $this->assertSame('WpStarter\Auth\Middleware\Authenticate:foo,bar', $signature);
+
+        $signature = Authenticate::using('foo', 'bar', 'baz');
+        $this->assertSame('WpStarter\Auth\Middleware\Authenticate:foo,bar,baz', $signature);
+    }
+
+    public function testItCanGenerateDefinitionViaStaticMethodForBasic()
+    {
+        $signature = AuthenticateWithBasicAuth::using('guard');
+        $this->assertSame('WpStarter\Auth\Middleware\AuthenticateWithBasicAuth:guard', $signature);
+
+        $signature = AuthenticateWithBasicAuth::using('guard', 'field');
+        $this->assertSame('WpStarter\Auth\Middleware\AuthenticateWithBasicAuth:guard,field', $signature);
+
+        $signature = AuthenticateWithBasicAuth::using(field: 'field');
+        $this->assertSame('WpStarter\Auth\Middleware\AuthenticateWithBasicAuth:,field', $signature);
     }
 
     public function testDefaultUnauthenticatedThrows()
@@ -183,6 +208,8 @@ class AuthenticateMiddlewareTest extends TestCase
     protected function authenticate(...$guards)
     {
         $request = m::mock(Request::class);
+
+        $request->shouldReceive('expectsJson')->andReturn(false);
 
         $nextParam = null;
 

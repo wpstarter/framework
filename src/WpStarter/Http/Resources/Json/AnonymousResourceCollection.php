@@ -12,16 +12,32 @@ class AnonymousResourceCollection extends ResourceCollection
     public $collects;
 
     /**
+     * Indicates if the collection keys should be preserved.
+     *
+     * @var bool
+     */
+    public $preserveKeys = false;
+
+    /**
      * Create a new anonymous resource collection.
      *
      * @param  mixed  $resource
      * @param  string  $collects
-     * @return void
      */
     public function __construct($resource, $collects)
     {
         $this->collects = $collects;
 
         parent::__construct($resource);
+    }
+
+    /**
+     * Indicate that the collection keys should be preserved.
+     */
+    public function preserveKeys(bool $value = true): static
+    {
+        $this->preserveKeys = $value;
+
+        return $this;
     }
 }

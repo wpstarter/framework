@@ -2,12 +2,17 @@
 
 namespace WpStarter\Tests\Validation;
 
+use Exception;
+use WpStarter\Translation\ArrayLoader;
+use WpStarter\Translation\Translator;
 use WpStarter\Validation\Rules\RequiredIf;
+use WpStarter\Validation\Validator;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 class ValidationRequiredIfTest extends TestCase
 {
-    public function testItClousureReturnsFormatsAStringVersionOfTheRule()
+    public function testItClosureReturnsFormatsAStringVersionOfTheRule()
     {
         $rule = new RequiredIf(function () {
             return true;
@@ -36,17 +41,46 @@ class ValidationRequiredIfTest extends TestCase
 
         $rule = new RequiredIf(true);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
 
         $rule = new RequiredIf('phpinfo');
     }
 
     public function testItReturnedRuleIsNotSerializable()
     {
-        $this->expectException(\Exception::class);
+        $this->expectException(Exception::class);
 
         $rule = serialize(new RequiredIf(function () {
             return true;
         }));
+    }
+
+    public function testRequiredIfRuleValidation()
+    {
+        $trans = new Translator(new ArrayLoader, 'en');
+
+        $rule = new RequiredIf(true);
+
+        $v = new Validator($trans, ['x' => 'foo'], ['x' => $rule]);
+        $this->assertTrue($v->passes());
+
+        $v = new Validator($trans, ['x' => ''], ['x' => (string) $rule]);
+        $this->assertTrue($v->fails());
+
+        $v = new Validator($trans, ['x' => 'foo'], ['x' => [$rule]]);
+        $this->assertTrue($v->passes());
+
+        $v = new Validator($trans, ['x' => 'foo'], ['x' => ['string', $rule]]);
+        $this->assertTrue($v->passes());
+
+        $rule = new RequiredIf(false);
+
+        $v = new Validator($trans, ['x' => 'foo'], ['x' => ['string', $rule]]);
+        $this->assertTrue($v->passes());
+
+        $rule = new RequiredIf(null);
+
+        $v = new Validator($trans, ['x' => 'foo'], ['x' => ['string', $rule]]);
+        $this->assertTrue($v->passes());
     }
 }

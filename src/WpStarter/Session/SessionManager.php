@@ -4,13 +4,16 @@ namespace WpStarter\Session;
 
 use WpStarter\Support\Manager;
 
+/**
+ * @mixin \WpStarter\Session\Store
+ */
 class SessionManager extends Manager
 {
     /**
      * Call a custom driver creator.
      *
      * @param  string  $driver
-     * @return mixed
+     * @return \WpStarter\Session\Store
      */
     protected function callCustomCreator($driver)
     {
@@ -47,7 +50,9 @@ class SessionManager extends Manager
     protected function createCookieDriver()
     {
         return $this->buildSession(new CookieSessionHandler(
-            $this->container->make('cookie'), $this->config->get('session.lifetime')
+            $this->container->make('cookie'),
+            $this->config->get('session.lifetime'),
+            $this->config->get('session.expire_on_close')
         ));
     }
 
@@ -185,8 +190,13 @@ class SessionManager extends Manager
     protected function buildSession($handler)
     {
         return $this->config->get('session.encrypt')
-                ? $this->buildEncryptedSession($handler)
-                : new Store($this->config->get('session.cookie'), $handler);
+            ? $this->buildEncryptedSession($handler)
+            : new Store(
+                $this->config->get('session.cookie'),
+                $handler,
+                $id = null,
+                $this->config->get('session.serialization', 'php')
+            );
     }
 
     /**
@@ -198,7 +208,11 @@ class SessionManager extends Manager
     protected function buildEncryptedSession($handler)
     {
         return new EncryptedStore(
-            $this->config->get('session.cookie'), $handler, $this->container['encrypter']
+            $this->config->get('session.cookie'),
+            $handler,
+            $this->container['encrypter'],
+            $id = null,
+            $this->config->get('session.serialization', 'php'),
         );
     }
 
@@ -223,6 +237,26 @@ class SessionManager extends Manager
     }
 
     /**
+     * Get the maximum number of seconds the session lock should be held for.
+     *
+     * @return int
+     */
+    public function defaultRouteBlockLockSeconds()
+    {
+        return $this->config->get('session.block_lock_seconds', 10);
+    }
+
+    /**
+     * Get the maximum number of seconds to wait while attempting to acquire a route block session lock.
+     *
+     * @return int
+     */
+    public function defaultRouteBlockWaitSeconds()
+    {
+        return $this->config->get('session.block_wait_seconds', 10);
+    }
+
+    /**
      * Get the session configuration.
      *
      * @return array
@@ -235,7 +269,7 @@ class SessionManager extends Manager
     /**
      * Get the default session driver name.
      *
-     * @return string
+     * @return string|null
      */
     public function getDefaultDriver()
     {

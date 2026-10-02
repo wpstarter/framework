@@ -10,11 +10,6 @@ use stdClass;
 
 class DatabaseSoftDeletingTraitTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        m::close();
-    }
-
     public function testDeleteSetsSoftDeletedColumn()
     {
         $model = m::mock(DatabaseSoftDeletingTraitStub::class);
@@ -29,6 +24,7 @@ class DatabaseSoftDeletingTraitTest extends TestCase
             'deleted_at',
             'updated_at',
         ]);
+        $model->shouldReceive('usesTimestamps')->once()->andReturn(true);
         $model->delete();
 
         $this->assertInstanceOf(Carbon::class, $model->deleted_at);
@@ -61,9 +57,11 @@ class DatabaseSoftDeletingTraitTest extends TestCase
 class DatabaseSoftDeletingTraitStub
 {
     use SoftDeletes;
+
     public $deleted_at;
     public $updated_at;
     public $timestamps = true;
+    public $exists = false;
 
     public function newQuery()
     {

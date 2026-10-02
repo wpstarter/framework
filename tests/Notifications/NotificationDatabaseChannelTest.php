@@ -2,6 +2,7 @@
 
 namespace WpStarter\Tests\Notifications;
 
+use Carbon\Carbon;
 use WpStarter\Notifications\Channels\DatabaseChannel;
 use WpStarter\Notifications\Messages\DatabaseMessage;
 use WpStarter\Notifications\Notification;
@@ -10,11 +11,6 @@ use PHPUnit\Framework\TestCase;
 
 class NotificationDatabaseChannelTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        m::close();
-    }
-
     public function testDatabaseChannelCreatesDatabaseRecordWithProperData()
     {
         $notification = new NotificationDatabaseChannelTestNotification;
@@ -57,10 +53,10 @@ class NotificationDatabaseChannelTest extends TestCase
         $notifiable = m::mock();
 
         $notifiable->shouldReceive('routeNotificationFor->create')->with([
-            'id'        => 1,
-            'type'      => 'MONTHLY',
-            'data'      => ['invoice_id' => 1],
-            'read_at'   => null,
+            'id' => 1,
+            'type' => 'MONTHLY',
+            'data' => ['invoice_id' => 1],
+            'read_at' => Carbon::now()->toDateTimeString(),
             'something' => 'else',
         ]);
 
@@ -87,6 +83,11 @@ class NotificationDatabaseChannelCustomizeTypeTestNotification extends Notificat
     public function databaseType()
     {
         return 'MONTHLY';
+    }
+
+    public function initialDatabaseReadAtValue()
+    {
+        return Carbon::now();
     }
 }
 

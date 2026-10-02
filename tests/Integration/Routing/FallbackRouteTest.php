@@ -10,7 +10,7 @@ class FallbackRouteTest extends TestCase
     public function testBasicFallback()
     {
         Route::fallback(function () {
-            return ws_response('fallback', 404);
+            return response('fallback', 404);
         });
 
         Route::get('one', function () {
@@ -26,7 +26,7 @@ class FallbackRouteTest extends TestCase
     {
         Route::group(['prefix' => 'prefix'], function () {
             Route::fallback(function () {
-                return ws_response('fallback', 404);
+                return response('fallback', 404);
             });
 
             Route::get('one', function () {
@@ -43,7 +43,7 @@ class FallbackRouteTest extends TestCase
     public function testFallbackWithWildcards()
     {
         Route::fallback(function () {
-            return ws_response('fallback', 404);
+            return response('fallback', 404);
         });
 
         Route::get('one', function () {
@@ -55,14 +55,19 @@ class FallbackRouteTest extends TestCase
         })->where('any', '.*');
 
         $this->assertStringContainsString('one', $this->get('/one')->getContent());
-        $this->assertStringContainsString('wildcard', $this->get('/non-existing')->getContent());
-        $this->assertEquals(200, $this->get('/non-existing')->getStatusCode());
+
+        tap($this->get('/non-existing'), function ($response) {
+            $this->assertStringContainsString('wildcard', $response->getContent());
+            $this->assertEquals(200, $response->getStatusCode());
+
+            $this->assertSame('non-existing', $response->baseRequest->route('any'));
+        });
     }
 
     public function testNoRoutes()
     {
         Route::fallback(function () {
-            return ws_response('fallback', 404);
+            return response('fallback', 404);
         });
 
         $this->assertStringContainsString('fallback', $this->get('/non-existing')->getContent());
@@ -72,7 +77,7 @@ class FallbackRouteTest extends TestCase
     public function testRespondWithNamedFallbackRoute()
     {
         Route::fallback(function () {
-            return ws_response('fallback', 404);
+            return response('fallback', 404);
         })->name('testFallbackRoute');
 
         Route::get('one', function () {

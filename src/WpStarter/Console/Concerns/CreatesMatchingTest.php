@@ -2,7 +2,7 @@
 
 namespace WpStarter\Console\Concerns;
 
-use WpStarter\Support\Str;
+use WpStarter\Support\Stringable;
 use Symfony\Component\Console\Input\InputOption;
 
 trait CreatesMatchingTest
@@ -14,7 +14,7 @@ trait CreatesMatchingTest
      */
     protected function addTestOptions()
     {
-        foreach (['test' => 'PHPUnit', 'pest' => 'Pest'] as $option => $name) {
+        foreach (['test' => 'Test', 'pest' => 'Pest', 'phpunit' => 'PHPUnit'] as $option => $name) {
             $this->getDefinition()->addOption(new InputOption(
                 $option,
                 null,
@@ -28,17 +28,19 @@ trait CreatesMatchingTest
      * Create the matching test case if requested.
      *
      * @param  string  $path
-     * @return void
+     * @return bool
      */
     protected function handleTestCreation($path)
     {
-        if (! $this->option('test') && ! $this->option('pest')) {
-            return;
+        if (! $this->option('test') && ! $this->option('pest') && ! $this->option('phpunit')) {
+            return false;
         }
 
-        $this->call('make:test', [
-            'name' => Str::of($path)->after($this->laravel['path'])->beforeLast('.php')->append('Test')->replace('\\', '/'),
+        return $this->call('make:test', [
+            'name' => (new Stringable($path))->after($this->laravel['path'])->beforeLast('.php')->append('Test')->replace('\\', '/'),
             '--pest' => $this->option('pest'),
-        ]);
+            '--phpunit' => $this->option('phpunit'),
+            '--force' => $this->hasOption('force') && $this->option('force'),
+        ]) == 0;
     }
 }

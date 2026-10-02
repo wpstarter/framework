@@ -11,11 +11,6 @@ use PHPUnit\Framework\TestCase;
 
 class DatabaseProcessorTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        m::close();
-    }
-
     public function testInsertGetIdProcessing()
     {
         $pdo = $this->createMock(ProcessorTestPDOStub::class);
@@ -38,9 +33,8 @@ class ProcessorTestPDOStub extends PDO
         //
     }
 
-    #[\ReturnTypeWillChange]
-    public function lastInsertId($sequence = null)
+    public function lastInsertId($sequence = null): string|false
     {
-        //
+        return '';
     }
 }
