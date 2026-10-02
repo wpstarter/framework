@@ -493,7 +493,7 @@ class Middleware
             ])),
 
             'api' => array_values(array_filter([
-                $this->statefulApi ? \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class : null,
+                $this->statefulApi ? \WpStarter\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class : null,
                 $this->apiLimiter ? 'throttle:'.$this->apiLimiter : null,
                 \WpStarter\Routing\Middleware\SubstituteBindings::class,
             ])),

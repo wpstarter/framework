@@ -18,7 +18,7 @@ use WpStarter\Support\Facades\Broadcast;
 use WpStarter\Support\Facades\Event;
 use WpStarter\Support\Facades\Route;
 use WpStarter\Support\Facades\View;
-use Laravel\Folio\Folio;
+use WpStarter\Folio\Folio;
 
 class ApplicationBuilder
 {

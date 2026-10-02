@@ -8,7 +8,7 @@ use WpStarter\Bus\Queueable;
 use WpStarter\Contracts\Container\Container;
 use WpStarter\Contracts\Queue\ShouldQueue;
 use WpStarter\Foundation\Bus\Dispatchable;
-use Laravel\SerializableClosure\SerializableClosure;
+use WpStarter\SerializableClosure\SerializableClosure;
 use ReflectionFunction;
 
 class CallQueuedClosure implements ShouldQueue
@@ -18,7 +18,7 @@ class CallQueuedClosure implements ShouldQueue
     /**
      * The serializable Closure instance.
      *
-     * @var \Laravel\SerializableClosure\SerializableClosure
+     * @var \WpStarter\SerializableClosure\SerializableClosure
      */
     public $closure;
 
@@ -46,7 +46,7 @@ class CallQueuedClosure implements ShouldQueue
     /**
      * Create a new job instance.
      *
-     * @param  \Laravel\SerializableClosure\SerializableClosure  $closure
+     * @param  \WpStarter\SerializableClosure\SerializableClosure  $closure
      */
     public function __construct($closure)
     {

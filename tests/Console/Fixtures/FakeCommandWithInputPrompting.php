@@ -4,8 +4,8 @@ namespace WpStarter\Tests\Console\Fixtures;
 
 use WpStarter\Console\Command;
 use WpStarter\Contracts\Console\PromptsForMissingInput;
-use Laravel\Prompts\Prompt;
-use Laravel\Prompts\TextPrompt;
+use WpStarter\Prompts\Prompt;
+use WpStarter\Prompts\TextPrompt;
 use Symfony\Component\Console\Input\InputInterface;
 
 class FakeCommandWithInputPrompting extends Command implements PromptsForMissingInput

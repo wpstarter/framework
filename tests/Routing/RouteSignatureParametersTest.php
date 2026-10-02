@@ -4,7 +4,7 @@ namespace WpStarter\Tests\Routing;
 
 use WpStarter\Database\Eloquent\Model;
 use WpStarter\Routing\RouteSignatureParameters;
-use Laravel\SerializableClosure\SerializableClosure;
+use WpStarter\SerializableClosure\SerializableClosure;
 use PHPUnit\Framework\TestCase;
 use ReflectionParameter;
 

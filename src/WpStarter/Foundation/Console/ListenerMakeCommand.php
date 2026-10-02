@@ -10,7 +10,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-use function Laravel\Prompts\suggest;
+use function WpStarter\Prompts\suggest;
 
 #[AsCommand(name: 'make:listener')]
 class ListenerMakeCommand extends GeneratorCommand

@@ -21,7 +21,7 @@ use WpStarter\Support\Str;
 use WpStarter\Support\Traits\Conditionable;
 use WpStarter\Support\Traits\Macroable;
 use InvalidArgumentException;
-use Laravel\SerializableClosure\SerializableClosure;
+use WpStarter\SerializableClosure\SerializableClosure;
 use LogicException;
 use Symfony\Component\Routing\Route as SymfonyRoute;
 

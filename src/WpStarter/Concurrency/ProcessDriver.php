@@ -10,7 +10,7 @@ use WpStarter\Process\Factory as ProcessFactory;
 use WpStarter\Process\Pool;
 use WpStarter\Support\Arr;
 use WpStarter\Support\Defer\DeferredCallback;
-use Laravel\SerializableClosure\SerializableClosure;
+use WpStarter\SerializableClosure\SerializableClosure;
 
 use function WpStarter\Support\defer;
 

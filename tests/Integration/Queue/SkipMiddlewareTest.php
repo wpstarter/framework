@@ -8,7 +8,7 @@ use WpStarter\Contracts\Queue\Job;
 use WpStarter\Queue\CallQueuedHandler;
 use WpStarter\Queue\InteractsWithQueue;
 use WpStarter\Queue\Middleware\Skip;
-use Laravel\SerializableClosure\SerializableClosure;
+use WpStarter\SerializableClosure\SerializableClosure;
 use Mockery as m;
 use Orchestra\Testbench\TestCase;
 

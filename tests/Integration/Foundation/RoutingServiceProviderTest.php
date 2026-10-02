@@ -132,7 +132,7 @@ class RoutingServiceProviderTest extends TestCase
         $response = $this->call('POST', 'test-route', content: file_get_contents(__DIR__.'/Fixtures/laravel.txt.gz'));
 
         $response->assertOk();
-        $response->assertContent("Laravel\n");
+        $response->assertContent("WpStarter\n");
     }
 }
 

@@ -2,7 +2,7 @@
 
 namespace WpStarter\Support\Facades;
 
-use Laravel\Ui\UiServiceProvider;
+use WpStarter\Ui\UiServiceProvider;
 use RuntimeException;
 
 /**

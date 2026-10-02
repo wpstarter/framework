@@ -73,7 +73,7 @@ class ApiInstallCommand extends Command
                 'passport:install',
             ]);
 
-            $this->components->info('API scaffolding installed. Please add the [Laravel\Passport\HasApiTokens] trait to your User model.');
+            $this->components->info('API scaffolding installed. Please add the [WpStarter\Passport\HasApiTokens] trait to your User model.');
         } else {
             if (! $this->option('without-migration-prompt')) {
                 if ($this->confirm('One new database migration has been published. Would you like to run all pending database migrations?', true)) {
@@ -81,7 +81,7 @@ class ApiInstallCommand extends Command
                 }
             }
 
-            $this->components->info('API scaffolding installed. Please add the [Laravel\Sanctum\HasApiTokens] trait to your User model.');
+            $this->components->info('API scaffolding installed. Please add the [WpStarter\Sanctum\HasApiTokens] trait to your User model.');
         }
     }
 

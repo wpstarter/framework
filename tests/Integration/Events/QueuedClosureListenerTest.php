@@ -6,7 +6,7 @@ use WpStarter\Events\CallQueuedListener;
 use WpStarter\Events\InvokeQueuedClosure;
 use WpStarter\Support\Facades\Bus;
 use WpStarter\Support\Facades\Event;
-use Laravel\SerializableClosure\SerializableClosure;
+use WpStarter\SerializableClosure\SerializableClosure;
 use Orchestra\Testbench\TestCase;
 
 class QueuedClosureListenerTest extends TestCase

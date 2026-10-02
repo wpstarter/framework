@@ -5,7 +5,7 @@ namespace WpStarter\Tests\Integration\Concurrency\Console;
 use WpStarter\Concurrency\Console\InvokeSerializedClosureCommand;
 use WpStarter\Contracts\Console\Kernel;
 use WpStarter\Support\Facades\Artisan;
-use Laravel\SerializableClosure\SerializableClosure;
+use WpStarter\SerializableClosure\SerializableClosure;
 use Orchestra\Testbench\TestCase;
 use RuntimeException;
 use Symfony\Component\Console\Output\BufferedOutput;

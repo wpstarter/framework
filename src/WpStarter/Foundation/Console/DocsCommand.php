@@ -16,7 +16,7 @@ use Symfony\Component\Process\ExecutableFinder;
 use Symfony\Component\Process\Process;
 use Throwable;
 
-use function Laravel\Prompts\suggest;
+use function WpStarter\Prompts\suggest;
 
 #[AsCommand(name: 'docs')]
 class DocsCommand extends Command

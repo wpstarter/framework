@@ -11,7 +11,7 @@ use WpStarter\Support\Env;
 use WpStarter\Support\Str;
 use Symfony\Component\Console\Attribute\AsCommand;
 
-use function Laravel\Prompts\password;
+use function WpStarter\Prompts\password;
 
 #[AsCommand(name: 'env:decrypt')]
 class EnvironmentDecryptCommand extends Command

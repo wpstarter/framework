@@ -6,16 +6,16 @@ use WpStarter\Console\Command;
 use WpStarter\Contracts\Console\Kernel;
 use Orchestra\Testbench\TestCase;
 
-use function Laravel\Prompts\confirm;
-use function Laravel\Prompts\multisearch;
-use function Laravel\Prompts\multiselect;
-use function Laravel\Prompts\password;
-use function Laravel\Prompts\pause;
-use function Laravel\Prompts\search;
-use function Laravel\Prompts\select;
-use function Laravel\Prompts\suggest;
-use function Laravel\Prompts\text;
-use function Laravel\Prompts\textarea;
+use function WpStarter\Prompts\confirm;
+use function WpStarter\Prompts\multisearch;
+use function WpStarter\Prompts\multiselect;
+use function WpStarter\Prompts\password;
+use function WpStarter\Prompts\pause;
+use function WpStarter\Prompts\search;
+use function WpStarter\Prompts\select;
+use function WpStarter\Prompts\suggest;
+use function WpStarter\Prompts\text;
+use function WpStarter\Prompts\textarea;
 
 class PromptsAssertionTest extends TestCase
 {

@@ -290,7 +290,7 @@ class EncrypterTest extends TestCase
     {
         $this->assertFalse(Encrypter::appearsEncrypted('foo'));
         $this->assertFalse(Encrypter::appearsEncrypted('APP_NAME=Laravel'));
-        $this->assertFalse(Encrypter::appearsEncrypted("APP_NAME=Laravel\nAPP_ENV=local"));
+        $this->assertFalse(Encrypter::appearsEncrypted("APP_NAME=WpStarter\nAPP_ENV=local"));
     }
 
     public function testEncryptedReturnsFalseForNonString()

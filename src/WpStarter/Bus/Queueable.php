@@ -6,7 +6,7 @@ use Closure;
 use WpStarter\Queue\CallQueuedClosure;
 use WpStarter\Support\Arr;
 use WpStarter\Support\Collection;
-use Laravel\SerializableClosure\SerializableClosure;
+use WpStarter\SerializableClosure\SerializableClosure;
 use PHPUnit\Framework\Assert as PHPUnit;
 use RuntimeException;
 
@@ -38,7 +38,7 @@ trait Queueable
     /**
      * The job deduplicator callback the job should use to generate the deduplication ID.
      *
-     * @var \Laravel\SerializableClosure\SerializableClosure|null
+     * @var \WpStarter\SerializableClosure\SerializableClosure|null
      */
     public $deduplicator;
 

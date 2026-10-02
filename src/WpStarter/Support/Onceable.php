@@ -4,7 +4,7 @@ namespace WpStarter\Support;
 
 use Closure;
 use WpStarter\Contracts\Support\HasOnceHash;
-use Laravel\SerializableClosure\Support\ReflectionClosure;
+use WpStarter\SerializableClosure\Support\ReflectionClosure;
 
 class Onceable
 {

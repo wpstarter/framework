@@ -9,7 +9,7 @@ class InvokeQueuedClosure
     /**
      * Handle the event.
      *
-     * @param  \Laravel\SerializableClosure\SerializableClosure  $closure
+     * @param  \WpStarter\SerializableClosure\SerializableClosure  $closure
      * @param  array  $arguments
      * @return void
      */
@@ -21,7 +21,7 @@ class InvokeQueuedClosure
     /**
      * Handle a job failure.
      *
-     * @param  \Laravel\SerializableClosure\SerializableClosure  $closure
+     * @param  \WpStarter\SerializableClosure\SerializableClosure  $closure
      * @param  array  $arguments
      * @param  array  $catchCallbacks
      * @param  \Throwable  $exception

@@ -10,7 +10,7 @@ use WpStarter\Support\Collection;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Output\OutputInterface;
 
-use function Laravel\Prompts\suggest;
+use function WpStarter\Prompts\suggest;
 
 #[AsCommand(name: 'model:show')]
 class ShowModelCommand extends DatabaseInspectionCommand implements PromptsForMissingInput

@@ -6,10 +6,10 @@ use WpStarter\Contracts\Events\Dispatcher;
 use WpStarter\Database\Events\QueryExecuted;
 use WpStarter\Queue\Events\JobProcessed;
 use WpStarter\Queue\Events\JobProcessing;
-use Laravel\Octane\Events\RequestReceived;
-use Laravel\Octane\Events\RequestTerminated;
-use Laravel\Octane\Events\TaskReceived;
-use Laravel\Octane\Events\TickReceived;
+use WpStarter\Octane\Events\RequestReceived;
+use WpStarter\Octane\Events\RequestTerminated;
+use WpStarter\Octane\Events\TaskReceived;
+use WpStarter\Octane\Events\TickReceived;
 
 class Listener
 {

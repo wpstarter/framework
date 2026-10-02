@@ -3,17 +3,17 @@
 namespace WpStarter\Console\Concerns;
 
 use WpStarter\Console\PromptValidationException;
-use Laravel\Prompts\ConfirmPrompt;
-use Laravel\Prompts\MultiSearchPrompt;
-use Laravel\Prompts\MultiSelectPrompt;
-use Laravel\Prompts\PasswordPrompt;
-use Laravel\Prompts\PausePrompt;
-use Laravel\Prompts\Prompt;
-use Laravel\Prompts\SearchPrompt;
-use Laravel\Prompts\SelectPrompt;
-use Laravel\Prompts\SuggestPrompt;
-use Laravel\Prompts\TextareaPrompt;
-use Laravel\Prompts\TextPrompt;
+use WpStarter\Prompts\ConfirmPrompt;
+use WpStarter\Prompts\MultiSearchPrompt;
+use WpStarter\Prompts\MultiSelectPrompt;
+use WpStarter\Prompts\PasswordPrompt;
+use WpStarter\Prompts\PausePrompt;
+use WpStarter\Prompts\Prompt;
+use WpStarter\Prompts\SearchPrompt;
+use WpStarter\Prompts\SelectPrompt;
+use WpStarter\Prompts\SuggestPrompt;
+use WpStarter\Prompts\TextareaPrompt;
+use WpStarter\Prompts\TextPrompt;
 use stdClass;
 use Symfony\Component\Console\Input\InputInterface;
 

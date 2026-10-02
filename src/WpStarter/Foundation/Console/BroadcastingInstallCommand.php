@@ -11,10 +11,10 @@ use Symfony\Component\Console\Attribute\AsCommand;
 
 use function WpStarter\Support\artisan_binary;
 use function WpStarter\Support\php_binary;
-use function Laravel\Prompts\confirm;
-use function Laravel\Prompts\password;
-use function Laravel\Prompts\select;
-use function Laravel\Prompts\text;
+use function WpStarter\Prompts\confirm;
+use function WpStarter\Prompts\password;
+use function WpStarter\Prompts\select;
+use function WpStarter\Prompts\text;
 
 #[AsCommand(name: 'install:broadcasting')]
 class BroadcastingInstallCommand extends Command

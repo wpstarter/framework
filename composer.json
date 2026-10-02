@@ -21,8 +21,6 @@
         "fruitcake/php-cors": "^1.3",
         "guzzlehttp/guzzle": "^7.8.2",
         "guzzlehttp/uri-template": "^1.0",
-        "laravel/prompts": "^0.3.0",
-        "laravel/serializable-closure": "^1.3|^2.0",
         "league/commonmark": "^2.8.1",
         "league/flysystem": "^3.25.1",
         "league/flysystem-local": "^3.25.1",
@@ -96,7 +94,8 @@
             "src/WpStarter/Log/functions.php",
             "src/WpStarter/Reflection/helpers.php",
             "src/WpStarter/Support/functions.php",
-            "src/WpStarter/Support/helpers.php"
+            "src/WpStarter/Support/helpers.php",
+            "lib/prompts/src/helpers.php"
         ],
         "psr-4": {
             "WpStarter\\": "src/WpStarter/",
@@ -105,7 +104,11 @@
                 "src/WpStarter/Collections/",
                 "src/WpStarter/Conditionable/",
                 "src/WpStarter/Reflection/"
-            ]
+            ],
+            "WpStarter\\Prompts\\": "lib/prompts/src/",
+            "WpStarter\\SerializableClosure\\": "lib/serializable-closure/src"
+
+
         }
     },
     "autoload-dev": {

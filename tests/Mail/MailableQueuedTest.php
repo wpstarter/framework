@@ -13,7 +13,7 @@ use WpStarter\Mail\Mailable;
 use WpStarter\Mail\Mailer;
 use WpStarter\Mail\SendQueuedMailable;
 use WpStarter\Support\Testing\Fakes\QueueFake;
-use Laravel\SerializableClosure\SerializableClosure;
+use WpStarter\SerializableClosure\SerializableClosure;
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Mailer\Transport\TransportInterface;

@@ -23,7 +23,7 @@ use WpStarter\Queue\Failed\NullFailedJobProvider;
 use WpStarter\Support\Arr;
 use WpStarter\Support\Facades\Facade;
 use WpStarter\Support\ServiceProvider;
-use Laravel\SerializableClosure\SerializableClosure;
+use WpStarter\SerializableClosure\SerializableClosure;
 
 class QueueServiceProvider extends ServiceProvider implements DeferrableProvider
 {

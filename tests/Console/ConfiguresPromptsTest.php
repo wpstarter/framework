@@ -6,15 +6,15 @@ use WpStarter\Console\Application;
 use WpStarter\Console\Command;
 use WpStarter\Console\OutputStyle;
 use WpStarter\Console\View\Components\Factory;
-use Laravel\Prompts\Prompt;
+use WpStarter\Prompts\Prompt;
 use Mockery as m;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\NullOutput;
 
-use function Laravel\Prompts\multiselect;
-use function Laravel\Prompts\select;
+use function WpStarter\Prompts\multiselect;
+use function WpStarter\Prompts\select;
 
 class ConfiguresPromptsTest extends TestCase
 {

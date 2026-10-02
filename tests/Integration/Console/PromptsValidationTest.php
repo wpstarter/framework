@@ -6,7 +6,7 @@ use WpStarter\Console\Command;
 use WpStarter\Contracts\Console\Kernel;
 use Orchestra\Testbench\TestCase;
 
-use function Laravel\Prompts\text;
+use function WpStarter\Prompts\text;
 
 class PromptsValidationTest extends TestCase
 {

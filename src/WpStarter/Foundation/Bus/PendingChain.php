@@ -8,7 +8,7 @@ use WpStarter\Contracts\Bus\Dispatcher;
 use WpStarter\Queue\CallQueuedClosure;
 use WpStarter\Support\Collection;
 use WpStarter\Support\Traits\Conditionable;
-use Laravel\SerializableClosure\SerializableClosure;
+use WpStarter\SerializableClosure\SerializableClosure;
 
 use function WpStarter\Support\enum_value;
 

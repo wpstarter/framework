@@ -9,7 +9,7 @@ use WpStarter\Contracts\Events\Dispatcher as EventDispatcher;
 use WpStarter\Support\Arr;
 use WpStarter\Support\Collection;
 use WpStarter\Support\Traits\Conditionable;
-use Laravel\SerializableClosure\SerializableClosure;
+use WpStarter\SerializableClosure\SerializableClosure;
 use RuntimeException;
 use Throwable;
 use UnitEnum;

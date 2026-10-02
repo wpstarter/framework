@@ -14,7 +14,7 @@ use WpStarter\Support\Str;
 use WpStarter\Tests\Queue\Fixtures\FakeSqsJob;
 use WpStarter\Tests\Queue\Fixtures\FakeSqsJobWithDeduplication;
 use WpStarter\Tests\Queue\Fixtures\FakeSqsJobWithMessageGroup;
-use Laravel\SerializableClosure\SerializableClosure;
+use WpStarter\SerializableClosure\SerializableClosure;
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
 

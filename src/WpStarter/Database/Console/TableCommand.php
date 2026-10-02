@@ -9,7 +9,7 @@ use WpStarter\Support\Collection;
 use WpStarter\Support\Number;
 use Symfony\Component\Console\Attribute\AsCommand;
 
-use function Laravel\Prompts\search;
+use function WpStarter\Prompts\search;
 
 #[AsCommand(name: 'db:table')]
 class TableCommand extends DatabaseInspectionCommand

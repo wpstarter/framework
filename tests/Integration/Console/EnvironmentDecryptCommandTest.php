@@ -333,7 +333,7 @@ class EnvironmentDecryptCommandTest extends TestCase
             ->assertExitCode(0);
 
         $this->filesystem->shouldHaveReceived('put')
-            ->with(ws_base_path('.env'), "APP_NAME=Laravel\nAPP_ENV=local\n");
+            ->with(ws_base_path('.env'), "APP_NAME=WpStarter\nAPP_ENV=local\n");
     }
 
     public function testItStillDecryptsBlobFormat(): void
@@ -342,7 +342,7 @@ class EnvironmentDecryptCommandTest extends TestCase
         $encrypter = new Encrypter($key, 'AES-256-CBC');
 
         // Create blob format (entire file encrypted as one)
-        $originalContent = "APP_NAME=Laravel\nAPP_ENV=local";
+        $originalContent = "APP_NAME=WpStarter\nAPP_ENV=local";
         $encryptedContent = $encrypter->encrypt($originalContent);
 
         $this->filesystem->shouldReceive('exists')
@@ -369,7 +369,7 @@ class EnvironmentDecryptCommandTest extends TestCase
         $encrypter = new Encrypter($key, 'AES-256-CBC');
 
         // Create blob format and inject a newline (simulating wrapped base64)
-        $originalContent = "APP_NAME=Laravel\nAPP_ENV=local";
+        $originalContent = "APP_NAME=WpStarter\nAPP_ENV=local";
         $encryptedContent = $encrypter->encrypt($originalContent);
 
         // Insert a newline in the middle of the base64 string

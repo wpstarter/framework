@@ -17,7 +17,7 @@ use WpStarter\Queue\CallQueuedHandler;
 use WpStarter\Queue\InteractsWithQueue;
 use WpStarter\Queue\QueueManager;
 use WpStarter\Support\Testing\Fakes\QueueFake;
-use Laravel\SerializableClosure\SerializableClosure;
+use WpStarter\SerializableClosure\SerializableClosure;
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
 

@@ -10,8 +10,8 @@ use WpStarter\Filesystem\Filesystem;
 use WpStarter\Support\Str;
 use Symfony\Component\Console\Attribute\AsCommand;
 
-use function Laravel\Prompts\password;
-use function Laravel\Prompts\select;
+use function WpStarter\Prompts\password;
+use function WpStarter\Prompts\select;
 
 #[AsCommand(name: 'env:encrypt')]
 class EnvironmentEncryptCommand extends Command

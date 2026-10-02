@@ -2,7 +2,7 @@
 
 namespace WpStarter\Console;
 
-use function Laravel\Prompts\confirm;
+use function WpStarter\Prompts\confirm;
 
 trait ConfirmableTrait
 {

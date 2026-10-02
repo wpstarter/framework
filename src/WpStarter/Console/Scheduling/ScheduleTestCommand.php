@@ -6,7 +6,7 @@ use WpStarter\Console\Application;
 use WpStarter\Console\Command;
 use Symfony\Component\Console\Attribute\AsCommand;
 
-use function Laravel\Prompts\select;
+use function WpStarter\Prompts\select;
 
 #[AsCommand(name: 'schedule:test')]
 class ScheduleTestCommand extends Command

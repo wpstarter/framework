@@ -15,8 +15,8 @@ use League\Flysystem\UnixVisibility\PortableVisibilityConverter;
 use League\Flysystem\Visibility;
 use Symfony\Component\Console\Attribute\AsCommand;
 
-use function Laravel\Prompts\search;
-use function Laravel\Prompts\select;
+use function WpStarter\Prompts\search;
+use function WpStarter\Prompts\select;
 
 #[AsCommand(name: 'vendor:publish')]
 class VendorPublishCommand extends Command

@@ -18,7 +18,7 @@ use WpStarter\Notifications\SendQueuedNotifications;
 use WpStarter\Queue\InteractsWithQueue;
 use WpStarter\Queue\SerializesModels;
 use WpStarter\Support\Collection;
-use Laravel\SerializableClosure\SerializableClosure;
+use WpStarter\SerializableClosure\SerializableClosure;
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
 

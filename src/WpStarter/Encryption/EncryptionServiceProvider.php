@@ -4,7 +4,7 @@ namespace WpStarter\Encryption;
 
 use WpStarter\Support\ServiceProvider;
 use WpStarter\Support\Str;
-use Laravel\SerializableClosure\SerializableClosure;
+use WpStarter\SerializableClosure\SerializableClosure;
 
 class EncryptionServiceProvider extends ServiceProvider
 {

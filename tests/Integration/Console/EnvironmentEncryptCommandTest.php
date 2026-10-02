@@ -176,7 +176,7 @@ class EnvironmentEncryptCommandTest extends TestCase
         $filesystem->shouldReceive('get')
             ->with(ws_base_path('.env'))
             ->once()
-            ->andReturn("APP_NAME=Laravel\nAPP_ENV=local");
+            ->andReturn("APP_NAME=WpStarter\nAPP_ENV=local");
         $filesystem->shouldReceive('put')
             ->once()
             ->with(ws_base_path('.env.encrypted'), m::on(function ($content) {
@@ -208,7 +208,7 @@ class EnvironmentEncryptCommandTest extends TestCase
         $filesystem->shouldReceive('get')
             ->with(ws_base_path('.env'))
             ->once()
-            ->andReturn("# Comment\nAPP_NAME=Laravel\n\nAPP_ENV=local");
+            ->andReturn("# Comment\nAPP_NAME=WpStarter\n\nAPP_ENV=local");
         $filesystem->shouldReceive('put')
             ->once()
             ->with(ws_base_path('.env.encrypted'), m::on(function ($content) {

@@ -4,7 +4,7 @@ namespace WpStarter\Events;
 
 use Closure;
 use WpStarter\Support\Collection;
-use Laravel\SerializableClosure\SerializableClosure;
+use WpStarter\SerializableClosure\SerializableClosure;
 
 use function WpStarter\Support\enum_value;
 
@@ -41,7 +41,7 @@ class QueuedClosure
     /**
      * The job deduplicator callback the job should use to generate the deduplication ID.
      *
-     * @var \Laravel\SerializableClosure\SerializableClosure|null
+     * @var \WpStarter\SerializableClosure\SerializableClosure|null
      */
     public $deduplicator;
 

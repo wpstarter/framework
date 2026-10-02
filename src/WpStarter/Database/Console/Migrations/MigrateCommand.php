@@ -15,7 +15,7 @@ use RuntimeException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Throwable;
 
-use function Laravel\Prompts\confirm;
+use function WpStarter\Prompts\confirm;
 
 #[AsCommand(name: 'migrate')]
 class MigrateCommand extends BaseCommand implements Isolatable
