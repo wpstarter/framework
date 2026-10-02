@@ -21,7 +21,7 @@ class BladeEchoHandlerTest extends AbstractBladeTestCase
     public function testBladeHandlerCanInterceptRegularEchos()
     {
         $this->assertSame(
-            "<?php \$__bladeCompiler = app('blade.compiler'); ?><?php echo ws_e(\$__bladeCompiler->applyEchoHandler(\$exampleObject)); ?>",
+            "<?php \$__bladeCompiler = ws_app('blade.compiler'); ?><?php echo ws_e(\$__bladeCompiler->applyEchoHandler(\$exampleObject)); ?>",
             $this->compiler->compileString('{{$exampleObject}}')
         );
     }
@@ -29,7 +29,7 @@ class BladeEchoHandlerTest extends AbstractBladeTestCase
     public function testBladeHandlerCanInterceptRawEchos()
     {
         $this->assertSame(
-            "<?php \$__bladeCompiler = app('blade.compiler'); ?><?php echo \$__bladeCompiler->applyEchoHandler(\$exampleObject); ?>",
+            "<?php \$__bladeCompiler = ws_app('blade.compiler'); ?><?php echo \$__bladeCompiler->applyEchoHandler(\$exampleObject); ?>",
             $this->compiler->compileString('{!!$exampleObject!!}')
         );
     }
@@ -37,7 +37,7 @@ class BladeEchoHandlerTest extends AbstractBladeTestCase
     public function testBladeHandlerCanInterceptEscapedEchos()
     {
         $this->assertSame(
-            "<?php \$__bladeCompiler = app('blade.compiler'); ?><?php echo ws_e(\$__bladeCompiler->applyEchoHandler(\$exampleObject)); ?>",
+            "<?php \$__bladeCompiler = ws_app('blade.compiler'); ?><?php echo ws_e(\$__bladeCompiler->applyEchoHandler(\$exampleObject)); ?>",
             $this->compiler->compileString('{{{$exampleObject}}}')
         );
     }
@@ -45,7 +45,7 @@ class BladeEchoHandlerTest extends AbstractBladeTestCase
     public function testWhitespaceIsPreservedCorrectly()
     {
         $this->assertSame(
-            "<?php \$__bladeCompiler = app('blade.compiler'); ?><?php echo ws_e(\$__bladeCompiler->applyEchoHandler(\$exampleObject)); ?>\n\n",
+            "<?php \$__bladeCompiler = ws_app('blade.compiler'); ?><?php echo ws_e(\$__bladeCompiler->applyEchoHandler(\$exampleObject)); ?>\n\n",
             $this->compiler->compileString("{{\$exampleObject}}\n")
         );
     }
@@ -60,7 +60,7 @@ class BladeEchoHandlerTest extends AbstractBladeTestCase
             throw new Exception('The fluent object has been successfully handled!');
         });
 
-        app()->instance('blade.compiler', $this->compiler);
+        ws_app()->instance('blade.compiler', $this->compiler);
 
         $exampleObject = new Fluent();
 
@@ -82,7 +82,7 @@ class BladeEchoHandlerTest extends AbstractBladeTestCase
     {
         $this->compiler->stringable('iterable', $closure);
 
-        app()->instance('blade.compiler', $this->compiler);
+        ws_app()->instance('blade.compiler', $this->compiler);
 
         ob_start();
         eval((new Stringable($this->compiler->compileString($blade)))->remove(['<?php', '?>']));
@@ -104,7 +104,7 @@ class BladeEchoHandlerTest extends AbstractBladeTestCase
     #[DataProvider('nonStringableDataProvider')]
     public function testHandlerWorksWithNonStringables($blade, $expectedOutput)
     {
-        app()->instance('blade.compiler', $this->compiler);
+        ws_app()->instance('blade.compiler', $this->compiler);
 
         ob_start();
         eval((new Stringable($this->compiler->compileString($blade)))->remove(['<?php', '?>']));

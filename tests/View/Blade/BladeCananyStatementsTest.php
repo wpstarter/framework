@@ -11,9 +11,9 @@ breeze
 @elsecanany([\'delete\', \'approve\'], [$post])
 sneeze
 @endcan';
-        $expected = '<?php if (app(\\WpStarter\\Contracts\\Auth\\Access\\Gate::class)->any([\'create\', \'update\'], [$post])): ?>
+        $expected = '<?php if (ws_app(\\WpStarter\\Contracts\\Auth\\Access\\Gate::class)->any([\'create\', \'update\'], [$post])): ?>
 breeze
-<?php elseif (app(\\WpStarter\\Contracts\\Auth\\Access\\Gate::class)->any([\'delete\', \'approve\'], [$post])): ?>
+<?php elseif (ws_app(\\WpStarter\\Contracts\\Auth\\Access\\Gate::class)->any([\'delete\', \'approve\'], [$post])): ?>
 sneeze
 <?php endif; ?>';
         $this->assertEquals($expected, $this->compiler->compileString($string));

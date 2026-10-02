@@ -515,7 +515,7 @@ class FoundationViteTest extends TestCase
             ];
         });
 
-        $result = app(Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
+        $result = ws_app(Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
 
         $this->assertSame(
             '<script type="module" src="http://localhost:3000/@vite/client"></script>'
@@ -537,7 +537,7 @@ class FoundationViteTest extends TestCase
             'src' => 'expected-src',
         ]);
 
-        $result = app(Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
+        $result = ws_app(Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
 
         $this->assertStringEndsWith(
             '<link rel="expected-rel" href="expected-href" />'
@@ -624,7 +624,7 @@ class FoundationViteTest extends TestCase
     {
         $this->makeViteManifest();
 
-        $vite = app(Vite::class);
+        $vite = ws_app(Vite::class);
 
         $this->assertSame('', $vite->toHtml());
 
@@ -640,7 +640,7 @@ class FoundationViteTest extends TestCase
     {
         $this->makeViteManifest(null, 'custom-build');
 
-        $vite = app(Vite::class);
+        $vite = ws_app(Vite::class);
 
         $vite->withEntryPoints(['resources/js/app.js'])->useBuildDirectory('custom-build');
 
@@ -656,7 +656,7 @@ class FoundationViteTest extends TestCase
     {
         $this->makeViteHotFile('cold');
 
-        $vite = app(Vite::class);
+        $vite = ws_app(Vite::class);
 
         $vite->withEntryPoints(['resources/js/app.js'])->useHotFile('cold');
 
@@ -677,7 +677,7 @@ class FoundationViteTest extends TestCase
                 'file' => 'assets/profile.versioned.png',
             ],
         ], $buildDir = Str::random());
-        $vite = app(Vite::class)->useBuildDirectory($buildDir);
+        $vite = ws_app(Vite::class)->useBuildDirectory($buildDir);
         $this->app['config']->set('app.asset_url', 'https://cdn.app.com');
 
         // default behaviour...
@@ -721,7 +721,7 @@ class FoundationViteTest extends TestCase
         $buildDir = Str::random();
         $this->makeViteManifest($manifest, $buildDir);
 
-        $result = app(Vite::class)(['resources/js/Pages/Auth/Login.vue'], $buildDir);
+        $result = ws_app(Vite::class)(['resources/js/Pages/Auth/Login.vue'], $buildDir);
 
         $this->assertSame(
             '<link rel="preload" as="style" href="https://example.com/'.$buildDir.'/assets/app.9842b564.css" />'
@@ -869,7 +869,7 @@ class FoundationViteTest extends TestCase
             ];
         });
 
-        $result = app(Vite::class)(['resources/js/app.js'], $buildDir);
+        $result = ws_app(Vite::class)(['resources/js/app.js'], $buildDir);
 
         $this->assertSame(
             '<link rel="preload" as="style" href="https://example.com/'.$buildDir.'/assets/app.versioned.css" general="attribute" crossorigin data-persistent-across-pages="YES" keep-me empty-string="" zero="0" />'
@@ -1038,7 +1038,7 @@ class FoundationViteTest extends TestCase
             return Str::contains($src, '-nopreload') ? false : [];
         });
 
-        $result = app(Vite::class)(['resources/js/app.js', 'resources/js/app-nopreload.js'], $buildDir);
+        $result = ws_app(Vite::class)(['resources/js/app.js', 'resources/js/app-nopreload.js'], $buildDir);
 
         $this->assertSame(
             '<link rel="preload" as="style" href="https://example.com/'.$buildDir.'/assets/app.versioned.css" />'
@@ -1086,7 +1086,7 @@ class FoundationViteTest extends TestCase
         ], $buildDir);
         ViteFacade::useCspNonce('expected-nonce');
 
-        $result = app(Vite::class)(['resources/js/app.js'], $buildDir);
+        $result = ws_app(Vite::class)(['resources/js/app.js'], $buildDir);
 
         $this->assertSame(
             '<link rel="preload" as="style" href="https://example.com/'.$buildDir.'/assets/app.versioned.css" nonce="expected-nonce" />'
@@ -1134,7 +1134,7 @@ class FoundationViteTest extends TestCase
             'crossorigin' => 'style-crossorigin',
         ]);
 
-        $result = app(Vite::class)(['resources/js/app.js'], $buildDir);
+        $result = ws_app(Vite::class)(['resources/js/app.js'], $buildDir);
 
         $this->assertSame(
             '<link rel="preload" as="style" href="https://example.com/'.$buildDir.'/assets/app.versioned.css" crossorigin="style-crossorigin" />'
@@ -1162,7 +1162,7 @@ class FoundationViteTest extends TestCase
     public function testItCanConfigureTheManifestFilename()
     {
         $buildDir = Str::random();
-        app()->usePublicPath(__DIR__);
+        ws_app()->usePublicPath(__DIR__);
         if (! file_exists(ws_public_path($buildDir))) {
             mkdir(ws_public_path($buildDir));
         }
@@ -1176,7 +1176,7 @@ class FoundationViteTest extends TestCase
 
         ViteFacade::useManifestFilename('custom-manifest.json');
 
-        $result = app(Vite::class)(['resources/js/app.js'], $buildDir);
+        $result = ws_app(Vite::class)(['resources/js/app.js'], $buildDir);
 
         $this->assertSame(
             '<link rel="modulepreload" as="script" href="https://example.com/'.$buildDir.'/assets/app-from-custom-manifest.versioned.js" />'
@@ -1211,7 +1211,7 @@ class FoundationViteTest extends TestCase
             ],
         ], $buildDir);
 
-        $result = app(Vite::class)(['resources/js/app.js', 'resources/js/Pages/Welcome.vue'], $buildDir);
+        $result = ws_app(Vite::class)(['resources/js/app.js', 'resources/js/Pages/Welcome.vue'], $buildDir);
 
         $this->assertSame(
             '<link rel="preload" as="style" href="https://example.com/'.$buildDir.'/assets/app-versioned.css" />'
@@ -1267,7 +1267,7 @@ class FoundationViteTest extends TestCase
 
     protected function makeViteManifest($contents = null, $path = 'build')
     {
-        app()->usePublicPath(__DIR__);
+        ws_app()->usePublicPath(__DIR__);
 
         if (! file_exists(ws_public_path($path))) {
             mkdir(ws_public_path($path));
@@ -1320,7 +1320,7 @@ class FoundationViteTest extends TestCase
         $manifest = json_decode(file_get_contents(__DIR__.'/fixtures/prefetching-manifest.json'));
         $buildDir = Str::random();
         $this->makeViteManifest($manifest, $buildDir);
-        app()->usePublicPath(__DIR__);
+        ws_app()->usePublicPath(__DIR__);
 
         $html = (string) ViteFacade::withEntryPoints(['resources/js/app.js'])->useBuildDirectory($buildDir)->prefetch(concurrency: 3)->toHtml();
 
@@ -1396,7 +1396,7 @@ class FoundationViteTest extends TestCase
         $manifest = json_decode(file_get_contents(__DIR__.'/fixtures/prefetching-manifest.json'));
         $buildDir = Str::random();
         $this->makeViteManifest($manifest, $buildDir);
-        app()->usePublicPath(__DIR__);
+        ws_app()->usePublicPath(__DIR__);
 
         $html = (string) ViteFacade::withEntryPoints(['resources/js/app.js', 'resources/js/Pages/Auth/Login.vue'])->useBuildDirectory($buildDir)->prefetch(concurrency: 3)->toHtml();
 
@@ -1426,7 +1426,7 @@ class FoundationViteTest extends TestCase
         $manifest = json_decode(file_get_contents(__DIR__.'/fixtures/prefetching-manifest.json'));
         $buildDir = Str::random();
         $this->makeViteManifest($manifest, $buildDir);
-        app()->usePublicPath(__DIR__);
+        ws_app()->usePublicPath(__DIR__);
 
         $html = (string) ViteFacade::withEntryPoints(['resources/js/app.js'])->useBuildDirectory($buildDir)->prefetch(concurrency: 10)->toHtml();
 
@@ -1462,7 +1462,7 @@ class FoundationViteTest extends TestCase
         $manifest = json_decode(file_get_contents(__DIR__.'/fixtures/prefetching-manifest.json'));
         $buildDir = Str::random();
         $this->makeViteManifest($manifest, $buildDir);
-        app()->usePublicPath(__DIR__);
+        ws_app()->usePublicPath(__DIR__);
 
         $html = (string) ViteFacade::withEntryPoints(['resources/js/app.js'])->useBuildDirectory($buildDir)->prefetch()->toHtml();
 
@@ -1516,7 +1516,7 @@ class FoundationViteTest extends TestCase
         $manifest = json_decode(file_get_contents(__DIR__.'/fixtures/prefetching-manifest.json'));
         $buildDir = Str::random();
         $this->makeViteManifest($manifest, $buildDir);
-        app()->usePublicPath(__DIR__);
+        ws_app()->usePublicPath(__DIR__);
 
         $html = (string) ws_tap(ViteFacade::withEntryPoints(['resources/js/app.js'])->useBuildDirectory($buildDir)->prefetch(concurrency: 3))->useCspNonce('abc123')->toHtml();
 
@@ -1552,7 +1552,7 @@ class FoundationViteTest extends TestCase
         $manifest = json_decode(file_get_contents(__DIR__.'/fixtures/prefetching-manifest.json'));
         $buildDir = Str::random();
         $this->makeViteManifest($manifest, $buildDir);
-        app()->usePublicPath(__DIR__);
+        ws_app()->usePublicPath(__DIR__);
 
         $html = (string) ws_tap(ViteFacade::withEntryPoints(['resources/js/app.js']))->useBuildDirectory($buildDir)->prefetch(concurrency: 3)->usePreloadTagAttributes([
             'key' => 'value',
@@ -1595,7 +1595,7 @@ class FoundationViteTest extends TestCase
         $manifest = json_decode(file_get_contents(__DIR__.'/fixtures/prefetching-manifest.json'));
         $buildDir = Str::random();
         $this->makeViteManifest($manifest, $buildDir);
-        app()->usePublicPath(__DIR__);
+        ws_app()->usePublicPath(__DIR__);
 
         $html = (string) ViteFacade::withEntryPoints(['resources/js/admin.js'])->useBuildDirectory($buildDir)->prefetch(concurrency: 3)->toHtml();
 
@@ -1674,7 +1674,7 @@ class FoundationViteTest extends TestCase
         $manifest = json_decode(file_get_contents(__DIR__.'/fixtures/prefetching-manifest.json'));
         $buildDir = Str::random();
         $this->makeViteManifest($manifest, $buildDir);
-        app()->usePublicPath(__DIR__);
+        ws_app()->usePublicPath(__DIR__);
 
         $html = (string) ws_tap(ViteFacade::withEntryPoints(['resources/js/app.js']))
             ->useCspNonce('abc123')
@@ -1698,7 +1698,7 @@ class FoundationViteTest extends TestCase
         $manifest = json_decode(file_get_contents(__DIR__.'/fixtures/prefetching-manifest.json'));
         $buildDir = Str::random();
         $this->makeViteManifest($manifest, $buildDir);
-        app()->usePublicPath(__DIR__);
+        ws_app()->usePublicPath(__DIR__);
 
         $html = (string) ws_tap(ViteFacade::withEntryPoints(['resources/js/app.js']))
             ->useBuildDirectory($buildDir)
@@ -1714,12 +1714,12 @@ class FoundationViteTest extends TestCase
     {
         $this->makeViteManifest();
 
-        app(Vite::class)('resources/js/app.js');
-        app()->forgetScopedInstances();
-        $this->assertCount(1, app(Vite::class)->preloadedAssets());
+        ws_app(Vite::class)('resources/js/app.js');
+        ws_app()->forgetScopedInstances();
+        $this->assertCount(1, ws_app(Vite::class)->preloadedAssets());
 
-        app(Vite::class)->flush();
-        $this->assertCount(0, app(Vite::class)->preloadedAssets());
+        ws_app(Vite::class)->flush();
+        $this->assertCount(0, ws_app(Vite::class)->preloadedAssets());
     }
 
     protected function cleanViteManifest($path = 'build')
@@ -1755,7 +1755,7 @@ class FoundationViteTest extends TestCase
 
     protected function makeViteHotFile($path = null)
     {
-        app()->usePublicPath(__DIR__);
+        ws_app()->usePublicPath(__DIR__);
 
         $path ??= ws_public_path('hot');
 

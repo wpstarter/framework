@@ -18,6 +18,6 @@ trait CompilesInjections
 
         $service = trim($segments[1]);
 
-        return "<?php \${$variable} = app({$service}); ?>";
+        return "<?php \${$variable} = ws_app({$service}); ?>";
     }
 }

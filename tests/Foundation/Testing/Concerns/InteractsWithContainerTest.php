@@ -14,7 +14,7 @@ class InteractsWithContainerTest extends TestCase
     {
         $instance = $this->withoutVite();
 
-        $this->assertSame('', app(Vite::class)(['resources/js/app.js'])->toHtml());
+        $this->assertSame('', ws_app(Vite::class)(['resources/js/app.js'])->toHtml());
         $this->assertSame($this, $instance);
     }
 
@@ -22,7 +22,7 @@ class InteractsWithContainerTest extends TestCase
     {
         $instance = $this->withoutVite();
 
-        $this->assertSame('', app(Vite::class)->reactRefresh());
+        $this->assertSame('', ws_app(Vite::class)->reactRefresh());
         $this->assertSame($this, $instance);
     }
 
@@ -30,7 +30,7 @@ class InteractsWithContainerTest extends TestCase
     {
         $instance = $this->withoutVite();
 
-        $this->assertSame('', app(Vite::class)->asset('path/to/asset.png'));
+        $this->assertSame('', ws_app(Vite::class)->asset('path/to/asset.png'));
         $this->assertSame($this, $instance);
     }
 
@@ -50,7 +50,7 @@ class InteractsWithContainerTest extends TestCase
     {
         $instance = $this->withoutVite();
 
-        $this->assertSame([], app(Vite::class)->preloadedAssets());
+        $this->assertSame([], ws_app(Vite::class)->preloadedAssets());
         $this->assertSame($this, $instance);
     }
 

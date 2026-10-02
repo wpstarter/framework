@@ -57,7 +57,7 @@ trait CompilesConditionals
      */
     protected function compileEnv($environments)
     {
-        return "<?php if(app()->environment{$environments}): ?>";
+        return "<?php if(ws_app()->environment{$environments}): ?>";
     }
 
     /**
@@ -77,7 +77,7 @@ trait CompilesConditionals
      */
     protected function compileProduction()
     {
-        return "<?php if(app()->environment('production')): ?>";
+        return "<?php if(ws_app()->environment('production')): ?>";
     }
 
     /**
