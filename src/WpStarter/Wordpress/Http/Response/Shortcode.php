@@ -31,7 +31,7 @@ class Shortcode extends Content implements HasPostTitle
         }
     }
 
-    public function getContent($content = null)
+    public function getContent($content = null): false|string
     {
         $view=$this->components[static::$defaultShortcode]??'';
         if($view) {
