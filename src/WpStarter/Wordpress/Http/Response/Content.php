@@ -25,7 +25,7 @@ class Content extends Response implements HasPostTitle
     }
 
 
-    function getContent($content = null)
+    function getContent($content = null): false|string
     {
         $buffer = '';
         foreach ($this->components as $view) {
