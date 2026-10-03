@@ -95,6 +95,7 @@
             "src/WpStarter/Reflection/helpers.php",
             "src/WpStarter/Support/functions.php",
             "src/WpStarter/Support/helpers.php",
+            "src/WpStarter/Wordpress/helpers.php",
             "lib/prompts/src/helpers.php"
         ],
         "psr-4": {

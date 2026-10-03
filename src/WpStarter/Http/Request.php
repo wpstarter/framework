@@ -17,6 +17,8 @@ use Symfony\Component\HttpFoundation\Exception\SessionNotFoundException;
 use Symfony\Component\HttpFoundation\InputBag;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use WpStarter\Wordpress\Http\Request\PrepareBaseUrlForWp;
+use WpStarter\Wordpress\Http\Request\SupportNotFoundExceptionTrace;
 
 /**
  * @method array validate(array $rules, ...$params)
@@ -34,6 +36,7 @@ class Request extends SymfonyRequest implements Arrayable, ArrayAccess
         Concerns\InteractsWithInput,
         Conditionable,
         Macroable;
+    use SupportNotFoundExceptionTrace,PrepareBaseUrlForWp;
 
     /**
      * The decoded JSON content for the request.
