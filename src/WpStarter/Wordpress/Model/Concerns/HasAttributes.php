@@ -2,6 +2,7 @@
 
 namespace WpStarter\Wordpress\Model\Concerns;
 
+use BackedEnum;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use DateTimeInterface;
@@ -10,6 +11,9 @@ use LogicException;
 use ReflectionClass;
 use ReflectionMethod;
 use ReflectionNamedType;
+use RuntimeException;
+use Stringable;
+use ValueError;
 use WpStarter\Contracts\Database\Eloquent\Castable;
 use WpStarter\Contracts\Database\Eloquent\CastsInboundAttributes;
 use WpStarter\Contracts\Support\Arrayable;
@@ -18,6 +22,7 @@ use WpStarter\Database\Eloquent\Casts\AsCollection;
 use WpStarter\Database\Eloquent\Casts\Attribute;
 use WpStarter\Database\Eloquent\InvalidCastException;
 use WpStarter\Database\Eloquent\JsonEncodingException;
+use WpStarter\Database\Eloquent\MissingAttributeException;
 use WpStarter\Database\Eloquent\Relations\Relation;
 use WpStarter\Database\LazyLoadingViolationException;
 use WpStarter\Support\Arr;
@@ -25,7 +30,10 @@ use WpStarter\Support\Carbon;
 use WpStarter\Support\Collection as BaseCollection;
 use WpStarter\Support\Facades\Crypt;
 use WpStarter\Support\Facades\Date;
+use WpStarter\Support\Facades\Hash;
 use WpStarter\Support\Str;
+
+use function WpStarter\Support\enum_value;
 
 trait HasAttributes
 {
@@ -48,6 +56,13 @@ trait HasAttributes
      * @var array
      */
     protected $changes = [];
+
+    /**
+     * The previous state of the changed model attributes.
+     *
+     * @var array<string, mixed>
+     */
+    protected $previous = [];
 
     /**
      * The attributes that should be cast.
@@ -1833,6 +1848,7 @@ trait HasAttributes
     public function syncChanges()
     {
         $this->changes = $this->getDirty();
+        $this->previous = array_intersect_key((array) $this->originalData, $this->changes);
 
         return $this;
     }
@@ -2122,5 +2138,389 @@ trait HasAttributes
 
             return false;
         })->map->name->values()->all();
+    }
+
+    /**
+     * Initialize the trait.
+     *
+     * @return void
+     */
+    protected function initializeHasAttributes()
+    {
+        $this->casts = $this->ensureCastsAreStringValues(
+            array_merge($this->casts, $this->casts()),
+        );
+    }
+
+    /**
+     * Determine whether an attribute exists on the model.
+     *
+     * @param  string  $key
+     * @return bool
+     */
+    public function hasAttribute($key)
+    {
+        if (! $key) {
+            return false;
+        }
+
+        return Support::dataKeyExists($key, $this->data) ||
+            array_key_exists($key, $this->casts) ||
+            $this->hasGetMutator($key) ||
+            $this->hasAttributeMutator($key) ||
+            $this->isClassCastable($key);
+    }
+
+    /**
+     * Either throw a missing attribute exception or return null depending on Eloquent's configuration.
+     *
+     * @param  string  $key
+     * @return null
+     *
+     * @throws \WpStarter\Database\Eloquent\MissingAttributeException
+     */
+    protected function throwMissingAttributeExceptionIfApplicable($key)
+    {
+        if ($this->exists &&
+            ! $this->wasRecentlyCreated &&
+            static::preventsAccessingMissingAttributes()) {
+            if (isset(static::$missingAttributeViolationCallback)) {
+                return call_user_func(static::$missingAttributeViolationCallback, $this, $key);
+            }
+
+            throw new MissingAttributeException($this, $key);
+        }
+
+        return null;
+    }
+
+    /**
+     * Determine if any get mutator exists for an attribute.
+     *
+     * @param  string  $key
+     * @return bool
+     */
+    public function hasAnyGetMutator($key)
+    {
+        return $this->hasGetMutator($key) || $this->hasAttributeGetMutator($key);
+    }
+
+    /**
+     * Ensure that the given casts are strings.
+     *
+     * @param  array  $casts
+     * @return array
+     */
+    protected function ensureCastsAreStringValues($casts)
+    {
+        foreach ($casts as $attribute => $cast) {
+            $casts[$attribute] = match (true) {
+                is_object($cast) => ws_value(function () use ($cast, $attribute) {
+                    if ($cast instanceof Stringable) {
+                        return (string) $cast;
+                    }
+
+                    throw new InvalidArgumentException(
+                        "The cast object for the {$attribute} attribute must implement Stringable."
+                    );
+                }),
+                is_array($cast) => ws_value(function () use ($cast) {
+                    if (count($cast) === 1) {
+                        return $cast[0];
+                    }
+
+                    [$cast, $arguments] = [array_shift($cast), $cast];
+
+                    return $cast.':'.implode(',', $arguments);
+                }),
+                default => $cast,
+            };
+        }
+
+        return $casts;
+    }
+
+    /**
+     * Compare two values for the given attribute using the custom cast class.
+     *
+     * @param  string  $key
+     * @param  mixed  $original
+     * @param  mixed  $value
+     * @return bool
+     */
+    protected function compareClassCastableAttribute($key, $original, $value)
+    {
+        return $this->resolveCasterClass($key)->compare(
+            $this, $key, $original, $value
+        );
+    }
+
+    /**
+     * Get an enum case instance from a given class and value.
+     *
+     * @param  string  $enumClass
+     * @param  string|int  $value
+     * @return \UnitEnum
+     */
+    protected function getEnumCaseFromValue($enumClass, $value)
+    {
+        return is_subclass_of($enumClass, BackedEnum::class)
+            ? $enumClass::from($value)
+            : constant($enumClass.'::'.$value);
+    }
+
+    /**
+     * Get the storable value from the given enum.
+     *
+     * @param  string  $expectedEnum
+     * @param  \UnitEnum  $value
+     * @return string|int
+     */
+    protected function getStorableEnumValue($expectedEnum, $value)
+    {
+        if (! $value instanceof $expectedEnum) {
+            throw new ValueError(sprintf('Value [%s] is not of the expected enum type [%s].', var_export($value, true), $expectedEnum));
+        }
+
+        return enum_value($value);
+    }
+
+    /**
+     * Get the JSON casting flags for the given attribute.
+     *
+     * @param  string  $key
+     * @return int
+     */
+    protected function getJsonCastFlags($key)
+    {
+        $flags = 0;
+
+        if ($this->hasCast($key, ['json:unicode'])) {
+            $flags |= JSON_UNESCAPED_UNICODE;
+        }
+
+        return $flags;
+    }
+
+    /**
+     * Get the current encrypter being used by the model.
+     *
+     * @return \WpStarter\Contracts\Encryption\Encrypter
+     */
+    public static function currentEncrypter()
+    {
+        return static::$encrypter ?? Crypt::getFacadeRoot();
+    }
+
+    /**
+     * Cast the given attribute to a hashed string.
+     *
+     * @param  string  $key
+     * @param  mixed  $value
+     * @return string
+     */
+    protected function castAttributeAsHashedString($key, #[\SensitiveParameter] $value)
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (! Hash::isHashed($value)) {
+            return Hash::make($value);
+        }
+
+        /** @phpstan-ignore staticMethod.notFound */
+        if (! Hash::verifyConfiguration($value)) {
+            throw new RuntimeException("Could not verify the hashed value's configuration.");
+        }
+
+        return $value;
+    }
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts()
+    {
+        return [];
+    }
+
+    /**
+     * Determine if the key is comparable using a custom class.
+     *
+     * @param  string  $key
+     * @return bool
+     */
+    protected function isClassComparable($key)
+    {
+        return ! $this->isEnumCastable($key) &&
+            $this->isClassCastable($key) &&
+            method_exists($this->resolveCasterClass($key), 'compare');
+    }
+
+    /**
+     * Merge the a cast class and attribute cast attribute back into the model.
+     *
+     * @return void
+     */
+    protected function mergeAttributeFromCachedCasts(string $key)
+    {
+        $this->mergeAttributeFromClassCasts($key);
+        $this->mergeAttributeFromAttributeCasts($key);
+    }
+
+    /**
+     * Merge the cast class attribute back into the model.
+     *
+     * @return void
+     */
+    protected function mergeAttributeFromClassCasts(string $key): void
+    {
+        if (! isset($this->classCastCache[$key])) {
+            return;
+        }
+
+        $value = $this->classCastCache[$key];
+
+        $caster = $this->resolveCasterClass($key);
+
+        $this->data = Support::dataMerge(
+            $this->data,
+            $caster instanceof CastsInboundAttributes
+                ? [$key => $value]
+                : $this->normalizeCastClassResponse($key, $caster->set($this, $key, $value, (array) $this->data))
+        );
+    }
+
+    /**
+     * Merge the cast class attribute back into the model.
+     *
+     * @return void
+     */
+    protected function mergeAttributeFromAttributeCasts(string $key): void
+    {
+        if (! isset($this->attributeCastCache[$key])) {
+            return;
+        }
+
+        $value = $this->attributeCastCache[$key];
+
+        $attribute = $this->{Str::camel($key)}();
+
+        if ($attribute->get && ! $attribute->set) {
+            return;
+        }
+
+        $callback = $attribute->set ?: function ($value) use ($key) {
+            $this->data->{$key} = $value;
+        };
+
+        $this->data = Support::dataMerge(
+            $this->data,
+            $this->normalizeCastClassResponse(
+                $key, $callback($value, (array) $this->data)
+            )
+        );
+    }
+
+    /**
+     * Get all of the current attributes on the model for an insert operation.
+     *
+     * @return array
+     */
+    protected function getAttributesForInsert()
+    {
+        return $this->getAttributes();
+    }
+
+    /**
+     * Get all attributes except the given ones.
+     *
+     * @param  array<string>|mixed  $attributes
+     * @return array
+     */
+    public function except($attributes)
+    {
+        $attributes = is_array($attributes) ? $attributes : func_get_args();
+
+        $results = [];
+
+        foreach ($this->getAttributes() as $key => $value) {
+            if (! in_array($key, $attributes)) {
+                $results[$key] = $this->getAttribute($key);
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * Discard attribute changes and reset the attributes to their original state.
+     *
+     * @return $this
+     */
+    public function discardChanges()
+    {
+        [$this->data, $this->changes, $this->previous] = [clone $this->originalData, [], []];
+
+        $this->classCastCache = [];
+        $this->attributeCastCache = [];
+
+        return $this;
+    }
+
+    /**
+     * Get the attributes that have been changed since the last sync for an update operation.
+     *
+     * @return array<string, mixed>
+     */
+    protected function getDirtyForUpdate()
+    {
+        return $this->getDirty();
+    }
+
+    /**
+     * Get the attributes that were previously original before the model was last saved.
+     *
+     * @return array<string, mixed>
+     */
+    public function getPrevious()
+    {
+        return $this->previous;
+    }
+
+    /**
+     * Get the accessors that are being appended to model arrays.
+     *
+     * @return array
+     */
+    public function getAppends()
+    {
+        return $this->appends;
+    }
+
+    /**
+     * Merge new appended attributes with existing appended attributes on the model.
+     *
+     * @param  array<string>  $appends
+     * @return $this
+     */
+    public function mergeAppends(array $appends)
+    {
+        $this->appends = array_values(array_unique(array_merge($this->appends, $appends)));
+
+        return $this;
+    }
+
+    /**
+     * Remove all appended properties from the model.
+     *
+     * @return $this
+     */
+    public function withoutAppends()
+    {
+        return $this->setAppends([]);
     }
 }

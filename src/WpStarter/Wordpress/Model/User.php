@@ -2,30 +2,45 @@
 
 namespace WpStarter\Wordpress\Model;
 
-use ArrayAccess;
-use JsonSerializable;
 use WP_User;
-use WpStarter\Contracts\Support\Arrayable;
-use WpStarter\Contracts\Support\Jsonable;
-use WpStarter\Database\Eloquent\Contracts\Model;
+use WpStarter\Database\Eloquent\Builder;
 use WpStarter\Database\Eloquent\MassAssignmentException;
 use WpStarter\Wordpress\Exceptions\WpErrorException;
-use WpStarter\Wordpress\Model\Concerns\SupportMethods;
-use WpStarter\Wordpress\Model\Concerns\UserQuery;
+use WpStarter\Wordpress\Model\Concerns\WpUserCustom;
 
-abstract class User extends WP_User implements
-    Model,
-    Arrayable, ArrayAccess, Jsonable, JsonSerializable
+class User extends UserBaseModel
 {
 
-    use \WpStarter\Wordpress\Model\Concerns\HasAttributes,
-        \WpStarter\Database\Eloquent\Concerns\HasEvents,
-        \WpStarter\Database\Eloquent\Concerns\HasGlobalScopes,
-        \WpStarter\Database\Eloquent\Concerns\HasRelationships,
-        \WpStarter\Database\Eloquent\Concerns\HasTimestamps,
-        \WpStarter\Database\Eloquent\Concerns\HidesAttributes,
-        \WpStarter\Database\Eloquent\Concerns\GuardsAttributes;
-    use UserQuery, SupportMethods;
+    use \WpStarter\Wordpress\Model\Concerns\HasAttributes;
+    use WpUserCustom;
+
+    /**
+     * The table associated with the model.
+     *
+     * @var string|null
+     */
+    protected $table='users';
+
+    /**
+     * The primary key for the model.
+     *
+     * @var string
+     */
+    protected $primaryKey = 'ID';
+
+    /**
+     * The "type" of the primary key ID.
+     *
+     * @var string
+     */
+    protected $keyType = 'int';
+
+    /**
+     * Indicates if the IDs are auto-incrementing.
+     *
+     * @var bool
+     */
+    public $incrementing = true;
 
     protected $skipPasswordHash = false;
     /**
@@ -69,27 +84,6 @@ abstract class User extends WP_User implements
      * @var string|null
      */
     const UPDATED_AT = null;
-
-    /**
-     * The array of booted models.
-     *
-     * @var array
-     */
-    protected static $booted = [];
-
-    /**
-     * The event dispatcher instance.
-     *
-     * @var \WpStarter\Contracts\Events\Dispatcher|null
-     */
-    protected static $dispatcher;
-
-    /**
-     * The array of trait initializers that will be called on each new instance.
-     *
-     * @var array
-     */
-    protected static $traitInitializers = [];
 
     public function __construct($attributes = [], $site_id = 0)
     {
@@ -138,120 +132,6 @@ abstract class User extends WP_User implements
         return static::find($this->ID);
     }
 
-    public static function make(...$args)
-    {
-        $instance = new static($args);
-        return $instance;
-    }
-
-    /**
-     * Check if the model needs to be booted and if so, do it.
-     *
-     * @return void
-     */
-    protected function bootIfNotBooted()
-    {
-        if (!isset(static::$booted[static::class])) {
-            static::$booted[static::class] = true;
-
-            $this->fireModelEvent('booting', false);
-
-            static::booting();
-            static::boot();
-            static::booted();
-
-            $this->fireModelEvent('booted', false);
-        }
-    }
-    /**
-     * Perform any actions required before the model boots.
-     *
-     * @return void
-     */
-    protected static function booting()
-    {
-        //
-    }
-    /**
-     * The "booting" method of the model.
-     *
-     * @return void
-     */
-    protected static function boot()
-    {
-        static::bootTraits();
-    }
-
-
-
-    /**
-     * Boot all of the bootable traits on the model.
-     *
-     * @return void
-     */
-    protected static function bootTraits()
-    {
-        $class = static::class;
-
-        $booted = [];
-
-        static::$traitInitializers[$class] = [];
-
-        foreach (ws_class_uses_recursive($class) as $trait) {
-            $method = 'boot' . ws_class_basename($trait);
-
-            if (method_exists($class, $method) && !in_array($method, $booted)) {
-                forward_static_call([$class, $method]);
-
-                $booted[] = $method;
-            }
-
-            if (method_exists($class, $method = 'initialize' . ws_class_basename($trait))) {
-                static::$traitInitializers[$class][] = $method;
-
-                static::$traitInitializers[$class] = array_unique(
-                    static::$traitInitializers[$class]
-                );
-            }
-        }
-    }
-
-    /**
-     * Initialize any initializable traits on the model.
-     *
-     * @return void
-     */
-    protected function initializeTraits()
-    {
-        foreach (static::$traitInitializers[static::class] as $method) {
-            $this->{$method}();
-        }
-    }
-
-    /**
-     * Perform any actions required after the model boots.
-     *
-     * @return void
-     */
-    protected static function booted()
-    {
-        //
-    }
-    /**
-     * Update the model in the database.
-     *
-     * @param array $attributes
-     * @param array $options
-     * @return bool
-     */
-    public function update(array $attributes = [], array $options = [])
-    {
-        if (!$this->exists()) {
-            return false;
-        }
-        return $this->fill($attributes)->save($options);
-    }
-
     public function fill($attributes)
     {
         foreach ($attributes as $key => $value) {
@@ -283,15 +163,15 @@ abstract class User extends WP_User implements
      * @param array $options
      * @return bool
      */
-    public function save(array $options = [])
+    public function save(array $options = []): bool
     {
         if ($this->fireModelEvent('saving') === false) {
             return false;
         }
         if ($this->exists()) {
-            $saved = $this->performUpdate();
+            $saved = $this->performUpdate(null);
         } else {
-            $saved = $this->performInsert();
+            $saved = $this->performInsert(null);
         }
         if ($saved) {
             $this->finishSave($options);
@@ -300,7 +180,7 @@ abstract class User extends WP_User implements
         return $saved;
     }
 
-    protected function performUpdate()
+    protected function performUpdate(Builder $query)
     {
 
         if ($this->fireModelEvent('updating') === false) {
@@ -326,7 +206,7 @@ abstract class User extends WP_User implements
 
     }
 
-    protected function performInsert()
+    protected function performInsert(Builder $query)
     {
         if ($this->fireModelEvent('creating') === false) {
             return false;
@@ -381,111 +261,6 @@ abstract class User extends WP_User implements
             }
         }
     }
-
-    static function create($attributes)
-    {
-        return (new static())->fill($attributes)->save();
-    }
-
-    public function toArray()
-    {
-        return $this->attributesToArray();
-    }
-
-    public function toJson($options = 0)
-    {
-        return json_encode($this->jsonSerialize(), $options);
-    }
-    /**
-     * Convert the object into something JSON serializable.
-     *
-     * @return mixed
-     */
-    public function jsonSerialize(): mixed
-    {
-        return $this->toArray();
-    }
-
-
-    /**
-     * Determine if the given attribute exists.
-     *
-     * @param mixed $offset
-     * @return bool
-     */
-    public function offsetExists($offset): bool
-    {
-        return isset($this->$offset);
-    }
-
-    /**
-     * Get the value for a given offset.
-     *
-     * @param mixed $offset
-     * @return mixed
-     */
-    public function offsetGet($offset): mixed
-    {
-        return $this->$offset;
-    }
-
-    /**
-     * Set the value for a given offset.
-     *
-     * @param mixed $offset
-     * @param mixed $value
-     * @return void
-     */
-    public function offsetSet($offset, $value): void
-    {
-        $this->$offset = $value;
-    }
-
-    /**
-     * Unset the value for a given offset.
-     *
-     * @param mixed $offset
-     * @return void
-     */
-    public function offsetUnset($offset): void
-    {
-        unset($this->$offset);
-    }
-
-    /**
-     * Magic method for accessing custom fields.
-     *
-     * @param string $key User meta key to retrieve.
-     * @return mixed Value of the given user meta key (if set). If `$key` is 'id', the user ID.
-     * @since 3.3.0
-     *
-     */
-    public function __get($key)
-    {
-        return $this->getAttribute($key);
-    }
-
-    /**
-     * Magic method for setting custom user fields.
-     *
-     * This method does not update custom fields in the database. It only stores
-     * the value on the WP_User instance.
-     *
-     * @param string $key User meta key.
-     * @param mixed $value User meta value.
-     * @since 3.3.0
-     *
-     */
-    public function __set($key, $value)
-    {
-        $this->setAttribute($key, $value);
-    }
-
-    public function __isset($key)
-    {
-        return parent::__isset($key);
-    }
-
 
     /**
      * This method help to update user login, since user login not able to update with wp_user_insert
