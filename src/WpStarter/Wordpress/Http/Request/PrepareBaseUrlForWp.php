@@ -4,7 +4,7 @@ namespace WpStarter\Wordpress\Http\Request;
 
 trait PrepareBaseUrlForWp
 {
-    protected function prepareBaseUrl()
+    protected function prepareBaseUrl(): string
     {
         if(is_wp()) {
             $serverVars = [];
