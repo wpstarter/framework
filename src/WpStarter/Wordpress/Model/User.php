@@ -77,6 +77,12 @@ abstract class User extends WP_User implements
      */
     protected static $booted = [];
 
+    /**
+     * The event dispatcher instance.
+     *
+     * @var \WpStarter\Contracts\Events\Dispatcher|null
+     */
+    protected static $dispatcher;
 
     /**
      * The array of trait initializers that will be called on each new instance.
