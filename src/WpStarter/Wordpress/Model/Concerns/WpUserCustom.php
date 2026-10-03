@@ -45,7 +45,7 @@ trait WpUserCustom
      * @param \WP_User|null $wp_user
      * @return static|null
      */
-    public static function fromWpUser(\WP_User $wp_user = null)
+    public static function fromWpUser(?\WP_User $wp_user)
     {
         if (!$wp_user) {
             return null;
