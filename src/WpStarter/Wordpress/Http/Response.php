@@ -66,7 +66,7 @@ abstract class Response extends BaseResponse implements \ArrayAccess
         return $parts;
     }
 
-    public function sendHeaders()
+    public function sendHeaders(?int $statusCode = null): static
     {
         if (!$this->headerIsAlreadySent) {
             $this->headerIsAlreadySent = true;
@@ -85,7 +85,7 @@ abstract class Response extends BaseResponse implements \ArrayAccess
      *
      * @return $this
      */
-    public function sendContent()
+    public function sendContent(): static
     {
         echo $this->getContent();
         return $this;
