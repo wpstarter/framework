@@ -2,12 +2,15 @@
 
 namespace WpStarter\Wordpress\Admin;
 
+use WpStarter\Routing\Matching\MethodValidator;
 use WpStarter\Routing\Redirector;
 use WpStarter\Routing\UrlGenerator;
 use WpStarter\Support\ServiceProvider;
 use WpStarter\Wordpress\Admin\Contracts\Kernel;
 use WpStarter\Wordpress\Admin\Notice\NoticeManager;
 use WpStarter\Wordpress\Admin\Notice\SessionStore;
+use WpStarter\Wordpress\Admin\Routing\Matching\ScreenIdValidator;
+use WpStarter\Wordpress\Admin\Routing\Menu;
 use WpStarter\Wordpress\Admin\Routing\Router;
 use WpStarter\Wordpress\Admin\Services\ScreenOption;
 use WpStarter\Http\Request;
@@ -57,6 +60,10 @@ class AdminServiceProvider extends ServiceProvider
         if(!is_wp()){
             return ;
         }
+        Menu::$validators= [
+            new MethodValidator,
+            new ScreenIdValidator,
+        ];
         if(is_admin() && $this->app->bound(Kernel::class)) {
             $this->app->make(Kernel::class)->handle(Request::capture());
             $this->loadViewsFrom(__DIR__ . '/resources/views', 'wp.admin');

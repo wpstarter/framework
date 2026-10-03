@@ -32,26 +32,6 @@ class Menu extends Route
     }
 
     /**
-     * Get the route validators for the instance.
-     *
-     * @return array
-     */
-    public static function getValidators()
-    {
-        if (isset(static::$validators)) {
-            return static::$validators;
-        }
-
-        // To match the route, we will use a chain of responsibility pattern with the
-        // validator implementations. We will spin through each one making sure it
-        // passes and then we will know if the route as a whole matches request.
-        return static::$validators = [
-            new MethodValidator,
-            new ScreenIdValidator,
-        ];
-    }
-
-    /**
      * Create new group for children menu
      * @param $callback
      * @return $this
