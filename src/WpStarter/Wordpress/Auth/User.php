@@ -1,16 +1,12 @@
 <?php
 
-namespace WpStarter\Wordpress;
+namespace WpStarter\Wordpress\Auth;
 
-use WpStarter\Wordpress\Auth\Authenticatable;
-use WpStarter\Wordpress\Model\User as Model;
-use WpStarter\Auth\MustVerifyEmail;
-use WpStarter\Auth\Passwords\CanResetPassword;
+use WP_User;
 use WpStarter\Contracts\Auth\Access\Authorizable as AuthorizableContract;
 use WpStarter\Contracts\Auth\Authenticatable as AuthenticatableContract;
-use WpStarter\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use WpStarter\Foundation\Auth\Access\Authorizable;
-use WP_User;
+use WpStarter\Wordpress\Model\User as Model;
 
 class User extends Model implements
     AuthenticatableContract,

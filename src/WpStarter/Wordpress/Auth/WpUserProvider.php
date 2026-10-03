@@ -30,7 +30,7 @@ class WpUserProvider implements UserProvider
      * Retrieve a user by their unique identifier.
      *
      * @param  mixed  $identifier
-     * @return \WpStarter\Wordpress\User|null
+     * @return \WpStarter\Wordpress\Auth\User|null
      */
     public function retrieveById($identifier)
     {
@@ -50,7 +50,7 @@ class WpUserProvider implements UserProvider
     /**
      * Create a new instance of the model.
      *
-     * @return \WpStarter\Wordpress\User
+     * @return \WpStarter\Wordpress\Auth\User
      */
     public function createModel()
     {
