@@ -16,7 +16,7 @@ class HandleExceptions extends \WpStarter\Foundation\Bootstrap\HandleExceptions
         $prior_error = error_get_last();
         parent::bootstrap($app);
         if ($prior_error) {//We cannot handle error now
-            $this->app->booted(function () use ($prior_error) {
+            $app->booted(function () use ($prior_error) {
                 $this->handleError($prior_error['type'],
                     $prior_error['message'],
                     $prior_error['file'],
@@ -26,7 +26,7 @@ class HandleExceptions extends \WpStarter\Foundation\Bootstrap\HandleExceptions
     }
 
     /**
-     * Report PHP deprecations, or convert PHP errors to ErrorException instances.
+     * Report PHP deprecations or convert PHP errors to ErrorException instances.
      *
      * @param int $level
      * @param string $message
@@ -62,21 +62,22 @@ class HandleExceptions extends \WpStarter\Foundation\Bootstrap\HandleExceptions
     public function handleExternalError(ErrorException $error)
     {
         self::$reservedMemory = null;
-        $config = $this->app['config'];
+        $config = static::$app['config'];
         $level = $error->getSeverity();
         $message = $error->getMessage();
         $file = $error->getFile();
         $line = $error->getLine();
         try {
             if ($this->isDeprecation($level)) {
-                return $this->handleDeprecation($message, $file, $line);
+                $this->handleDeprecationError($message, $file, $line);
+                return ;
             }
             $this->reportExternal($error);
         } catch (Exception $e) {
             //
         }
         if ($config->get('app.debug_external')) {
-            if ($this->app->runningInConsole()) {
+            if (static::$app->runningInConsole()) {
                 $this->renderForConsole($error);
             } else {
                 $this->renderHttpResponse($error);
@@ -88,12 +89,12 @@ class HandleExceptions extends \WpStarter\Foundation\Bootstrap\HandleExceptions
     protected function reportExternal(ErrorException $error)
     {
         if (!class_exists(LogManager::class)
-            || $this->app->runningUnitTests()
+            || static::$app->runningUnitTests()
         ) {
             return;
         }
         try {
-            $logger = $this->app->make(LogManager::class);
+            $logger = static::$app->make(LogManager::class);
         } catch (Exception $e) {
             return;
         }
@@ -115,7 +116,7 @@ class HandleExceptions extends \WpStarter\Foundation\Bootstrap\HandleExceptions
      */
     protected function ensureExternalLoggerIsConfigured()
     {
-        ws_with($this->app['config'], function ($config) {
+        ws_with(static::$app['config'], function ($config) {
             if ($config->get('logging.channels.external')) {
                 return;
             }
@@ -140,9 +141,9 @@ class HandleExceptions extends \WpStarter\Foundation\Bootstrap\HandleExceptions
      */
     public function handleException(Throwable $e)
     {
-        if (!$this->app->runningInConsole() && !$this->app->hasBeenBootstrapped()) {
-            //App not bootstrapped, force debug
-            $this->app['config']->set('app.debug', true);
+        if (!static::$app->runningInConsole() && !static::$app->hasBeenBootstrapped()) {
+            //App isn't bootstrapped, force debug
+            static::$app['config']->set('app.debug', true);
         }
         parent::handleException($e);
 
@@ -150,7 +151,7 @@ class HandleExceptions extends \WpStarter\Foundation\Bootstrap\HandleExceptions
 
     protected function isExternalPath($path)
     {
-        return strpos($path, $this->app->basePath()) === false;
+        return !str_contains($path, static::$app->basePath());
     }
 
 }
