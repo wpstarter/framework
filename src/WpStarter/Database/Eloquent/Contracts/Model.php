@@ -2,16 +2,6 @@
 
 namespace WpStarter\Database\Eloquent\Contracts;
 
-use ArrayAccess;
-use JsonSerializable;
-use Stringable;
-use WpStarter\Contracts\Broadcasting\HasBroadcastChannel;
-use WpStarter\Contracts\Queue\QueueableEntity;
-use WpStarter\Contracts\Routing\UrlRoutable;
-use WpStarter\Contracts\Support\Arrayable;
-use WpStarter\Contracts\Support\CanBeEscapedWhenCastToString;
-use WpStarter\Contracts\Support\Jsonable;
-
 /**
  * The public model API shared by Eloquent models and independent adapters.
  *
@@ -24,7 +14,7 @@ use WpStarter\Contracts\Support\Jsonable;
  * @property bool $preventsLazyLoading
  * @property bool $timestamps
  */
-interface Model extends Arrayable, ArrayAccess, CanBeEscapedWhenCastToString, HasBroadcastChannel, Jsonable, JsonSerializable, QueueableEntity, Stringable, UrlRoutable
+interface Model
 {
     /**
      * Clear the list of booted models so they will be re-booted.

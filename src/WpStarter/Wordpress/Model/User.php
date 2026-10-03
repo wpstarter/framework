@@ -19,12 +19,12 @@ abstract class User extends WP_User implements
 {
 
     use \WpStarter\Wordpress\Model\Concerns\HasAttributes,
-        \WpStarter\Wordpress\Model\Concerns\HasEvents,
-        \WpStarter\Wordpress\Model\Concerns\HasGlobalScopes,
-        \WpStarter\Wordpress\Model\Concerns\HasRelationships,
-        \WpStarter\Wordpress\Model\Concerns\HasTimestamps,
-        \WpStarter\Wordpress\Model\Concerns\HidesAttributes,
-        \WpStarter\Wordpress\Model\Concerns\GuardsAttributes;
+        \WpStarter\Database\Eloquent\Concerns\HasEvents,
+        \WpStarter\Database\Eloquent\Concerns\HasGlobalScopes,
+        \WpStarter\Database\Eloquent\Concerns\HasRelationships,
+        \WpStarter\Database\Eloquent\Concerns\HasTimestamps,
+        \WpStarter\Database\Eloquent\Concerns\HidesAttributes,
+        \WpStarter\Database\Eloquent\Concerns\GuardsAttributes;
     use UserQuery, SupportMethods;
 
     protected $skipPasswordHash = false;
@@ -127,7 +127,7 @@ abstract class User extends WP_User implements
         }
     }
 
-    public function fresh()
+    public function fresh($with = [])
     {
         return static::find($this->ID);
     }
@@ -390,8 +390,12 @@ abstract class User extends WP_User implements
     {
         return json_encode($this->jsonSerialize(), $options);
     }
-    #[\ReturnTypeWillChange]
-    public function jsonSerialize()
+    /**
+     * Convert the object into something JSON serializable.
+     *
+     * @return mixed
+     */
+    public function jsonSerialize(): mixed
     {
         return $this->toArray();
     }
@@ -403,8 +407,7 @@ abstract class User extends WP_User implements
      * @param mixed $offset
      * @return bool
      */
-    #[\ReturnTypeWillChange]
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         return isset($this->$offset);
     }
@@ -415,8 +418,7 @@ abstract class User extends WP_User implements
      * @param mixed $offset
      * @return mixed
      */
-    #[\ReturnTypeWillChange]
-    public function offsetGet($offset)
+    public function offsetGet($offset): mixed
     {
         return $this->$offset;
     }
@@ -428,8 +430,7 @@ abstract class User extends WP_User implements
      * @param mixed $value
      * @return void
      */
-    #[\ReturnTypeWillChange]
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         $this->$offset = $value;
     }
@@ -440,8 +441,7 @@ abstract class User extends WP_User implements
      * @param mixed $offset
      * @return void
      */
-    #[\ReturnTypeWillChange]
-    public function offsetUnset($offset)
+    public function offsetUnset($offset): void
     {
         unset($this->$offset);
     }
