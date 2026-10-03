@@ -19,7 +19,7 @@ class TraitMakeCommandTest extends TestCase
 
     public function testItCanGenerateTraitFileWhenTraitsFolderExists()
     {
-        $traitsFolderPath = app_path('Traits');
+        $traitsFolderPath = ws_app_path('Traits');
 
         /** @var \WpStarter\Filesystem\Filesystem $files */
         $files = $this->app['files'];
@@ -39,7 +39,7 @@ class TraitMakeCommandTest extends TestCase
 
     public function testItCanGenerateTraitFileWhenConcernsFolderExists()
     {
-        $traitsFolderPath = app_path('Concerns');
+        $traitsFolderPath = ws_app_path('Concerns');
 
         /** @var \WpStarter\Filesystem\Filesystem $files */
         $files = $this->app['files'];

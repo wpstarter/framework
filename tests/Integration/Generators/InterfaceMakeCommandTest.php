@@ -25,7 +25,7 @@ class InterfaceMakeCommandTest extends TestCase
 
     public function testItCanGenerateInterfaceFileWhenContractsFolderExists()
     {
-        $interfacesFolderPath = app_path('Contracts');
+        $interfacesFolderPath = ws_app_path('Contracts');
 
         /** @var \WpStarter\Filesystem\Filesystem $files */
         $files = $this->app['files'];
@@ -45,7 +45,7 @@ class InterfaceMakeCommandTest extends TestCase
 
     public function testItCanGenerateInterfaceFileWhenInterfacesFolderExists()
     {
-        $interfacesFolderPath = app_path('Interfaces');
+        $interfacesFolderPath = ws_app_path('Interfaces');
 
         /** @var \WpStarter\Filesystem\Filesystem $files */
         $files = $this->app['files'];

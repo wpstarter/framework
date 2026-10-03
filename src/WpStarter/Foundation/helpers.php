@@ -139,13 +139,13 @@ if (! function_exists('ws_app')) {
     }
 }
 
-if (! function_exists('app_path')) {
+if (! function_exists('ws_app_path')) {
     /**
      * Get the path to the application folder.
      *
      * @param  string  $path
      */
-    function app_path($path = ''): string
+    function ws_app_path($path = ''): string
     {
         return ws_app()->path($path);
     }

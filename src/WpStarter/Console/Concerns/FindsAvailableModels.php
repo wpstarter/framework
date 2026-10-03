@@ -14,7 +14,7 @@ trait FindsAvailableModels
      */
     protected function findAvailableModels()
     {
-        $modelPath = is_dir(app_path('Models')) ? app_path('Models') : app_path();
+        $modelPath = is_dir(ws_app_path('Models')) ? ws_app_path('Models') : ws_app_path();
 
         return (new Collection(Finder::create()->files()->depth(0)->in($modelPath)))
             ->map(fn ($file) => $file->getBasename('.php'))

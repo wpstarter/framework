@@ -237,7 +237,7 @@ abstract class GeneratorCommand extends Command implements PromptsForMissingInpu
             return $model;
         }
 
-        return is_dir(app_path('Models'))
+        return is_dir(ws_app_path('Models'))
             ? $rootNamespace.'Models\\'.$model
             : $rootNamespace.$model;
     }
@@ -261,7 +261,7 @@ abstract class GeneratorCommand extends Command implements PromptsForMissingInpu
      */
     protected function possibleEvents()
     {
-        $eventPath = app_path('Events');
+        $eventPath = ws_app_path('Events');
 
         if (! is_dir($eventPath)) {
             return [];

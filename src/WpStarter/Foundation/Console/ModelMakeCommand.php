@@ -232,7 +232,7 @@ class ModelMakeCommand extends GeneratorCommand
      */
     protected function getDefaultNamespace($rootNamespace)
     {
-        return is_dir(app_path('Models')) ? $rootNamespace.'\\Models' : $rootNamespace;
+        return is_dir(ws_app_path('Models')) ? $rootNamespace.'\\Models' : $rootNamespace;
     }
 
     /**

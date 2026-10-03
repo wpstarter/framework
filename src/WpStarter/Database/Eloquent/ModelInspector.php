@@ -324,7 +324,7 @@ class ModelInspector
             return $model;
         }
 
-        return is_dir(app_path('Models'))
+        return is_dir(ws_app_path('Models'))
             ? $rootNamespace.'Models\\'.$model
             : $rootNamespace.$model;
     }

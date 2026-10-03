@@ -135,7 +135,7 @@ class PruneCommand extends Command
                 return $namespace.str_replace(
                     ['/', '.php'],
                     ['\\', ''],
-                    Str::after($model->getRealPath(), realpath(app_path()).DIRECTORY_SEPARATOR)
+                    Str::after($model->getRealPath(), realpath(ws_app_path()).DIRECTORY_SEPARATOR)
                 );
             })
             ->when(! empty($except), fn ($models) => $models->reject(fn ($model) => in_array($model, $except)))
@@ -156,7 +156,7 @@ class PruneCommand extends Command
                 ->all();
         }
 
-        return app_path('Models');
+        return ws_app_path('Models');
     }
 
     /**

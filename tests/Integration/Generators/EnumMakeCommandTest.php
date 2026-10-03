@@ -48,7 +48,7 @@ class EnumMakeCommandTest extends TestCase
 
     public function testItCanGenerateEnumFileInEnumsFolder()
     {
-        $enumsFolderPath = app_path('Enums');
+        $enumsFolderPath = ws_app_path('Enums');
 
         /** @var \WpStarter\Filesystem\Filesystem $files */
         $files = $this->app['files'];
@@ -68,7 +68,7 @@ class EnumMakeCommandTest extends TestCase
 
     public function testItCanGenerateEnumFileInEnumerationsFolder()
     {
-        $enumerationsFolderPath = app_path('Enumerations');
+        $enumerationsFolderPath = ws_app_path('Enumerations');
 
         /** @var \WpStarter\Filesystem\Filesystem $files */
         $files = $this->app['files'];
