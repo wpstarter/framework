@@ -44,50 +44,37 @@ class Kernel extends HttpKernel
     {
         $request->setRouteNotFoundHttpException(false);
         $response = parent::handle($request);
-        if($request->isNotFoundHttpExceptionFromRoute()) {
-            //Not found response and come from no route match...
-            if($processResponse) {
-                $this->registerWpHandler($request);
-            }else{//Expected to return response
-                $response=$this->handleWp($request,$processResponse);
-            }
-        }else{
+        if(!$request->isNotFoundHttpExceptionFromRoute()) {
+            //Got final response process if requested
             if($processResponse) {
                 $this->processResponse($request, $response);
             }
+        }else{
+            //Continue to run wp route stack
+            $response=$this->handleWp($request,$response,$processResponse);
         }
         return $response;
     }
 
-    /**
-     * Process response
-     * @param $request
-     * @param $response
-     * @return void
-     */
-    protected function processResponse($request, $response){
-        //Not a not found response from router
-        if($response instanceof \WpStarter\Wordpress\Http\Response){
-            //Got a WordPress response, process it
-            $handler=$this->app->make(\WpStarter\Wordpress\Http\Response\Handler::class);
-            /**
-             * @var \WpStarter\Wordpress\Http\Response\Handler $handler
-             */
-            $handler->handle($this,$request,$response);
-        }else {//Normal response
-            $response->send();
-            $this->terminate($request, $response);
-            die;
+    function handleWp($request, $response, $processResponse=false){
+        if($processResponse) {
+            //Requested to process response, we run at target hook
+            $this->handleAndProcessWpAtTargetHook($request);
+        }else{
+            //No process return the response
+            $response=$this->handleWpRoute($request);
         }
-
+        return $response;
     }
 
-    function registerWpHandler($request)
+    function handleAndProcessWpAtTargetHook($request): void
     {
         $hook=(array)$this->wpHandleHook;
         add_action($hook[0]??'template_redirect', function ()use($request) {
-            if($request->isNotFoundHttpExceptionFromRoute()) {
-                $this->handleWp(Request::capture(), true);
+            $response=$this->handleWpRoute($request);
+            if(!$request->isNotFoundHttpExceptionFromRoute()){
+                //Got a response, process it
+                $this->processResponse($request, $response);
             }
         }, $hook[1]??1);
     }
@@ -98,7 +85,7 @@ class Kernel extends HttpKernel
      * @param bool $processResponse
      * @return \Symfony\Component\HttpFoundation\Response|\WpStarter\Http\Response
      */
-    function handleWp($request, $processResponse=false)
+    function handleWpRoute($request)
     {
         try {
             $request->setRouteNotFoundHttpException(false);
@@ -107,11 +94,6 @@ class Kernel extends HttpKernel
             $this->reportException($e);
             $response = $this->renderException($request, $e);
         }
-        if (!$request->isNotFoundHttpExceptionFromRoute()) {
-            if($processResponse) {
-                $this->processResponse($request, $response);
-            }
-        }//No roure match continue to wp
         return $response;
 
     }
@@ -155,8 +137,31 @@ class Kernel extends HttpKernel
             $this->wpRouter->middlewareGroup($key, $middleware);
         }
 
-        foreach ($this->routeMiddleware as $key => $middleware) {
+        foreach (array_merge($this->routeMiddleware, $this->middlewareAliases) as $key => $middleware) {
             $this->wpRouter->aliasMiddleware($key, $middleware);
+        }
+
+    }
+
+    /**
+     * Process response
+     * @param $request
+     * @param $response
+     * @return void
+     */
+    protected function processResponse($request, $response){
+        //Not a not found response from router
+        if($response instanceof \WpStarter\Wordpress\Http\Response){
+            //Got a WordPress response, process it
+            $handler=$this->app->make(\WpStarter\Wordpress\Http\Response\Handler::class);
+            /**
+             * @var \WpStarter\Wordpress\Http\Response\Handler $handler
+             */
+            $handler->handle($this,$request,$response);
+        }else {//Normal response
+            $response->send();
+            $this->terminate($request, $response);
+            die;
         }
 
     }

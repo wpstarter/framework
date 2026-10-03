@@ -12,7 +12,7 @@ function _x() {}
 /**
  * @ignore
  */
-function add_filter() {}
+function add_filter(...$args) {}
 
 /**
  * @ignore
@@ -32,7 +32,7 @@ function apply_filters() {}
 /**
  * @ignore
  */
-function add_action() {}
+function add_action(...$args) {}
 
 /**
  * @ignore
