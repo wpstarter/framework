@@ -83,7 +83,7 @@ class HandleExceptionsTest extends TestCase
                 #ErrorException: str_contains\(\): Passing null to parameter \#2 \(\\\$needle\) of type string is deprecated in /home/user/laravel/routes/web\.php:17
                 Stack trace:
                 \#0 .*helpers.php\(.*\): WpStarter\\\\Foundation\\\\Bootstrap\\\\HandleExceptions.*
-                \#1 .*HandleExceptions\.php\(.*\): with.*
+                \#1 .*HandleExceptions\.php\(.*\): ws_with.*
                 \#2 .*HandleExceptions\.php\(.*\): WpStarter\\\\Foundation\\\\Bootstrap\\\\HandleExceptions->handleDeprecation.*
                 \#3 .*HandleExceptionsTest\.php\(.*\): WpStarter\\\\Foundation\\\\Bootstrap\\\\HandleExceptions->handleError.*
                 [\s\S]*#i
@@ -173,7 +173,7 @@ class HandleExceptionsTest extends TestCase
                 #ErrorException: str_contains\(\): Passing null to parameter \#2 \(\\\$needle\) of type string is deprecated in /home/user/laravel/routes/web\.php:17
                 Stack trace:
                 \#0 .*helpers.php\(.*\): WpStarter\\\\Foundation\\\\Bootstrap\\\\HandleExceptions.*
-                \#1 .*HandleExceptions\.php\(.*\): with.*
+                \#1 .*HandleExceptions\.php\(.*\): ws_with.*
                 \#2 .*HandleExceptions\.php\(.*\): WpStarter\\\\Foundation\\\\Bootstrap\\\\HandleExceptions->handleDeprecation.*
                 \#3 .*HandleExceptionsTest\.php\(.*\): WpStarter\\\\Foundation\\\\Bootstrap\\\\HandleExceptions->handleError.*
                 [\s\S]*#i
