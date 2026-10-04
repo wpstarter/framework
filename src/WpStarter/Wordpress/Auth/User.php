@@ -29,6 +29,6 @@ class User extends Model implements
 
     public function getAuthPasswordName()
     {
-        // TODO: Implement getAuthPasswordName() method.
+        return 'user_pass';
     }
 }

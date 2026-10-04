@@ -70,7 +70,7 @@ abstract class Response extends BaseResponse implements \ArrayAccess
     {
         if (!$this->headerIsAlreadySent) {
             $this->headerIsAlreadySent = true;
-            return parent::sendHeaders();
+            return parent::sendHeaders($statusCode);
         }
         return $this;
     }

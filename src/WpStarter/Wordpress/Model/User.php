@@ -168,10 +168,11 @@ class User extends UserBaseModel
         if ($this->fireModelEvent('saving') === false) {
             return false;
         }
+        $query = $this->newModelQuery();
         if ($this->exists()) {
-            $saved = $this->performUpdate(null);
+            $saved = $this->performUpdate($query);
         } else {
-            $saved = $this->performInsert(null);
+            $saved = $this->performInsert($query);
         }
         if ($saved) {
             $this->finishSave($options);

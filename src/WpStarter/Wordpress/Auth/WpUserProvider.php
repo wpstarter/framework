@@ -83,15 +83,7 @@ class WpUserProvider implements UserProvider
     }
 
 
-    public function retrieveByToken($identifier, $token)
-    {
-        // TODO: Implement retrieveByToken() method.
-    }
 
-    public function updateRememberToken(Authenticatable $user, $token)
-    {
-        // TODO: Implement updateRememberToken() method.
-    }
 
     /**
      * Retrieve a user by the given credentials.
@@ -156,6 +148,15 @@ class WpUserProvider implements UserProvider
 
     public function rehashPasswordIfRequired(Authenticatable $user, #[\SensitiveParameter] array $credentials, bool $force = false)
     {
-        // TODO: Implement rehashPasswordIfRequired() method.
+
+    }
+    public function retrieveByToken($identifier, $token)
+    {
+        // WordPress doesn't have token
+    }
+
+    public function updateRememberToken(Authenticatable $user, $token)
+    {
+        // WordPress doesn't have token
     }
 }

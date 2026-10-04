@@ -2,12 +2,12 @@
 /**
  * @ignore
  */
-function __() {}
+function __(...$args) {}
 
 /**
  * @ignore
  */
-function _x() {}
+function _x(...$args) {}
 
 /**
  * @ignore
@@ -17,17 +17,17 @@ function add_filter(...$args) {}
 /**
  * @ignore
  */
-function remove_filter() {}
+function remove_filter(...$args) {}
 
 /**
  * @ignore
  */
-function did_filter() {}
+function did_filter(...$args) {}
 
 /**
  * @ignore
  */
-function apply_filters() {}
+function apply_filters(...$args) {}
 
 /**
  * @ignore
@@ -37,54 +37,54 @@ function add_action(...$args) {}
 /**
  * @ignore
  */
-function remove_action(){}
+function remove_action(...$args){}
 
 /**
  * @ignore
  */
-function did_action() {}
+function did_action(...$args) {}
 
 /**
  * @ignore
  */
-function do_action() {}
+function do_action(...$args) {}
 
 /**
  * @ignore
  */
-function do_action_ref_array() {}
+function do_action_ref_array(...$args) {}
 
 /**
  * @ignore
  */
-function get_bloginfo() {}
+function get_bloginfo(...$args) {}
 
 /**
  * @ignore
  */
-function get_option() {}
+function get_option(...$args) {}
 
 /**
  * @ignore
  */
-function is_lighttpd_before_150() {}
+function is_lighttpd_before_150(...$args) {}
 
 /**
  * @ignore
  */
-function esc_attr() {}
+function esc_attr(...$args) {}
 
 /**
  * @ignore
  */
-function is_admin() {
+function is_admin(...$args) {
     return false;
 }
 
 /**
  * @ignore
  */
-function network_site_url() {}
+function network_site_url(...$args) {}
 
 /**
  * @ignore
@@ -119,7 +119,7 @@ function wp_get_current_user(){}
 /**
  * @ignore
  */
-function wp_authenticate(){}
+function wp_authenticate(...$args){}
 /**
  * @ignore
  */
