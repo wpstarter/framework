@@ -86,7 +86,7 @@ class WordpressServiceProvider extends ServiceProvider
     {
         $this->app->resolving('mail.manager', function ($mailManager) {
             $mailManager->extend('wp', function ($config) {
-                return new WpTransport($config);
+                return new WpTransport;
             });
         });
     }
