@@ -315,7 +315,7 @@ class EnvironmentDecryptCommandTest extends TestCase
         $encrypter = new Encrypter($key, 'AES-256-CBC');
 
         // Create readable format encrypted content
-        $encryptedContent = 'APP_NAME='.$encrypter->encryptString('Laravel')."\n".
+        $encryptedContent = 'APP_NAME='.$encrypter->encryptString('WpStarter')."\n".
                            'APP_ENV='.$encrypter->encryptString('local');
 
         $this->filesystem->shouldReceive('exists')

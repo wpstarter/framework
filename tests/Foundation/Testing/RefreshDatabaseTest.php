@@ -44,7 +44,7 @@ class RefreshDatabaseTest extends TestCase
     protected function refreshApplication()
     {
         $this->app = Testbench::create(
-            basePath: package_path('vendor/orchestra/testbench-core/laravel'),
+            basePath: package_path('vendor/wpstarter/o-testbench-core/laravel'),
         );
     }
 

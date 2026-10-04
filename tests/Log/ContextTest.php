@@ -152,8 +152,8 @@ class ContextTest extends TestCase
                 'array' => 'a:3:{i:0;i:1;i:1;i:2;i:2;i:3;}',
                 'hash' => 'a:1:{s:3:"foo";s:3:"bar";}',
                 'object' => 'O:8:"stdClass":1:{s:3:"foo";s:3:"bar";}',
-                'enum' => 'E:31:"WpStarter\Tests\Log\Suit:Clubs";',
-                'backed_enum' => 'E:43:"WpStarter\Tests\Log\StringBackedSuit:Clubs";',
+                'enum' => 'E:30:"WpStarter\Tests\Log\Suit:Clubs";',
+                'backed_enum' => 'E:42:"WpStarter\Tests\Log\StringBackedSuit:Clubs";',
             ],
             'hidden' => [
                 'number' => 'i:55;',

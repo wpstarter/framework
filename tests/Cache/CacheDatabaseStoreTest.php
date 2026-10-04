@@ -26,14 +26,14 @@ class CacheDatabaseStoreTest extends TestCase
 
     public function testNullIsReturnedAndItemDeletedWhenItemIsExpired()
     {
-        $store = $this->getMockBuilder(DatabaseStore::class)->onlyMethods(['forgetIfExpired'])->setConstructorArgs($this->getMocks())->getMock();
+        $store = $this->getStore();
 
         $getQuery = m::mock(stdClass::class);
         $getQuery->shouldReceive('whereIn')->once()->with('key', ['prefixfoo'])->andReturn($getQuery);
         $getQuery->shouldReceive('get')->once()->andReturn(ws_collect([(object) ['key' => 'prefixfoo', 'expiration' => 1]]));
 
         $deleteQuery = m::mock(stdClass::class);
-        $deleteQuery->shouldReceive('whereIn')->once()->with('key', ['prefixfoo', 'prefixilluminate:cache:flexible:created:foo'])->andReturn($deleteQuery);
+        $deleteQuery->shouldReceive('whereIn')->once()->with('key', ['prefixfoo', 'prefixwpstarter:cache:flexible:created:foo'])->andReturn($deleteQuery);
         $deleteQuery->shouldReceive('where')->once()->with('expiration', '<=', m::any())->andReturn($deleteQuery);
         $deleteQuery->shouldReceive('delete')->once()->andReturnNull();
 
@@ -124,7 +124,7 @@ class CacheDatabaseStoreTest extends TestCase
         $store = $this->getStore();
         $table = m::mock(stdClass::class);
         $store->getConnection()->shouldReceive('table')->once()->with('table')->andReturn($table);
-        $table->shouldReceive('whereIn')->once()->with('key', ['prefixfoo', 'prefixilluminate:cache:flexible:created:foo'])->andReturn($table);
+        $table->shouldReceive('whereIn')->once()->with('key', ['prefixfoo', 'prefixwpstarter:cache:flexible:created:foo'])->andReturn($table);
         $table->shouldReceive('delete')->once();
 
         $store->forget('foo');

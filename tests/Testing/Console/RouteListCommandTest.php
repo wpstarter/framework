@@ -148,7 +148,7 @@ class RouteListCommandTest extends TestCase
             ->assertSuccessful()
             ->expectsOutput('')
             ->expectsOutput(
-                '  GET|HEAD       foo/{user} WpStarter\Tests\Testing\Console\FooController@show'
+                '  GET|HEAD       foo/{user} . WpStarter\Tests\Testing\Console\FooController@show'
             )->expectsOutput('')
             ->expectsOutput(
                 '                                                              Showing [1] routes'
@@ -224,7 +224,7 @@ class RouteListCommandTest extends TestCase
             ->assertSuccessful()
             ->expectsOutput('')
             ->expectsOutput('  GET|HEAD       foo/{user} WpStarter\Tests\Testing\Console\FooController@show')
-            ->expectsOutput('  ANY            redirect .... WpStarter\Routing\RedirectController')
+            ->expectsOutput('  ANY            redirect ..... WpStarter\Routing\RedirectController')
             ->expectsOutput('  GET|HEAD       view .............................................. ')
             ->expectsOutput('')
             ->expectsOutput('                                                  Showing [3] routes')

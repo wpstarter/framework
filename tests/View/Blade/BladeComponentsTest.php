@@ -16,8 +16,8 @@ class BladeComponentsTest extends AbstractBladeTestCase
 
     public function testClassComponentsAreCompiled()
     {
-        $this->assertSame(str_replace("\r\n", "\n", '<?php if (isset($component)) { $__componentOriginal2dda3d2f2f9b76bd400bf03f0b84e87f = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal2dda3d2f2f9b76bd400bf03f0b84e87f = $attributes; } ?>
+        $this->assertSame(str_replace("\r\n", "\n", '<?php if (isset($component)) { $__componentOriginal51ed2198964b0d1ccae650c71673f397 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal51ed2198964b0d1ccae650c71673f397 = $attributes; } ?>
 <?php $component = WpStarter\Tests\View\Blade\ComponentStub::class::resolve(["foo" => "bar"] + (isset($attributes) && $attributes instanceof WpStarter\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName(\'test\'); ?>
 <?php if ($component->shouldRender()): ?>

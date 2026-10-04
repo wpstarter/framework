@@ -555,11 +555,11 @@ class EventsDispatcherTest extends TestCase
         $_SERVER['__event.test'] = [];
         $d = new Dispatcher;
 
-        $d->listen('ws_event', function () use ($d) {
-            $d->listen('ws_event', function () {
+        $d->listen('event', function () use ($d) {
+            $d->listen('event', function () {
                 $_SERVER['__event.test'][] = 'fired 1';
             });
-            $d->listen('ws_event', function () {
+            $d->listen('event', function () {
                 $_SERVER['__event.test'][] = 'fired 2';
             });
         });
@@ -573,10 +573,10 @@ class EventsDispatcherTest extends TestCase
     public function testDuplicateListenersWillFire()
     {
         $d = new Dispatcher;
-        $d->listen('ws_event', TestListener::class);
-        $d->listen('ws_event', TestListener::class);
-        $d->listen('ws_event', TestListener::class.'@handle');
-        $d->listen('ws_event', TestListener::class.'@handle');
+        $d->listen('event', TestListener::class);
+        $d->listen('event', TestListener::class);
+        $d->listen('event', TestListener::class.'@handle');
+        $d->listen('event', TestListener::class.'@handle');
         $d->dispatch('event');
 
         $this->assertEquals(4, TestListener::$counter);

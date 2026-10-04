@@ -33,7 +33,7 @@ class ContextIntegrationTest extends TestCase
 
         $this->assertSame([
             'data' => [
-                'model' => 'O:45:"WpStarter\Contracts\Database\ModelIdentifier":5:{s:5:"class";s:31:"WpStarter\Foundation\Auth\User";s:2:"id";i:1;s:9:"relations";a:0:{}s:10:"connection";s:7:"testing";s:15:"collectionClass";N;}',
+                'model' => 'O:44:"WpStarter\Contracts\Database\ModelIdentifier":5:{s:5:"class";s:30:"WpStarter\Foundation\Auth\User";s:2:"id";i:1;s:9:"relations";a:0:{}s:10:"connection";s:7:"testing";s:15:"collectionClass";N;}',
                 'number' => 'i:55;',
             ],
             'hidden' => [],

@@ -371,7 +371,7 @@ class ModelSerializationTest extends TestCase
         $serialized = serialize(new ModelSerializationParentAccessibleTestClass($user, $user, $user));
 
         $this->assertSame(
-            'O:78:"WpStarter\\Tests\\Integration\\Queue\\ModelSerializationParentAccessibleTestClass":2:{s:4:"user";O:45:"WpStarter\\Contracts\\Database\\ModelIdentifier":5:{s:5:"class";s:61:"WpStarter\\Tests\\Integration\\Queue\\ModelSerializationTestUser";s:2:"id";i:1;s:9:"relations";a:0:{}s:10:"connection";s:7:"testing";s:15:"collectionClass";N;}s:8:"'."\0".'*'."\0".'user2";O:45:"WpStarter\\Contracts\\Database\\ModelIdentifier":5:{s:5:"class";s:61:"WpStarter\\Tests\\Integration\\Queue\\ModelSerializationTestUser";s:2:"id";i:1;s:9:"relations";a:0:{}s:10:"connection";s:7:"testing";s:15:"collectionClass";N;}}', $serialized
+            'O:77:"WpStarter\\Tests\\Integration\\Queue\\ModelSerializationParentAccessibleTestClass":2:{s:4:"user";O:44:"WpStarter\\Contracts\\Database\\ModelIdentifier":5:{s:5:"class";s:60:"WpStarter\\Tests\\Integration\\Queue\\ModelSerializationTestUser";s:2:"id";i:1;s:9:"relations";a:0:{}s:10:"connection";s:7:"testing";s:15:"collectionClass";N;}s:8:"'."\0".'*'."\0".'user2";O:44:"WpStarter\\Contracts\\Database\\ModelIdentifier":5:{s:5:"class";s:60:"WpStarter\\Tests\\Integration\\Queue\\ModelSerializationTestUser";s:2:"id";i:1;s:9:"relations";a:0:{}s:10:"connection";s:7:"testing";s:15:"collectionClass";N;}}', $serialized
         );
     }
 
@@ -385,7 +385,7 @@ class ModelSerializationTest extends TestCase
         $serialized = serialize(new ModelSerializationWithoutRelations($user));
 
         $this->assertSame(
-            'O:69:"WpStarter\Tests\Integration\Queue\ModelSerializationWithoutRelations":1:{s:4:"user";O:45:"WpStarter\Contracts\Database\ModelIdentifier":5:{s:5:"class";s:39:"WpStarter\Tests\Integration\Queue\User";s:2:"id";i:1;s:9:"relations";a:0:{}s:10:"connection";s:7:"testing";s:15:"collectionClass";N;}}', $serialized
+            'O:68:"WpStarter\Tests\Integration\Queue\ModelSerializationWithoutRelations":1:{s:4:"user";O:44:"WpStarter\Contracts\Database\ModelIdentifier":5:{s:5:"class";s:38:"WpStarter\Tests\Integration\Queue\User";s:2:"id";i:1;s:9:"relations";a:0:{}s:10:"connection";s:7:"testing";s:15:"collectionClass";N;}}', $serialized
         );
     }
 
@@ -399,7 +399,7 @@ class ModelSerializationTest extends TestCase
         $serialized = serialize(new ModelSerializationAttributeTargetsClassTestClass($user, new DataValueObject('hello')));
 
         $this->assertSame(
-            'O:83:"WpStarter\Tests\Integration\Queue\ModelSerializationAttributeTargetsClassTestClass":2:{s:4:"user";O:45:"WpStarter\Contracts\Database\ModelIdentifier":5:{s:5:"class";s:39:"WpStarter\Tests\Integration\Queue\User";s:2:"id";i:1;s:9:"relations";a:0:{}s:10:"connection";s:7:"testing";s:15:"collectionClass";N;}s:5:"value";O:50:"WpStarter\Tests\Integration\Queue\DataValueObject":1:{s:5:"value";s:5:"hello";}}',
+            'O:82:"WpStarter\Tests\Integration\Queue\ModelSerializationAttributeTargetsClassTestClass":2:{s:4:"user";O:44:"WpStarter\Contracts\Database\ModelIdentifier":5:{s:5:"class";s:38:"WpStarter\Tests\Integration\Queue\User";s:2:"id";i:1;s:9:"relations";a:0:{}s:10:"connection";s:7:"testing";s:15:"collectionClass";N;}s:5:"value";O:49:"WpStarter\Tests\Integration\Queue\DataValueObject":1:{s:5:"value";s:5:"hello";}}',
             $serialized
         );
 
@@ -440,7 +440,7 @@ class ModelSerializationTest extends TestCase
         ));
 
         $this->assertSame(
-            'O:83:"WpStarter\Tests\Integration\Queue\ModelSerializationAttributeTargetsClassTestClass":2:{s:4:"user";O:45:"WpStarter\Contracts\Database\ModelIdentifier":5:{s:5:"class";s:4:"user";s:2:"id";i:1;s:9:"relations";a:0:{}s:10:"connection";s:7:"testing";s:15:"collectionClass";N;}s:5:"value";O:50:"WpStarter\Tests\Integration\Queue\DataValueObject":1:{s:5:"value";s:5:"hello";}}',
+            'O:82:"WpStarter\Tests\Integration\Queue\ModelSerializationAttributeTargetsClassTestClass":2:{s:4:"user";O:44:"WpStarter\Contracts\Database\ModelIdentifier":5:{s:5:"class";s:4:"user";s:2:"id";i:1;s:9:"relations";a:0:{}s:10:"connection";s:7:"testing";s:15:"collectionClass";N;}s:5:"value";O:49:"WpStarter\Tests\Integration\Queue\DataValueObject":1:{s:5:"value";s:5:"hello";}}',
             $serialized
         );
 
@@ -468,7 +468,7 @@ class ModelSerializationTest extends TestCase
         ));
 
         $this->assertSame(
-            'O:67:"WpStarter\Tests\Integration\Queue\CollectionSerializationTestClass":1:{s:5:"users";O:45:"WpStarter\Contracts\Database\ModelIdentifier":5:{s:5:"class";s:4:"user";s:2:"id";a:1:{i:0;i:1;}s:9:"relations";a:0:{}s:10:"connection";s:7:"testing";s:15:"collectionClass";N;}}',
+            'O:66:"WpStarter\Tests\Integration\Queue\CollectionSerializationTestClass":1:{s:5:"users";O:44:"WpStarter\Contracts\Database\ModelIdentifier":5:{s:5:"class";s:4:"user";s:2:"id";a:1:{i:0;i:1;}s:9:"relations";a:0:{}s:10:"connection";s:7:"testing";s:15:"collectionClass";N;}}',
             $serialized
         );
 

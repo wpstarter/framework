@@ -38,7 +38,7 @@ class ConfigShowCommandTest extends TestCase
             ->expectsOutput('  float .................................................. 1.2  ')
             ->expectsOutput('  boolean ............................................... true  ')
             ->expectsOutput('  null .................................................. null  ')
-            ->expectsOutput('  array ⇁ 0 .. WpStarter\Foundation\Console\ConfigShowCommand  ')
+            ->expectsOutput('  array ⇁ 0 ... WpStarter\Foundation\Console\ConfigShowCommand  ')
             ->expectsOutput('  empty_array ............................................. []  ')
             ->expectsOutput('  assoc_array ⇁ foo ...................................... bar  ')
             ->expectsOutput('  class ............................................. stdClass  ');
