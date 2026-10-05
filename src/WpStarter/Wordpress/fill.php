@@ -5,6 +5,8 @@
 if(!class_exists(WP_User::class)){
     class WP_User{
         public $data;
+        public $ID = 0;
+
         public function __construct($id = 0, $name = '', $site_id = 0)
         {
             $this->data = new stdClass();

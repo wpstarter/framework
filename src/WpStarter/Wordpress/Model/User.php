@@ -279,6 +279,12 @@ class User extends UserBaseModel
         return null;
     }
 
+    function syncOriginal()
+    {
+        $this->ID=$this->attributes['ID']??0;
+        parent::syncOriginal();
+    }
+
     /***
      * Update user while skip password hashing
      * @param $callback
