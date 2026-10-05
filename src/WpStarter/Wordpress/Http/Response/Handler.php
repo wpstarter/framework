@@ -50,6 +50,8 @@ class Handler
                     $this->sendPageResponse($kernel, $request, $response);
                 }, $priority);
             }
+        } elseif ($response instanceof PassThrough) {
+            $this->registerTerminateOnShutdown();
         } elseif ($response instanceof Shortcode) {
             $this->registerTerminateOnShutdown();
             foreach ($response->all() as $tag => $view) {
