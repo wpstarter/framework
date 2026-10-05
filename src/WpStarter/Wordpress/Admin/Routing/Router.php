@@ -50,6 +50,16 @@ class Router extends \WpStarter\Routing\Router
         return $response;
     }
 
+    protected function runRouteWithinStack(Route $route, Request $request)
+    {
+        // Resolve before gathering middleware, even when middleware is disabled.
+        if ($route instanceof Menu) {
+            $route->resolveControllerMethod($request);
+        }
+
+        return parent::runRouteWithinStack($route, $request);
+    }
+
     function dispatch(Request $request)
     {
         return parent::dispatch($request);

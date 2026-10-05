@@ -16,6 +16,9 @@ abstract class Controller extends \WpStarter\Routing\Controller
     protected $ignoreActions=["-1"];
     protected $actionsMap=[];
 
+    protected $resolvedActionRequest;
+    protected $resolvedActionMethod;
+
     /**
      * Map resource actions
      * @return $this
@@ -66,9 +69,27 @@ abstract class Controller extends \WpStarter\Routing\Controller
         return $this->actionsMap[$key] ?? $defaultMethod;
     }
 
+    /**
+     * Resolve the action once per request for middleware and dispatch.
+     *
+     * @param Request $request
+     * @return string
+     */
+    public function resolveActionMethod(Request $request)
+    {
+        if ($this->resolvedActionRequest !== $request) {
+            $method = $this->getActionMethod($request);
+
+            $this->resolvedActionRequest = $request;
+            $this->resolvedActionMethod = $method;
+        }
+
+        return $this->resolvedActionMethod;
+    }
+
     public function __invoke(...$parameters)
     {
-        $method=$this->getActionMethod(ws_app('request'));
+        $method=$this->resolveActionMethod(ws_app('request'));
         return ws_app()->call([$this,$method],$parameters);
     }
 

@@ -3,6 +3,7 @@
 namespace WpStarter\Wordpress\Admin\Routing;
 
 
+use WpStarter\Http\Request;
 use WpStarter\Routing\Matching\MethodValidator;
 use WpStarter\Routing\Route;
 use WpStarter\Support\Str;
@@ -16,6 +17,52 @@ class Menu extends Route
     public $hookSuffix;
     protected $layout;
     protected $response;
+
+    public function bind(Request $request)
+    {
+        // Middleware selection depends on the action of the current request.
+        $this->computedMiddleware = null;
+
+        return parent::bind($request);
+    }
+
+    public function controllerMiddleware()
+    {
+        if (! $this->isControllerAction()) {
+            return [];
+        }
+
+        $controller = $this->getController();
+        $method = $this->getControllerMethod();
+
+        if ($controller instanceof Controller && $method === '__invoke') {
+            $method = $this->resolveControllerMethod($this->container->make('request'));
+        }
+
+        return $this->controllerDispatcher()->getMiddleware($controller, $method);
+    }
+
+    /**
+     * Resolve the controller method without changing the registered action.
+     *
+     * @param Request $request
+     * @return string|null
+     */
+    public function resolveControllerMethod(Request $request)
+    {
+        if (! $this->isControllerAction()) {
+            return null;
+        }
+
+        $controller = $this->getController();
+        $method = $this->getControllerMethod();
+
+        if ($controller instanceof Controller && $method === '__invoke') {
+            $method = $controller->resolveActionMethod($request);
+        }
+
+        return $method;
+    }
 
     public function initialize(){
         if(!$this->getAction('title')){
