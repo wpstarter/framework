@@ -3,6 +3,7 @@
 namespace WpStarter\Wordpress\Admin\Routing;
 
 
+use WpStarter\Http\Request;
 use WpStarter\Routing\Matching\MethodValidator;
 use WpStarter\Routing\Route;
 use WpStarter\Support\Str;
@@ -17,6 +18,52 @@ class Menu extends Route
     protected $layout;
     protected $response;
 
+    public function bind(Request $request)
+    {
+        // Middleware selection depends on the action of the current request.
+        $this->computedMiddleware = null;
+
+        return parent::bind($request);
+    }
+
+    public function controllerMiddleware()
+    {
+        if (! $this->isControllerAction()) {
+            return [];
+        }
+
+        $controller = $this->getController();
+        $method = $this->getControllerMethod();
+
+        if ($controller instanceof Controller && $method === '__invoke') {
+            $method = $this->resolveControllerMethod($this->container->make('request'));
+        }
+
+        return $this->controllerDispatcher()->getMiddleware($controller, $method);
+    }
+
+    /**
+     * Resolve the controller method without changing the registered action.
+     *
+     * @param Request $request
+     * @return string|null
+     */
+    public function resolveControllerMethod(Request $request)
+    {
+        if (! $this->isControllerAction()) {
+            return null;
+        }
+
+        $controller = $this->getController();
+        $method = $this->getControllerMethod();
+
+        if ($controller instanceof Controller && $method === '__invoke') {
+            $method = $controller->resolveActionMethod($request);
+        }
+
+        return $method;
+    }
+
     public function initialize(){
         if(!$this->getAction('title')){
             $this->title(Str::headline($this->uri()));
@@ -29,6 +76,26 @@ class Menu extends Route
         }
         $this->layout()->title($this->getAction('page_title'));
         $this->layout()->setNoticeManager($this->container['wp.admin.notice']);
+    }
+
+    /**
+     * Get the route validators for the instance.
+     *
+     * @return array
+     */
+    public static function getValidators()
+    {
+        if (isset(static::$validators)) {
+            return static::$validators;
+        }
+
+        // To match the route, we will use a chain of responsibility pattern with the
+        // validator implementations. We will spin through each one making sure it
+        // passes and then we will know if the route as a whole matches request.
+        return static::$validators = [
+            new MethodValidator,
+            new ScreenIdValidator,
+        ];
     }
 
     /**
