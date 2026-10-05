@@ -43,13 +43,6 @@ use function WpStarter\Support\enum_value;
 trait HasAttributes
 {
     /**
-     * The original WordPress user data snapshot.
-     *
-     * @var \stdClass|null
-     */
-    protected $originalData;
-
-    /**
      * Determine whether an attribute exists on the model.
      *
      * @param  string  $key
@@ -448,90 +441,13 @@ trait HasAttributes
     }
 
     /**
-     * Get the model's original attribute values.
-     *
-     * @param  string|null  $key
-     * @param  mixed  $default
-     * @return ($key is null ? array<string, mixed> : mixed)
-     */
-    public function getOriginal($key = null, $default = null)
-    {
-        return (new static)->setRawAttributes(
-            (array) $this->originalData, $sync = true
-        )->getOriginalWithoutRewindingModel($key, $default);
-    }
-
-    /**
-     * Get the model's original attribute values.
-     *
-     * @param  string|null  $key
-     * @param  mixed  $default
-     * @return ($key is null ? array<string, mixed> : mixed)
-     */
-    protected function getOriginalWithoutRewindingModel($key = null, $default = null)
-    {
-        if ($key) {
-            return $this->transformModelValue(
-                $key, Arr::get((array) $this->originalData, $key, $default)
-            );
-        }
-
-        return (new Collection((array) $this->originalData))
-            ->mapWithKeys(fn ($value, $key) => [$key => $this->transformModelValue($key, $value)])
-            ->all();
-    }
-
-    /**
-     * Get the model's raw original attribute values.
-     *
-     * @param  string|null  $key
-     * @param  mixed  $default
-     * @return ($key is null ? array<string, mixed> : mixed)
-     */
-    public function getRawOriginal($key = null, $default = null)
-    {
-        return Arr::get((array) $this->originalData, $key, $default);
-    }
-
-    /**
-     * Sync the original attributes with the current.
-     *
-     * @return $this
-     */
-    public function syncOriginal()
-    {
-        $this->originalData = (object) $this->getAttributes();
-
-        return $this;
-    }
-
-    /**
-     * Sync multiple original attribute with their current values.
-     *
-     * @param  array<string>|string  $attributes
-     * @return $this
-     */
-    public function syncOriginalAttributes($attributes)
-    {
-        $attributes = is_array($attributes) ? $attributes : func_get_args();
-
-        $modelAttributes = $this->getAttributes();
-
-        foreach ($attributes as $attribute) {
-            $this->originalData->{$attribute} = $modelAttributes[$attribute];
-        }
-
-        return $this;
-    }
-
-    /**
      * Discard attribute changes and reset the attributes to their original state.
      *
      * @return $this
      */
     public function discardChanges()
     {
-        [$this->data, $this->changes, $this->previous] = [(object) (array) $this->originalData, [], []];
+        [$this->data, $this->changes, $this->previous] = [(object) $this->original, [], []];
 
         $this->classCastCache = [];
         $this->attributeCastCache = [];
@@ -547,12 +463,12 @@ trait HasAttributes
      */
     public function originalIsEquivalent($key)
     {
-        if (! array_key_exists($key, (array) $this->originalData)) {
+        if (! array_key_exists($key, $this->original)) {
             return false;
         }
 
         $attribute = Arr::get((array) $this->data, $key);
-        $original = Arr::get((array) $this->originalData, $key);
+        $original = Arr::get($this->original, $key);
 
         if ($attribute === $original) {
             return true;

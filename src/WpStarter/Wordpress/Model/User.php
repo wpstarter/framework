@@ -69,7 +69,6 @@ class User extends UserBaseModel
         'locale',
         'role',
         'user_status',
-
     ];
     /**
      * The name of the "created at" column.
@@ -127,25 +126,7 @@ class User extends UserBaseModel
         }
     }
 
-    public function fresh($with = [])
-    {
-        return static::find($this->ID);
-    }
 
-    public function fill($attributes)
-    {
-        foreach ($attributes as $key => $value) {
-            if ($this->isFillable($key)) {
-                $this->setAttribute($key, $value);
-            } else {
-                throw new MassAssignmentException(sprintf(
-                    'Add [%s] to fillable property to allow mass assignment on [%s].',
-                    $key, get_class($this)
-                ));
-            }
-        }
-        return $this;
-    }
 
     protected function isWpField($key)
     {
@@ -157,6 +138,13 @@ class User extends UserBaseModel
         return !$this->isWpField($key);
     }
 
+    public function fresh($with = [])
+    {
+        if(!is_wp()){
+            return parent::fresh($with);
+        }
+        return static::find($this->ID);
+    }
     /**
      * Save the model to the database.
      *
@@ -165,23 +153,26 @@ class User extends UserBaseModel
      */
     public function save(array $options = []): bool
     {
+        if(!is_wp()){
+            //Not running inside WordPress, try eloquent save
+            return parent::save($options);
+        }
         if ($this->fireModelEvent('saving') === false) {
             return false;
         }
-        $query = $this->newModelQuery();
         if ($this->exists()) {
-            $saved = $this->performUpdate($query);
+            $saved = $this->performWpUpdate();
         } else {
-            $saved = $this->performInsert($query);
+            $saved = $this->performWpInsert();
         }
         if ($saved) {
-            $this->finishSave($options);
+            $this->finishWpSave($options);
         }
 
         return $saved;
     }
 
-    protected function performUpdate(Builder $query)
+    protected function performWpUpdate()
     {
 
         if ($this->fireModelEvent('updating') === false) {
@@ -207,7 +198,7 @@ class User extends UserBaseModel
 
     }
 
-    protected function performInsert(Builder $query)
+    protected function performWpInsert()
     {
         if ($this->fireModelEvent('creating') === false) {
             return false;
@@ -223,7 +214,7 @@ class User extends UserBaseModel
         return $result;
     }
 
-    protected function finishSave($options)
+    protected function finishWpSave($options)
     {
 
         $data = static::get_data_by('id', $this->ID);

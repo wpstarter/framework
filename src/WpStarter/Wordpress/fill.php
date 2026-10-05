@@ -4,8 +4,10 @@
  */
 if(!class_exists(WP_User::class)){
     class WP_User{
-        public function __construct()
+        public $data;
+        public function __construct($id = 0, $name = '', $site_id = 0)
         {
+            $this->data = new stdClass();
         }
     }
 }
