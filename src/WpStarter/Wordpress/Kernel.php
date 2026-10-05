@@ -15,6 +15,7 @@ class Kernel extends HttpKernel
 {
     use HasEarlyBootstrappers;
     protected $wpHandleHook=['template_redirect',1];
+    protected $wpHandled=false;
     /**
      * @var \WpStarter\Wordpress\Application
      */
@@ -51,15 +52,16 @@ class Kernel extends HttpKernel
             }
         }else{
             //Continue to run wp route stack
-            $response=$this->handleWp($request,$response,$processResponse);
+            $response = $this->handleWp($request, $response, $processResponse);
         }
+        //handle may be called multiple times, init:1 and wp_loaded:30
         return $response;
     }
 
     function handleWp($request, $response, $processResponse=false){
         if($processResponse) {
             //Requested to process response, we run at target hook
-            $this->handleAndProcessWpAtTargetHook($request);
+            $this->handleWpRouteAndResponse($request);
         }else{
             //No process return the response
             $response=$this->handleWpRoute($request);
@@ -67,8 +69,12 @@ class Kernel extends HttpKernel
         return $response;
     }
 
-    function handleAndProcessWpAtTargetHook($request): void
+    protected function handleWpRouteAndResponse($request): void
     {
+        if($this->wpHandled){
+            return ;
+        }
+        $this->wpHandled=true;
         $hook=(array)$this->wpHandleHook;
         add_action($hook[0]??'template_redirect', function ()use($request) {
             $response=$this->handleWpRoute($request);
@@ -116,7 +122,7 @@ class Kernel extends HttpKernel
             ->then($this->dispatchToWpRouter());
     }
 
-    function dispatchToWpRouter($route = null)
+    protected function dispatchToWpRouter($route = null)
     {
         return function ($request) use ($route) {
             return $this->wpRouter->dispatch($request);
