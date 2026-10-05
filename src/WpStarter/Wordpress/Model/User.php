@@ -281,8 +281,8 @@ class User extends UserBaseModel
 
     function syncOriginal()
     {
-        $this->ID=$this->attributes['ID']??0;
         parent::syncOriginal();
+        $this->ID=$this->original[$this->primaryKey]??0;
     }
 
     /***
