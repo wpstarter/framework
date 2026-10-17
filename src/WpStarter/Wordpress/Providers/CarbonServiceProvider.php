@@ -20,6 +20,9 @@ class CarbonServiceProvider extends \WpStarter\Support\ServiceProvider
     /** @var callable|null */
     protected $localeGetter = null;
 
+    /** @var callable|null */
+    protected $fallbackLocaleGetter = null;
+
     public function setAppGetter(?callable $appGetter): void
     {
         $this->appGetter = $appGetter;
@@ -30,9 +33,15 @@ class CarbonServiceProvider extends \WpStarter\Support\ServiceProvider
         $this->localeGetter = $localeGetter;
     }
 
+    public function setFallbackLocaleGetter(?callable $fallbackLocaleGetter): void
+    {
+        $this->fallbackLocaleGetter = $fallbackLocaleGetter;
+    }
+
     public function boot()
     {
         $this->updateLocale();
+        $this->updateFallbackLocale();
 
         if (!$this->app->bound('events')) {
             return;
@@ -65,11 +74,38 @@ class CarbonServiceProvider extends \WpStarter\Support\ServiceProvider
             WpStarterCarbon::setLocale($locale);
         }
 
-        if (class_exists(Date::class)) {
+        if (class_exists(\WpStarter\Support\Facades\Date::class)) {
             try {
                 $root = Date::getFacadeRoot();
                 $root->setLocale($locale);
-            } catch (Throwable $e) {
+            } catch (Throwable) {
+                // Non Carbon class in use in Date facade
+            }
+        }
+    }
+
+    public function updateFallbackLocale()
+    {
+        $locale = $this->getFallbackLocale();
+
+        if ($locale === null) {
+            return;
+        }
+
+        Carbon::setFallbackLocale($locale);
+        CarbonImmutable::setFallbackLocale($locale);
+        CarbonPeriod::setFallbackLocale($locale);
+        CarbonInterval::setFallbackLocale($locale);
+
+        if (class_exists(WpStarterCarbon::class) && method_exists(WpStarterCarbon::class, 'setFallbackLocale')) {
+            WpStarterCarbon::setFallbackLocale($locale);
+        }
+
+        if (class_exists(Date::class)) {
+            try {
+                $root = Date::getFacadeRoot();
+                $root->setFallbackLocale($locale);
+            } catch (Throwable) { // @codeCoverageIgnore
                 // Non Carbon class in use in Date facade
             }
         }
@@ -92,6 +128,19 @@ class CarbonServiceProvider extends \WpStarter\Support\ServiceProvider
             : $this->getGlobalApp('translator');
 
         return $app ? $app->getLocale() : null;
+    }
+
+    protected function getFallbackLocale()
+    {
+        if ($this->fallbackLocaleGetter) {
+            return ($this->fallbackLocaleGetter)();
+        }
+
+        $app = $this->getApp();
+
+        return $app && method_exists($app, 'getFallbackLocale')
+            ? $app->getFallbackLocale()
+            : $this->getGlobalApp('translator')?->getFallback();
     }
 
     protected function getApp()
