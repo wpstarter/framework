@@ -22,4 +22,8 @@ class Kernel extends ConsoleKernel
         \WpStarter\Foundation\Bootstrap\RegisterProviders::class,
         \WpStarter\Foundation\Bootstrap\BootProviders::class,
     ];
+    protected function shouldDiscoverCommands()
+    {
+        return get_class($this) === __CLASS__;
+    }
 }
