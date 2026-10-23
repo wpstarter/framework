@@ -44,19 +44,41 @@ class Updater
             'Content-Length: ' . strlen($formData),
             'User-Agent: '.$userAgent
         );
-
+        $apiUrl = ws_config('wordpress.plugins.updater.api_url','http://api.wordpress.org/plugins/update-check/1.1/');
+        $token = ws_config('wordpress.plugins.updater.token');
+        if (!empty($token)) {
+            $headers[] = 'Authorization: Bearer ' . $token;
+        }
         $options = array(
             'http' => array(
                 'header'  => implode("\r\n", $headers),
                 'method'  => 'POST',
                 'content' => $formData,
+                'timeout' => ws_config('wordpress.plugins.updater.timeout', 60),
             ),
         );
 
         $context = stream_context_create($options);
 
-        $response = file_get_contents('http://api.wordpress.org/plugins/update-check/1.1/', false, $context);
-        $update=json_decode($response);
+        $response = file_get_contents($apiUrl, false, $context);
+        if ($response === false) {
+            throw new \RuntimeException(
+                'Failed to connect to WordPress update API.'
+            );
+        }
+
+        $update = json_decode($response);
+
+        if (
+            json_last_error() !== JSON_ERROR_NONE
+            || !is_object($update)
+            || !isset($update->plugins)
+            || !is_object($update->plugins)
+        ) {
+            throw new \RuntimeException(
+                'Invalid response from WordPress update API.'
+            );
+        }
         foreach ($update->plugins as $slug=>$info){
             if(isset($plugins[$slug])){
                 $plugins[$slug]->NewVersion=$info->new_version;
