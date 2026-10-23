@@ -2,8 +2,11 @@
 
 namespace WpStarter\Wordpress;
 
+use WpStarter\Contracts\Cache\Factory as CacheFactory;
 use WpStarter\Database\Connection;
 use WpStarter\Routing\Redirector;
+use WpStarter\Wordpress\Middleware\StartSession;
+use WpStarter\Session\SessionManager;
 use WpStarter\Support\Facades\Artisan;
 use WpStarter\Support\ServiceProvider;
 use WpStarter\Wordpress\Admin\AdminServiceProvider;
@@ -35,6 +38,7 @@ class WordpressServiceProvider extends ServiceProvider
         $this->registerResponse();
         $this->registerShortcodeManager();
         $this->registerChildServices();
+        $this->registerSession();
 
     }
 
@@ -71,6 +75,15 @@ class WordpressServiceProvider extends ServiceProvider
         });
         add_action('deactivated_plugin',function(){
             Artisan::call('queue:restart');
+        });
+    }
+
+
+    protected function registerSession(){
+        $this->app->singleton(StartSession::class, function ($app) {
+            return new StartSession($app->make(SessionManager::class), function () use ($app) {
+                return $app->make(CacheFactory::class);
+            });
         });
     }
 
