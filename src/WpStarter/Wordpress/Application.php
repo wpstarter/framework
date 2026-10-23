@@ -11,13 +11,27 @@ class Application extends \WpStarter\Foundation\Application
      *
      * @var string
      */
-    const VERSION = '2.1.9';
+    const VERSION = '2.2.0';
     /**
      * Indicates if the application has been early bootstrapped before.
      *
      * @var bool
      */
     protected $hasBeenEarlyBootstrapped = false;
+
+    public static function configure(?string $basePath = null)
+    {
+        $basePath = match (true) {
+            is_string($basePath) => $basePath,
+            default => static::inferBasePath(),
+        };
+
+        return (new Configuration\ApplicationBuilder(new static($basePath)))
+            ->withKernels()
+            ->withEvents()
+            ->withCommands()
+            ->withProviders();
+    }
 
     protected function registerBaseServiceProviders()
     {
