@@ -5,11 +5,9 @@ namespace WpStarter\Wordpress\Setting;
 use WpStarter\Support\Facades\Artisan;
 use WpStarter\Support\ServiceProvider;
 
-abstract class SettingServiceProvider extends ServiceProvider
+class SettingServiceProvider extends ServiceProvider
 {
-    protected $autoRestartQueue=true;
-    protected $autoSave=true;
-    function register()
+    public function register()
     {
         $this->app->singleton(Repository::class, function () {
             return new Repository($this->getOptionKey());
@@ -18,15 +16,15 @@ abstract class SettingServiceProvider extends ServiceProvider
     }
 
     public function boot(){
-        if($this->autoRestartQueue) {
+        if($this->isRestartQueue()) {
             add_action('update_option_' . $this->getOptionKey(), [$this,'reloadSettings']);
         }
-        if($this->autoSave) {
+        if($this->isAutosave()) {
             add_action('shutdown', [$this,'saveSettings']);
         }
     }
     public function saveSettings(){
-        if($this->app->bound('setting')) {
+        if($this->app->resolved('setting')) {
             $this->app['setting']->save();
         }
     }
@@ -37,5 +35,14 @@ abstract class SettingServiceProvider extends ServiceProvider
         }
     }
 
-    abstract protected function getOptionKey();
+    protected function getOptionKey()
+    {
+        return $this->app['config']->get('setting.option_key', 'ws_settings');
+    }
+    protected function isAutosave(){
+        return $this->app['config']->get('setting.autosave', true);
+    }
+    protected function isRestartQueue(){
+        return $this->app['config']->get('setting.restart_queue', true);
+    }
 }

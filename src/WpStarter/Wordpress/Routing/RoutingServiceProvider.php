@@ -11,7 +11,7 @@ use WpStarter\Wordpress\Routing\Matching\ShortcodeValidator;
 
 class RoutingServiceProvider extends ServiceProvider
 {
-    function register()
+    public function register()
     {
         $this->app->singleton('wp.router', function ($app) {
             return new Router($app['events'], $app);
@@ -19,7 +19,7 @@ class RoutingServiceProvider extends ServiceProvider
         $this->app->alias('wp.router', Router::class);
     }
 
-    function boot()
+    public function boot()
     {
         \WpStarter\Routing\Route::mixin(new RouteHook());
         \WpStarter\Routing\Route::$validators=array_merge(\WpStarter\Routing\Route::getValidators(), [new HookValidator()]);

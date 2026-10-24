@@ -17,7 +17,7 @@ use WpStarter\Http\Request;
 
 class AdminServiceProvider extends ServiceProvider
 {
-    function register()
+    public function register()
     {
         $this->app->singleton('wp.admin.router', function ($app) {
             return new Router($app['events'], $app);
@@ -55,7 +55,7 @@ class AdminServiceProvider extends ServiceProvider
         });
     }
 
-    function boot()
+    public function boot()
     {
         if(!is_wp()){
             return ;

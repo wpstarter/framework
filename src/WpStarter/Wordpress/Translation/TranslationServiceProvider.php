@@ -6,7 +6,7 @@ use WpStarter\Support\ServiceProvider;
 
 class TranslationServiceProvider extends ServiceProvider
 {
-    function register()
+    public function register()
     {
         $this->app->singleton('l10n',function($app){
             return new L10n($app['config']);

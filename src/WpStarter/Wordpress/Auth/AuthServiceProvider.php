@@ -8,10 +8,10 @@ use WpStarter\Support\ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
 {
-    function register(){
+    public function register(){
 
     }
-    function boot(){
+    public function boot(){
         if($this->app->bound('auth')){
 
             $authManager=$this->app->make('auth');

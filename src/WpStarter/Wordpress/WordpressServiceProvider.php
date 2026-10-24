@@ -26,10 +26,11 @@ use WpStarter\Wordpress\Services\Livewire;
 use WpStarter\Wordpress\Services\QueryMonitor;
 use WpStarter\Wordpress\Shortcode\ShortcodeManager;
 use WpStarter\Wordpress\Translation\TranslationServiceProvider;
+use WpStarter\Wordpress\Setting\SettingServiceProvider;
 
 class WordpressServiceProvider extends ServiceProvider
 {
-    function register()
+    public function register()
     {
         $this->configureDatabase();
         $this->registerResourceManager();
@@ -51,9 +52,17 @@ class WordpressServiceProvider extends ServiceProvider
         $this->app->register(AuthServiceProvider::class);
         $this->app->register(AdminServiceProvider::class);
         $this->app->register(TranslationServiceProvider::class);
+        $this->app->registered(function ($app) {
+            /**
+             * @var \WpStarter\Foundation\Application $app
+             */
+            if (empty($app->getProviders(SettingServiceProvider::class))) {
+                $app->register(SettingServiceProvider::class);
+            }
+        });
     }
 
-    function boot()
+    public function boot()
     {
         User::setConnectionResolver($this->app['db']);
         User::setEventDispatcher($this->app['events']);
