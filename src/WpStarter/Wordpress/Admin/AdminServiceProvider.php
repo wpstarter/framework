@@ -64,8 +64,8 @@ class AdminServiceProvider extends ServiceProvider
             new MethodValidator,
             new ScreenIdValidator,
         ];
-        if(is_admin() && $this->app->bound(Kernel::class)) {
-            $this->app->make(Kernel::class)->handle(Request::capture());
+        if(is_admin() && $this->app->bound(Kernel::class) && $this->app->bound('request')) {
+            $this->app->make(Kernel::class)->handle($this->app['request']);
             $this->loadViewsFrom(__DIR__ . '/resources/views', 'wp.admin');
         }
     }
