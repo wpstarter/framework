@@ -72,7 +72,7 @@ class Updater
 
         if (
             json_last_error() !== JSON_ERROR_NONE
-            || is_array($update)
+            || !is_array($update)
             || !isset($update['plugins'])
             || !is_array($update['plugins'])
         ) {
