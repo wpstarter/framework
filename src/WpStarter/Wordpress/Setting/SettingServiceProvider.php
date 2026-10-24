@@ -37,12 +37,12 @@ class SettingServiceProvider extends ServiceProvider
 
     protected function getOptionKey()
     {
-        return $this->app['config']->get('setting.option_key', 'ws_settings');
+        return $this->app['config']->get('wordpress.settings.option_key', 'ws_settings');
     }
     protected function isAutosave(){
-        return $this->app['config']->get('setting.autosave', true);
+        return $this->app['config']->get('wordpress.settings.autosave', true);
     }
     protected function isRestartQueue(){
-        return $this->app['config']->get('setting.restart_queue', true);
+        return $this->app['config']->get('wordpress.settings.restart_queue', true);
     }
 }
