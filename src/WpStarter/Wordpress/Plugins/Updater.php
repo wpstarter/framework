@@ -3,6 +3,7 @@
 namespace WpStarter\Wordpress\Plugins;
 
 use WpStarter\Support\Collection;
+use WpStarter\Support\Str;
 
 
 class Updater
@@ -67,22 +68,22 @@ class Updater
             );
         }
 
-        $update = json_decode($response);
+        $update = json_decode($response,true);
 
         if (
             json_last_error() !== JSON_ERROR_NONE
-            || !is_object($update)
-            || !isset($update->plugins)
-            || !is_object($update->plugins)
+            || is_array($update)
+            || !isset($update['plugins'])
+            || !is_array($update['plugins'])
         ) {
             throw new \RuntimeException(
-                'Invalid response from WordPress update API.'
+                'Invalid response from WordPress update API. '.Str::limit($response)
             );
         }
-        foreach ($update->plugins as $slug=>$info){
+        foreach ($update['plugins'] as $slug=>$info){
             if(isset($plugins[$slug])){
-                $plugins[$slug]->NewVersion=$info->new_version;
-                $plugins[$slug]->UpdatePackage=$info->package;
+                $plugins[$slug]->NewVersion=$info['new_version'];
+                $plugins[$slug]->UpdatePackage=$info['package'];
             }
         }
         return $plugins;
