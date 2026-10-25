@@ -11,12 +11,22 @@ use WpStarter\Wordpress\Routing\Matching\ShortcodeValidator;
 
 class RoutingServiceProvider extends ServiceProvider
 {
+    /**
+     * The callback that should be used to load the application's routes.
+     *
+     * @var \Closure|null
+     */
+    protected static $loadRoutesUsing;
+
     public function register()
     {
         $this->app->singleton('wp.router', function ($app) {
             return new Router($app['events'], $app);
         });
         $this->app->alias('wp.router', Router::class);
+        $this->app->booted(function(){
+            $this->loadRoutes();
+        });
     }
 
     public function boot()
@@ -28,4 +38,28 @@ class RoutingServiceProvider extends ServiceProvider
             new SchemeValidator, new HostValidator,
         ];
     }
+    /**
+     * Load the application routes.
+     *
+     * @return void
+     */
+    protected function loadRoutes()
+    {
+        if (! is_null(static::$loadRoutesUsing)) {
+            $this->app->call(static::$loadRoutesUsing);
+        }
+    }
+
+    /**
+     * Register the callback that will be used to load the application's routes.
+     *
+     * @param  \Closure|null  $routesCallback
+     * @return void
+     */
+    public static function loadRoutesUsing(?Closure $routesCallback)
+    {
+        static::$loadRoutesUsing = $routesCallback;
+    }
+
+
 }
