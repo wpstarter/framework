@@ -2,6 +2,7 @@
 
 namespace WpStarter\Wordpress\Routing;
 
+use Closure;
 use WpStarter\Routing\Matching\HostValidator;
 use WpStarter\Routing\Matching\MethodValidator;
 use WpStarter\Routing\Matching\SchemeValidator;
