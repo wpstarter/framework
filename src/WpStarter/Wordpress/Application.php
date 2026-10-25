@@ -11,7 +11,7 @@ class Application extends \WpStarter\Foundation\Application
      *
      * @var string
      */
-    const VERSION = '2.3.0';
+    const VERSION = '2.3.1';
     /**
      * Indicates if the application has been early bootstrapped before.
      *
@@ -19,6 +19,10 @@ class Application extends \WpStarter\Foundation\Application
      */
     protected $hasBeenEarlyBootstrapped = false;
 
+    /**
+     * @param string|null $basePath
+     * @return Configuration\ApplicationBuilder
+     */
     public static function configure(?string $basePath = null)
     {
         $basePath = match (true) {
