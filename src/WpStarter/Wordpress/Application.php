@@ -11,7 +11,7 @@ class Application extends \WpStarter\Foundation\Application
      *
      * @var string
      */
-    const VERSION = '2.3.2';
+    const VERSION = '2.4.0';
     /**
      * Indicates if the application has been early bootstrapped before.
      *

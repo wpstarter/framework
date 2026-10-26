@@ -12,8 +12,8 @@ class Updater
     protected $pluginsDir;
     public function __construct($pluginsDir)
     {
-        $this->pluginsDir=$pluginsDir;
-        $this->pluginsRepository=new Repository($pluginsDir);
+        $this->pluginsDir=rtrim(str_replace('\\', '/', $pluginsDir), '/');;
+        $this->pluginsRepository=new Repository($this->pluginsDir);
     }
 
     /**
@@ -29,23 +29,12 @@ class Updater
             'locale'       => json_encode( [] ),
             'all'          => json_encode( true ),
         );
-        if(defined('ABSPATH') && defined('WPINC')){
-            $versionFile = ABSPATH . WPINC . '/version.php';
-        }else{
-            $versionFile = dirname(dirname($this->pluginsDir)) . '/wp-includes/version.php';
-        }
-        $wp_version = '6.x';
-        if ( file_exists( $versionFile ) ) {
-            include $versionFile;
-        }
-        $userAgent = 'WordPress/'.$wp_version  . '; ' . 'http://localhost';
         $formData=http_build_query($data);
         $headers = array(
             'Content-Type: application/x-www-form-urlencoded',
             'Content-Length: ' . strlen($formData),
-            'User-Agent: '.$userAgent
+            'User-Agent: WordPress/'.$this->wordpressVersion()  . '; ' . 'http://localhost'
         );
-        $apiUrl = ws_config('wordpress.plugins.updater.api_url','http://api.wordpress.org/plugins/update-check/1.1/');
         $token = ws_config('wordpress.plugins.updater.token');
         if (!empty($token)) {
             $headers[] = 'Authorization: Bearer ' . $token;
@@ -61,7 +50,10 @@ class Updater
 
         $context = stream_context_create($options);
 
-        $response = file_get_contents($apiUrl, false, $context);
+        $response = $this->request(
+            ws_config('wordpress.plugins.updater.api_url','https://api.wordpress.org/plugins/update-check/1.1/'),
+            $context
+        );
         if ($response === false) {
             throw new \RuntimeException(
                 'Failed to connect to WordPress update API.'
@@ -87,6 +79,24 @@ class Updater
             }
         }
         return $plugins;
+    }
+
+    protected function request($url, $context)
+    {
+        return @file_get_contents($url, false, $context);
+    }
+
+    protected function wordpressVersion()
+    {
+        $file = defined('ABSPATH') && defined('WPINC')
+            ? ABSPATH.WPINC.'/version.php'
+            : dirname($this->pluginsDir, 2).'/wp-includes/version.php';
+        $contents = is_file($file) && is_readable($file) ? file_get_contents($file) : '';
+
+        // Never include WordPress files, even when inspecting a local installation.
+        return preg_match('/\$wp_version\s*=\s*([\'"])([^\'"\r\n]+)\1\s*;/', $contents, $match)
+            ? $match[2]
+            : '6.x';
     }
 
 

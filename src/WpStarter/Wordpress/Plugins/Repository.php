@@ -11,7 +11,7 @@ class Repository
     protected $plugins;
     public function __construct($pluginsDir)
     {
-        $this->pluginsDir=$pluginsDir;
+        $this->pluginsDir=rtrim(str_replace('\\', '/', $pluginsDir), '/');
     }
     /**
      * @return Collection|Plugin[]
